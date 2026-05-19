@@ -1830,3 +1830,8 @@ export interface CompactionSummarizerResult {
 	/** Mark true when the summary was precomputed/cached (no fresh LLM call). */
 	realtime?: boolean;
 }
+
+// 8G tier lightweight MemoryProvider (naia-agent#41) — public API so hosts
+// (naia-agent) can inject it. Faithful MemoryProvider impl (anchor #1).
+export { LiteMemoryProvider } from "./lite-provider.js";
+export type { LiteMemoryProviderOptions } from "./lite-provider.js";
