@@ -322,7 +322,7 @@ export interface MemoryAdapter {
 		 *  context.atTimestamp (optional, ms): bi-temporal recall — only fact versions valid
 		 *  at the given timestamp are considered. Adapters without bi-temporal support may
 		 *  ignore this option (degrades to standard search). */
-		search(query: string, topK: number, deepRecall?: boolean, context?: { project?: string; atTimestamp?: number; mode?: "latest" | "history" | "at-time"; minConfidence?: number; queryHint?: string; scopeMode?: "strict" | "soft"; crossProject?: boolean }): Promise<Fact[]>;
+		search(query: string, topK: number, deepRecall?: boolean, context?: { project?: string; atTimestamp?: number; mode?: "latest" | "history" | "at-time"; minConfidence?: number; queryHint?: string; scopeMode?: "strict" | "soft"; crossProject?: boolean; epochAnchor?: string }): Promise<Fact[]>;
 		/** Run Ebbinghaus decay sweep, returns number of pruned memories */
 		decay(now: number): Promise<number>;
 		/** Strengthen association between two entities (Hebbian) */

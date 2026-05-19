@@ -13,8 +13,8 @@ export async function migrateJsonToSqlite(jsonPath: string, sqlitePath: string) 
     }
 
     const jsonAdapter = new LocalAdapter({ storePath: jsonPath });
-    await jsonAdapter.init(); // Assuming init() loads data
-    const store = (jsonAdapter as any).getStore();
+    await (jsonAdapter as any).init?.(); // load data if init() is available
+    const store = (jsonAdapter as any).getStore?.() ?? (jsonAdapter as any).store ?? {};
 
     const sqliteAdapter = new SqliteAdapter({ dbPath: sqlitePath });
     

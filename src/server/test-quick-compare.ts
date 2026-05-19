@@ -54,6 +54,7 @@ async function testMode(mode: "raw_episode" | "llm_extract") {
 				entities: [],
 				topics: ep.encodingContext.project ? [ep.encodingContext.project] : [],
 				importance: ep.importance.utility,
+				maxEmotion: ep.importance.emotion ?? 0,
 				sourceEpisodeIds: [ep.id],
 			}));
 	} else {

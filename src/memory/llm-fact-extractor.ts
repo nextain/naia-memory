@@ -226,6 +226,7 @@ Format: {"1": ["fact", ...], "2": ["fact", ...], ...}`;
 				entities: [],
 				topics: ep.encodingContext.project ? [ep.encodingContext.project] : [],
 				importance: ep.importance.utility,
+				maxEmotion: ep.importance.emotion ?? 0,
 				sourceEpisodeIds: [ep.id],
 			}));
 		});
