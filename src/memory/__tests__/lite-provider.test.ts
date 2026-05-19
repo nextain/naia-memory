@@ -1,4 +1,5 @@
 import { mkdtemp, rm } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -29,7 +30,13 @@ class FakeEmbedder implements EmbeddingProvider {
 	}
 }
 
-const VEC = { cat: [1, 0, 0], dog: [0, 1, 0], fish: [0, 0, 1] };
+const VEC = {
+	cat: [1, 0, 0],
+	dog: [0, 1, 0],
+	fish: [0, 0, 1],
+	mix: [1, 1, 0], // fractional cosine vs cat = 1/√2
+	neg: [-1, 0, 0], // anti-correlated vs cat → clamp 0
+};
 
 let dir: string;
 afterEach(async () => {
@@ -123,6 +130,47 @@ describe("LiteMemoryProvider", () => {
 		expect((await p.recall("cat", { topK: -3 })).length).toBe(1);
 		expect(await p.recall("   ")).toEqual([]);
 		await p.close();
+	});
+
+	it("B2: real fractional cosine + anti-correlated clamp (kills identity-eq mutation)", async () => {
+		const p = new LiteMemoryProvider({
+			dbPath: ":memory:",
+			embedder: new FakeEmbedder(3, VEC),
+			writesEnabled: true,
+		});
+		await p.encode({ content: "mix fact", role: "user" });
+		await p.encode({ content: "neg fact", role: "user" });
+		const h = await p.recall("cat", { topK: 2 });
+		const s = Object.fromEntries(h.map((x) => [x.content, x.score]));
+		expect(s["mix fact"]).toBeCloseTo(0.70710678, 6);
+		expect(s["neg fact"]).toBe(0);
+		expect(h[0].content).toBe("mix fact");
+		await p.close();
+	});
+
+	it("corrupt vec row → skipped, no throw (anchor #6 preservation)", async () => {
+		const db = join(dir, "corrupt.db");
+		const w = new LiteMemoryProvider({
+			dbPath: db,
+			embedder: new FakeEmbedder(3, VEC),
+			writesEnabled: true,
+		});
+		await w.encode({ content: "cat fact", role: "user" });
+		await w.close();
+		const require = createRequire(import.meta.url);
+		const Database = require("better-sqlite3") as typeof import("better-sqlite3");
+		const raw = new Database(db);
+		raw
+			.prepare(
+				"INSERT INTO lite_facts (id, content, vec, dims, project, created_at) VALUES (?,?,?,?,?,?)",
+			)
+			.run("bad1", "corrupt", "{not json", 3, null, Date.now());
+		raw.close();
+		const r = new LiteMemoryProvider({ dbPath: db, embedder: new FakeEmbedder(3, VEC) });
+		const h = await r.recall("cat");
+		expect(h.length).toBe(1);
+		expect(h[0].content).toBe("cat fact");
+		await r.close();
 	});
 
 	it("consolidate is a no-op summary (preservation-first); close ok", async () => {

@@ -13,6 +13,7 @@
 
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { EmbeddingProvider } from "../embeddings.js";
@@ -34,7 +35,14 @@ class FakeEmbedder implements EmbeddingProvider {
 		return Promise.all(t.map((x) => this.embed(x)));
 	}
 }
-const VEC = { cat: [1, 0, 0], dog: [0, 1, 0] };
+// cat/dog orthogonal; mix → fractional cosine vs cat (1/√2≈0.7071);
+// neg → anti-correlated vs cat (raw −1 → clamp 0, distinct from orthogonal).
+const VEC = {
+	cat: [1, 0, 0],
+	dog: [0, 1, 0],
+	mix: [1, 1, 0],
+	neg: [-1, 0, 0],
+};
 
 let pass = 0;
 let fail = 0;
@@ -106,6 +114,40 @@ await t("F4 invalid topK → default; empty query → []", async () => {
 	assert.equal((await p.recall("cat", { topK: -3 })).length, 1);
 	assert.deepEqual(await p.recall("   "), []);
 	await p.close();
+});
+
+await t("B2: cosine produces real fractional score + anti-correlated clamp", async () => {
+	const p = new LiteMemoryProvider({ dbPath: ":memory:", embedder: new FakeEmbedder(3, VEC), writesEnabled: true });
+	await p.encode({ content: "mix fact", role: "user" }); // vec [1,1,0]
+	await p.encode({ content: "neg fact", role: "user" }); // vec [-1,0,0]
+	const h = await p.recall("cat", { topK: 2 }); // query [1,0,0]
+	const byId = Object.fromEntries(h.map((x) => [x.content, x.score]));
+	// mix: 1/√2 ≈ 0.7071 — kills "identity-equality" cosine mutation.
+	assert.ok(Math.abs(byId["mix fact"] - 0.70710678) < 1e-6, `mix=${byId["mix fact"]}`);
+	// neg: raw cosine −1 → clamp 0 (distinct path from orthogonal).
+	assert.equal(byId["neg fact"], 0);
+	assert.equal(h[0].content, "mix fact"); // 0.707 > 0 ordering
+	await p.close();
+});
+
+await t("corrupt vec row → skipped, no throw (anchor #6 preservation)", async () => {
+	const db = join(dir, "corrupt.db");
+	const p = new LiteMemoryProvider({ dbPath: db, embedder: new FakeEmbedder(3, VEC), writesEnabled: true });
+	await p.encode({ content: "cat fact", role: "user" });
+	await p.close();
+	// Inject a corrupt-vec row directly (same native CJS require path).
+	const require = createRequire(import.meta.url);
+	const Database = require("better-sqlite3") as typeof import("better-sqlite3");
+	const raw = new Database(db);
+	raw.prepare(
+		"INSERT INTO lite_facts (id, content, vec, dims, project, created_at) VALUES (?,?,?,?,?,?)",
+	).run("bad1", "corrupt", "{not json", 3, null, Date.now());
+	raw.close();
+	const p2 = new LiteMemoryProvider({ dbPath: db, embedder: new FakeEmbedder(3, VEC) });
+	const h = await p2.recall("cat"); // must NOT throw; corrupt row skipped
+	assert.equal(h.length, 1);
+	assert.equal(h[0].content, "cat fact");
+	await p2.close();
 });
 
 await t("consolidate no-op summary; close ok", async () => {
