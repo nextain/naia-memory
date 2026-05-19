@@ -22,8 +22,14 @@
  *  - writes off by default(B-write): 쓰기 게이트 본책임=naia-agent(독립 validator)
  */
 
-import Database from "better-sqlite3";
+import { createRequire } from "node:module";
+import type DatabaseType from "better-sqlite3";
 import type { EmbeddingProvider } from "./embeddings.js";
+
+// better-sqlite3 is a native CJS addon. tsx/vitest ESM loaders double-load
+// it ("Module did not self-register"); a real CJS require loads it once.
+const require = createRequire(import.meta.url);
+const Database = require("better-sqlite3") as typeof DatabaseType;
 import type {
 	MemoryProvider,
 	MemoryProviderInput,
@@ -70,7 +76,7 @@ function cosineScore(a: readonly number[], b: readonly number[]): number {
 }
 
 export class LiteMemoryProvider implements MemoryProvider {
-	readonly #db: Database.Database;
+	readonly #db: DatabaseType.Database;
 	readonly #embedder: EmbeddingProvider;
 	readonly #writesEnabled: boolean;
 	readonly #defaultTopK: number;
