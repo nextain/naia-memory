@@ -1426,12 +1426,25 @@ export class MemorySystem {
 	 * the head of a conversation when the LLM context approaches its budget.
 	 *
 	 * Structural match for `CompactableCapable.compact()`.
+	 *
+	 * v3 (Slice 3-XR-Compact #47):
+	 * - `priorRecap` (optional): the prior compaction's recap message.
+	 *   When present, prepended verbatim as a `## Prior recap (anchored)`
+	 *   section so this compaction becomes anchored iterative summarization
+	 *   (Factory.ai pattern) rather than naive head-summarize.
+	 * - `strategy` (optional): hint to memory implementations. Currently
+	 *   informational; future versions may switch summarization style.
+	 * - Recap shape: legacy first-line header (preserved for backward
+	 *   compatibility with existing tests) + structured 5-section markdown
+	 *   appended (Goal / Instructions / Tool calls / Discoveries / Files).
 	 */
 	async compact(input: {
 		messages: readonly { role: string; content: string; timestamp?: number }[];
 		keepTail: number;
 		targetTokens: number;
 		sessionId?: string;
+		strategy?: string;
+		priorRecap?: { role: string; content: string; timestamp?: number };
 	}): Promise<{
 		summary: { role: "assistant"; content: string; timestamp?: number };
 		droppedCount: number;
@@ -1443,9 +1456,14 @@ export class MemorySystem {
 		// rolling summary for it, use that as the seed. compact() becomes
 		// essentially free — realtime=true.
 		const rs = input.sessionId ? this.rollingSummaries.get(input.sessionId) : undefined;
-		const recap = rs
+		const baseRecap = rs
 			? buildRecapFromRollingSummary(rs, msgs.length, input.keepTail)
 			: buildDeterministicRecap(msgs, input.keepTail);
+
+		// v3: structured sections (opencode pattern) appended after legacy
+		// header. priorRecap merged as the leading anchor section.
+		const structured = buildStructuredSections(msgs, input.priorRecap);
+		const recap = structured.length > 0 ? `${baseRecap}\n\n${structured}` : baseRecap;
 
 		let finalContent = recap;
 		// Rolling-summary seed is precomputed → realtime=true unless a
@@ -1791,6 +1809,115 @@ function compressEvictedMessages(
 	if (first) lines.push(`  first: "${truncateForRecap(first.content, 80)}"`);
 	if (last && last !== first) lines.push(`  last: "${truncateForRecap(last.content, 80)}"`);
 	return lines.join("\n");
+}
+
+/**
+ * v3 structured 5-section markdown sections (opencode/openclaw pattern,
+ * Slice 3-XR-Compact #47 §6.1). Appended after the legacy header line so
+ * existing assertions ("[Conversation recap …]") survive.
+ *
+ * Sections (omitted when empty):
+ * - `## Prior recap (anchored)` — when `priorRecap` provided (Factory.ai
+ *   anchored iterative pattern — Q7 lock).
+ * - `## Goal` — first user message (intent).
+ * - `## Instructions` — system-role messages in the window.
+ * - `## Tool calls made` — distinct tool messages (Microsoft pattern via
+ *   caller-side preprocessing; we list names/targets here).
+ * - `## Discoveries` — fact-shaped assistant lines (heuristic).
+ * - `## Relevant files / URLs` — strict-preserve identifiers (paths, URLs).
+ */
+function buildStructuredSections(
+	msgs: readonly { role: string; content: string; timestamp?: number }[],
+	priorRecap?: { role: string; content: string; timestamp?: number },
+): string {
+	const sections: string[] = [];
+
+	if (priorRecap && priorRecap.content.trim().length > 0) {
+		sections.push("## Prior recap (anchored)", priorRecap.content.trim());
+	}
+
+	const firstUser = msgs.find((m) => m.role === "user");
+	if (firstUser) {
+		sections.push("## Goal", truncateForRecap(firstUser.content, 240));
+	}
+
+	const systemMsgs = msgs.filter((m) => m.role === "system");
+	if (systemMsgs.length > 0) {
+		const lines = ["## Instructions"];
+		for (const sm of systemMsgs.slice(0, 3)) {
+			lines.push(`- ${truncateForRecap(sm.content, 160)}`);
+		}
+		sections.push(lines.join("\n"));
+	}
+
+	const toolMsgs = msgs.filter((m) => m.role === "tool");
+	if (toolMsgs.length > 0) {
+		const lines = ["## Tool calls made"];
+		const seen = new Set<string>();
+		let shown = 0;
+		for (const tm of toolMsgs) {
+			const key = truncateForRecap(tm.content, 80);
+			if (seen.has(key)) continue;
+			seen.add(key);
+			lines.push(`- ${truncateForRecap(tm.content, 120)}`);
+			shown++;
+			if (shown >= 10) {
+				if (toolMsgs.length > shown) {
+					lines.push(`- … (${toolMsgs.length - shown} more tool messages)`);
+				}
+				break;
+			}
+		}
+		sections.push(lines.join("\n"));
+	}
+
+	const assistantMsgs = msgs.filter((m) => m.role === "assistant");
+	if (assistantMsgs.length > 0) {
+		const lines = ["## Discoveries"];
+		let added = 0;
+		outer: for (const am of assistantMsgs) {
+			const factLines = am.content
+				.split("\n")
+				.map((l) => l.trim())
+				.filter((l) => l.length >= 40 && l.length <= 200);
+			for (const line of factLines.slice(0, 2)) {
+				lines.push(`- ${line}`);
+				added++;
+				if (added >= 5) break outer;
+			}
+		}
+		if (added > 0) {
+			sections.push(lines.join("\n"));
+		}
+	}
+
+	// Identifier strict-preserve: file-path-like + URLs verbatim. Used as
+	// "## Relevant files / URLs" — recall pin for later reference.
+	const pathRe = /(?:^|\s|`)([/\w][\w./\-]*\.[a-z]{1,6})(?=\s|`|$|[,.;:!?])/gim;
+	const urlRe = /https?:\/\/[^\s)`'"<>]+/g;
+	const files = new Set<string>();
+	for (const m of msgs) {
+		for (const match of m.content.matchAll(pathRe)) {
+			const p = match[1];
+			if (p && p.length >= 3) files.add(p);
+			if (files.size >= 15) break;
+		}
+		if (files.size >= 15) break;
+		for (const match of m.content.matchAll(urlRe)) {
+			files.add(match[0]);
+			if (files.size >= 15) break;
+		}
+		if (files.size >= 15) break;
+	}
+	if (files.size > 0) {
+		const lines = ["## Relevant files / URLs"];
+		for (const f of [...files].slice(0, 15)) {
+			lines.push(`- \`${f}\``);
+		}
+		sections.push(lines.join("\n"));
+	}
+
+	return sections.join("\n\n");
 }
 
 function buildRecapFromRollingSummary(
