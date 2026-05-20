@@ -1502,6 +1502,59 @@ export class MemorySystem {
 		};
 	}
 
+	// ─── Handoff (naia-agent HandoffCapable) — Slice 3-XR-Handoff (#50) ─
+
+	/**
+	 * Attach an incoming handoff blob into the long-term store. Encodes the
+	 * recap content as an `assistant`-role memory and each anchor as a
+	 * standalone `user`-role memory keyed by the blob's session id. The next
+	 * `recall()` will surface these — providing fact-level cross-session
+	 * continuity.
+	 *
+	 * Structural match for `HandoffCapable.attachHandoff()` from naia-agent.
+	 * Kept zero-dep (no type-level import of `@nextain/agent-types`).
+	 *
+	 * Idempotent at the SOURCE level: re-attaching the same sessionId blob
+	 * MAY produce duplicate facts in the store (callers should dedupe by
+	 * `(sessionId, createdAt)` if needed). Future versions may dedupe here.
+	 */
+	async attachHandoff(blob: {
+		readonly version: 1;
+		readonly sessionId: string;
+		readonly createdAt: number;
+		readonly turnCount: number;
+		readonly totalTokens: number;
+		readonly trigger: string;
+		readonly recap: { role: string; content: string; timestamp?: number };
+		readonly anchors: readonly string[];
+	}): Promise<void> {
+		// Use the blob's createdAt as the encode timestamp so the long-term
+		// store preserves source ordering on cross-session import.
+		const ctx = { sessionId: `handoff:${blob.sessionId}` };
+
+		// Recap as a single assistant memory.
+		await this.encode(
+			{
+				content: `[Handoff from session ${blob.sessionId} — ${blob.turnCount} turns, trigger=${blob.trigger}]\n${blob.recap.content}`,
+				role: "assistant",
+				timestamp: blob.createdAt,
+			},
+			ctx,
+		);
+
+		// Each anchor as its own short memory for fact-level recall hits.
+		for (const anchor of blob.anchors) {
+			await this.encode(
+				{
+					content: `[Handoff anchor] ${anchor}`,
+					role: "user",
+					timestamp: blob.createdAt,
+				},
+				ctx,
+			);
+		}
+	}
+
 	// ─── R4 #26 Background brain — spike + active context ──────────────
 
 	/** Subscribe spike events. naia-agent 가 source-monitor + pragmatic-gate
