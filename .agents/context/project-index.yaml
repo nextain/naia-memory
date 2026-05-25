@@ -70,7 +70,7 @@ next_path:
 adapters:
   - id: naia
     file: src/benchmark/comparison/adapter-naia.ts
-    description: Alpha Memory — this project
+    description: Naia Memory — this project
   - id: mem0
     file: src/benchmark/comparison/adapter-mem0.ts
     description: mem0 OSS — vector search + LLM dedup

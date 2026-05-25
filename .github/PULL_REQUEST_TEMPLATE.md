@@ -1,4 +1,4 @@
-<!-- Thank you for contributing to Alpha Memory! -->
+<!-- Thank you for contributing to Naia Memory! -->
 
 ## Summary
 
@@ -6,7 +6,7 @@
 
 ## `MemoryProvider` contract impact
 
-Alpha Memory is the reference `MemoryProvider` implementation for the Naia
+Naia Memory is the reference `MemoryProvider` implementation for the Naia
 ecosystem (see `@nextain/agent-types`).
 
 - [ ] Changes behavior observable through the `MemoryProvider` façade — consumers may be affected

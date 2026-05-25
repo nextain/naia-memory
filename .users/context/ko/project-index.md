@@ -1,8 +1,8 @@
-# Alpha Memory — Project Index
+# Naia Memory — Project Index
 
 > Mirror of `.agents/context/project-index.yaml` (human-readable)
 
-- **Repo**: [nextain/alpha-memory](https://github.com/nextain/alpha-memory)
+- **Repo**: [nextain/naia-memory](https://github.com/nextain/naia-memory)
 - **License**: Apache-2.0
 - **Parent**: [nextain/naia-os](https://github.com/nextain/naia-os)
 
@@ -20,7 +20,7 @@
 
 | ID | File | Description |
 |----|------|-------------|
-| `naia` | adapter-naia.ts | Alpha Memory — this project |
+| `naia` | adapter-naia.ts | Naia Memory — this project |
 | `mem0` | adapter-mem0.ts | mem0 OSS — vector search + LLM dedup |
 | `sillytavern` | adapter-sillytavern.ts | SillyTavern — vectra + transformers.js |
 | `letta` | adapter-letta.ts | Letta (formerly MemGPT) |

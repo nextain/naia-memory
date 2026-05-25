@@ -1,4 +1,4 @@
-# Alpha Memory — Architecture
+# Naia Memory — Architecture
 
 > Mirror of `.agents/context/architecture.yaml` (human-readable)
 

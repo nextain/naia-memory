@@ -1,7 +1,7 @@
 {
-	"name": "alpha-memory-service",
+	"name": "naia-memory-service",
 	"version": "1.0.0",
-	"description": "API wrapper for @nextain/alpha-memory library",
+	"description": "API wrapper for @nextain/naia-memory library",
 	"main": "dist/index.js",
 	"scripts": {
 		"build": "tsc",
@@ -12,7 +12,7 @@
 	"author": "Nextain Inc.",
 	"license": "ISC",
 	"dependencies": {
-		"@nextain/alpha-memory": "file:../",
+		"@nextain/naia-memory": "file:../",
 		"express": "^4.19.2",
 		"cors": "^2.8.5"
 	},

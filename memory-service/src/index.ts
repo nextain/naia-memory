@@ -1,4 +1,4 @@
-import { MemorySystem } from "@nextain/alpha-memory"; // Assuming MemorySystem is exported from the library
+import { MemorySystem } from "@nextain/naia-memory"; // Assuming MemorySystem is exported from the library
 import cors from "cors";
 import express from "express";
 
@@ -12,7 +12,7 @@ app.use(express.json());
 const memory = new MemorySystem({}); // Placeholder, actual initialization might vary
 
 app.get("/", (req, res) => {
-	res.send("Alpha Memory Service is running!");
+	res.send("Naia Memory Service is running!");
 });
 
 // Example endpoint: search memory
@@ -34,5 +34,5 @@ app.post("/search", async (req, res) => {
 // Add other memory-related endpoints as needed (e.g., add, update, delete)
 
 app.listen(port, () => {
-	console.log(`Alpha Memory Service listening at http://localhost:${port}`);
+	console.log(`Naia Memory Service listening at http://localhost:${port}`);
 });
