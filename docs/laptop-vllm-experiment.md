@@ -137,7 +137,7 @@ VLLM_EMBED_BASE=http://localhost:8001 \
 VLLM_EMBED_MODEL=Qwen/Qwen3-Embedding-0.6B \
 VLLM_EMBED_DIM=1024 \
 GEMINI_API_KEY=xxx \
-pnpm exec tsx src/server/mem0-api.ts
+pnpm exec tsx src/server/naia-memory-api.ts
 ```
 
 ## 문제 해결

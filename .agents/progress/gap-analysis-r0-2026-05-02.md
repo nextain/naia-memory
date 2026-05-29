@@ -8,7 +8,7 @@
 
 | 영역 | 파일 |
 |------|------|
-| 기존 코드 (5K+ lines) | `src/memory/`, `src/server/mem0-api.ts`, `src/benchmark/` |
+| 기존 코드 (5K+ lines) | `src/memory/`, `src/server/naia-memory-api.ts`, `src/benchmark/` |
 | 새 v3 drift 코드 (~600 lines) | `src/v3/` |
 | 컨텍스트 문서 | `AGENTS.md`, `CLAUDE.md` (mirror), `.agents/context/*.yaml`, plan-v3-anchor |
 
@@ -34,7 +34,7 @@ src/memory/
 │  └─ qdrant.ts                       # Qdrant
 └─ __tests__/ (7 test files)         # backup, compact, consolidation, decay, importance, memory-system, reconsolidation
 src/server/
-└─ mem0-api.ts (266 lines)            # REST server (mem0 protocol 호환)
+└─ naia-memory-api.ts (266 lines)            # REST server (mem0 protocol 호환)
 ```
 
 ### 1.2 v3 drift (이번 세션, ~600 lines)
@@ -134,11 +134,11 @@ export class NaiaMemoryProvider
 
 **결론**: 8 capability 의 70% 가 코드로는 있음. **interface implements 선언 + 매핑 코드만** 추가하면 됨. R2 슬라이스에서 처리.
 
-## 4. Gap 3: Server (mem0-api.ts) 갭
+## 4. Gap 3: Server (naia-memory-api.ts) 갭
 
 ### 4.1 현재 상태
 
-`src/server/mem0-api.ts` (266 lines):
+`src/server/naia-memory-api.ts` (266 lines):
 - 옛 `MemoryAdapter` interface 사용 (LocalAdapter 또는 Mem0Adapter 직접)
 - `MemorySystem` 객체 만들어서 사용
 - REST 엔드포인트: `/memories`, `/search`, `/consolidate`, `/health`

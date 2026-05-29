@@ -349,7 +349,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.listen(port, () => {
-	console.log(`naia-memory Mem0 API server on port ${port}`);
+	console.log(`naia-memory naia-memory API server on port ${port}`);
 	console.log(`  store: ${storePath}`);
 	console.log(`  vector store: ${vectorStorePath}`);
 	console.log(`  embedder: ${process.env.VLLM_EMBED_BASE ? `${embedModel} (${embedDims}d, vLLM)` : `gemini-embedding-001 (3072d)`}`);

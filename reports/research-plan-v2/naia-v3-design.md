@@ -28,7 +28,7 @@
 ```
 Application Layer (Naia OS)
        ↓ POST /memories, /search
-mem0-api server (Express, port 9876, REST 기존 유지)
+naia-memory-api server (Express, port 9876, REST 기존 유지)
        ↓
 ─────────────── Naia v3 Core ───────────────
   1. Naia Pre-Processing (stateless)

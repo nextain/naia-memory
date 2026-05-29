@@ -30,7 +30,7 @@ Naia Memory = LocalAdapter(자체 JSON + cosine + BM25 + KG)
             + Context budget allocator
 ```
 
-서버(`mem0-api.ts`)는 mem0 **REST 프로토콜만 호환**.
+서버(`naia-memory-api.ts`)는 mem0 **REST 프로토콜만 호환**.
 
 ## 3. Keyword Hit 사전 검증 (conv 0, 199문항)
 
@@ -124,7 +124,7 @@ return scored.map((s) => s.fact);  // score 버림, Fact만 반환
 
 `Fact` 타입에 `relevanceScore` 필드가 있으나(`types.ts:121`), search()에서 설정하지 않음.
 
-#### 버그 B: 가짜 선형 점수 (mem0-api.ts:108)
+#### 버그 B: 가짜 선형 점수 (naia-memory-api.ts:108)
 
 ```typescript
 score: f.relevanceScore ?? 1 - i * (1 / (result.facts.length + 1))
@@ -174,11 +174,11 @@ LocalAdapter는 내부적으로 cosine similarity로 정렬하나, score를 버�
 
 #### A. 검색 score 버그 수정
 
-**문제**: `local.ts:586`에서 score를 버리고 `mem0-api.ts:108`에서 가짜 점수 할당.
+**문제**: `local.ts:586`에서 score를 버리고 `naia-memory-api.ts:108`에서 가짜 점수 할당.
 
 **수정안**:
 1. `local.ts` search()에서 `relevanceScore`를 Fact에 설정 후 반환
-2. `mem0-api.ts`에서 `f.relevanceScore` 사용 (fallback은 유지)
+2. `naia-memory-api.ts`에서 `f.relevanceScore` 사용 (fallback은 유지)
 
 **예상 효과**: 검색 결과가 쿼리에 의존하게 됨 → **open-domain 84.6% 유지, 다른 카테고리 대폭 개선 예상**
 

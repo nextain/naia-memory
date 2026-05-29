@@ -294,7 +294,7 @@ src/memory/                         # 메모리 코어
 └─ embeddings/                       # 임베딩 abstraction (기존)
 
 src/server/                          # REST API server
-└─ memory-rest.ts                    # MemoryProvider → REST (mem0-api.ts 정리)
+└─ memory-rest.ts                    # MemoryProvider → REST (naia-memory-api.ts 정리)
 
 src/v3/                              # ⚠️ 이전 작업 — R2 시 정리/재배치
                                      # 대부분 capabilities/ 또는 agent 영역으로 이동
@@ -494,7 +494,7 @@ export interface MemoryProviderConfig {
 - 서빙 프레임워크 단일화: vllm-omni만 사용 (Ollama 제거)
 - `adapter-naia-local.ts`: Ollama endpoint → `VLLM_EMBED_BASE` env (default `localhost:8001`)
 - `run-comparison.ts`: `callOllama` → `callVllm` (`VLLM_BASE` env, default `localhost:8000`)
-- `mem0-api.ts`: `VLLM_EMBED_BASE`/`VLLM_EMBED_MODEL`/`VLLM_EMBED_DIM` env 지원
+- `naia-memory-api.ts`: `VLLM_EMBED_BASE`/`VLLM_EMBED_MODEL`/`VLLM_EMBED_DIM` env 지원
 - `scripts/serve-embedding.sh`: vLLM 임베딩 서버 실행 스크립트
 - **다음 단계**: 노트북 RTX 4060 (8GB)에서 vLLM 임베딩 서버 구동 후 벤치마크 실행
 

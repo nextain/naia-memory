@@ -257,7 +257,7 @@ reports/
 
 **설계**: v2 합성 팩트뱅크(200 허구 팩트, 241 쿼리)로 LLM 사전지식 경로 차단. airi baseline 33.9%→15%로 차단 확인.
 
-**아키텍처 관계**: `naia-local = 독자 엔진 (LocalAdapter: JSON + vector + BM25 + KG) + Naia Layer (importance gating, LLM consolidation, contradiction detection)`. mem0 코드 전혀 미사용. 서버(`mem0-api.ts`)는 mem0 REST 프로토콜만 호환.
+**아키텍처 관계**: `naia-local = 독자 엔진 (LocalAdapter: JSON + vector + BM25 + KG) + Naia Layer (importance gating, LLM consolidation, contradiction detection)`. mem0 코드 전혀 미사용. 서버(`naia-memory-api.ts`)는 mem0 REST 프로토콜만 호환.
 
 **이중 순위 (공정성 vs 사용자 경험)**:
 
