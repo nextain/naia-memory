@@ -6,6 +6,7 @@ import { Mem0Adapter } from "../memory/adapters/mem0.js";
 import { buildLLMFactExtractor } from "../memory/llm-fact-extractor.js";
 import { OpenAICompatEmbeddingProvider } from "../memory/embeddings.js";
 import { createConsolidationGate } from "./consolidation-gate.js";
+import { VectorStore } from "./vector-store.js";
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
@@ -13,6 +14,10 @@ app.use(express.json({ limit: "10mb" }));
 const apiKey = process.env.GEMINI_API_KEY || "";
 const port = parseInt(process.env.PORT || "9876", 10);
 const storePath = process.env.STORE_PATH || "/tmp/locomo-naia-memory.json";
+const vectorStorePath =
+	process.env.VECTOR_STORE_PATH ||
+	storePath.replace(/\.json$/i, "") + ".vec.sqlite";
+const vectorStore = new VectorStore(vectorStorePath);
 
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai";
 const GATEWAY_URL = process.env.GATEWAY_URL || "";
@@ -274,39 +279,67 @@ app.post("/memories/vector", async (req, res) => {
 				: Date.now();
 
 		await addThrottle();
-		// TODO (Phase 3 cycle 2): MemorySystem 에 encodeVector / Adapter direct
-		//   vector push 구현. 본 cycle 은 endpoint skeleton 만.
-		// 구현 path 후보:
-		//   (a) MemorySystem.encode 에 optional precomputedVector 인자 추가
-		//   (b) LocalAdapter 의 episodic.upsertWithVector 메서드 추가
-		//       (sqlite-vec 직접 호출)
-		//   (c) 새 MemorySystem.encodeVector 메서드 (대규모 변경)
-		//
-		// 작업 게이트:
-		//   - naia-cognitive 측 client (score_memory_naia.py) 가 본 endpoint 호출
-		//   - 실 benchmark = Phase 3 cycle 2
-		const _payload = {
+		const id = vectorStore.add({
 			user_id,
 			vector,
-			content: content ?? `[vector:${metadata.source_type ?? "unknown"}]`,
-			timestamp: ts,
+			content,
 			source_type: metadata.source_type ?? "vector",
 			source_model: metadata.source_model,
-			vector_dim: vector.length,
+			timestamp: ts,
 			additional_data: metadata.additional_data ?? {},
-		};
-		console.log(
-			`[vector endpoint stub] user=${user_id} vec_dim=${vector.length} model=${metadata.source_model}`,
-		);
-
-		res.status(501).json({
-			error: "vector storage not yet implemented",
-			note: "endpoint skeleton — Phase 3 cycle 2 implementation pending",
-			received: { user_id, vector_dim: vector.length, source_model: metadata.source_model },
+		});
+		res.json({
+			id,
+			user_id,
+			vector_dim: vector.length,
+			source_model: metadata.source_model,
+			source_type: metadata.source_type ?? "vector",
+			timestamp: ts,
 		});
 		return;
 	} catch (err: any) {
 		console.error("VECTOR ADD error:", err.message?.slice(0, 300));
+		res.status(500).json({ error: err.message?.slice(0, 200) });
+	}
+});
+
+// POST /search/vector — pre-computed query vector 로 vec0 검색
+//   body: {
+//     user_id: string,
+//     query_vector: number[],
+//     source_model: string,            // 같은 model 의 벡터만 검색
+//     limit?: number (default 5),
+//     filter?: { source_type?: string },
+//   }
+//   response: { results: Array<{ id, content, source_type, source_model, timestamp,
+//                                additional_data, distance, score }> }
+//
+// score = 1 - distance/2 (cosine distance 0~2 → cosine sim 0~1)
+app.post("/search/vector", async (req, res) => {
+	try {
+		const { user_id, query_vector, source_model, limit, filter } = req.body;
+		if (!user_id) {
+			res.status(400).json({ error: "user_id required" });
+			return;
+		}
+		if (!Array.isArray(query_vector) || query_vector.length === 0) {
+			res.status(400).json({ error: "query_vector (non-empty array) required" });
+			return;
+		}
+		if (!source_model) {
+			res.status(400).json({ error: "source_model required (embedding versioning)" });
+			return;
+		}
+		const results = vectorStore.search({
+			user_id,
+			query_vector,
+			source_model,
+			limit: typeof limit === "number" ? limit : 5,
+			filter,
+		});
+		res.json({ results });
+	} catch (err: any) {
+		console.error("VECTOR SEARCH error:", err.message?.slice(0, 300));
 		res.status(500).json({ error: err.message?.slice(0, 200) });
 	}
 });
@@ -318,6 +351,7 @@ app.get("/health", (_req, res) => {
 app.listen(port, () => {
 	console.log(`naia-memory Mem0 API server on port ${port}`);
 	console.log(`  store: ${storePath}`);
+	console.log(`  vector store: ${vectorStorePath}`);
 	console.log(`  embedder: ${process.env.VLLM_EMBED_BASE ? `${embedModel} (${embedDims}d, vLLM)` : `gemini-embedding-001 (3072d)`}`);
 	console.log(`  fact extraction: ${useGateway ? `gateway (${GATEWAY_URL})` : "gemini direct"}`);
 	console.log(`  lazy consolidation (consolidates on first search)`);
