@@ -228,6 +228,89 @@ app.delete("/memories", async (req, res) => {
 	}
 });
 
+// === Vector endpoint (Phase 3 cycle 1, naia-cognitive 통합) ============
+// Peer review (Gemini + Gemma 4) 만장일치 결정. paradigm 본질.
+//
+// POST /memories/vector
+//   body: {
+//     user_id: string,
+//     vector: number[],                    // pre-computed embedding (e.g. HuBERT 768 + chroma 12)
+//     content?: string,                    // optional human-readable description
+//     metadata?: {
+//       source_type: "audio_fingerprint" | "image" | ...,
+//       source_model: "hubert-chroma-v1.0",   // ★ embedding versioning
+//       timestamp?: number | string,
+//       additional_data?: object,
+//     }
+//   }
+//
+// Storage path: episodic store (Hippocampus) — content + vector + metadata.
+// Search side: POST /search 가 query_vector + source_model filter 지원 (search extension).
+//
+// Embedding versioning 주의: 동일 source_model 끼리만 cosine 비교 의미 있음.
+// 다른 model 의 vector 가 mix 되면 ranking 왜곡. metadata.source_model 로 분리.
+
+app.post("/memories/vector", async (req, res) => {
+	try {
+		const { user_id, vector, content, metadata } = req.body;
+		if (!user_id) {
+			res.status(400).json({ error: "user_id required" });
+			return;
+		}
+		if (!Array.isArray(vector) || vector.length === 0) {
+			res.status(400).json({ error: "vector (non-empty array) required" });
+			return;
+		}
+		if (!metadata?.source_model) {
+			res.status(400).json({ error: "metadata.source_model required (embedding versioning)" });
+			return;
+		}
+
+		const ts =
+			metadata?.timestamp
+				? typeof metadata.timestamp === "number"
+					? metadata.timestamp
+					: Date.parse(metadata.timestamp)
+				: Date.now();
+
+		await addThrottle();
+		// TODO (Phase 3 cycle 2): MemorySystem 에 encodeVector / Adapter direct
+		//   vector push 구현. 본 cycle 은 endpoint skeleton 만.
+		// 구현 path 후보:
+		//   (a) MemorySystem.encode 에 optional precomputedVector 인자 추가
+		//   (b) LocalAdapter 의 episodic.upsertWithVector 메서드 추가
+		//       (sqlite-vec 직접 호출)
+		//   (c) 새 MemorySystem.encodeVector 메서드 (대규모 변경)
+		//
+		// 작업 게이트:
+		//   - naia-cognitive 측 client (score_memory_naia.py) 가 본 endpoint 호출
+		//   - 실 benchmark = Phase 3 cycle 2
+		const _payload = {
+			user_id,
+			vector,
+			content: content ?? `[vector:${metadata.source_type ?? "unknown"}]`,
+			timestamp: ts,
+			source_type: metadata.source_type ?? "vector",
+			source_model: metadata.source_model,
+			vector_dim: vector.length,
+			additional_data: metadata.additional_data ?? {},
+		};
+		console.log(
+			`[vector endpoint stub] user=${user_id} vec_dim=${vector.length} model=${metadata.source_model}`,
+		);
+
+		res.status(501).json({
+			error: "vector storage not yet implemented",
+			note: "endpoint skeleton — Phase 3 cycle 2 implementation pending",
+			received: { user_id, vector_dim: vector.length, source_model: metadata.source_model },
+		});
+		return;
+	} catch (err: any) {
+		console.error("VECTOR ADD error:", err.message?.slice(0, 300));
+		res.status(500).json({ error: err.message?.slice(0, 200) });
+	}
+});
+
 app.get("/health", (_req, res) => {
 	res.json({ status: "ok" });
 });
