@@ -1,0 +1,31 @@
+{
+	"version": 1,
+	"quarantined": [
+		{
+			"name": "api-server",
+			"origin": "api-server",
+			"quarantined_date": "2026-05-30",
+			"reason": "방치 AI A/B 실험 placeholder 서버 — 1커밋(2026-04-21) 후 방치, 빌드 미연결, MemoryServicePlaceholder. harden 2026-05-30",
+			"retention_months": 3,
+			"review_by": "2026-08-30",
+			"compress_on_expiry": true,
+			"status": "active",
+			"compressed": false,
+			"pending_notice": false,
+			"user_approved": true
+		},
+		{
+			"name": "memory-service",
+			"origin": "memory-service",
+			"quarantined_date": "2026-05-30",
+			"reason": "방치 TS HTTP 래퍼 placeholder — 2커밋(2번째=rename뿐), 빌드 미연결, new MemorySystem({}) placeholder. harden 2026-05-30",
+			"retention_months": 3,
+			"review_by": "2026-08-30",
+			"compress_on_expiry": true,
+			"status": "active",
+			"compressed": false,
+			"pending_notice": false,
+			"user_approved": true
+		}
+	]
+}

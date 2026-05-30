@@ -9,11 +9,23 @@ structure:
   src/memory: Core memory system (MemorySystem, adapters, types, R2.5 filter, usage tracker)
   src/benchmark/aihub141: Korean R2.3 multi-session bench (Phase A) — loader, scorer, run, analyze, reanalyze, embedding-reanalyze
   src/benchmark/comparison: Legacy fact-bank.json bench (R5–R14, archived)
+  src/test: self-trust 하네스 단위 테스트 (*.test.mjs) — harden 2026-05-30
+  scripts: 빌드·검증 + self-trust 하네스 (enforce/verify-watch/quarantine/ci-verify/gen-lists/mirror) — harden 2026-05-30
+  reports: R-시리즈 벤치마크 산출물 (고유등록 F12) — 대용량 런 JSON 은 gitignore
   docs/integration.md: naia-agent integration SoT (interface + params + buildMemory sample)
   docs/reports: Generated benchmark reports (committed summaries only)
   .agents/context: AI-optimized context (English, YAML/JSON)
   .agents/progress: SoT plan + decision matrix + Phase A results
   .users/context: Human-readable mirror (same structure)
+
+# 보류 격리(harden 2026-05-30) — 방치 의심 자산 백업. 컨텍스트가 존재를 인지하도록 등록.
+quarantine:
+  manifest: quarantine/MANIFEST.json   # force-추적 — 비어있지 않으면 백업 자산 존재
+  manager: scripts/quarantine.mjs       # add/check/list/restore/extend/purge
+  quarantined:
+    - api-server: 방치 AI A/B 실험 placeholder 서버 (1커밋, 빌드 미연결). 재검토 2026-08-30
+    - memory-service: 방치 TS HTTP 래퍼 placeholder (2커밋, 빌드 미연결). 재검토 2026-08-30
+  note: 만료 시 cron 자동 압축(비파괴), 삭제는 권한 유저 결정 (SessionStart quarantine-notice.js)
 
 entry_points:
   - README.md

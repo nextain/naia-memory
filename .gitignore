@@ -42,6 +42,22 @@ locomo-memory.json
 .claude/
 .users/context/agents-rules.md
 
+# T3 보안 — 키/시크릿/개인정보 (절대 추적 금지, README 마커만) — harden 2026-05-30
+data-private/
+!data-private/README.md
+
+# build / coverage artifacts (추적 제외 — harden 2026-05-30)
+coverage/
+*.tsbuildinfo
+
+# 벤치마크 비교 데이터 덤프 (89MB, 재현가능 — 추적 제외, harden 2026-05-30)
+memory-sillytavern-stable/
+
+# 보류 격리(Quarantine) — 방치 의심 자산 백업. 실물 제외, MANIFEST/README 만 추적
+quarantine/*
+!quarantine/MANIFEST.json
+!quarantine/README.md
+
 # misc
 urllib.request
 task_summary.md
