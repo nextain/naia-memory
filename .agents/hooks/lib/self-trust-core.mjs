@@ -13,7 +13,7 @@ import path from "path";
 
 const DEFAULTS = {
 	enforcement_level: "enforced",
-	completion: { keywords: [], negations: [], evidence_patterns: [] },
+	completion: { keywords: [], negations: [], evidence_patterns: [], strong_evidence_patterns: [] },
 	change_set_rules: [],
 	artifact_min_meaningful_chars: 100,
 };
@@ -107,15 +107,39 @@ function keywordHit(text, kw) {
 }
 
 // 완료선언 + 증거 판정
-export function checkCompletion(message, cfg) {
+export function checkCompletion(message, cfg, opts = {}) {
 	if (cfg.level === "off") return { ok: true, reason: "off" };
 	const m = String(message || "").normalize("NFC");
 	const negated = (cfg.completion.negations || []).some((n) => keywordHit(m, n));
 	const completed = (cfg.completion.keywords || []).some((k) => keywordHit(m, k));
 	if (!completed || negated) return { ok: true, reason: negated ? "부정문(미완료)" : "완료선언 아님" };
-	const hasEvidence = (cfg.completion.evidence_patterns || []).some((p) => m.toLowerCase().includes(p.toLowerCase()));
-	if (hasEvidence) return { ok: true, reason: "증거 동반" };
-	return { ok: false, reason: "완료선언 + 증거없음" };
+	// 증거 등급: 강(존재 검증된 아티팩트 인용) > 약(키워드만) > 없음.
+	// ⚠️ 적대검증(gemini, 2026-05-30) 교훈: 'review-pass: CLEAN' 텍스트는 위조 가능 →
+	//   strong 은 인용된 **검증 리포트 파일이 실제 존재**해야 인정(opts.fileExists 주입 시).
+	//   텍스트가 아닌 상호참조 아티팩트라야 위조가 어렵다. (내용/commit_hash 대조는 CI 몫.)
+	const ml = m.toLowerCase();
+	const hasStrong = (cfg.completion.strong_evidence_patterns || []).some((p) => ml.includes(p.toLowerCase()));
+	const hasWeak = (cfg.completion.evidence_patterns || []).some((p) => ml.includes(p.toLowerCase()));
+	if (hasStrong) {
+		if (typeof opts.fileExists === "function") {
+			const refs = extractEvidenceRefs(m);
+			if (refs.some((r) => opts.fileExists(r))) return { ok: true, reason: "강한 증거(검증 아티팩트 존재 확인)", tier: "strong" };
+			// 인용은 했으나 파일 부재 = 위조 의심 → 약한 증거로 강등
+			return { ok: true, reason: "검증 인용했으나 아티팩트 부재 — 약한 증거로 강등", tier: "weak", note: "cited-ref-missing" };
+		}
+		return { ok: true, reason: "강한 증거(참조 인용)", tier: "strong" };
+	}
+	if (hasWeak) return { ok: true, reason: "약한 증거(키워드만) — 재실행 가능 검증 인용 권고", tier: "weak" };
+	return { ok: false, reason: "완료선언 + 증거없음", tier: "none" };
+}
+
+// 완료 메시지에서 검증 아티팩트 경로 후보 추출 (.agents/reviews/.. , *.json/md/txt/log 경로).
+export function extractEvidenceRefs(message) {
+	const m = String(message || "");
+	const refs = new Set();
+	for (const x of m.match(/[\w./\-]+\.(?:json|md|txt|log)\b/g) || []) refs.add(x);
+	for (const x of m.match(/\.agents\/reviews\/[\w./\-]+/g) || []) refs.add(x);
+	return [...refs];
 }
 
 // 글롭(**, *, {a,b}) → 정규식
@@ -125,8 +149,11 @@ function globToRe(glob) {
 	for (let i = 0; i < g.length; i++) {
 		const ch = g[i];
 		if (ch === "*") {
-			if (g[i + 1] === "*") { re += ".*"; i++; } // **
-			else re += "[^/]*"; // *
+			if (g[i + 1] === "*") {
+				// **/ = 0개 이상 디렉터리(0개 포함, 표준 minimatch). ** 단독(끝/중간) = 모든 문자.
+				if (g[i + 2] === "/") { re += "(?:.*/)?"; i += 2; } // **/  (뒤 / 까지 소비)
+				else { re += ".*"; i++; } // **
+			} else re += "[^/]*"; // *
 		} else if (ch === "{") {
 			const end = g.indexOf("}", i);
 			if (end > i) { re += "(" + g.slice(i + 1, end).split(",").map(escapeRe).join("|") + ")"; i = end; }

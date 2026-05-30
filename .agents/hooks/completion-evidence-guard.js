@@ -49,8 +49,26 @@ async function main() {
 	}
 	if (cfg.level === "off") process.exit(0);
 
-	const r = checkCompletion(extractCommitMessage(cmd, root), cfg);
-	if (r.ok) process.exit(0);
+	// 강한 증거는 인용된 검증 아티팩트가 실제 존재해야 인정 (위조 방지 — 적대검증 교훈).
+	const fileExists = (p) => {
+		try {
+			return fs.existsSync(path.resolve(root, p));
+		} catch {
+			return false;
+		}
+	};
+	const r = checkCompletion(extractCommitMessage(cmd, root), cfg, { fileExists });
+	if (r.ok) {
+		// 약한 증거(키워드만/인용아티팩트부재) = placeholder 도 통과하는 드리프트 원인 → 차단 안 하되 advisory 경고.
+		if (r.tier === "weak") {
+			const msg =
+				r.note === "cited-ref-missing"
+					? "[M4] 검증 리포트를 인용했으나 그 파일이 존재하지 않습니다(위조 의심). 실제 review-pass/acceptance 를 돌려 리포트를 생성한 뒤 그 경로를 인용하세요. (docs/acceptance-criteria.md)"
+					: "[M4] 약한 완료 증거(키워드만). placeholder 도 키워드는 쓸 수 있습니다 — 재실행 가능한 검증을 인용하세요: 'review-pass: CLEAN (.agents/reviews/r-...json)' 또는 'acceptance: <검증명령> → 0'. (docs/acceptance-criteria.md)";
+			process.stdout.write(JSON.stringify({ systemMessage: msg }));
+		}
+		process.exit(0);
+	}
 
 	const reason =
 		"[M4] " + r.reason + " — AI 자가-완료 선언 금지. 완료는 증거로 증명하세요.\n" +

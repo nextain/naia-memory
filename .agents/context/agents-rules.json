@@ -342,6 +342,14 @@
 				"closes #",
 				"resolves #",
 				"fixes #"
+			],
+			"strong_evidence_patterns": [
+				"review-pass:",
+				"review-log",
+				".agents/reviews/",
+				"acceptance:",
+				"VERDICT=",
+				"CONFIRMED-resolved"
 			]
 		},
 		"change_set_rules": [
