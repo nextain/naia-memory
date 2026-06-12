@@ -38,7 +38,11 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
-    "test": "vitest run",
+    "test": "vitest run && npm run verify:harness",
+    "test:unit": "vitest run",
+    "test:sqlite": "RUN_SQLITE=1 vitest run src/memory/__tests__/sqlite-smoke.test.ts src/memory/__tests__/daily-ground-benchmark.test.ts src/memory/__tests__/epoch-anchoring.test.ts src/memory/__tests__/flashbulb-memory.test.ts src/memory/__tests__/semantic-consolidation.test.ts",
+    "verify:harness": "for f in src/test/*.mjs; do echo \"▶ $f\"; node \"$f\" || exit 1; done",
+    "verify": "npm run test",
     "benchmark": "tsx src/benchmark/comparison/run-comparison.ts",
     "check": "biome check --write ."
   },

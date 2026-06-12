@@ -1218,9 +1218,16 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		this.kg = new KnowledgeGraph(importedKgState);
 		try {
 			this.markDirty();
-			this.save();
+			// Flush synchronously: a debounced save() fires later (off this call
+			// stack), so a disk-write failure would never surface here and the
+			// rollback below could never run. saveImmediate() throws on a bad write.
+			this.saveImmediate();
 		} catch (err) {
-			// Disk write failed — restore both store and KG to avoid divergence
+			// Disk write failed — restore both store and KG to avoid divergence.
+			// saveImmediate() throws before clearing `dirty`, so `dirty` is still
+			// true here: the restored state will persist on the next mutation or on
+			// close() (which flushes). We deliberately do NOT re-arm save() — that
+			// would only schedule another write to the same failing path.
 			this.store = previousStore;
 			this.kg = previousKg;
 			throw err;
