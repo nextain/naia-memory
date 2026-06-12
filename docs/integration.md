@@ -29,6 +29,47 @@ const result = await memory.recall(query, { project, topK: 10 });
 // result.facts: Fact[], result.episodes: Episode[]
 ```
 
+## 0.5 Agent turn-loop 결선 레시피 (consumer 측 참고용)
+
+> 헥사고날 consumer(new-naia-agent)는 자체 `MemoryPort` 뒤에 naia-memory 어댑터를
+> 둔다. **고정 계약은 공개 표면 `encode` + `recall` 둘뿐** — 내부 타입 누출 없음.
+> 실행 가능한 reference + round-trip 증명:
+> `src/memory/__tests__/agent-turn-integration.test.ts` (LocalAdapter, 무외부의존,
+> 3 pass). 거기 `AgentMemoryAdapter` 는 **예시**다 — agent 가 복사 후 자신의 정책으로
+> 바꾼다.
+>
+> ⚠️ **아래 `topK: 5`·라벨 문자열("(기억)"/"(이전 대화)")·facts-first 순서·`join("\n")`
+> 반환 형태에 더해 — _무엇을 언제 저장/주입할지_(예: 양쪽 발화 저장 여부, 요약 저장,
+> 주입 시점)까지 전부 _agent 소유 정책_의 예시다 (L03 — naia-memory 가 prompt/저장
+> 정책을 규정하지 않음).** agent 가 자유롭게 교체한다. naia-memory 가 고정하는 건
+> `encode` / `recall`의 **시그니처(공개 표면)뿐**.
+
+턴 루프 결선 (예시):
+
+```ts
+// ── pre-turn: 회상 → 프롬프트 주입 (형식·topK 는 agent 가 정함) ──
+const { episodes, facts } = await memory.recall(userMessage, { project, topK: 5 /* 예시 */ });
+const memoryBlock = [
+  ...facts.map((f) => `- (기억) ${f.content}`),       // 라벨·순서 = agent 정책 예시
+  ...episodes.map((e) => `- (이전 대화) ${e.content}`),
+].join("\n");           // 비면 주입 생략 (cold start)
+// → memoryBlock 을 system/context 에 주입하고 LLM 호출
+
+// ── post-turn: 저장 (무엇을·언제 저장할지 = agent 정책; encode 시그니처만 고정) ──
+await memory.encode({ content: userMessage,    role: "user"      }, { project, sessionId });
+await memory.encode({ content: assistantReply, role: "assistant" }, { project, sessionId });
+```
+
+핸드오프 체크리스트 (agent 세션이 wire-in 시):
+1. `@nextain/naia-memory` 의존 추가 (workspace 또는 빌드된 dist 참조).
+2. `AgentMemoryAdapter` 예시를 참고해 agent 의 `MemoryPort` 구현 — 형식·topK·순서는 agent 가 정함.
+3. `chat-turn-handler` 에 pre-turn recall(주입) / post-turn encode(저장) 결선.
+4. 사용자 setting → embeddingProvider / factExtractor 주입(없으면 keyword recall 로 동작 — 위 reference 가 그 경로).
+5. agent 측 통합 테스트(실 stdio) = **그 repo의 P01~P05 + 드리프트 계약** 준수해 추가 (G2 의 'agent 측 결선' 책임).
+
+> 본 repo(naia-memory) 의 G2 책임 = **소비 가능한 표면 + 증명 + 레시피 제공**까지.
+> 실제 agent 배선·실 stdio 통합 테스트는 new-naia-agent 세션이 그 repo 거버넌스 안에서 수행.
+
 ## 0. 책임 분리
 
 | 책임 | 누구 |
