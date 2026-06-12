@@ -94,6 +94,33 @@ ${pairsText}
 Return ONLY a JSON object with keys "1".."${batch.length}". No prose.`;
 }
 
+/** Extract the first balanced `{…}` object span, ignoring braces inside JSON
+ *  string literals and any leading/trailing prose. Returns null if none found. */
+function balancedObjectAt(s: string, start: number): string | null {
+	let depth = 0;
+	let inStr = false;
+	let esc = false;
+	for (let i = start; i < s.length; i++) {
+		const ch = s[i];
+		if (esc) {
+			esc = false;
+			continue;
+		}
+		if (ch === "\\") {
+			esc = true;
+			continue;
+		}
+		if (ch === '"') {
+			inStr = !inStr;
+			continue;
+		}
+		if (inStr) continue;
+		if (ch === "{") depth++;
+		else if (ch === "}" && --depth === 0) return s.slice(start, i + 1);
+	}
+	return null;
+}
+
 /** Parse the LLM's JSON response and emit verdicts that pass the
  *  confidence threshold. Strips code fences (small models often wrap JSON). */
 export function parseContradictionVerdicts(
@@ -103,14 +130,36 @@ export function parseContradictionVerdicts(
 	confidenceThreshold: number,
 	modelLabel: string,
 ): ContradictionVerdict[] {
-	const cleaned = rawContent
+	const fenced = rawContent
 		.replace(/^```(?:json)?\s*/i, "")
 		.replace(/\s*```\s*$/i, "")
 		.trim();
-	const parsed = JSON.parse(cleaned) as Record<
+	// gemini-flash-lite wraps/appends prose around the JSON object, and that prose
+	// can itself contain braces ("{참고}: {...}"). Scan each balanced object span
+	// in order and take the first that parses, so brace-bearing junk is skipped
+	// instead of dropping the whole batch to the heuristic fallback.
+	type Parsed = Record<
 		string,
 		{ contradiction?: boolean; confidence?: number; reason?: string }
 	>;
+	let parsed: Parsed | undefined;
+	for (let i = fenced.indexOf("{"); i >= 0; i = fenced.indexOf("{", i + 1)) {
+		const span = balancedObjectAt(fenced, i);
+		if (!span) break;
+		try {
+			const candidate = JSON.parse(span) as Parsed;
+			// Take the first object that is actually a verdict map (keyed "1"…),
+			// not a stray prose object like {"note":"…"} that is also valid JSON.
+			if (Object.hasOwn(candidate, "1")) {
+				parsed = candidate;
+				break;
+			}
+		} catch {
+			// not valid JSON (e.g. prose "{참고}") — try the next "{"
+		}
+	}
+	// Nothing parsed: a final attempt throws so the caller falls back to heuristic.
+	if (parsed === undefined) parsed = JSON.parse(fenced) as Parsed;
 
 	const verdicts: ContradictionVerdict[] = [];
 	const debug = process.env.NAIA_FILTER_DEBUG === "1";

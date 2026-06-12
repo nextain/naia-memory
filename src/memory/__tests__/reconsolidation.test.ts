@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	checkContradiction,
 	findContradictions,
+	isContradictionCandidate,
 } from "../reconsolidation.js";
 import type { Fact } from "../types.js";
 
@@ -477,5 +478,34 @@ describe("checkContradiction — entity-only match (RC-18)", () => {
 		// + negation match; defaults to keep.
 		const r = checkContradiction(fact, "Luke");
 		expect(r.action).toBe("keep");
+	});
+});
+
+// ─── isContradictionCandidate — Hangul-aware length gate ─────────────────
+
+describe("isContradictionCandidate — Hangul-aware length gate", () => {
+	it("2-char Korean subject+attribute with a different value is a candidate", () => {
+		// The original defect: 루크/가장 (2 chars) were dropped by length>=3,
+		// leaving 1 shared token < the >=2 gate, so the LLM never saw the
+		// 파란색→초록색 contradiction.
+		const fact = makeFact({ content: "루크 가장 좋아하는 색: 파란색", entities: [] });
+		expect(isContradictionCandidate(fact, "루크 가장 좋아하는 색: 초록색")).toBe(true);
+	});
+
+	it("mixed token (K팝) is NOT length-eligible — only pure Hangul gets ≥2", () => {
+		// /^[가-힣]+$/ matches pure Hangul only; "K팝" (Latin+Hangul, 2 chars)
+		// falls under the Latin ≥3 rule and is dropped, so it can't inflate overlap.
+		const fact = makeFact({ content: "K팝 color blue", entities: [] });
+		expect(isContradictionCandidate(fact, "K팝 color green")).toBe(false);
+	});
+
+	it("shared entity short-circuits regardless of token length", () => {
+		const fact = makeFact({ content: "X", entities: ["루크"] });
+		expect(isContradictionCandidate(fact, "루크 어쩌고")).toBe(true);
+	});
+
+	it("unrelated content is NOT a candidate", () => {
+		const fact = makeFact({ content: "루크 좋아하는 색 파란색", entities: [] });
+		expect(isContradictionCandidate(fact, "버스가 늦게 도착했다")).toBe(false);
 	});
 });

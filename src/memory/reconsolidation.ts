@@ -248,8 +248,16 @@ export function isContradictionCandidate(
 		return true;
 	}
 
-	const existingTokens = tokenizeSimple(existingLower).filter((t) => t.length >= 3);
-	const newTokens = tokenizeSimple(newLower).filter((t) => t.length >= 3);
+	// Hangul stems are routinely 2 chars after particle stripping (루크/가장/색상),
+	// so the Latin-oriented length>=3 filter dropped them and a 2-char Korean
+	// "same subject+attribute, different value" contradiction fell below the >=2
+	// overlap gate. Pure-Hangul tokens → ≥2; everything else keeps ≥3.
+	const isTooShort = (t: string): boolean =>
+		/^[가-힣]+$/u.test(t) ? t.length < 2 : t.length < 3;
+	const existingTokens = tokenizeSimple(existingLower).filter(
+		(t) => !isTooShort(t),
+	);
+	const newTokens = tokenizeSimple(newLower).filter((t) => !isTooShort(t));
 	let overlap = 0;
 	for (const nt of newTokens) {
 		if (existingTokens.some((et) => et === nt || et.includes(nt) || nt.includes(et))) {

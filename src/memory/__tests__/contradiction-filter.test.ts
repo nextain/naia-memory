@@ -8,6 +8,7 @@ import {
 	GeminiFlashLiteContradictionFilter,
 	HeuristicContradictionFilter,
 	VllmReasoningContradictionFilter,
+	parseContradictionVerdicts,
 	selectFilter,
 } from "../contradiction-filter.js";
 import type { Fact } from "../types.js";
@@ -341,5 +342,63 @@ describe("selectFilter env-based selection", () => {
 	it("CONTRADICTION_FILTER=vllm returns Vllm placeholder", () => {
 		const f = selectFilter({ CONTRADICTION_FILTER: "vllm" } as NodeJS.ProcessEnv);
 		expect(f).toBeInstanceOf(VllmReasoningContradictionFilter);
+	});
+});
+
+describe("parseContradictionVerdicts — balanced JSON extraction", () => {
+	const batch1 = [{ existing: makeFact(), newInfo: "new value" }];
+
+	it("parses a clean single-object response", () => {
+		const raw = '{"1": {"contradiction": true, "confidence": 0.8, "reason": "r"}}';
+		const v = parseContradictionVerdicts(raw, batch1, 0, 0.6, "test");
+		expect(v).toHaveLength(1);
+		expect(v[0]?.result.action).toBe("update");
+	});
+
+	it("ignores broken trailing text after the object (flash-lite corruption)", () => {
+		const raw =
+			'{"1": {"contradiction": true, "confidence": 0.8, "reason": "r"}}\n색깔\'."}}';
+		const v = parseContradictionVerdicts(raw, batch1, 0, 0.6, "test");
+		expect(v).toHaveLength(1);
+	});
+
+	it("strips code fences", () => {
+		const raw =
+			'```json\n{"1": {"contradiction": true, "confidence": 0.9, "reason": "r"}}\n```';
+		const v = parseContradictionVerdicts(raw, batch1, 0, 0.6, "test");
+		expect(v).toHaveLength(1);
+	});
+
+	it("ignores leading prose before the object", () => {
+		const raw =
+			'Result: {"1": {"contradiction": true, "confidence": 0.8, "reason": "r"}}';
+		const v = parseContradictionVerdicts(raw, batch1, 0, 0.6, "test");
+		expect(v).toHaveLength(1);
+	});
+
+	it("handles braces inside string values without truncating", () => {
+		const raw =
+			'{"1": {"contradiction": false, "confidence": 0.1, "reason": "has } and { braces"}}';
+		const v = parseContradictionVerdicts(raw, batch1, 0, 0.6, "test");
+		expect(v).toHaveLength(0);
+	});
+
+	it("skips a brace-bearing prose object before the real verdict", () => {
+		// Leading prose can itself contain braces ("{참고}"); the first balanced
+		// span fails to parse, so the scanner moves to the next "{" and finds the
+		// real verdict object instead of dropping the whole batch.
+		const raw =
+			'{참고}: {"1": {"contradiction": true, "confidence": 0.8, "reason": "r"}}';
+		const v = parseContradictionVerdicts(raw, batch1, 0, 0.6, "test");
+		expect(v).toHaveLength(1);
+	});
+
+	it("skips a valid-JSON prose object that lacks verdict keys", () => {
+		// {"note":…} is valid JSON but not a verdict map; the scanner must keep
+		// going to the real {"1":…} rather than accepting the first parseable span.
+		const raw =
+			'{"note": "thinking"} {"1": {"contradiction": true, "confidence": 0.8, "reason": "r"}}';
+		const v = parseContradictionVerdicts(raw, batch1, 0, 0.6, "test");
+		expect(v).toHaveLength(1);
 	});
 });
