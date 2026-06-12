@@ -1230,7 +1230,9 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	// ─── Lifecycle ────────────────────────────────────────────────────────
 
 	async close(): Promise<void> {
-		this.save();
+		// Flush synchronously — a pending debounced save() would otherwise be lost
+		// when the process exits or the store reloads right after close.
+		this.saveImmediate();
 	}
 
 	// ─── Testing Helpers ──────────────────────────────────────────────────
