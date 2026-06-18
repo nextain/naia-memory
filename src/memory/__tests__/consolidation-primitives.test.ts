@@ -36,6 +36,7 @@ function makeFact(overrides: Partial<ExtractedFact> = {}): ExtractedFact {
 		entities: [],
 		topics: [],
 		importance: 0.5,
+		maxEmotion: 0.5,
 		sourceEpisodeIds: [],
 		...overrides,
 	};

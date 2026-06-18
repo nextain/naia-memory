@@ -1,6 +1,8 @@
 import { parentPort, workerData } from "node:worker_threads";
 import Database from "better-sqlite3";
 import * as sqliteVec from "sqlite-vec";
+// 이 파일은 sqlite.ts 에서 `new Worker(new URL("./sqlite-worker.ts"))` 로 런타임에 .ts 로 직접 로드된다(빌드 산출물 아님).
+// 따라서 worker 내부 import 는 .ts 확장자가 필수(.js 로 바꾸면 worker 모듈 해석 실패 → 행). tsconfig.typecheck 의 allowImportingTsExtensions 가 이를 수용.
 import { normalize, tokenize } from "../ko-normalize.ts";
 
 const { dbPath } = workerData;

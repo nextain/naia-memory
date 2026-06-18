@@ -9,13 +9,13 @@
   },
 
   "current_work": {
-    "issue": null,
-    "title": null,
-    "issue_doc": null,
+    "issue": "context-docs-cleanup-2026-06-18",
+    "title": "계약 유효성 GREEN(typecheck+test) + 컨텍스트/문서 SoT 정합화",
+    "issue_doc": ".agents/progress/context-docs-cleanup-2026-06-18.md",
     "github_issue": null,
-    "started": null,
-    "last_updated": null,
-    "status": "idle"
+    "started": "2026-06-18",
+    "last_updated": "2026-06-18",
+    "status": "done"
   },
 
   "sdlc_gates": {

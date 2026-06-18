@@ -16,7 +16,6 @@ function input(overrides: Partial<MemoryInput> = {}): MemoryInput {
 		content: "",
 		role: "user",
 		timestamp: 0,
-		encodingContext: {},
 		...overrides,
 	};
 }

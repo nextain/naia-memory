@@ -1,7 +1,10 @@
 {
 	"extends": "./tsconfig.json",
 	"compilerOptions": {
-		"noEmit": true
+		"noEmit": true,
+		// SqliteAdapter 의 worker(sqlite-worker.ts)는 런타임에 new Worker(URL('./sqlite-worker.ts')) 로 .ts 로 로드되어
+		// worker 내부 import 가 .ts 확장자를 요구한다. noEmit 타입체크에서만 이를 허용(빌드 emit 경로 무관).
+		"allowImportingTsExtensions": true
 	},
 	"include": ["src/**/*"],
 	"exclude": ["node_modules", "dist", "src/benchmark"]

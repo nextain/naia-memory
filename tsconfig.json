@@ -13,5 +13,8 @@
 		"skipLibCheck": true
 	},
 	"include": ["src/**/*"],
-	"exclude": ["node_modules", "dist", "src/benchmark", "src/**/__tests__"]
+	// sqlite-worker.ts 는 sqlite.ts 에서 new Worker(URL('./sqlite-worker.ts')) 로 소스 실행(tsx/vitest) 시 .ts 로 로드된다.
+	// emit 시 .ts import(TS5097)라 build 대상에서 제외 → dist 에는 worker 가 없고 *dist 의 SqliteAdapter 는 비동작*(알려진 native 한계, sqlite.ts 주석 참조).
+	// 타입체크는 tsconfig.typecheck.json(allowImportingTsExtensions)이 커버. SqliteAdapter 는 보조 경로 — 1차/패키지 소비는 LocalAdapter.
+	"exclude": ["node_modules", "dist", "src/benchmark", "src/**/__tests__", "src/memory/adapters/sqlite-worker.ts"]
 }

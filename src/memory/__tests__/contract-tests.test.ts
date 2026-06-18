@@ -24,6 +24,7 @@ function localFactory(): ProviderFactory {
 					entities: [],
 					topics: [],
 					importance: ep.importance.utility,
+					maxEmotion: ep.importance.emotion,
 					sourceEpisodeIds: [ep.id],
 				}),
 			);

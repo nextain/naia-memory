@@ -47,6 +47,10 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
         this.embedder = options.embeddingProvider ?? null;
         
         // Initialize Background Worker
+        // ⚠️ 알려진 한계(native 제외분): worker URL 이 `.ts` 를 가리켜 **소스 실행(tsx/vitest)에서만** 동작한다.
+        //   `npm run build` 산출물 dist/ 에는 worker(.ts)가 emit 되지 않으므로, *published dist 에서 SqliteAdapter 는 비동작*(worker spawn ENOENT).
+        //   SqliteAdapter 는 incomplete native 보조 경로(RUN_SQLITE 게이트, 사전 실패 존재) — 프로덕션/패키지 소비는 LocalAdapter 사용.
+        //   dist 지원하려면 worker 를 .js 로 emit + 런타임 src/dist 경로 분기 필요(별도 작업).
         this.worker = new Worker(new URL("./sqlite-worker.ts", import.meta.url), {
             workerData: { dbPath: options.dbPath }
         });
@@ -237,6 +241,10 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
     async export(password: string): Promise<Uint8Array> { return new Uint8Array(0); }
     async import(blob: Uint8Array, password: string): Promise<void> {}
     async close(): Promise<void> { await this.worker.terminate(); }
-    private rowToEpisode(r: any): Episode { return { id: r.id, content: r.content, timestamp: r.timestamp, role: r.role as any, consolidated: !!r.consolidated, importance: { utility: r.importance_utility, emotion: r.importance_emotion }, encodingContext: JSON.parse(r.encoding_context || "{}") }; }
+    // sqlite episodes 스키마는 핵심 필드(id/content/timestamp/role/consolidated/importance_utility/importance_emotion/encoding_context)만 영속.
+    // Episode 계약의 미영속 필드는 컬럼 fallback → 기본값(미저장 importance/surprise 축=0, summary=""/recallCount=0/lastAccessed=timestamp/strength=1=decay 미적용).
+    // ⚠️ 이 기본값들은 *복원 불가 placeholder* — ranking/decay/표시에서 실제 값으로 신뢰 금지. (영속하려면 schema 확장 필요; 확장 시 컬럼이 우선.)
+    // LocalAdapter 가 1차 경로(전 필드 영속), SqliteAdapter 는 native 보조(RUN_SQLITE 게이트, 알려진 한계).
+    private rowToEpisode(r: any): Episode { return { id: r.id, content: r.content, summary: r.summary ?? "", timestamp: r.timestamp, role: r.role as any, consolidated: !!r.consolidated, recallCount: r.recall_count ?? 0, lastAccessed: r.last_accessed ?? r.timestamp, strength: r.strength ?? 1, importance: { importance: 0, surprise: 0, emotion: r.importance_emotion, utility: r.importance_utility }, encodingContext: JSON.parse(r.encoding_context || "{}") }; }
     private rowToFact(r: any, score?: number): Fact { return { id: r.id, content: r.content, entities: JSON.parse(r.entities || "[]"), topics: JSON.parse(r.topics || "[]"), importance: r.importance, maxEmotion: r.max_emotion, strength: r.strength, status: r.status as any, createdAt: r.created_at, updatedAt: r.updated_at, lastAccessed: r.last_accessed, recallCount: r.recall_count, validFrom: r.valid_from, validTo: r.valid_to, successorId: r.successor_id, supersedes: r.supersedes, sourceEpisodes: JSON.parse(r.source_episodes || "[]"), encodingContext: JSON.parse(r.encoding_context || "{}"), relevanceScore: score }; }
 }

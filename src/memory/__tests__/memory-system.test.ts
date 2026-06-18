@@ -44,7 +44,7 @@ function makeSystem(opts: {
 	consolidationIntervalMs?: number;
 } = {}): { system: MemorySystem; path: string } {
 	const { adapter, path } = tmpAdapter();
-	const sysOpts: Parameters<typeof MemorySystem>[0] = {
+	const sysOpts: ConstructorParameters<typeof MemorySystem>[0] = {
 		adapter,
 		consolidationIntervalMs: opts.consolidationIntervalMs ?? 0, // disable timer
 	};
@@ -74,6 +74,7 @@ function oneFactPerEpisodeExtractor(): FactExtractor {
 				entities: [],
 				topics: [],
 				importance: ep.importance.utility,
+				maxEmotion: ep.importance.emotion,
 				sourceEpisodeIds: [ep.id],
 			}),
 		);
@@ -292,6 +293,7 @@ describe("MemorySystem.consolidateNow", () => {
 					entities: [],
 					topics: [],
 					importance: 0.7,
+					maxEmotion: ep.importance.emotion,
 					sourceEpisodeIds: [ep.id],
 				}),
 			);
@@ -434,6 +436,7 @@ describe("[D.2 RC-04 integration] value-replacement flows through consolidation"
 				entities: ["Luke"],
 				topics: ["database"],
 				importance: 0.8,
+				maxEmotion: ep.importance.emotion,
 				sourceEpisodeIds: [ep.id],
 			}));
 		const { system } = makeSystem({ factExtractor: extractor });

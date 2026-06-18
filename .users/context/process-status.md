@@ -1,55 +1,65 @@
-# 프로세스 현황
+<!-- src-sha: 4f72478cc2a0b463 -->
+<!-- 자동 번역 미러 (M13-mirror). 원본: .agents/context/process-status.json -->
 
-> **SoT**: `.agents/context/process-status.json`
-> 세션 시작/종료 시 SoT JSON과 이 파일을 동기화.
+# 프로세스 상태 기록
 
----
+## 개요
 
-## 참조 링크
+프로세스 현황 기록(SoT: Single Source of Truth). 세션 시작/종료 시 반드시 업데이트. 구조명세·이슈·리소스를 유기적으로 연결합니다.
 
-| 항목 | 위치 |
-|------|------|
-| 구조 명세 | [docs/project-structure.md](../../docs/project-structure.md) |
-| 규칙 SoT | [.agents/context/agents-rules.json](../context/agents-rules.json) |
-| 교훈 | [docs/lessons.md](../../docs/lessons.md) |
-| 이슈 문서 | [.agents/progress/](../progress/) |
+## 참고 자료
 
----
+- **프로젝트 구조**: `docs/project-structure.md`
+- **에이전트 규칙**: `.agents/context/agents-rules.json`
+- **이슈 문서 디렉토리**: `.agents/progress/`
 
 ## 현재 작업
 
-_(신규 이슈 시작 시 업데이트)_
+| 항목 | 내용 |
+|------|------|
+| 이슈 ID | `context-docs-cleanup-2026-06-18` |
+| 제목 | 계약 유효성 GREEN(typecheck+test) + 컨텍스트/문서 SoT 정합화 |
+| 이슈 문서 | `.agents/progress/context-docs-cleanup-2026-06-18.md` |
+| GitHub 이슈 | 없음 |
+| 시작일 | 2026-06-18 |
+| 마지막 업데이트 | 2026-06-18 |
+| 상태 | 완료 |
 
-**이슈**: —
-**제목**: —
-**상태**: idle
+## SDLC 게이트(Software Development Life Cycle Gate)
 
----
+| 게이트 | 상태 | 이름 | 산출물 | 참고 |
+|--------|------|------|--------|------|
+| P01 | 해당없음 | 사용자 시나리오 | 없음 | 없음 |
+| P02 | 해당없음 | 테스트 시나리오 | 없음 | 없음 |
+| P03 | 해당없음 | 요구사항 | 없음 | 없음 |
+| P04 | 해당없음 | 통합 테스트 | 없음 | 없음 |
+| P05 | 해당없음 | 요구사항 완료 | 없음 | 없음 |
 
-## SDLC 게이트
+## 리소스 현황
 
-| 게이트 | 상태 | 산출물(deliverable) |
-|--------|:----:|---------------------|
-| P01 사용자시나리오 | — | — |
-| P02 테스트시나리오 | — | — |
-| P03 요구사항 | — | — |
-| P04 통합테스트 | — | — |
-| P05 완료 | — | — |
+- **마지막 규칙 적용 실행**: 없음
+- **위반 사항**: 없음
 
-마지막 업데이트: —
+## 사용 방법
 
----
+### 세션 시작 시
 
-## 세션 체크리스트
+1. 이 파일 읽기
+2. 현재 작업 내용 확인
+3. 마지막 업데이트 시간을 현재 시각으로 갱신
+4. SDLC 게이트 상태 확인 후 작업 시작
 
-**시작 시**:
-- [ ] `process-status.json` 읽기
-- [ ] `current_work` 확인
-- [ ] `last_updated` 갱신
-- [ ] P01~P03 게이트 완료 확인 후 코딩 시작
+### 세션 종료 시
 
-**종료/커밋 전**:
-- [ ] 완료된 게이트 status → done, deliverable 기재
-- [ ] `last_updated` 갱신
-- [ ] 이 파일 동기화
-- [ ] `process-status.json` 커밋에 포함
+1. 완료된 게이트 상태를 '완료'로 변경
+2. 산출물 경로 기재
+3. 마지막 업데이트 시간 갱신
+4. `.users/context/process-status.md` 동기화
+5. 이 파일을 커밋에 포함
+
+### 새 이슈 시작 시
+
+1. 현재 작업 필드 업데이트
+2. `.agents/progress/issue-{번호}-{요약}.md` 새 파일 생성
+3. SDLC 게이트 전체 상태를 '대기중'으로 초기화
+4. 리소스 현황의 위반 사항 초기화

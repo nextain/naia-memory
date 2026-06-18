@@ -119,7 +119,8 @@
 		}
 	],
 	"phase": {
-		"current": "R2",
+		"current": "R4-break-point",
+		"note": "R1(안정화 7 slice)·R2(Capability 4 slice)·R3(Preservation-first 7 step)·#27(retrieval ranking) 모두 done. R4 = naia-agent 통합 prerequisite 대기로 naia-memory 측 자율 진행 일시정지(cross-review 2-reviewer 합의). 근거: .agents/progress/r3-cognitive-architecture-2026-05-08.md, .agents/progress/r4-break-point-2026-05-10.md",
 		"slices": {
 			"R1.0": "done",
 			"R1.1": "done",
@@ -127,7 +128,10 @@
 			"R1.3": "done",
 			"R1.4": "done",
 			"R1.5": "done",
-			"R1.6": "done"
+			"R1.6": "done",
+			"R2": "done",
+			"R3": "done",
+			"R4": "paused — naia-agent 통합 대기(break-point)"
 		}
 	},
 	"$schema": "https://nextain.com/schemas/agents-rules/v2",
@@ -154,7 +158,7 @@
 			"root_dirs": "F12 allowed_root_dirs (이 파일)",
 			"root_files": "F13 allowed_root_files (이 파일)",
 			"packages": "pnpm-workspace.yaml packages 목록 (있는 경우)",
-			"docs": "AGENTS.md 정규 디자인 문서 표 + docs/project-structure.md Doc Registry"
+			"docs": "docs/project-structure.md Doc Registry (현존 문서 + 하위 디렉터리 + SDLC 게이트 문서)"
 		},
 		"enforcement_script": "scripts/enforce-root-structure.sh",
 		"enforcement_mode": "delete_on_fix — --fix 플래그 시 미등록 리소스 삭제"
@@ -213,7 +217,7 @@
 			"tsconfig.typecheck.json",
 			"vitest.config.ts"
 		],
-		"note": "목록 수정 = 헌장 수정 → 사용자 승인 필수 | README.md = 이 repo 소개(복제 제외) / README.template.md = 새 프로젝트가 받는 skeleton(create·migration 이 README.md 로 사용)",
+		"note": "목록 수정 = 헌장 수정 → 사용자 승인 필수 | README.md = 이 repo 소개(복제 제외) | README.ko.md = 한국어 README",
 		"violation_action": "BLOCK — enforce-root-structure.sh --fix 가 삭제",
 		"status": "ACTIVE"
 	},
