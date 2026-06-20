@@ -6,6 +6,22 @@
 > Naia 오픈소스 플랫폼의 네 레포(naia-os 셸 · naia-agent 런타임 · naia-memory 기억 · naia-adk 설정) 중 **기억**을 맡습니다.
 > 이 문서는 처음 오신 분이 "무엇을, 어떻게" 도울 수 있는지 안내합니다.
 
+## 처음이라면 — 가장 빠른 첫 기여 (15분)
+
+위에 "벡터 검색"·"에빙하우스 망각 곡선" 같은 말이 나와도 겁먹지 마세요. **첫 기여에는 인지과학을 몰라도 됩니다.**
+오타·문서·번역·`docs/` 보강·예제 추가·타입 정리 같은 작은 변경은 아래의 Self-Rigor 기준(벤치마크 등)도, 네이티브 빌드도 필요 없습니다 — 이슈 하나면 됩니다.
+**벤치마크(`pnpm benchmark`)는 검색·랭킹·저장의 *성능*을 바꾸는 변경에만 필요**합니다. 그 외에는 안 돌려도 됩니다.
+
+> ⚠️ 코드를 빌드·테스트하려면 네이티브 모듈(`better-sqlite3`, `sqlite-vec`)을 컴파일해야 해서 OS별 빌드 도구가 필요합니다 — 아래 [5장](#5-개발-환경-준비) 참고. 문서·번역만 할 거라면 이 단계 없이 바로 가능합니다.
+
+AI 코딩 도구(Cursor, Claude Code 등)를 쓰신다면, 이 폴더를 연 뒤 아래를 그대로 복사해 붙여 보세요:
+
+> 이 저장소의 `.github/CONTRIBUTING.md`, `README.md`, `docs/cognitive-architecture.md` 를 읽고,
+> 내가 30분 안에 끝낼 수 있는 'good first issue' 후보 3개를, 각각 어떤 파일을 고치면 되는지와
+> 벤치마크가 필요한 변경인지 아닌지까지 함께 알려줘.
+
+막히면 [Discord](https://discord.gg/FGYJN7auty)에서 물어보세요.
+
 ## 1. 누구의 허락도 필요 없습니다
 
 먼저 저장소를 내려받습니다.
@@ -53,12 +69,21 @@ cd naia-memory
 
 > **보안 취약점**은 공개 이슈에 올리지 말고, [보안 정책](SECURITY.md)에 따라 `security@nextain.io`로 비공개 제보해 주세요.
 
-## 5. 개발 환경 준비
+## 5. 개발 환경 준비 (코드를 빌드·테스트할 때만)
 
-**준비물**
+> 문서·번역만 할 거라면 이 장은 건너뛰어도 됩니다.
 
-- [Node.js](https://nodejs.org/) 20 이상, [pnpm](https://pnpm.io/)
-- 네이티브 모듈(`better-sqlite3`, `sqlite-vec`)을 빌드하므로 C/C++ 빌드 도구가 필요할 수 있습니다(설치 중 오류가 나면 [Discord](https://discord.gg/FGYJN7auty)에 OS와 로그를 공유해 주세요).
+**공통 준비물**
+
+- [Node.js](https://nodejs.org/) 20 이상, [pnpm](https://pnpm.io/) — 설치 후 `node -v`, `pnpm -v`로 확인.
+
+**OS별 빌드 도구** — `better-sqlite3`·`sqlite-vec`가 설치 중 네이티브 모듈을 컴파일하므로 C/C++ 빌드 도구가 **필요합니다**(없으면 `pnpm install`이 실패합니다):
+
+- **Windows** — [Visual Studio C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)(“C++를 사용한 데스크톱 개발” 워크로드) + Python 3. (대안: 관리자 PowerShell에서 `npm install --global windows-build-tools`.)
+- **macOS** — `xcode-select --install` (Xcode 명령줄 도구).
+- **Linux (Ubuntu)** — `sudo apt install build-essential python3`.
+
+설치가 막히면 [Discord](https://discord.gg/FGYJN7auty)에 OS와 오류 로그를 함께 공유해 주세요.
 
 **설치와 실행**
 
