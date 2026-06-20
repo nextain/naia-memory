@@ -39,6 +39,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test": "vitest run",
+    "test:sqlite": "node scripts/test-sqlite.mjs",
     "benchmark": "tsx src/benchmark/comparison/run-comparison.ts",
     "check": "biome check --write ."
   },
