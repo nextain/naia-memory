@@ -15,7 +15,7 @@
  * Selection priority (env, see `selectFilter`):
  *   VLLM_REASONING_BASE > GEMINI_API_KEY > heuristic
  *
- * Refs: nextain/alpha-memory#14, plan-v3-anchor §4 R2.5
+ * Refs: nextain/naia-memory#14, plan-v3-anchor §4 R2.5
  */
 
 import {

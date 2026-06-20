@@ -91,7 +91,7 @@ src/
 │   ├── reconsolidation.ts      # consolidation 시 모순 감지
 │   ├── contradiction-filter.ts # R2.5 — heuristic / Gemini / vLLM 3개 provider
 │   ├── knowledge-graph.ts      # 엔티티/관계 추출 + spreading activation
-│   ├── embeddings.ts           # 5개 provider (OpenAI-compat / offline / HF / gateway)
+│   ├── embeddings.ts           # 4개 provider (OpenAI-compat / offline / HF / gateway)
 │   ├── llm-fact-extractor.ts   # LLM 기반 atomic fact 추출
 │   ├── usage-tracker.ts        # 측정마다 토큰 + cost 추적
 │   └── adapters/

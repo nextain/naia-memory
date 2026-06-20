@@ -91,7 +91,7 @@ src/
 │   ├── reconsolidation.ts      # Contradiction detection on consolidation
 │   ├── contradiction-filter.ts # R2.5 — heuristic / Gemini / vLLM filter providers
 │   ├── knowledge-graph.ts      # Entity/relation extraction + spreading activation
-│   ├── embeddings.ts           # 5 providers (OpenAI-compat, offline, HF, gateway)
+│   ├── embeddings.ts           # 4 providers (OpenAI-compat, offline, HF, gateway)
 │   ├── llm-fact-extractor.ts   # LLM-based atomic fact extraction
 │   ├── usage-tracker.ts        # Per-run token + cost tracking
 │   └── adapters/
