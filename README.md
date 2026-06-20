@@ -5,8 +5,9 @@
 [English](README.md) | [한국어](README.ko.md)
 
 > **Status (2026-05-08)** — Ship-ready for `naia-agent` integration.
-> Phase A Korean R2.3 measurement complete: **76.8% recall@20 (cosine semantic)** on AI Hub 141 multi-session conversations. Mid-tier baseline level (≈ mem0 67% / Letta 74% on LoCoMo English J-score). 12× faster than mem0 for the same workload.
-> See [`docs/integration.md`](docs/integration.md) for naia-agent / naia-os wire-in. See [issue #23](https://github.com/nextain/naia-memory/issues/23) for measurement details.
+> Phase A Korean R2.3 (AI Hub 141 multi-session), recall@20: **69.1% keyword / 62.8% polarity-aware / 76.8% cosine-semantic**. 12× faster than mem0 on the same workload.
+> ⚠️ **Reproducibility (honest)**: the raw AI Hub 141 dataset is **not redistributable** (NIA license), so committed artifacts are the loader + scorer + the **keyword** report ([`reports/aihub141-r2-3-reanalysis-100conv.md`](reports/aihub141-r2-3-reanalysis-100conv.md)). The **76.8% cosine** figure is a *separate reanalysis* that you reproduce by supplying the dataset (`AIHUB_141_PATH`) and running `src/benchmark/aihub141/embedding-reanalyze.ts` — its output is **not committed** (data-gated). Comparison to LoCoMo J-score (mem0 67% / Letta 74%) is a **different metric → disclaimed**, not a like-for-like ranking.
+> See [`docs/integration.md`](docs/integration.md) for wire-in, [issue #23](https://github.com/nextain/naia-memory/issues/23) for details.
 
 ---
 
@@ -198,11 +199,11 @@ For naia-agent / naia-os integration, see [`docs/integration.md`](docs/integrati
 | MemU | 92.1% | Top tier |
 | MemMachine | 84.9% | Top tier |
 | Letta | 74.0% | Mid tier |
-| **naia (Korean cosine)** | **76.8%** | **Numerically comparable** |
+| naia (Korean cosine) | 76.8% | ⚠️ different metric — NOT a like-for-like score |
 | Mem0 | 67.0% | Mid tier |
 | OpenAI ChatGPT memory | 52.9% | Lower tier |
 
-**Caveat**: LoCoMo metric is LLM-as-judge J-score on QA; naia metric is recall@k on extracted facts. **Direct comparison disclaimed**, but mid-tier ordering is consistent.
+**Caveat (read this before reading the table)**: LoCoMo metric is LLM-as-judge J-score on English QA; the naia 76.8% is recall@k (cosine ≥0.7) on Korean extracted facts. These are **not the same measurement** — the table is a rough sanity placement, **not a ranking**, and the naia row is bolded nowhere on purpose. Direct comparison is **disclaimed**.
 
 Full report: [`reports/aihub141-r2-3-reanalysis-100conv.md`](reports/aihub141-r2-3-reanalysis-100conv.md), [issue #23](https://github.com/nextain/naia-memory/issues/23).
 

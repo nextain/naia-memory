@@ -5,7 +5,8 @@
 [English](README.md) | [한국어](README.ko.md)
 
 > **상태 (2026-05-08)** — `naia-agent` 통합 ship-ready.
-> Phase A 한국어 R2.3 측정 완료: AI Hub 141 멀티세션 대화 위에서 **recall@20 cosine semantic = 76.8%**. mid-tier baseline 수준 (영어 mem0 67% / Letta 74% LoCoMo J-score 와 수치 대등). 같은 작업 분량 mem0 대비 **12배 빠름**.
+> Phase A 한국어 R2.3 (AI Hub 141 멀티세션), recall@20: **키워드 69.1% / polarity-aware 62.8% / cosine-semantic 76.8%**. 같은 작업 분량 mem0 대비 **12배 빠름**.
+> ⚠️ **재현성(정직)**: AI Hub 141 원본 데이터는 **재배포 불가**(NIA 라이선스) → 커밋된 산출물은 loader + scorer + **키워드** 리포트([`reports/aihub141-r2-3-reanalysis-100conv.md`](reports/aihub141-r2-3-reanalysis-100conv.md)) 뿐. **76.8% cosine**은 *별도 재해석* — 데이터를 직접 제공(`AIHUB_141_PATH`)하고 `src/benchmark/aihub141/embedding-reanalyze.ts`를 돌려야 재현되며, 그 출력은 **미커밋**(data-gated). LoCoMo J-score(mem0 67%/Letta 74%) 대비는 **다른 metric → 비교 disclaim**, like-for-like 순위 아님.
 > naia-agent / naia-os 통합 가이드: [`docs/integration.md`](docs/integration.md). 측정 상세: [issue #23](https://github.com/nextain/naia-memory/issues/23).
 
 ---
@@ -198,11 +199,11 @@ naia-agent / naia-os 통합 가이드: [`docs/integration.md`](docs/integration.
 | MemU | 92.1% | top tier |
 | MemMachine | 84.9% | top tier |
 | Letta | 74.0% | mid tier |
-| **naia (한국어 cosine)** | **76.8%** | **수치 대등** |
+| naia (한국어 cosine) | 76.8% | ⚠️ 다른 metric — like-for-like 점수 아님 |
 | Mem0 | 67.0% | mid tier |
 | OpenAI ChatGPT memory | 52.9% | lower tier |
 
-**Caveat**: LoCoMo 는 LLM-as-judge J-score on QA, naia 는 recall@k on extracted facts. **직접 비교 disclaim**, 그러나 mid-tier 위치 일관.
+**Caveat(표보다 먼저 읽을 것)**: LoCoMo 는 영어 QA의 LLM-as-judge J-score, naia 76.8% 는 한국어 추출 fact의 recall@k(cosine ≥0.7). **같은 측정이 아님** — 이 표는 대략적 위치 짐작이지 **순위 아님**, naia 행을 일부러 굵게 안 했다. 직접 비교 **disclaim**.
 
 상세 결과: [`reports/aihub141-r2-3-reanalysis-100conv.md`](reports/aihub141-r2-3-reanalysis-100conv.md), [issue #23](https://github.com/nextain/naia-memory/issues/23).
 
