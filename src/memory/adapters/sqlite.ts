@@ -46,9 +46,18 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
         if (dir !== "." && !existsSync(dir)) mkdirSync(dir, { recursive: true });
         this.embedder = options.embeddingProvider ?? null;
         
-        // Initialize Background Worker
-        this.worker = new Worker(new URL("./sqlite-worker.js", import.meta.url), {
-            workerData: { dbPath: options.dbPath }
+        // Initialize Background Worker.
+        // The built package ships sqlite-worker.js next to this file. In dev/tests we
+        // run from .ts source where that .js doesn't exist yet, so fall back to the
+        // .ts worker loaded through tsx (a devDependency).
+        const jsWorker = new URL("./sqlite-worker.js", import.meta.url);
+        const useTsWorker = !existsSync(fileURLToPath(jsWorker));
+        const workerUrl = useTsWorker
+            ? new URL("./sqlite-worker.ts", import.meta.url)
+            : jsWorker;
+        this.worker = new Worker(workerUrl, {
+            workerData: { dbPath: options.dbPath },
+            ...(useTsWorker ? { execArgv: ["--import", "tsx/esm"] } : {}),
         });
         
         this.worker.on("message", (msg) => {
@@ -148,7 +157,13 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
             await this.callWorker("transaction", { ops: [
                 { sql: "INSERT OR REPLACE INTO id_map (fid, fact_id) VALUES (?, ?)", params: [rowid, fact.id] },
                 { sql: "INSERT OR REPLACE INTO facts_time_idx (id, min_ts, max_ts) VALUES (?, ?, ?)", params: [rowid, fact.validFrom ?? fact.createdAt, fact.validTo ?? 253402300799000] },
-                { sql: "INSERT OR REPLACE INTO facts_fts (rowid, content, entities, topics) VALUES (?, ?, ?, ?)", params: [rowid, fact.content, fact.entities.join(" "), fact.topics.join(" ")] }
+                { sql: "INSERT OR REPLACE INTO facts_fts (rowid, content, entities, topics) VALUES (?, ?, ?, ?)", params: [rowid, fact.content, fact.entities.join(" "), fact.topics.join(" ")] },
+                // Hot tier mirrors the vec_facts_hot gating below — the Surface/hot search
+                // path (useHot) reads facts_fts_hot, so important facts MUST be indexed here
+                // too or keyword recall on the hot path returns nothing.
+                ...(fact.strength > 0.6 ? [
+                    { sql: "INSERT OR REPLACE INTO facts_fts_hot (rowid, content, entities, topics) VALUES (?, ?, ?, ?)", params: [rowid, fact.content, fact.entities.join(" "), fact.topics.join(" ")] }
+                ] : [])
             ]});
 
             if (this.embedder) {
@@ -218,7 +233,10 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
         },
         decay: async (now: number): Promise<number> => { return 0; /* Decay implementation in worker */ },
         associate: async (entityA: string, entityB: string, weight = 0.05): Promise<void> => {},
-        getAll: async (): Promise<Fact[]> => { return []; },
+        getAll: async (): Promise<Fact[]> => {
+            const rows = await this.callWorker("prepare-all", { sql: "SELECT * FROM facts", params: [] });
+            return rows.map((r: any) => this.rowToFact(r));
+        },
         delete: async (id: string): Promise<boolean> => { return true; }
     };
 
