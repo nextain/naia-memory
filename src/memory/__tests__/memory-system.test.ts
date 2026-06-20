@@ -44,7 +44,7 @@ function makeSystem(opts: {
 	consolidationIntervalMs?: number;
 } = {}): { system: MemorySystem; path: string } {
 	const { adapter, path } = tmpAdapter();
-	const sysOpts: Parameters<typeof MemorySystem>[0] = {
+	const sysOpts: ConstructorParameters<typeof MemorySystem>[0] = {
 		adapter,
 		consolidationIntervalMs: opts.consolidationIntervalMs ?? 0, // disable timer
 	};

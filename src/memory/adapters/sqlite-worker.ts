@@ -1,7 +1,7 @@
 import { parentPort, workerData } from "node:worker_threads";
 import Database from "better-sqlite3";
 import * as sqliteVec from "sqlite-vec";
-import { normalize, tokenize } from "../ko-normalize.ts";
+import { normalize, tokenize } from "../ko-normalize.js";
 
 const { dbPath } = workerData;
 const db = new Database(dbPath);

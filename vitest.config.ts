@@ -2,8 +2,10 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	test: {
-		// Exclude compiled output — vitest would otherwise double-run *.test.js in dist/
-		exclude: ["**/node_modules/**", "**/dist/**"],
+		// Exclude compiled output — vitest would otherwise double-run *.test.js in dist/.
+		// src/test/** are node:test harness self-trust tests (run via `node --test`,
+		// not vitest) — excluding prevents false failures from a foreign test runner.
+		exclude: ["**/node_modules/**", "**/dist/**", "src/test/**"],
 		// Phase A coverage floor enforcement (plan v3 §6, R10 close-gate condition).
 		// Per-file thresholds match spec documentation; aggregate threshold left
 		// generous since benchmark/adapters/* are untested in Phase A scope.

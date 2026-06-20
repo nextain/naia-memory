@@ -15,7 +15,7 @@ const endT = middleTs + (5000 * 1000);
 console.log("--- Performance Test: Gated FTS (constraining to 10k rows) ---");
 const startGated = performance.now();
 // First get candidates from R-Tree
-const candidateIds = db.prepare("SELECT id FROM facts_time_idx WHERE min_ts <= ? AND max_ts >= ?").all(endT, startT).map(r => r.id);
+const candidateIds = db.prepare("SELECT id FROM facts_time_idx WHERE min_ts <= ? AND max_ts >= ?").all(endT, startT).map((r: any) => r.id);
 console.log(`R-Tree found ${candidateIds.length} candidates in ${(performance.now() - startGated).toFixed(4)}ms`);
 
 const startFTS = performance.now();

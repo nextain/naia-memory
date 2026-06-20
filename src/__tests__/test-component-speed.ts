@@ -22,7 +22,7 @@ const endFTS = performance.now();
 console.log(`FTS Rank (100k matches, top 200) took: ${(endFTS - startFTS).toFixed(4)}ms`);
 
 console.log("--- Performance Test: Surgical Join (200 IDs) ---");
-const ids = rowsFTS.map(r => r.rowid);
+const ids = rowsFTS.map((r: any) => r.rowid);
 const startJoin = performance.now();
 const rowsJoin = db.prepare(`SELECT * FROM facts WHERE rowid IN (${ids.join(",") || "-1"})`).all();
 const endJoin = performance.now();

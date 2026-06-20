@@ -47,7 +47,7 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
         this.embedder = options.embeddingProvider ?? null;
         
         // Initialize Background Worker
-        this.worker = new Worker(new URL("./sqlite-worker.ts", import.meta.url), {
+        this.worker = new Worker(new URL("./sqlite-worker.js", import.meta.url), {
             workerData: { dbPath: options.dbPath }
         });
         
@@ -77,7 +77,7 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
             PRAGMA journal_mode = WAL;
             PRAGMA synchronous = NORMAL;
             PRAGMA cache_size = -64000;
-            CREATE TABLE IF NOT EXISTS episodes (id TEXT PRIMARY KEY, content TEXT NOT NULL, timestamp INTEGER NOT NULL, role TEXT NOT NULL, consolidated BOOLEAN DEFAULT 0, importance_utility REAL, importance_emotion REAL, encoding_context TEXT);
+            CREATE TABLE IF NOT EXISTS episodes (id TEXT PRIMARY KEY, content TEXT NOT NULL, timestamp INTEGER NOT NULL, role TEXT NOT NULL, consolidated BOOLEAN DEFAULT 0, importance_importance REAL, importance_surprise REAL, importance_emotion REAL, importance_utility REAL, encoding_context TEXT);
             CREATE INDEX IF NOT EXISTS idx_episodes_timestamp ON episodes(timestamp);
             CREATE TABLE IF NOT EXISTS facts (id TEXT PRIMARY KEY, base_id TEXT NOT NULL, content TEXT NOT NULL, entities TEXT, topics TEXT, importance REAL, max_emotion REAL, strength REAL, status TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, last_accessed INTEGER NOT NULL, recall_count INTEGER DEFAULT 0, valid_from INTEGER NOT NULL, valid_to INTEGER, successor_id TEXT, supersedes TEXT, source_episodes TEXT, encoding_context TEXT);
             CREATE INDEX IF NOT EXISTS idx_facts_base_id ON facts(base_id);
@@ -99,8 +99,8 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
     episode = {
         store: async (event: Episode): Promise<void> => {
             await this.callWorker("prepare-run", {
-                sql: "INSERT INTO episodes (id, content, timestamp, role, consolidated, importance_utility, importance_emotion, encoding_context) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                params: [event.id, event.content, event.timestamp, event.role, event.consolidated ? 1 : 0, event.importance?.utility, event.importance?.emotion, JSON.stringify(event.encodingContext)]
+                sql: "INSERT INTO episodes (id, content, timestamp, role, consolidated, importance_importance, importance_surprise, importance_emotion, importance_utility, encoding_context) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                params: [event.id, event.content, event.timestamp, event.role, event.consolidated ? 1 : 0, event.importance?.importance, event.importance?.surprise, event.importance?.emotion, event.importance?.utility, JSON.stringify(event.encodingContext)]
             });
         },
         recall: async (query: string, context: RecallContext): Promise<Episode[]> => {
@@ -237,6 +237,7 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
     async export(password: string): Promise<Uint8Array> { return new Uint8Array(0); }
     async import(blob: Uint8Array, password: string): Promise<void> {}
     async close(): Promise<void> { await this.worker.terminate(); }
-    private rowToEpisode(r: any): Episode { return { id: r.id, content: r.content, timestamp: r.timestamp, role: r.role as any, consolidated: !!r.consolidated, importance: { utility: r.importance_utility, emotion: r.importance_emotion }, encodingContext: JSON.parse(r.encoding_context || "{}") }; }
+    // NOTE(WIP): SqliteAdapter episode 스키마는 summary/recall_count/last_accessed/strength 미저장 → 기본값 복원(비손실 round-trip은 후속). LocalAdapter 가 완전한 기본 경로.
+    private rowToEpisode(r: any): Episode { return { id: r.id, content: r.content, summary: r.summary ?? r.content, timestamp: r.timestamp, role: r.role as any, consolidated: !!r.consolidated, recallCount: r.recall_count ?? 0, lastAccessed: r.last_accessed ?? r.timestamp, strength: r.strength ?? 1, importance: { importance: r.importance_importance ?? 0, surprise: r.importance_surprise ?? 0, emotion: r.importance_emotion ?? 0, utility: r.importance_utility ?? 0 }, encodingContext: JSON.parse(r.encoding_context || "{}") }; }
     private rowToFact(r: any, score?: number): Fact { return { id: r.id, content: r.content, entities: JSON.parse(r.entities || "[]"), topics: JSON.parse(r.topics || "[]"), importance: r.importance, maxEmotion: r.max_emotion, strength: r.strength, status: r.status as any, createdAt: r.created_at, updatedAt: r.updated_at, lastAccessed: r.last_accessed, recallCount: r.recall_count, validFrom: r.valid_from, validTo: r.valid_to, successorId: r.successor_id, supersedes: r.supersedes, sourceEpisodes: JSON.parse(r.source_episodes || "[]"), encodingContext: JSON.parse(r.encoding_context || "{}"), relevanceScore: score }; }
 }

@@ -105,7 +105,9 @@ export interface ExtractedFact {
         entities: string[];
         topics: string[];
         importance: number;
-        maxEmotion: number;
+        /** Highest emotional valence among source episodes (0.0–1.0).
+         *  Optional — defaults to 0 when absent (matches stored `Fact.maxEmotion`). */
+        maxEmotion?: number;
         sourceEpisodeIds: string[];
 }
 export interface MemorySystemOptions {
@@ -345,7 +347,7 @@ function mergeRelatedFacts(
 				        entities: unionDedup(acc.entities, other.entities),
 				        topics: unionDedup(acc.topics, other.topics),
 				        importance: Math.max(acc.importance, other.importance),
-				        maxEmotion: Math.max(acc.maxEmotion, other.maxEmotion),
+				        maxEmotion: Math.max(acc.maxEmotion ?? 0, other.maxEmotion ?? 0),
 				        sourceEpisodeIds: unionDedup(
 				                acc.sourceEpisodeIds,
 				                other.sourceEpisodeIds,
@@ -943,7 +945,7 @@ export class MemorySystem {
 						);
 						const newMaxEmotion = Math.max(
 						        duplicate.maxEmotion ?? 0,
-						        ef.maxEmotion,
+						        ef.maxEmotion ?? 0,
 						);
 						await this.adapter.semantic.upsert({
 						        ...duplicate,
@@ -981,7 +983,7 @@ export class MemorySystem {
 								);
 								const newMaxEmotion = Math.max(
 								   fact.maxEmotion ?? 0,
-								   ef.maxEmotion,
+								   ef.maxEmotion ?? 0,
 								);
 								const successorId = `${fact.id}-v${Date.now()}`;
 								await this.adapter.semantic.upsert({
