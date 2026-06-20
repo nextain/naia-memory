@@ -83,7 +83,7 @@ cd naia-memory
 - **macOS** — `xcode-select --install` (Xcode 명령줄 도구).
 - **Linux (Ubuntu)** — `sudo apt install build-essential python3`.
 
-설치가 막히면 [Discord](https://discord.gg/FGYJN7auty)에 OS와 오류 로그를 함께 공유해 주세요.
+**`pnpm install`이 실패한다면** — `gyp ERR!`, `node-gyp`, `cl.exe`/`MSB...`(Windows), `xcrun`(macOS), 또는 `better-sqlite3`/`sqlite-vec` 빌드 오류가 보이면, 위 OS별 빌드 도구가 빠진 것입니다. 빌드 도구를 설치한 뒤 `pnpm install`을 다시 실행하세요. 그래도 막히면 [Discord](https://discord.gg/FGYJN7auty)에 OS와 전체 오류 로그를 함께 올려 주세요.
 
 **설치와 실행**
 
