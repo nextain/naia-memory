@@ -334,9 +334,11 @@ describe("MemorySystem.consolidateNow", () => {
 		);
 		const r = await system.consolidateNow(true);
 		expect(r.episodesProcessed).toBe(2);
-		// Either factsCreated=1 (cycle-level dedup via mergeRelatedFacts
-		// before upsert) OR factsCreated=1 + factsUpdated=1 (first created,
+		// Either factsCreated=1 (cycle-level dedup — consolidate hot-path 의 inline
+		// jaccard 중복탐지, index.ts) OR factsCreated=1 + factsUpdated=1 (first created,
 		// second matches duplicate). Both prove the D.1 hot-path is live.
+		// (주의: 실제 발화하는 dedup 은 inline duplicate-find 이지 standalone mergeRelatedFacts 가
+		//  아니다 — 적대검증 2026-06-21 정정. mergeRelatedFacts 는 별도 유틸리티(MR-* 단위테스트).)
 		const { facts } = await system.recall("TypeScript", RECALL_CTX);
 		expect(facts).toHaveLength(1);
 		await system.close();

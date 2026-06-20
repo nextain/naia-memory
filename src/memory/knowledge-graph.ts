@@ -184,26 +184,20 @@ export class KnowledgeGraph {
 	}
 
 	/**
-	 * Decay all edge weights (Ebbinghaus on associations).
-	 * Removes edges that fall below threshold.
+	 * Decay all edge weights (Ebbinghaus on associations). **R3 보존 우선(#25): edge 를 삭제하지 않는다** —
+	 * pruneThreshold 미만이어도 weight 만 약화하고 영구 보존(spreading activation 에서 weight≈0 은 자연 무시,
+	 * 효과 0). 임계 도달(#29) 시에만 explicit forget 가능. ⚠️ 과거 JSDoc 은 "Removes edges / Number of edges
+	 * removed" 로 *거짓 기술* 했었음(적대검증 2026-06-21) — 실제로는 무삭제.
 	 *
-	 * @returns Number of edges removed
+	 * @returns pruneThreshold 미만으로 *약화된*(삭제 아님) edge 수
 	 */
 	decayEdges(factor = 0.95, pruneThreshold = 0.01): number {
-		let removed = 0;
-		// R3 보존 우선 (사용자 directive 2026-05-08, #25):
-		// edge 영구 보존. weight 만 약화 — pruneThreshold 미만이어도 *delete X*.
-		// spreading activation 시 weight=0 인 edge 는 자연 무시 됨 (효과 0).
-		// 임계 도달 (#29) 시만 explicit forget 가능.
+		let weakened = 0;
 		for (const [, edge] of Object.entries(this.state.edges)) {
 			edge.weight *= factor;
-			if (edge.weight < pruneThreshold) {
-				// 데이터 보존 — weight 매우 약함 (recall priority 0 효과)
-				removed++;
-			}
+			if (edge.weight < pruneThreshold) weakened++; // 데이터 보존 — weight 매우 약함(recall priority ~0 효과)
 		}
-
-		return removed;
+		return weakened;
 	}
 
 	/**

@@ -317,6 +317,9 @@ function factsWithinTemporalWindow(
 	return gap <= TEMPORAL_GROUP_WINDOW_MS;
 }
 
+/** Standalone fact-merge 유틸리티(MR-* 단위테스트로 검증). ⚠️ 현재 consolidate **hot-path 에는
+ *  배선되지 않음** — 실제 발화하는 dedup 은 consolidate 루프의 inline jaccard 중복탐지다(적대검증
+ *  2026-06-21 확인). export 유지(공개 유틸/미래 배선 후보)하되, "라이브 dedup=이 함수"로 오해 금지. */
 function mergeRelatedFacts(
 	facts: ExtractedFact[],
 	sourceEpisodes?: Episode[],
