@@ -1,40 +1,41 @@
-# Naia Memory: Technical Specification (v6.0)
+# Naia Memory: Technical Specification
 
 ## Core Philosophy: Self-Rigor
 - **No Magic Numbers**: All retrieval weights must be empirically derived.
-- **Scale Verification**: Minimum 100k fact corpus required for performance claims.
-- **Honest Latency**: Report both Surface (Tier 1) and Deep (Full scan) metrics separately.
+- **Scale Verification**: Performance claims require a measurement on a ≥100k fact corpus.
+- **Honest Latency**: Report Surface (Tier 1) and Deep (full scan) latency separately, and never present an unverified number as "measured".
 
-## Implementation Details
-### 1. Hybrid Storage Engine
-- **Relational**: SQLite 3 (better-sqlite3) for metadata and episodic storage.
-- **Keyword**: FTS5 with BM25 ranking for exact-match recall.
-- **Vector**: `sqlite-vec` (vec0) for semantic similarity (Brute-force linear scan).
-- **Temporal**: R-Tree index for O(log N) point-in-time and interval queries.
+## Storage Adapters
+naia-memory ships two interchangeable adapters behind the `MemoryAdapter` interface (`src/memory/types.ts`):
 
-### 2. Async Architecture (v6.0)
-- **Worker Isolation**: All DB I/O moved to a dedicated Node.js Worker Thread.
-- **Non-blocking**: Prevents Main Thread (UI) freeze during heavy recall or decay cycles.
-- **Message Protocol**: Command-based communication with monotonic ID tracking.
+| Adapter | Backend | Status | Use when |
+|---|---|---|---|
+| **LocalAdapter** (default) | JSON file + in-memory cosine + BM25 + KnowledgeGraph | **Complete** — the path `MemorySystem` uses by default and that `naia-agent` integrates against | Desktop / single-user, up to ~tens of thousands of facts |
+| **SqliteAdapter** | SQLite 3 (better-sqlite3) + FTS5/BM25 + sqlite-vec (vec0) + R-Tree, DB I/O in a worker thread | **In progress** — store / keyword recall / `getAll` work; flashbulb-emotion gating, epoch anchoring, and KG association are not yet at LocalAdapter parity | High-performance scaling path (100k+ facts) |
 
-### 3. Tiered Recall Strategy
-- **Tier 1 (Surface)**: Top 10,000 facts by strength/importance (Target: < 25ms).
-- **Tier 2 (Deep)**: Full corpus scan (O(N) linear scan bottleneck).
+`MemorySystem` defaults to `LocalAdapter` (`src/memory/index.ts`). Pass a `SqliteAdapter` explicitly to opt into the SQLite path.
 
-## Measured Benchmarks (100,000 Facts)
-| Metric | Dataset | Result |
-| :--- | :--- | :--- |
-| Surface Recall Latency | 10k Hot / 100k Total | **9.74ms** |
-| Deep Recall Latency | 100k Exhaustive | **~80ms** |
-| Backup Throughput | 10k Records | 4.3MB (Encrypted) |
-| Data Integrity | Bi-temporal Range | 100% Precision |
+## SqliteAdapter Engine (high-performance path)
 
-## Resolved Blockers (Adversarial Fixes)
-- **P0-1 (Claude)**: Full scan sort on 100k rows in RRF. Fixed via Materialized CTEs.
-- **P0-2 (Gemini/Codex)**: Bi-temporal context pollution. Fixed via gated relevance filters.
-- **P1-1 (Gemini/Codex)**: Backup OOM risk. Fixed via chunked serialization.
+### 1. Hybrid Storage
+- **Relational / episodic**: SQLite 3 (better-sqlite3).
+- **Keyword**: FTS5 with BM25 ranking. Two tiers — `facts_fts` (full corpus) + `facts_fts_hot` (high-strength surface tier).
+- **Vector**: `sqlite-vec` (vec0), brute-force linear scan (`vec_facts` + `vec_facts_hot`).
+- **Temporal**: R-Tree (`facts_time_idx`) for bi-temporal point/interval queries.
 
-## Current Technical Debt (v6.0)
-1. **Linear Scan**: Deep recall degrades linearly; ANN (HNSW) required for 1M+ facts.
-2. **Memory KG**: Full KnowledgeGraph load in RAM; incremental/streaming load required.
-3. **JS Overhead**: Worker message-passing adds ~2ms overhead; Rust-layer FFI optimization potential.
+### 2. Worker Isolation
+- DB I/O runs in a dedicated worker thread (`sqlite-worker.ts`) so the main thread stays responsive during heavy recall or decay. Command-based message protocol with monotonic message IDs.
+- The built package ships `sqlite-worker.js`; dev/test load the `.ts` worker through `tsx`.
+
+### 3. Tiered Recall
+- **Tier 1 (Surface / hot)**: high-strength facts, target sub-25ms.
+- **Tier 2 (Deep)**: full corpus scan (O(N) linear).
+
+## Performance Targets (unverified)
+The SqliteAdapter *targets* sub-25ms surface recall and sub-100ms deep recall at 100k facts.
+**These are design targets, not measured results.** Per the Self-Rigor ethos above, no latency is published here as "measured" until a reproducible ≥100k benchmark artifact is committed to the repo. Measured figures that DO exist are reported per-run in `docs/reports/` (LocalAdapter).
+
+## Current Status / Technical Debt
+- **SqliteAdapter parity**: advanced retrieval (flashbulb-emotion gating, epoch anchoring, KG cross-domain association, insight distillation) is not yet at LocalAdapter parity — covered by the `*.test.ts` suites under `src/memory/__tests__/`.
+- **Linear scan**: deep recall degrades linearly; ANN (e.g. HNSW) required for 1M+ facts.
+- **KnowledgeGraph**: loads fully into RAM; incremental/streaming load required at scale.

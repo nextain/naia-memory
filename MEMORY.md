@@ -21,4 +21,4 @@
 - **Requirement**: Batch-limited decay processing with adaptive sleep intervals.
 
 ## Verification Log
-- **2026-05-15**: v6.0 Async Engine verified. Surface Recall (9.7ms) pass, Deep Recall (80ms) pass.
+- **2026-05-15**: v6.0 SqliteAdapter async engine dev run — Surface ~9.7ms / Deep ~80ms at 100k. NOTE(Self-Rigor): dev-machine figures, not a committed reproducible artifact — treat as targets until a benchmark report is checked in.

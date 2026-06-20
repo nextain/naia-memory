@@ -53,5 +53,6 @@ embeddings:
 adapters:
   interface: MemoryAdapter (src/memory/types.ts)
   implementations:
-    local: SQLite + hnswlib, no API key needed
+    local: JSON + cosine + BM25 + KnowledgeGraph (default, no API key)
+    sqlite: SQLite + FTS5/BM25 + sqlite-vec + R-Tree, worker-isolated (high-perf, in progress)
     mem0: mem0 OSS backend

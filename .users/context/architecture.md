@@ -93,5 +93,6 @@
 
 | 어댑터 | 저장소 | API 키 필요 |
 |--------|--------|-----------|
-| local (로컬) | SQLite + hnswlib | 불필요 |
+| local (로컬, 기본) | JSON + cosine + BM25 + KnowledgeGraph | 불필요 |
+| sqlite (고성능, 진행중) | SQLite + FTS5/BM25 + sqlite-vec + R-Tree (worker 격리) | 불필요 |
 | mem0 | mem0 오픈소스 백엔드 | 필요 |
