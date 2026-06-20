@@ -51,7 +51,7 @@ Naia Memory implements a 4-store memory architecture inspired by cognitive scien
 - **Ebbinghaus decay** — memory strength fades over time, strengthened by recall
 - **Reconsolidation (R2.5)** — contradiction filter on consolidation; supersedes outdated facts
 - **Bi-temporal recall (R2.3)** — recall at a past timestamp; multi-session continuity
-- **Pluggable adapters** — swap the vector backend (LocalAdapter / Mem0 / Qdrant)
+- **Pluggable adapters** — two interchangeable storage backends behind one `MemoryAdapter` interface: **LocalAdapter** (JSON + cosine + BM25 + KG — complete, default, what naia-agent integrates against) and **SqliteAdapter** (SQLite + FTS5/BM25 + sqlite-vec + R-Tree, worker-isolated — *in progress*, the 100k+ scaling path); plus Mem0 / Qdrant vector backends
 - **Multi-language benchmark** — Korean (AI Hub 141 multi-session) + English (LoCoMo planned)
 
 ---
@@ -95,7 +95,9 @@ src/
 │   ├── llm-fact-extractor.ts   # LLM-based atomic fact extraction
 │   ├── usage-tracker.ts        # Per-run token + cost tracking
 │   └── adapters/
-│       ├── local.ts            # JSON + cosine + BM25 + KG (default, recommended)
+│       ├── local.ts            # JSON + cosine + BM25 + KG (default, complete) ← naia-agent integrates here
+│       ├── sqlite.ts           # SQLite + FTS5/BM25 + sqlite-vec + R-Tree (in progress — 100k+ scaling path)
+│       ├── sqlite-worker.ts    #   DB I/O worker thread for sqlite.ts
 │       ├── mem0.ts             # mem0 OSS backend (stack-on-top hybrid)
 │       └── qdrant.ts           # Qdrant vector DB
 └── benchmark/

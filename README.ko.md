@@ -51,7 +51,7 @@ Naia Memory는 인지 과학 영감 4-store 메모리 아키텍처 구현:
 - **Ebbinghaus decay** — 시간에 따라 메모리 강도 감소, 회상 시 강화
 - **Reconsolidation (R2.5)** — consolidation 시 모순 필터; 오래된 사실 supersede
 - **Bi-temporal recall (R2.3)** — 과거 시점 회상; 멀티세션 연속성
-- **Pluggable adapters** — 벡터 백엔드 교체 (LocalAdapter / Mem0 / Qdrant)
+- **Pluggable adapters** — 하나의 `MemoryAdapter` 인터페이스 뒤 두 개의 교체 가능 저장 백엔드: **LocalAdapter**(JSON + cosine + BM25 + KG — 완성, 기본값, naia-agent 가 연동하는 경로)와 **SqliteAdapter**(SQLite + FTS5/BM25 + sqlite-vec + R-Tree, worker 격리 — *진행 중*, 10만+ 스케일링 경로); 추가로 Mem0 / Qdrant 벡터 백엔드
 - **다국어 벤치마크** — 한국어 (AI Hub 141 멀티세션) + 영어 (LoCoMo 예정)
 
 ---
@@ -95,7 +95,9 @@ src/
 │   ├── llm-fact-extractor.ts   # LLM 기반 atomic fact 추출
 │   ├── usage-tracker.ts        # 측정마다 토큰 + cost 추적
 │   └── adapters/
-│       ├── local.ts            # JSON + cosine + BM25 + KG (default, 권장)
+│       ├── local.ts            # JSON + cosine + BM25 + KG (default, 완성) ← naia-agent 연동 경로
+│       ├── sqlite.ts           # SQLite + FTS5/BM25 + sqlite-vec + R-Tree (진행 중 — 10만+ 스케일링 경로)
+│       ├── sqlite-worker.ts    #   sqlite.ts 용 DB I/O 워커 스레드
 │       ├── mem0.ts             # mem0 OSS 백엔드 (stack-on-top hybrid)
 │       └── qdrant.ts           # Qdrant 벡터 DB
 └── benchmark/
