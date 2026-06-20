@@ -137,9 +137,11 @@ describe("LocalAdapter backup", () => {
 		await source.semantic.upsert(newFact);
 		const blob = await source.export("password");
 
-		// Set storePath to an invalid location BEFORE import so the disk write fails
-		// after in-memory state has been updated, triggering the rollback path.
-		(adapter as any).storePath = "/nonexistent-root/cannot/write/here.json";
+		// Force the disk write to fail AFTER in-memory state has been updated, so the
+		// rollback path triggers. A null byte makes writeFileSync throw on every
+		// platform — a "nonexistent root" path is not reliable (Windows happily
+		// creates the directory tree, so the write would succeed and skip rollback).
+		(adapter as any).storePath = "\0invalid/here.json";
 
 		// import() should throw because save() fails
 		await expect(adapter.import(blob, "password")).rejects.toThrow();

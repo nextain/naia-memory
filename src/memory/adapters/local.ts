@@ -1218,7 +1218,10 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		this.kg = new KnowledgeGraph(importedKgState);
 		try {
 			this.markDirty();
-			this.save();
+			// saveImmediate (not the debounced save) so a disk-write failure throws
+			// synchronously here and triggers the rollback below — a scheduled save
+			// would write later, outside this try, leaving state diverged on failure.
+			this.saveImmediate();
 		} catch (err) {
 			// Disk write failed — restore both store and KG to avoid divergence
 			this.store = previousStore;
@@ -1230,7 +1233,10 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	// ─── Lifecycle ────────────────────────────────────────────────────────
 
 	async close(): Promise<void> {
-		this.save();
+		// Force a synchronous flush — `save()` only *schedules* a debounced write,
+		// which can lose data if the process tears down (or a new adapter opens the
+		// same store) before the timer fires. close() must durably persist.
+		this.saveImmediate();
 	}
 
 	// ─── Testing Helpers ──────────────────────────────────────────────────

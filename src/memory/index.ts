@@ -1112,6 +1112,12 @@ export class MemorySystem {
 			//    Distill clusters of facts into high-level insights.
 			const insightsCreated = await this.distillInsights(now);
 
+			// R4 Step 5a/5c — Background-brain 시간 스파이크(시간 anchor + 기념일).
+			//    detectTemporalAnchors/detectEmotionAnniversaries 는 구현돼 있었으나
+			//    consolidate 사이클에 한 번도 연결되지 않아 spike 가 안 났음 → 배선.
+			await this.detectTemporalAnchors(now);
+			await this.detectEmotionAnniversaries(now);
+
 			// 7. R4 #26 Step 4 — Replay-worthy fact strength boost.
 			//    학계 정합 (anchor §7): Sharp-wave ripples + CLS — 자다가
 			//    *recent + important + recently-recalled* fact 의 strength
