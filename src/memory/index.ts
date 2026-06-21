@@ -58,6 +58,8 @@ export {
 } from "./embeddings.js";
 export { buildLLMFactExtractor } from "./llm-fact-extractor.js";
 export type { LLMFactExtractorOptions } from "./llm-fact-extractor.js";
+export { buildLLMSummarizer } from "./llm-summarizer.js";
+export type { LLMSummarizerOptions } from "./llm-summarizer.js";
 export {
 	IdentityReranker,
 	OfflineRerankerProvider,
