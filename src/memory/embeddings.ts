@@ -24,6 +24,9 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 	readonly dims: number;
 	private pipeline: any = null;
 	private readonly modelName: string;
+	/** 실행 device(naia-embedded 컴퓨트 선택). 미지정 = transformers 기본(현행 동작 무변).
+	 *  "cpu" = 강제 CPU / "gpu" = 가용 시 GPU(onnxruntime EP), 없으면 CPU 폴백("auto"로 매핑) / "auto" = 자동. */
+	private readonly device?: "cpu" | "gpu" | "auto";
 	private initPromise: Promise<void> | null = null;
 
 	constructor(
@@ -31,8 +34,10 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 			| "all-MiniLM-L6-v2"
 			| "all-mpnet-base-v2"
 			| "multilingual-e5-large" = "all-MiniLM-L6-v2",
+		device?: "cpu" | "gpu" | "auto",
 	) {
 		this.modelName = model;
+		this.device = device;
 		if (model === "multilingual-e5-large") this.dims = 1024;
 		else if (model === "all-mpnet-base-v2") this.dims = 768;
 		else this.dims = 384;
@@ -56,7 +61,13 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 						? "Xenova/multilingual-e5-large"
 						: `Xenova/${this.modelName}`;
 
-				this.pipeline = await pipelineFn("feature-extraction", hfModel);
+				// device 매핑: gpu→"auto"(onnxruntime EP 가용 시 GPU, 없으면 CPU 폴백 — 메모리 비활성 회피) /
+				// cpu→"cpu" / auto→"auto" / 미지정→옵션 없이(transformers 기본, 현행 무변).
+				const pipeOpts =
+					this.device === undefined
+						? undefined
+						: { device: this.device === "gpu" ? "auto" : this.device };
+				this.pipeline = await pipelineFn("feature-extraction", hfModel, pipeOpts);
 			})();
 		}
 		return this.initPromise;
