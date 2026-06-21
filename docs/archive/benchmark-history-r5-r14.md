@@ -64,10 +64,10 @@ pnpm install
 
 # API Keys (pick one):
 # 1. GEMINI_API_KEY — GCP Naia-OS project "Gemini API Key v2" (permanent, no expiry)
-#    gcloud services api-keys get-key-string projects/181404717065/locations/global/keys/f7a5ed14-1090-4afd-a0be-c2ac09b7c6ae
+#    gcloud services api-keys get-key-string projects/<GCP_PROJECT>/locations/global/keys/<KEY_ID>
 # 2. GATEWAY_URL + GATEWAY_MASTER_KEY — any-llm gateway (Vertex AI routing)
-#    prod: https://naia-gateway-181404717065.asia-northeast3.run.app
-#    dev:  https://naia-gateway-dev-181404717065.asia-northeast3.run.app (key in agents-rules.json)
+#    prod: https://naia-gateway-<GCP_PROJECT>.asia-northeast3.run.app
+#    dev:  https://naia-gateway-dev-<GCP_PROJECT>.asia-northeast3.run.app (key in agents-rules.json)
 
 # Run benchmark (Korean, keyword judge)
 GEMINI_API_KEY=xxx pnpm exec tsx src/benchmark/comparison/run-comparison.ts --adapters=naia-local --judge=keyword --lang=ko

@@ -61,3 +61,7 @@ quarantine/*
 # misc
 urllib.request
 task_summary.md
+
+# 내부 @deprecated 벤치 도구(라우팅 매핑 노출) 비추적
+src/benchmark/cross-review-engine.ts
+src/benchmark/cross-review.ts

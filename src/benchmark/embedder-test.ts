@@ -2,9 +2,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 async function embed(text: string, provider: "google" | "vllm") {
-	const gwUrl =
-		"https://any-llm-gateway-70423245233.asia-northeast3.run.app/v1/embeddings";
-	const gwKey = "1ecc41ed461d4643b72c31b19b82533f.uLSxYdmhZjKEpyYJ";
+	// ⚠️ 시크릿/내부 URL 은 env 로만 — 공개 레포에 하드코딩 금지(보안 리뷰 HIGH). 미설정 시 빈 값.
+	const gwUrl = process.env.GATEWAY_EMBED_URL ?? "";
+	const gwKey = process.env.GATEWAY_MASTER_KEY ?? "";
 
 	if (provider === "google") {
 		const res = await fetch(gwUrl, {
