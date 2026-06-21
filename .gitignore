@@ -65,3 +65,8 @@ task_summary.md
 # 내부 @deprecated 벤치 도구(라우팅 매핑 노출) 비추적
 src/benchmark/cross-review-engine.ts
 src/benchmark/cross-review.ts
+
+# AI 크로스리뷰 세션 로그(내부 운영물 — 생성 헤더에 절대경로/세션 컨텍스트 포함). 비추적
+.agents/progress/gap-analysis-cross-review.md
+.agents/progress/plan-v3-anchor-cross-review-output.md
+.agents/progress/plan-v3-anchor-cross-review-output-v2.md

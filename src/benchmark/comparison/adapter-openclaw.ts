@@ -4,13 +4,20 @@ import { execSync } from "node:child_process";
  *
  * Requires: ~/.openclaw/openclaw.json configured with Gemini embedding provider.
  * Env: GEMINI_API_KEY must be set.
+ *   OPENCLAW_BIN       — override the `node <path>/openclaw.mjs` invocation
+ *                        (default: ~/.naia/openclaw/node_modules/openclaw/openclaw.mjs)
+ *   OPENCLAW_WORKSPACE — override the scratch workspace dir (default: ~/.openclaw/workspace)
  */
 import { mkdirSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import type { BenchmarkAdapter } from "./types.js";
 
 const OPENCLAW_BIN =
-	"node /home/luke/.naia/openclaw/node_modules/openclaw/openclaw.mjs";
-const WORKSPACE = "/home/luke/.openclaw/workspace";
+	process.env.OPENCLAW_BIN ||
+	`node ${join(homedir(), ".naia/openclaw/node_modules/openclaw/openclaw.mjs")}`;
+const WORKSPACE =
+	process.env.OPENCLAW_WORKSPACE || join(homedir(), ".openclaw/workspace");
 
 export class OpenClawAdapter implements BenchmarkAdapter {
 	readonly name = "openclaw";

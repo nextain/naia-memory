@@ -9,6 +9,7 @@
  */
 import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import type { AIHub141Conversation, AIHub141Session } from "./types.js";
@@ -24,8 +25,13 @@ export interface LoadOptions {
 	seed?: number;
 }
 
-const DEFAULT_AIHUB_PATH =
-	"/home/luke/data/aihub/141.한국어멀티세션대화/141.한국어_멀티세션_대화/01-1.정식개방데이터";
+// Default location of the (user-supplied, never-committed) AI Hub 141 dataset.
+// Override with env `AIHUB_141_PATH`. The dataset itself is licensed separately
+// and must be downloaded by the user from AI Hub.
+const DEFAULT_AIHUB_PATH = join(
+	homedir(),
+	"data/aihub/141.한국어멀티세션대화/141.한국어_멀티세션_대화/01-1.정식개방데이터",
+);
 
 function resolveZipPath(split: "validation" | "training", level: number): string {
 	const root = process.env.AIHUB_141_PATH || DEFAULT_AIHUB_PATH;

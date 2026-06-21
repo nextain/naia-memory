@@ -90,7 +90,7 @@ Visible 효과 noise band 안. naia 의 retrieval 은 *전체 stack 통합 효�
 GitHub origin/main = `f39abcf` (sweep archive). 6 commits ahead.
 
 ```
-! cd /var/home/luke/alpha-adk/projects/naia-memory && git push origin main
+git push origin main
 ```
 
-으로 push 가능 (Claude Code prompt 입력란).
+으로 push 가능 (저장소 루트에서 실행).
