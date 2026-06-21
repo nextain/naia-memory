@@ -72,6 +72,27 @@ export type {
 	ActiveContext,
 	SubscribableMemory,
 } from "./spike.js";
+// MemoryProvider contract + runtime capability detection.
+// `isCapable(provider, capName)` lets a host (naia-agent) feature-detect
+// optional capabilities (Backup / ImportanceScoring / Reconsolidation /
+// Temporal / Compactable) without a hard dependency on a separate types
+// package. Re-exported here so consumers import from "@nextain/naia-memory"
+// (the published package entry) — these interfaces live in provider-types.ts
+// until/if a standalone @nextain/agent-types package ships.
+export { isCapable } from "./provider-types.js";
+export type {
+	MemoryProvider,
+	MemoryProviderInput,
+	MemoryHit,
+	RecallOptions,
+	ConsolidationSummary,
+	AnyCapability,
+	BackupCapableProvider,
+	ImportanceScoringCapable,
+	ReconsolidationCapableProvider,
+	TemporalCapableProvider,
+	CompactableCapableProvider,
+} from "./provider-types.js";
 export { LocalAdapter } from "./adapters/local.js";
 export { QdrantAdapter } from "./adapters/qdrant.js";
 export { SqliteAdapter } from "./adapters/sqlite.js";

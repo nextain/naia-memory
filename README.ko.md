@@ -24,7 +24,7 @@ Naia Memory는 Naia 오픈소스 AI 플랫폼 4개 레포 중 하나:
 
 ### 의존성이 아닌 인터페이스
 
-Naia Memory는 **`@nextain/agent-types` 의 `MemoryProvider` 계약을 충실 구현한 한 가지 구현체**:
+Naia Memory는 **`MemoryProvider` 계약을 충실 구현한 한 가지 구현체**다. 이 계약은 현재 본 패키지의 `src/memory/provider-types.ts` 에 있고(`@nextain/naia-memory` 가 re-export), 독립 `@nextain/agent-types` 패키지로 분리하는 것은 계획돼 있으나 아직 ship 되지 않았다:
 
 - **투명** — 계약은 공개. 같은 계약을 구현한 어떤 메모리 시스템도 런타임 코드 변경 없이 교체 가능
 - **비결합** — naia-memory는 naia-agent 런타임에 의존 X. naia-agent는 본 패키지를 인터페이스 뒤의 블랙박스로 처리
@@ -85,21 +85,29 @@ Naia 는 **사람 뇌에 가까움** — 중요한 것만 저장, 안 쓰면 잊
 ```
 src/
 ├── memory/
-│   ├── index.ts                # MemorySystem — 메인 오케스트레이터
-│   ├── types.ts                # MemoryProvider 타입 계약
+│   ├── index.ts                # MemorySystem — 메인 오케스트레이터 + 패키지 entry export
+│   ├── types.ts                # 스토리지 MemoryAdapter 계약 + 핵심 도메인 타입 (Episode/Fact/Skill/Reflection/…)
+│   ├── provider-types.ts       # MemoryProvider 계약 + capability 인터페이스 + isCapable() 런타임 감지
+│   ├── lite-provider.ts        # LiteMemoryProvider — 8G tier 최소 MemoryProvider 구현 (export)
 │   ├── importance.ts           # 3축 importance 점수
 │   ├── decay.ts                # Ebbinghaus 망각 곡선
 │   ├── reconsolidation.ts      # consolidation 시 모순 감지
-│   ├── contradiction-filter.ts # R2.5 — heuristic / Gemini / vLLM 3개 provider
+│   ├── contradiction-filter.ts # R2.5 — heuristic / Gemini / vLLM 3개 provider (selectFilter)
+│   ├── reranker.ts             # cross-encoder reranker provider (Identity / Offline)
+│   ├── spike.ts                # R4 background-brain spike + ActiveContext 타입 (SubscribableMemory)
 │   ├── knowledge-graph.ts      # 엔티티/관계 추출 + spreading activation
 │   ├── embeddings.ts           # 4개 provider (OpenAI-compat / offline / HF / gateway)
-│   ├── llm-fact-extractor.ts   # LLM 기반 atomic fact 추출
+│   ├── llm-fact-extractor.ts   # LLM 기반 atomic fact 추출 (buildLLMFactExtractor)
+│   ├── llm-summarizer.ts       # LLM compaction summarizer (buildLLMSummarizer)
 │   ├── usage-tracker.ts        # 측정마다 토큰 + cost 추적
+│   ├── ko-normalize.ts         # 한국어 텍스트 정규화 (내부)
+│   ├── ko-time-parser.ts       # 한국어 시간 표현 파싱 (내부)
+│   ├── algorithms/             # A/B 실험 variant (variantA control / variantB treatment)
 │   └── adapters/
 │       ├── local.ts            # JSON + cosine + BM25 + KG (default, 완성) ← naia-agent 연동 경로
 │       ├── sqlite.ts           # SQLite + FTS5/BM25 + sqlite-vec + R-Tree (진행 중 — 10만+ 스케일링 경로)
 │       ├── sqlite-worker.ts    #   sqlite.ts 용 DB I/O 워커 스레드
-│       ├── mem0.ts             # mem0 OSS 백엔드 (stack-on-top hybrid)
+│       ├── mem0.ts             # mem0 OSS 백엔드 (stack-on-top hybrid — 내부/벤치마크 전용, 미export)
 │       └── qdrant.ts           # Qdrant 벡터 DB
 └── benchmark/
     ├── aihub141/               # 한국어 R2.3 멀티세션 벤치 (Phase A)
@@ -160,8 +168,11 @@ const result = await memory.recall("사용자 직업?", {
 });
 // result.facts: Fact[], result.episodes: Episode[]
 
-// Sleep cycle (수동 또는 30분마다 자동)
+// Sleep cycle — 수동 실행:
 await memory.consolidateNow();
+// ...또는 host 가 백그라운드 타이머를 켠다 (consolidationIntervalMs 마다, default 30분).
+// 타이머는 자동 시작 X — host 가 명시적으로 opt-in:
+memory.startConsolidation(); // 중지는 memory.stopConsolidation()
 ```
 
 naia-agent / naia-os 통합 가이드: [`docs/integration.md`](docs/integration.md) — wire-in 패턴, 설정 가능 파라미터, 2 prefab profile (cloud / local privacy) 의 SoT.
@@ -276,10 +287,10 @@ Naia Memory 는 3가지 명시 주입 방식 (production path 에서 env-var 매
 
 - ✅ R1 안정화 (7 슬라이스) · R2 capability (4 슬라이스) · R3 한국어 튜닝
 - ✅ Phase A — 한국어 R2.3 멀티세션 벤치 (AI Hub 141, 100 conv, **76.8% cosine**)
-- ✅ MemoryProvider 8-capability interface 정합 (`@nextain/agent-types`)
+- ✅ MemoryProvider capability 인터페이스 (`isCapable` 런타임 감지 — 5 capability: Backup / ImportanceScoring / Reconsolidation / Temporal / Compactable — `src/memory/provider-types.ts`)
 - ✅ Cost tracking — 측정마다 usage + estimated USD report 에 기록
 - ✅ Multi-metric scorer (keyword / polarity-aware / hard / embedding cosine)
-- ✅ naia-agent 통합 ready — `pnpm smoke:naia-memory` 검증 완료
+- ✅ naia-agent 통합 ready — **naia-agent** 레포의 통합 smoke 로 검증 (이 패키지의 스크립트 아님)
 
 ### 다음 — 벤치마크 framework
 

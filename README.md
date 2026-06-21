@@ -24,7 +24,7 @@ Naia Memory is one of four repos in the Naia open-source AI platform:
 
 ### Interfaces, not dependencies
 
-Naia Memory is **one implementation of the `MemoryProvider` contract** specified in `@nextain/agent-types`:
+Naia Memory is **one implementation of the `MemoryProvider` contract**. The contract currently lives in this package at `src/memory/provider-types.ts` (re-exported from `@nextain/naia-memory`); extracting it into a standalone `@nextain/agent-types` package is planned but not yet shipped:
 
 - **Transparent** — the contract is public. Any memory system that implements it can replace Naia Memory without touching runtime code.
 - **Non-binding** — naia-memory does not depend on naia-agent's runtime. naia-agent treats this package as a black box behind the interface.
@@ -85,21 +85,29 @@ Naia is **closer to a human brain**: store the important parts only, forget what
 ```
 src/
 ├── memory/
-│   ├── index.ts                # MemorySystem — main orchestrator
-│   ├── types.ts                # MemoryProvider type contract
+│   ├── index.ts                # MemorySystem — main orchestrator + package entry exports
+│   ├── types.ts                # Storage MemoryAdapter contract + core domain types (Episode/Fact/Skill/Reflection/…)
+│   ├── provider-types.ts       # MemoryProvider contract + capability interfaces + isCapable() runtime detection
+│   ├── lite-provider.ts        # LiteMemoryProvider — 8G-tier minimal MemoryProvider impl (exported)
 │   ├── importance.ts           # 3-axis importance scoring
 │   ├── decay.ts                # Ebbinghaus forgetting curve
 │   ├── reconsolidation.ts      # Contradiction detection on consolidation
-│   ├── contradiction-filter.ts # R2.5 — heuristic / Gemini / vLLM filter providers
+│   ├── contradiction-filter.ts # R2.5 — heuristic / Gemini / vLLM filter providers (selectFilter)
+│   ├── reranker.ts             # Cross-encoder reranker providers (Identity / Offline)
+│   ├── spike.ts                # R4 background-brain spike + ActiveContext types (SubscribableMemory)
 │   ├── knowledge-graph.ts      # Entity/relation extraction + spreading activation
 │   ├── embeddings.ts           # 4 providers (OpenAI-compat, offline, HF, gateway)
-│   ├── llm-fact-extractor.ts   # LLM-based atomic fact extraction
+│   ├── llm-fact-extractor.ts   # LLM-based atomic fact extraction (buildLLMFactExtractor)
+│   ├── llm-summarizer.ts       # LLM compaction summarizer (buildLLMSummarizer)
 │   ├── usage-tracker.ts        # Per-run token + cost tracking
+│   ├── ko-normalize.ts         # Korean text normalization (internal)
+│   ├── ko-time-parser.ts       # Korean temporal expression parsing (internal)
+│   ├── algorithms/             # A/B experiment variants (variantA control / variantB treatment)
 │   └── adapters/
 │       ├── local.ts            # JSON + cosine + BM25 + KG (default, complete) ← naia-agent integrates here
 │       ├── sqlite.ts           # SQLite + FTS5/BM25 + sqlite-vec + R-Tree (in progress — 100k+ scaling path)
 │       ├── sqlite-worker.ts    #   DB I/O worker thread for sqlite.ts
-│       ├── mem0.ts             # mem0 OSS backend (stack-on-top hybrid)
+│       ├── mem0.ts             # mem0 OSS backend (stack-on-top hybrid — internal/benchmark-only, not exported)
 │       └── qdrant.ts           # Qdrant vector DB
 └── benchmark/
     ├── aihub141/               # Korean R2.3 multi-session bench (Phase A)
@@ -160,8 +168,11 @@ const result = await memory.recall("What is the user's job?", {
 });
 // result.facts: Fact[], result.episodes: Episode[]
 
-// Sleep cycle (manual or automatic every 30 min)
+// Sleep cycle — run on demand:
 await memory.consolidateNow();
+// ...or let the host start the background timer (every consolidationIntervalMs,
+// default 30 min). The timer does NOT auto-start; the host opts in:
+memory.startConsolidation(); // stop with memory.stopConsolidation()
 ```
 
 For naia-agent / naia-os integration, see [`docs/integration.md`](docs/integration.md) — the SoT for wire-in patterns, settable parameters, and 2 prefab profiles (cloud / local privacy).
@@ -276,10 +287,10 @@ See [`docs/integration.md`](docs/integration.md) for full details and `buildMemo
 
 - ✅ R1 stabilization (7 slices) · R2 capability (4 slices) · R3 Korean tuning
 - ✅ Phase A — Korean R2.3 multi-session bench (AI Hub 141, 100 conv, **76.8% cosine**)
-- ✅ MemoryProvider 8-capability interface alignment with `@nextain/agent-types`
+- ✅ MemoryProvider capability interface (`isCapable` runtime detection over 5 capabilities — Backup / ImportanceScoring / Reconsolidation / Temporal / Compactable — in `src/memory/provider-types.ts`)
 - ✅ Cost tracking — per-run usage + estimated USD in report
 - ✅ Multi-metric scorer (keyword / polarity-aware / hard / embedding cosine)
-- ✅ naia-agent integration ready — `pnpm smoke:naia-memory` verified
+- ✅ naia-agent integration ready — verified via the integration smoke in the **naia-agent** repo (not a script in this package)
 
 ### Next — bench framework
 

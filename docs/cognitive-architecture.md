@@ -166,7 +166,9 @@ On spike event:
 | **Privacy 데이터** | project scope + irrelevant isolation | PII redaction + active context filter |
 | **Daily 사용 측정** | snapshot + diff | survey + Likert eval |
 
-공유 schema = `@nextain/agent-types` (SpikeEvent / ActiveContext).
+공유 schema (`SpikeEvent` / `ActiveContext` / `SpikeAction` / `SubscribableMemory`)
+는 현재 `src/memory/spike.ts` 에 정의되어 `@nextain/naia-memory` 에서 re-export 된다.
+독립 `@nextain/agent-types` 패키지로 옮기는 것은 계획(naia-agent#27)이며 아직 ship 전.
 
 ---
 

@@ -56,23 +56,34 @@ const memory = new MemorySystem({
 
 ### 1.1 Adapter (backend)
 
-| Adapter | 용도 | 의존 |
-|---|---|---|
-| **`SqliteAdapter`** | **권장 Default**. SQLite + R-Tree + FTS5 + vec0. 대규모(1M+) 확장성 | better-sqlite3, sqlite-vec |
-| `LocalAdapter` | JSON store + cosine + BM25 + KG. 소규모/개발용 | embedding provider |
-| `Mem0Adapter` | mem0 OSS backend (vector store + LLM dedup). \"stack on top\" 패턴 | mem0ai/oss + embedding/llm config |
-| `QdrantAdapter` | Qdrant vector DB | qdrant client |
+| Adapter | 용도 | 상태 | 의존 / import |
+|---|---|---|---|
+| **`LocalAdapter`** | **실제 Default**. JSON store + cosine + BM25 + KG. 데스크톱/단일 사용자, 수만 fact 까지. `MemorySystem` 이 adapter 미주입 시 자동 생성하는 경로이자 `naia-agent` 연동 경로 | **Complete** | embedding provider · `@nextain/naia-memory` export |
+| `SqliteAdapter` | SQLite + R-Tree + FTS5 + vec0. 대규모(100k+) 확장 경로 | **In progress** (store / keyword recall / getAll 동작, 고급 retrieval 미완 parity) | better-sqlite3, sqlite-vec · `@nextain/naia-memory` export |
+| `QdrantAdapter` | Qdrant vector DB | 동작 (embeddingProvider 필수) | qdrant client · `@nextain/naia-memory` export |
+| `Mem0Adapter` | mem0 OSS backend (vector store + LLM dedup). \"stack on top\" 패턴 | **internal / benchmark-only** — `index.ts` 가 export 하지 않음 (벤치마크 `naia-on-mem0` 경로 전용). 패키지 entry 에서 import 불가 | mem0ai/oss (devDependency) |
+
+adapter 를 명시하지 않으면 `MemorySystem` 이 `LocalAdapter` 를 자동 생성한다
+(소스: `src/memory/index.ts` 생성자). SQLite 경로는 `SqliteAdapter` 를 명시
+주입해 opt-in 한다.
 
 ```ts
-import { SqliteAdapter } from "@nextain/naia-memory";
+import { LocalAdapter, SqliteAdapter } from "@nextain/naia-memory";
 
+// 기본 경로 — adapter 생략 시 MemorySystem 이 내부적으로 이걸 만든다.
+new LocalAdapter({
+  storePath,                   // host 가 결정한 JSON store 경로
+  embeddingProvider: embedder, // EmbeddingProvider (생략 시 keyword-only recall)
+});
+
+// 확장 경로 (in progress) — 명시 opt-in.
 new SqliteAdapter({
-  dbPath: "~/.naia/memory/naia-memory.db",
-  embeddingProvider: ..., // EmbeddingProvider (필수 권장)
+  dbPath,                      // host 가 결정한 SQLite DB 경로
+  embeddingProvider: embedder, // EmbeddingProvider (필수 권장)
 });
 ```
 
-### 1.2 Embedding provider (5개 옵션)
+### 1.2 Embedding provider (4개 옵션)
 
 ```ts
 import {
@@ -206,7 +217,7 @@ const result = await memory.recall(
   query,  // string
   {
     project?: string,
-    topK?: number,           // default 10
+    topK?: number,           // default 20
     deepRecall?: boolean,    // true 시 episode 도 포함 (default false = fact only)
     atTimestamp?: number,    // R2.3 bi-temporal: 해당 시점 기준 회상
   },
@@ -218,8 +229,11 @@ result.episodes: Episode[];  // deepRecall=true 시
 
 ### 2.3 consolidate (sleep cycle)
 
-자동: `consolidationIntervalMs` 마다 (default 30분).
-수동: `await memory.consolidateNow(force)` — force=true 면 1시간 age gate 무시.
+자동: host 가 `memory.startConsolidation()` 를 호출하면 `consolidationIntervalMs`
+마다 (default 30분) 실행. **생성만으로는 타이머가 돌지 않는다** — host 가 명시적으로
+시작/중지(`startConsolidation()` / `stopConsolidation()`)한다.
+수동: `await memory.consolidateNow(force)` — force=true 면 **5분 age gate** 무시
+(에피소드가 5분 이상 묵어야 consolidate 대상; force 시 즉시 처리).
 
 ### 2.4 close
 
@@ -229,21 +243,36 @@ await memory.close();  // adapter cleanup
 
 ## 3. Capability 패턴 (graceful degradation)
 
-```ts
-import { isCapable } from \"@nextain/agent-types\";
+`isCapable` 와 capability 인터페이스는 `@nextain/naia-memory` 본 패키지에서 import
+한다 (`src/memory/provider-types.ts` 정의, `index.ts` 재-export). 별도
+`@nextain/agent-types` 패키지는 아직 ship 되지 않았다.
 
-if (isCapable<TemporalCapable>(memory, \"temporal\")) {
-  await memory.atTimestamp(...);  // R2.3 bi-temporal
+시그니처는 **제네릭이 아니라 문자열 기반**이다 —
+`isCapable(provider, capName: string): boolean`. `capName` 은 capability
+인터페이스 이름을 그대로 넘긴다.
+
+```ts
+import { isCapable } from \"@nextain/naia-memory\";
+
+if (isCapable(provider, \"TemporalCapableProvider\")) {
+  // applyDecay() / recallWithHistory() 사용 가능 (R2.3 bi-temporal)
 }
 
-if (isCapable<ReconsolidationCapable>(memory, \"reconsolidation\")) {
-  // R2.5 contradiction handling 동작
+if (isCapable(provider, \"ReconsolidationCapableProvider\")) {
+  // findContradictions() 사용 가능 (R2.5 contradiction handling)
 }
 ```
 
-8 capability: `BackupCapable`, `EmbeddingCapable`, `KnowledgeGraphCapable`,
-`ImportanceCapable`, `ReconsolidationCapable`, `TemporalCapable`,
-`SessionRecallCapable`, `CompactableCapable`.
+5 capability (`provider-types.ts` 의 `CAPABILITY_METHODS` SoT):
+`BackupCapableProvider` (exportBackup·importBackup), `ImportanceScoringCapable`
+(scoreImportance), `ReconsolidationCapableProvider` (findContradictions),
+`TemporalCapableProvider` (applyDecay·recallWithHistory),
+`CompactableCapableProvider` (compact).
+
+> ⚠️ `isCapable` 은 **`MemoryProvider` 어댑터(예: 본 패키지가 export 하는
+> `LiteMemoryProvider`)** 의 메서드 유무를 확인한다. `MemorySystem` 자신은
+> `MemoryProvider` 계약이 아니라 자체 `encode`/`recall`/`consolidateNow` API 를
+> 노출하므로, `isCapable(memorySystem, ...)` 가 아니라 provider 인스턴스에 쓴다.
 
 ## 4. 권장 사용자 setting 항목 (naia-agent 가 UI 로 받을 것)
 
@@ -346,12 +375,21 @@ export async function buildMemory(setting: NaiaMemorySetting) {
 
 ## 6. 검증
 
-- `naia-agent/examples/naia-memory-host.ts` (Slice 3) — 동작하는 reference
-- `pnpm smoke:naia-memory` — naia-agent 측 smoke (R2.3 bi-temporal + R2.5 filter)
+본 레포(naia-memory) 측:
+- `pnpm test` (vitest) — `src/memory/__tests__/` 단위/계약 테스트
+- `pnpm run test:sqlite` — SqliteAdapter 스모크 (`scripts/test-sqlite.mjs`)
+- `pnpm run benchmark` — 비교 벤치 (`src/benchmark/comparison/run-comparison.ts`)
 - Phase A 측정 결과 (issue #23) — 한국어 76.8% semantic recall
+
+통합 측(naia-agent) 책임 (이 레포 스크립트 아님 — 통합 측 레포에서 실행):
+- naia-agent 의 host reference 및 R2.3 bi-temporal + R2.5 filter smoke 는
+  naia-agent 레포의 example / smoke 스크립트에서 검증한다.
 
 ## 7. 변경 시 주의
 
-- `MemoryProvider` interface 는 `@nextain/agent-types` 의 SoT — naia-memory 는 *충실 구현* 만
+- `MemoryProvider` interface 의 **현재 SoT 는 본 패키지 `src/memory/provider-types.ts`**
+  (`@nextain/naia-memory` 가 re-export). 별도 `@nextain/agent-types` 패키지는 아직
+  ship 되지 않았다 — provider-types.ts 헤더의 `TODO`(agent-types 발행 시 re-export 로
+  치환) 가 미래 계획. naia-memory 는 이 계약의 *충실 구현* 책임.
 - naia-memory 자체에 setting UI / config file loader X — 통합 측 책임
 - env var fallback 은 *벤치마크 편의* 용도 — production 통합 시 명시 주입 권장

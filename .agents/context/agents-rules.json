@@ -192,6 +192,7 @@
 		"description": "루트 파일은 이 목록만 허용. 새 파일 생성 전 목록에 먼저 추가 (사용자 승인 후).",
 		"allowed_root_files": [
 			".editorconfig",
+			".env.example",
 			".gitignore",
 			".gitmodules",
 			"AGENTS.md",
