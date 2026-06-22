@@ -29,7 +29,7 @@
     "src/memory/",
     "src/utils/",
     "README.md",
-    "README.ko.md",
+    "README.en.md",
     "LICENSE"
   ],
   "publishConfig": {

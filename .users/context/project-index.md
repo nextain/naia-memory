@@ -76,7 +76,7 @@
 ## 진입점
 
 - `README.md`
-- `README.ko.md`
+- `README.en.md`
 - `docs/integration.md` — naia-agent / naia-os 통합을 위한 SoT
 - `.agents/context/project-index.yaml`
 - `.agents/progress/r2-bench-trust-2026-05-07.md` — 현재 SoT 계획

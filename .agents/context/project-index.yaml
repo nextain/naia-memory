@@ -29,7 +29,7 @@ quarantine:
 
 entry_points:
   - README.md
-  - README.ko.md
+  - README.en.md
   - docs/integration.md  # SoT for naia-agent / naia-os integration
   - .agents/context/project-index.yaml
   - .agents/progress/r2-bench-trust-2026-05-07.md  # current SoT plan

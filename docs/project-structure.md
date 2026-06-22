@@ -58,8 +58,8 @@
 | `LICENSE` | 라이선스 |
 | `MEMORY.md` | 프로젝트 메모리 인덱스 |
 | `OPENCODE.md` | AGENTS.md mirror (opencode) |
-| `README.ko.md` | 한국어 README |
-| `README.md` | 이 repo 소개 (영어 entry) |
+| `README.en.md` | 영어 README |
+| `README.md` | 이 repo 소개 (한국어 entry) |
 | `package-lock.json` | npm 잠금 파일 |
 | `package.json` | 패키지 설정 |
 | `pnpm-lock.yaml` | pnpm 잠금 파일 |
