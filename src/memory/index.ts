@@ -36,6 +36,7 @@ export {
 	type ContradictionFilterProvider,
 } from "./contradiction-filter.js";
 import { findContradictions, findContradictionsWith } from "./reconsolidation.js";
+import { filterNegativeCapture } from "./negative-capture.js";
 import type {
 	BackupCapable,
 	ConsolidationResult,
@@ -924,7 +925,17 @@ export class MemorySystem {
 
 			if (readyEpisodes.length > 0) {
 				// 2. Extract facts from episodes
-				const extracted = await this.factExtractor(readyEpisodes);
+				const extractedRaw = await this.factExtractor(readyEpisodes);
+				// negative-capture (hermes-derived): drop transient/env-dependent "facts" that would
+				// harden into durable self-imposed constraints (e.g. "tool X is broken"). Deterministic
+				// backstop to the LLM extractor's prompt-level policy (negative-capture.ts). Single
+				// chokepoint here covers both the heuristic and the LLM extractor.
+				const { kept: extracted, dropped: negDropped } = filterNegativeCapture(extractedRaw);
+				if (negDropped.length > 0 && process.env.NAIA_FILTER_DEBUG === "1") {
+					console.error(
+						`[NEG_CAPTURE] dropped ${negDropped.length} fact(s): ${negDropped.map((d) => d.reason).join(", ")}`,
+					);
+				}
 
 				// Dedup entity-pair associations across the entire cycle (not just per-fact)
 				const seenPairs = new Set<string>();

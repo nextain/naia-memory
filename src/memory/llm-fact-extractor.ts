@@ -120,6 +120,13 @@ Rules:
 - Do NOT invent facts not present in the input
 - CRITICAL: When the turn mentions relative time ("yesterday", "last week", "last night"), resolve it using the [Date: YYYY-MM-DD] tag. Example: if tagged [Date: 2023-05-08] and text says "yesterday", write the fact as "User went to the LGBTQ support group on 2023-05-07" or "on 7 May 2023".
 
+DO NOT capture transient or environment-dependent failures as facts (negative-capture policy). These harden into durable self-imposed constraints that bite later when the environment changes:
+- Environment-dependent failures: missing binaries, "command not found", not-installed packages, unconfigured credentials, fresh-install or post-migration path mismatches. The user can fix these — they are NOT durable facts.
+- Negative claims about tools/features ("X tool is broken", "browser tools don't work", "cannot use Y"). NEVER store these — they become refusals the agent cites against itself for months after the problem is fixed.
+- Transient errors that resolved on retry (timeouts, 5xx, 429, connection refused). If retrying worked, there is no durable fact — at most the retry pattern.
+- One-off task narratives ("summarized today's news") — not a durable fact about the user.
+If a failure was caused by setup state, capture the FIX (the install/config/env step) as the fact — never the failure itself.
+
 CRITICAL — UPDATE / CHANGE / REPLACEMENT statements:
 Update statements (where the speaker signals that a previously-true value
 has been replaced — e.g. "switched to X", "changed to Y", "now using Z",
