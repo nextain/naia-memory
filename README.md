@@ -1,148 +1,32 @@
-# Naia Memory (formerly Alpha Memory)
+# Naia Memory
 
-**AI 에이전트용 인지 메모리 아키텍처** — 중요도 게이팅 인코딩, 벡터 검색, 지식 그래프, 에빙하우스 망각 곡선, 다국어 벤치마크 스위트.
+[한국어](README.md) · [English](README.en.md) · [문서 색인](docs/README.md)
 
-[한국어](README.md) | [English](README.en.md)
+AI 에이전트가 사람처럼 기억하게 만드는 라이브러리입니다. 대화가 오갈 때마다 모든 문장을 그대로 벡터로 저장하는 대신, 사람의 기억을 흉내 냅니다. 중요한 것만 남기고, 한동안 꺼내 쓰지 않은 기억은 서서히 흐려지며, 다시 떠올린 기억은 오히려 또렷해집니다. 앞뒤가 안 맞는 사실이 들어오면 옛 기억을 새 사실로 갱신합니다.
 
-> **상태 (2026-05-08)** — `naia-agent` 통합 ship-ready.
-> Phase A 한국어 R2.3 (AI Hub 141 멀티세션), recall@20: **키워드 69.1% / polarity-aware 62.8% / cosine-semantic 76.8%**. 같은 작업 분량 mem0 대비 **12배 빠름**.
-> ⚠️ **재현성(정직)**: AI Hub 141 원본 데이터는 **재배포 불가**(NIA 라이선스) → 커밋된 산출물은 loader + scorer + **키워드** 리포트([`reports/aihub141-r2-3-reanalysis-100conv.md`](reports/aihub141-r2-3-reanalysis-100conv.md)) 뿐. **76.8% cosine**은 *별도 재해석* — 데이터를 직접 제공(`AIHUB_141_PATH`)하고 `src/benchmark/aihub141/embedding-reanalyze.ts`를 돌려야 재현되며, 그 출력은 **미커밋**(data-gated). LoCoMo J-score(mem0 67%/Letta 74%) 대비는 **다른 metric → 비교 disclaim**, like-for-like 순위 아님.
-> naia-agent / naia-os 통합 가이드: [`docs/integration.md`](docs/integration.md). 측정 상세: [issue #23](https://github.com/nextain/naia-memory/issues/23).
+그리고 그 기억은 사용자의 컴퓨터 안에 남습니다. 서비스 제공자에게 대화를 넘겨 원격 서버에서 기억을 관리하는 방식이 아니라, 로컬 파일이나 로컬 데이터베이스에 저장하고 사용자가 소유합니다.
 
----
+## 무엇을 하는가
 
-## Naia 생태계에서의 위치
+에이전트와 사용자가 나눈 대화를 받아서 두 가지 일을 합니다. 하나는 저장(encode)이고, 하나는 회상(recall)입니다.
 
-Naia Memory는 Naia 오픈소스 AI 플랫폼 4개 레포 중 하나:
+저장할 때는 들어온 발화가 기억할 만한지 먼저 따집니다. "안녕" 같은 의미 없는 인사는 걸러지고, "디자인 회사로 직장을 옮겼어" 처럼 중요한 정보는 남습니다. 그 판단은 세 가지 축의 점수로 이뤄집니다. 얼마나 중요한 내용인지(importance), 기존에 알던 것과 얼마나 다른 새로운 정보인지(surprise), 감정이 실렸는지(emotion)입니다.
 
-| Repo | 역할 |
-|------|------|
-| [naia-os](https://github.com/nextain/naia-os) | 데스크톱 셸 + OS 이미지 (호스트) |
-| [naia-agent](https://github.com/nextain/naia-agent) | 런타임 엔진 (loop · tools · compaction) |
-| [naia-adk](https://github.com/nextain/naia-adk) | 워크스페이스 포맷 + 스킬 라이브러리 |
-| **naia-memory** (본 레포) | 메모리 구현체 |
+회상할 때는 질문을 받아 관련 기억을 찾아 돌려줍니다. 이때 단순히 벡터 유사도 하나만 보지 않습니다. 뜻이 비슷한 것을 찾는 의미 검색(코사인 유사도)과 단어가 겹치는 것을 찾는 키워드 검색(BM25)을 함께 돌리고, 서로 다른 두 순위를 하나로 합칩니다(RRF, Reciprocal Rank Fusion). 여기에 지식 그래프로 연관된 기억을 끌어오고(spreading activation), 마지막으로 비슷한 결과가 중복되지 않도록 다양성을 확보합니다(MMR, Maximal Marginal Relevance).
 
-### 의존성이 아닌 인터페이스
-
-Naia Memory는 **`MemoryProvider` 계약을 충실 구현한 한 가지 구현체**다. 이 계약은 현재 본 패키지의 `src/memory/provider-types.ts` 에 있고(`@nextain/naia-memory` 가 re-export), 독립 `@nextain/agent-types` 패키지로 분리하는 것은 계획돼 있으나 아직 ship 되지 않았다:
-
-- **투명** — 계약은 공개. 같은 계약을 구현한 어떤 메모리 시스템도 런타임 코드 변경 없이 교체 가능
-- **비결합** — naia-memory는 naia-agent 런타임에 의존 X. naia-agent는 본 패키지를 인터페이스 뒤의 블랙박스로 처리
-- **추상화** — Naia Memory를 다른 구현체(mem0, Letta 등)로 교체해도 Naia 생태계 다른 부분은 변경 X
-
-Naia 의 광범위한 원칙: 레포는 **공개 인터페이스** 로 결합, 런타임 의존 X. 자세히는 [naia-agent README](https://github.com/nextain/naia-agent).
-
----
-
-## 개요
-
-Naia Memory는 인지 과학 영감 4-store 메모리 아키텍처 구현:
-
-| Store | 뇌 비유 | 저장 내용 |
-|-------|---------|-----------|
-| **Episodic** | 해마 | 시간 표시된 이벤트 + 전체 맥락 |
-| **Semantic** | 신피질 | 사실, 엔티티, 관계 |
-| **Procedural** | 기저핵 | 스킬, 전략, 학습된 패턴 |
-| **Working** | 전전두피질 | 활성 컨텍스트 (외부 관리) |
-
-### 주요 기능
-
-- **Importance gating** — 3축 점수 (importance × surprise × emotion) 로 저장 대상 필터링
-- **Knowledge graph** — 엔티티/관계 추출 + 의미 회상용 spreading activation
-- **Ebbinghaus decay** — 시간에 따라 메모리 강도 감소, 회상 시 강화
-- **Reconsolidation (R2.5)** — consolidation 시 모순 필터; 오래된 사실 supersede
-- **Bi-temporal recall (R2.3)** — 과거 시점 회상; 멀티세션 연속성
-- **Pluggable adapters** — 하나의 `MemoryAdapter` 인터페이스 뒤 두 개의 교체 가능 저장 백엔드: **LocalAdapter**(JSON + cosine + BM25 + KG — 완성, 기본값, naia-agent 가 연동하는 경로)와 **SqliteAdapter**(SQLite + FTS5/BM25 + sqlite-vec + R-Tree, worker 격리 — *진행 중*, 10만+ 스케일링 경로); 추가로 Mem0 / Qdrant 벡터 백엔드
-- **다국어 벤치마크** — 한국어 (AI Hub 141 멀티세션) + 영어 (LoCoMo 예정)
-
----
-
-## 동작 원리 (일반인 수준)
-
-대부분 메모리 시스템 = "검색 엔진" (vector store) — 모두 저장 후 cosine 검색.
-
-Naia 는 **사람 뇌에 가까움** — 중요한 것만 저장, 안 쓰면 잊음, 주기적으로 sleep cycle 동안 정리, 모순 발생 시 update.
-
-| Mechanism | 뇌 비유 | 효과 |
-|---|---|---|
-| Importance gating | 선택적 주의 | 의미 없는 turn ("안녕") 필터링 |
-| Sleep cycle (consolidation) | 수면 중 기억 정리 | 배치 fact 추출 (raw 대화 → atomic fact) |
-| Ebbinghaus decay | 망각 곡선 | 오래된 안 쓰는 fact 자연 약화 |
-| Reconsolidation | 모순 발생 시 update | "직장 옮겼어" 가 이전 직업 fact supersede |
-| Knowledge graph + spreading | 연관 회상 | "라면" 으로 "친구" + "금요일" 활성 |
-
-**Trade-off**:
-- ✅ 빠름 (lazy batch consolidate, 60-turn 대화 ~2분)
-- ✅ 저렴 ($0.005 / 100-turn 클라우드 모드)
-- ✅ 인지 mechanism (단순 vector 검색 X)
-- ❌ 절대 1등 X (영어 MemU 92% / MemMachine 85%)
-- ❌ 일부 mechanism (decay curve, R2.5 자연 trigger) 는 unit 벤치로 검증 어려움; 통합 레벨 측정 필요
-
----
-
-## 아키텍처
-
-```
-src/
-├── memory/
-│   ├── index.ts                # MemorySystem — 메인 오케스트레이터 + 패키지 entry export
-│   ├── types.ts                # 스토리지 MemoryAdapter 계약 + 핵심 도메인 타입 (Episode/Fact/Skill/Reflection/…)
-│   ├── provider-types.ts       # MemoryProvider 계약 + capability 인터페이스 + isCapable() 런타임 감지
-│   ├── lite-provider.ts        # LiteMemoryProvider — 8G tier 최소 MemoryProvider 구현 (export)
-│   ├── importance.ts           # 3축 importance 점수
-│   ├── decay.ts                # Ebbinghaus 망각 곡선
-│   ├── reconsolidation.ts      # consolidation 시 모순 감지
-│   ├── contradiction-filter.ts # R2.5 — heuristic / Gemini / vLLM 3개 provider (selectFilter)
-│   ├── reranker.ts             # cross-encoder reranker provider (Identity / Offline)
-│   ├── spike.ts                # R4 background-brain spike + ActiveContext 타입 (SubscribableMemory)
-│   ├── knowledge-graph.ts      # 엔티티/관계 추출 + spreading activation
-│   ├── embeddings.ts           # 4개 provider (OpenAI-compat / offline / HF / gateway)
-│   ├── llm-fact-extractor.ts   # LLM 기반 atomic fact 추출 (buildLLMFactExtractor)
-│   ├── llm-summarizer.ts       # LLM compaction summarizer (buildLLMSummarizer)
-│   ├── usage-tracker.ts        # 측정마다 토큰 + cost 추적
-│   ├── ko-normalize.ts         # 한국어 텍스트 정규화 (내부)
-│   ├── ko-time-parser.ts       # 한국어 시간 표현 파싱 (내부)
-│   ├── algorithms/             # A/B 실험 variant (variantA control / variantB treatment)
-│   └── adapters/
-│       ├── local.ts            # JSON + cosine + BM25 + KG (default, 완성) ← naia-agent 연동 경로
-│       ├── sqlite.ts           # SQLite + FTS5/BM25 + sqlite-vec + R-Tree (진행 중 — 10만+ 스케일링 경로)
-│       ├── sqlite-worker.ts    #   sqlite.ts 용 DB I/O 워커 스레드
-│       ├── mem0.ts             # mem0 OSS 백엔드 (stack-on-top hybrid — 내부/벤치마크 전용, 미export)
-│       └── qdrant.ts           # Qdrant 벡터 DB
-└── benchmark/
-    ├── aihub141/               # 한국어 R2.3 멀티세션 벤치 (Phase A)
-    │   ├── loader.ts           # AI Hub 141 zip → conversations
-    │   ├── scorer.ts           # recall@k, polarity-aware, hard match
-    │   ├── run.ts              # entry — naia-local / no-memory / mem0 / naia-on-mem0
-    │   ├── analyze.ts          # report → markdown 분석
-    │   ├── reanalyze.ts        # report → multi-metric 재해석 (cost 0)
-    │   └── embedding-reanalyze.ts  # report → cosine semantic recall
-    └── comparison/             # legacy fact-bank.json (R5–R14, archived)
-```
-
----
-
-## 설치
-
-```bash
-npm install @nextain/naia-memory
-# 또는
-pnpm add @nextain/naia-memory
-```
-
----
-
-## 사용 예
+가장 단순한 사용법은 이렇습니다.
 
 ```typescript
 import {
   MemorySystem,
   LocalAdapter,
   OpenAICompatEmbeddingProvider,
+  HeuristicContradictionFilter,
   buildLLMFactExtractor,
 } from "@nextain/naia-memory";
 
-// 3가지 명시 주입 — env-var 매직 X
+// 임베딩 provider 와 fact 추출기를 명시적으로 주입합니다.
+// 숨은 환경변수 매직 없이, 무엇을 쓰는지 코드에 드러냅니다.
 const embedder = new OpenAICompatEmbeddingProvider(
   baseURL, apiKey, "gemini-embedding-001", 3072,
 );
@@ -154,7 +38,14 @@ const factExtractor = buildLLMFactExtractor({
   apiKey, baseURL, model: "gemini-2.5-flash-lite",
 });
 
-const memory = new MemorySystem({ adapter, factExtractor });
+const memory = new MemorySystem({
+  adapter,
+  factExtractor,
+  // 모순 판정 필터도 명시적으로 넣습니다. 규칙 기반 필터는 외부 LLM 을
+  // 부르지 않습니다. 이 줄을 빼면 라이브러리가 환경변수(GEMINI_API_KEY 등)를
+  // 보고 필터를 자동으로 골라, 기본 상태에서도 판정이 외부로 나갈 수 있습니다.
+  contradictionFilter: new HeuristicContradictionFilter(),
+});
 
 // 저장
 await memory.encode(
@@ -164,181 +55,165 @@ await memory.encode(
 
 // 회상
 const result = await memory.recall("사용자 직업?", {
-  project: "personal", topK: 10,
+  project: "personal",
+  topK: 10,
 });
-// result.facts: Fact[], result.episodes: Episode[]
+// result.facts: 추출된 사실 목록
+// result.episodes: 원본 대화 조각 목록
+```
 
-// Sleep cycle — 수동 실행:
+`MemorySystem` 은 저장과 회상, 그리고 뒤에서 도는 정리 작업을 총괄하는 엔진입니다. 위 예제처럼 직접 써도 되고, naia-agent 같은 상위 런타임에 붙일 때는 아래 "계약 뒤에 숨는 구조"에서 설명하는 `MemoryProvider` 계약을 씁니다.
+
+정리 작업은 사람의 수면과 비슷합니다. 대화가 쌓이는 동안에는 원본을 그대로 두었다가, 나중에 한 번에 몰아서 원본 대화를 짧고 단단한 사실 조각으로 추출합니다.
+
+```typescript
+// 지금 바로 한 번 정리
 await memory.consolidateNow();
-// ...또는 host 가 백그라운드 타이머를 켠다 (consolidationIntervalMs 마다, default 30분).
-// 타이머는 자동 시작 X — host 가 명시적으로 opt-in:
-memory.startConsolidation(); // 중지는 memory.stopConsolidation()
+
+// 또는 백그라운드 타이머로 주기 실행 (기본 30분).
+// 타이머는 자동으로 켜지지 않습니다. 호스트가 명시적으로 켭니다.
+memory.startConsolidation();
+// 끄기: memory.stopConsolidation()
 ```
 
-naia-agent / naia-os 통합 가이드: [`docs/integration.md`](docs/integration.md) — wire-in 패턴, 설정 가능 파라미터, 2 prefab profile (cloud / local privacy) 의 SoT.
+## 특징
 
----
+**뇌를 본뜬 기억 구조.** 기억을 성격이 다른 저장소로 나눠 담습니다. 시간이 찍힌 사건을 맥락과 함께 담는 일화 기억(episodic, 해마에 비유)과, 거기서 추출한 사실과 관계를 담는 의미 기억(semantic, 신피질에 비유)이 핵심입니다. 여기에 반복해서 성공한 방법을 학습하는 절차 기억(procedural, 기저핵에 비유)의 기초 형태와, 지금 다루는 활성 맥락을 뜻하는 작업 기억(working, 전전두피질에 비유)이 있습니다. 일화·의미 기억은 완성되어 실제로 동작하고, 절차 기억은 스킬 성공/실패 집계 수준의 초기 형태이며, 작업 기억은 라이브러리가 저장하지 않고 상위 런타임이 관리합니다.
 
-## 최신 벤치마크 — Phase A (2026-05-07)
+**중요도 게이팅.** 앞서 말한 세 축(중요도, 새로움, 감정) 점수로 저장 대상을 거릅니다. 모든 발화를 저장하지 않기 때문에 저장소가 잡음으로 부풀지 않습니다.
 
-**AI Hub 141 — 한국어 멀티세션 대화** (실제 사람이 작성한 자연 대화).
-100 대화 × 4 세션, persona ground truth annotation.
+**망각 곡선과 강화.** 에빙하우스 망각 곡선을 따라 기억의 강도가 시간에 따라 줄어듭니다. 오래 안 쓴 사실은 자연히 약해지고, 반대로 회상할 때마다 그 기억의 수명이 늘어납니다. 자주 떠올리는 기억일수록 오래 남습니다.
 
-### Recall metrics (naia-local)
+**재응고와 모순 감지.** 정리 과정에서 새 사실이 기존 사실과 충돌하는지 봅니다. "직장을 옮겼어" 라는 발화가 들어오면 이전 직업 사실을 옛 것으로 밀어냅니다(supersede). 충돌 판정은 교체 가능한 필터로 합니다. 필터를 지정하지 않으면 라이브러리가 환경변수를 보고 자동으로 고릅니다. 로컬 vLLM 주소(`VLLM_REASONING_BASE`)가 있으면 vLLM, 없고 `GEMINI_API_KEY` 가 있으면 Gemini 를 부르며, 둘 다 없을 때만 규칙 기반(heuristic)으로 떨어집니다. 규칙 기반만 별도 LLM 호출이 없으므로, `GEMINI_API_KEY` 가 설정된 환경에서는 기본 상태에서도 모순 판정이 외부 LLM 으로 나갈 수 있습니다. 판정을 로컬에 묶어 두려면 위 예제처럼 규칙 기반 필터를 직접 주입하거나 로컬 vLLM 을 쓰면 됩니다.
 
-| 지표 | 값 | 의미 |
-|---|:-:|---|
-| recall@5 (loose keyword) | 38.4% | top-5 ranking — daily LLM context budget |
-| recall@10 (loose keyword) | 60.0% | mid-bound |
-| **recall@20 (loose keyword)** | **69.1%** | 원래 보고 (topK ceiling 으로 inflated) |
-| recall@20 (polarity-aware keyword) | 62.8% | 부정형 false positive 제외 |
-| **recall@20 (cosine 0.7 semantic)** | **76.8%** | **정직한 신호 — semantic 보존** |
-| recall@20 (hard substring) | 0.0% | naia 가 paraphrase — substring 미스는 *정상 동작* |
+**지식 그래프.** 엔티티와 관계를 뽑아 그래프로 잇습니다. "라면" 을 떠올리면 함께 등장했던 "친구", "금요일" 로 활성이 번져(spreading activation) 연관 기억을 함께 회상합니다.
 
-### Floor + 비교
+**하이브리드 검색.** 회상은 의미 검색(코사인)과 키워드 검색(BM25)을 RRF 로 합치고, 지식 그래프 연관과 MMR 다양성 확보를 더한 결과입니다. 이 위에 선택적으로 cross-encoder 재순위(reranker)를 얹을 수 있으나, 기본 reranker 는 순위를 바꾸지 않는 no-op 이고 실제 cross-encoder 모델은 호출하는 쪽에서 주입합니다.
 
-| Adapter | recall@20 | conv 당 시간 | conv 당 비용 |
-|---|:-:|:-:|:-:|
-| naia-local | 69.1% (kw) / **76.8%** (cosine) | **~2분** | ~$0.005 |
-| no-memory (절대 floor) | 0.0% | 0 | 0 |
-| mem0 (1-conv smoke) | 70.6% (kw) | ~24분 (12x 느림) | ~$0.05+ |
+**교체 가능한 저장 백엔드.** 저장 로직은 `MemoryAdapter` 하나의 인터페이스 뒤에 있어 백엔드를 갈아 끼울 수 있습니다. 자세한 구성은 아래 구조를 참고하세요.
 
-### 외부 LoCoMo 영어 baseline (다른 metric — disclaim)
+**프라이버시는 아키텍처 수준.** 기억 자체는 로컬 파일이나 로컬 데이터베이스에 저장되고 사용자가 소유합니다. 다만 임베딩, 사실 추출, 요약, 모순 판정은 구성에 따라 외부 모델을 부를 수 있습니다. 어떤 provider 를 쓸지는 라이브러리가 숨겨서 정하지 않고 호출하는 쪽이 명시적으로 주입하거나 환경변수로 고르므로, 무엇이 밖으로 나가는지가 코드에 드러납니다. 대화를 한 글자도 밖으로 내보내지 않으려면 임베딩·추출·요약은 로컬 모델로 붙이고, 모순 판정은 규칙 기반이나 로컬 vLLM 으로 두면 됩니다.
 
-| System | LoCoMo J-score | 비고 |
-|---|:-:|---|
-| MemU | 92.1% | top tier |
-| MemMachine | 84.9% | top tier |
-| Letta | 74.0% | mid tier |
-| naia (한국어 cosine) | 76.8% | ⚠️ 다른 metric — like-for-like 점수 아님 |
-| Mem0 | 67.0% | mid tier |
-| OpenAI ChatGPT memory | 52.9% | lower tier |
+## 왜 이렇게 만들었나
 
-**Caveat(표보다 먼저 읽을 것)**: LoCoMo 는 영어 QA의 LLM-as-judge J-score, naia 76.8% 는 한국어 추출 fact의 recall@k(cosine ≥0.7). **같은 측정이 아님** — 이 표는 대략적 위치 짐작이지 **순위 아님**, naia 행을 일부러 굵게 안 했다. 직접 비교 **disclaim**.
+대부분의 메모리 시스템은 사실상 검색 엔진입니다. 들어온 것을 전부 벡터로 저장하고 코사인 유사도로 꺼냅니다. 그러면 저장소가 무한히 커지고, 잡음이 쌓이고, 오래되어 틀린 정보와 최신 정보가 같은 자격으로 섞입니다.
 
-상세 결과: [`reports/aihub141-r2-3-reanalysis-100conv.md`](reports/aihub141-r2-3-reanalysis-100conv.md), [issue #23](https://github.com/nextain/naia-memory/issues/23).
+Naia Memory 의 목표는 벤치마크에서 완벽한 회상 점수로 1등 하는 것이 아닙니다. 사람의 기억을 닮는 것입니다. 사람은 모든 것을 기억하지 않습니다. 중요한 것을 남기고, 안 쓰면 잊고, 자주 떠올리면 또렷해지고, 사실이 바뀌면 갱신합니다. 이 성질들이 오래 함께 지내는 에이전트에게는 완벽한 기록보다 더 쓸모 있다고 봅니다.
 
-### Legacy 벤치마크 (archive)
+흐름으로 요약하면 이렇습니다. 발화가 들어오면 중요도 채점기(importance.ts)가 세 축 점수를 매겨 저장 여부를 정하고, 저장된 원본은 정리 단계에서 사실 추출기(llm-fact-extractor.ts)를 거쳐 의미 기억으로 옮겨지며, 회상 요청이 오면 어댑터(adapters/local.ts)가 코사인·BM25·지식 그래프·MMR 를 엮어 순위를 만들어 돌려줍니다. 그동안 망각 곡선(decay.ts)이 안 쓰는 기억의 강도를 계속 낮춥니다.
 
-R5-R14 의 `fact-bank.json` 결과 (R5 EN 84%, R6 KO 24.7% 등) → [`docs/archive/`](docs/archive/) 참고. Phase A 의 자연 대화 측정으로 대체. legacy fact-bank 는 합성 contradiction over-fit 문제 있음 (#22 retro).
+## 구조
 
----
+```
+src/
+├── memory/
+│   ├── index.ts                # MemorySystem — 저장·회상·정리 총괄 엔진 (패키지 진입점)
+│   ├── provider.ts             # NaiaMemoryProvider — MemoryProvider 계약 구현체 (소비자용 래퍼)
+│   ├── provider-types.ts       # MemoryProvider 계약 + capability 인터페이스 + isCapable() 감지
+│   ├── lite-provider.ts        # LiteMemoryProvider — 8G tier 경량 구현
+│   ├── types.ts                # MemoryAdapter 저장 계약 + 도메인 타입 (Episode/Fact/Skill 등)
+│   ├── importance.ts           # 중요도·새로움·감정 3축 채점
+│   ├── decay.ts                # 에빙하우스 망각 곡선, 회상 시 강화
+│   ├── reconsolidation.ts      # 정리 시 모순 감지·supersede
+│   ├── contradiction-filter.ts # 모순 판정 필터 (heuristic / Gemini / vLLM 선택)
+│   ├── knowledge-graph.ts      # 엔티티·관계 추출 + spreading activation
+│   ├── reranker.ts             # cross-encoder 재순위 (기본 no-op, cross-encoder 는 주입)
+│   ├── embeddings.ts           # 임베딩 provider 4종 (OpenAI 호환 / offline / HF / gateway)
+│   ├── llm-fact-extractor.ts   # 원본 대화 → 원자적 사실 추출
+│   ├── llm-summarizer.ts       # 컨텍스트 압축 요약기
+│   └── adapters/
+│       ├── local.ts            # JSON + 코사인 + BM25 + 지식 그래프 (완성·기본값)
+│       ├── sqlite.ts           # SQLite 백엔드 (진행 중, 아래 참고)
+│       ├── mem0.ts             # mem0 백엔드 (벤치마크 전용, 미공개)
+│       └── qdrant.ts           # Qdrant 벡터 DB 백엔드
+├── server/                     # Express HTTP 래퍼 (라이브러리를 REST 로 노출, port 9876)
+└── benchmark/
+    ├── aihub141/               # 한국어 멀티세션 회상 벤치 (AI Hub 141)
+    └── comparison/             # 다른 시스템(mem0/Letta 등)과 비교 어댑터
+```
 
-## 벤치마크 실행
+### 무엇을 import 할지
+
+패키지 진입점(`@nextain/naia-memory`)이 내보내는 것은 `MemorySystem`(엔진), `LocalAdapter`·`SqliteAdapter`·`QdrantAdapter`(저장 백엔드), `LiteMemoryProvider`(경량 구현), 임베딩 provider 들, `buildLLMFactExtractor`, 그리고 `MemoryProvider` 계약 타입입니다. 혼자 붙여 쓰고 실험할 때는 위 예제처럼 `MemorySystem` 을 직접 쓰는 것이 가장 간단합니다.
+
+### 계약 뒤에 숨는 구조
+
+naia-agent 같은 상위 런타임은 `MemorySystem` 을 직접 부르지 않고 `MemoryProvider` 계약(`provider-types.ts`)만 봅니다. 이 계약을 충실히 구현한 것이 `NaiaMemoryProvider`(`provider.ts`)로, 내부적으로 `MemorySystem` 에 위임합니다. 계약만 같으면 mem0 나 Letta 같은 다른 구현체로 갈아 끼워도 런타임 코드는 그대로입니다. 즉 naia-agent 는 메모리 구현을 인터페이스 뒤의 블랙박스로만 다룹니다.
+
+8GB 급 작은 환경을 위한 `LiteMemoryProvider` 도 같은 계약을 구현합니다. 무거운 정리·지식 그래프·워커 스레드를 얹지 않고, SQLite 에 사실을 append-only 로 저장한 뒤 주입된 임베더로 brute-force 코사인 회상만 합니다.
+
+### 저장 백엔드의 현재 상태
+
+기본값이자 완성된 백엔드는 `LocalAdapter` 입니다. JSON 파일에 저장하고 메모리 안에서 코사인·BM25·지식 그래프를 돌립니다. 데스크톱이나 1인 사용자, 수만 건 규모의 사실까지를 겨냥합니다. naia-agent 가 실제로 연동하는 경로도 이쪽입니다.
+
+`SqliteAdapter` 는 진행 중입니다. 저장과 키워드 회상, 벡터 회상(sqlite-vec), 그리고 자주 쓰는 사실을 따로 모아 빠르게 찾는 표면(hot) 티어까지는 동작합니다. 다만 감정 게이팅, 시점 앵커링, 지식 그래프 연관, 통찰 추출 같은 인지 기능은 아직 `LocalAdapter` 수준에 이르지 못했습니다. 그래서 지금 완성되어 기본으로 쓰이는 경로는 `LocalAdapter` 이고, `SqliteAdapter` 는 대규모 확장을 위한 성능 경로로 다듬는 중입니다.
+
+FTS5·sqlite-vec·R-Tree 를 묶어 인지 기능까지 `LocalAdapter` 와 같은 수준으로 끌어올리는 것이 남은 목표입니다.
+
+## Naia 생태계에서의 위치
+
+Naia Memory 는 Naia 오픈소스 AI 플랫폼을 이루는 네 개 레포 중 하나로, 기억을 담당합니다.
+
+- [naia-os](https://github.com/nextain/naia-os) — 데스크톱 셸과 OS 이미지 (호스트)
+- [naia-agent](https://github.com/nextain/naia-agent) — 대화 루프·도구·컨텍스트 압축 런타임
+- [naia-adk](https://github.com/nextain/naia-adk) — 워크스페이스 포맷과 스킬 라이브러리
+- **naia-memory** (이 레포) — 기억 구현체
+
+네 레포는 런타임 의존이 아니라 공개 인터페이스로 결합합니다. Naia Memory 는 naia-agent 런타임에 의존하지 않고, naia-agent 는 이 패키지를 `MemoryProvider` 계약 뒤의 블랙박스로만 다룹니다.
+
+## 설치와 시작
+
+```bash
+pnpm add @nextain/naia-memory
+# 또는
+npm install @nextain/naia-memory
+```
+
+소스에서 개발할 때는 이렇게 합니다.
 
 ```bash
 pnpm install
+pnpm exec tsc --noEmit   # 타입 체크
+pnpm exec vitest run     # 유닛 테스트
+```
 
-# Phase A — 한국어 R2.3 멀티세션 (AI Hub 141 dataset, 사용자가 별도 다운로드 필요)
+처음 코드를 읽는다면 `src/memory/index.ts`(엔진)와 `src/memory/provider-types.ts`(소비자 계약)부터 보면 전체 그림이 잡힙니다. 상위 런타임에 붙이는 방법은 [통합 가이드](docs/integration.md)에, 뇌를 본뜬 저장 구조의 설계 배경은 [인지 아키텍처](docs/cognitive-architecture.md)에 있습니다. 문서 전체 색인은 [docs/README.md](docs/README.md)를 보세요.
+
+## 로드맵과 평가
+
+### 어떻게 재보고 있나
+
+라이브러리가 표방하는 성질이 실제로 성립하는지 확인하는 벤치마크가 있습니다.
+
+한국어 회상 벤치(`src/benchmark/aihub141/`)는 AI Hub 141 한국어 멀티세션 대화 데이터로 회상 정확도를 잽니다. 사람이 쓴 자연스러운 대화 100건을 여러 세션에 걸쳐 넣고, 나중에 던진 질문에 관련 사실을 얼마나 되살리는지 recall@k 로 측정합니다. 원본 데이터는 NIA 라이선스 때문에 재배포할 수 없어서 레포에는 데이터 로더와 채점기만 커밋되어 있고, 데이터는 사용자가 직접 받아 `AIHUB_141_PATH` 로 넘겨야 재현됩니다. 데이터셋을 직접 받은 뒤 이렇게 돌립니다.
+
+```bash
+AIHUB_141_PATH=/path/to/aihub/141... \
 GEMINI_API_KEY=xxx \
-GATEWAY_URL=https://your-gateway GATEWAY_MASTER_KEY=xxx \
-AIHUB_141_PATH=/path/to/aihub/141.한국어멀티세션대화/...
   pnpm exec tsx src/benchmark/aihub141/run.ts \
-    --adapter=naia-local \
-    --limit=100 --level=4 --topK=20
-
-# Adapter: naia-local | no-memory | mem0 | naia-on-mem0
-# Level:   2 / 3 / 4 (멀티세션 갯수)
-
-# Multi-metric 재해석 (cost 0 — 기존 report 위에서)
-pnpm exec tsx src/benchmark/aihub141/reanalyze.ts \
-  reports/aihub141-r2-3-naia-local-*.json
-
-# Embedding cosine semantic 재해석 (~$0.005 per report)
-pnpm exec tsx src/benchmark/aihub141/embedding-reanalyze.ts \
-  reports/aihub141-r2-3-naia-local-*.json
+    --adapter=naia-local --limit=100 --level=4 --topK=20
 ```
 
-**Dataset**: [AI Hub 한국어 멀티세션 대화](https://www.aihub.or.kr/aihubdata/data/view.do?dataSetSn=71630) (NIA 라이선스 — 연구·교육용, 재배포 금지; loader-only commit 패턴, raw 데이터는 `AIHUB_141_PATH` env).
+다른 메모리 시스템(mem0/Letta 등)과 나란히 재보는 비교 어댑터는 `src/benchmark/comparison/` 에 있습니다.
 
----
+### 벤치마크 숫자를 읽을 때
 
-## 설정 — naia-agent 가 주입할 항목
+다른 시스템의 공개 점수(예: 영어 LoCoMo 데이터셋의 판정 점수)와 이 라이브러리의 한국어 recall@k 를 나란히 놓고 순위를 매기고 싶은 유혹이 있는데, 두 값은 측정 대상도 언어도 채점 방식도 다르므로 그렇게 읽으면 안 됩니다. 대략의 위치를 가늠하는 참고일 뿐 등수가 아닙니다. 목표 자체가 완벽한 회상 점수가 아니라 사람 같은 기억이므로, recall@k 나 지연 같은 대리 지표는 방향을 보는 신호이지 그 자체가 북극성은 아닙니다.
 
-Naia Memory 는 3가지 명시 주입 방식 (production path 에서 env-var 매직 X):
+### 앞으로
 
-| 주입 | 제공 형태 | Default fallback |
-|---|---|---|
-| **Embedding provider** | `OpenAICompatEmbeddingProvider(baseURL, apiKey, model, dims)` 또는 `OfflineEmbeddingProvider`, `HuggingFaceEmbeddingProvider`, `NaiaGatewayEmbeddingProvider` | 없음 |
-| **LLM fact extractor** | `buildLLMFactExtractor({ apiKey, baseURL, model })` | 없음 |
-| **Contradiction filter (선택)** | `selectFilter({ provider: 'heuristic'\|'gemini'\|'vllm', ... })` | heuristic (LLM 없음) |
+- 모순 필터 정확도를 재는 프레임워크(회상률, supersede 정밀도, 오탐률 3축)
+- 기억별 성질을 켜고 끄며 비교하는 A/B 측정
+- 다른 한국어 데이터셋으로 일반화 확인
 
-### 권장 prefab profile
+망각의 자연 발생, 자유 발화 흐름 속의 모순 감지, 절차 기억 같은 성질은 naia-agent·naia-os 와 결합한 통합 환경에서만 제대로 검증됩니다. 이 항목들은 해당 레포의 통합 벤치에서 추적합니다.
 
-**Profile A — 빠른 시작 (cloud)**:
-- LLM: Gemini 2.5 Flash Lite (Vertex AI gateway 권장 — production rate limit 회피)
-- Embedding: gemini-embedding-001 (3072d) 또는 vertex text-embedding-004 (768d)
-- Filter: heuristic (off)
-- 비용: ~$0.005 per 100 turn; daily 사용 시 월 ~$1-3
+## AI-Native 오픈소스
 
-**Profile B — Local privacy (사용자 GPU)**:
-- LLM: vLLM Gemma 4 E4B (port 8000, OpenAI-compatible)
-- Embedding: vLLM `bge-m3` 또는 offline `multilingual-e5-large`
-- Filter: vLLM Gemma 4 E4B
-- 비용: GPU 전기료만
+이 프로젝트는 AI 컨텍스트를 1급 산출물로 다룹니다. `.agents/` 의 컨텍스트 파일을 코드와 함께 버전 관리하고, AI 기여는 `Assisted-by:` git trailer 로 명시합니다. 기억은 로컬에 저장되어 사용자가 소유합니다. 임베딩·사실 추출·요약·모순 판정에 외부 모델을 붙이지 않는 한, 대화가 서비스 제공자의 서버로 넘어가지 않습니다.
 
-자세히는 [`docs/integration.md`](docs/integration.md) — `buildMemory(setting)` 참고 코드.
+`.agents/` 와 `.users/` 의 AI 컨텍스트는 [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) 라이선스입니다.
 
----
+## 라이선스
 
-## Roadmap
-
-### Done
-
-- ✅ R1 안정화 (7 슬라이스) · R2 capability (4 슬라이스) · R3 한국어 튜닝
-- ✅ Phase A — 한국어 R2.3 멀티세션 벤치 (AI Hub 141, 100 conv, **76.8% cosine**)
-- ✅ MemoryProvider capability 인터페이스 (`isCapable` 런타임 감지 — 5 capability: Backup / ImportanceScoring / Reconsolidation / Temporal / Compactable — `src/memory/provider-types.ts`)
-- ✅ Cost tracking — 측정마다 usage + estimated USD report 에 기록
-- ✅ Multi-metric scorer (keyword / polarity-aware / hard / embedding cosine)
-- ✅ naia-agent 통합 ready — **naia-agent** 레포의 통합 smoke 로 검증 (이 패키지의 스크립트 아님)
-
-### 다음 — 벤치마크 framework
-
-| Phase | 내용 | 비용 |
-|---|---|---|
-| **B-α** R2.5 contradiction filter framework | 합성 ledger + 3-axis scorer (recall / supersede precision / false positive) | ~400 LOC + ~$0.5 |
-| ~~B-β R2.3 forgetting curve~~ | **Skip** — 컨텍스트 작은 모델 + 실시간 압축 작업과 결합. 별도 시점 |
-| **B-γ** A/B mechanism 비교 | importance gating / KG spreading / naia-on-mem0 hybrid on/off | ~300 LOC + ~$1.5 |
-| **B-δ** Generalizability — 다른 한국어 dataset | KLUE / KorQuAD subset | ~200 LOC + ~$1 |
-
-### 미래 — 통합 레벨
-
-**naia-memory + naia-agent 결합 후에만 검증 가능** 한 mechanism (unit 레벨 X):
-- R2.3 자연어 시간 회상 ("어제" → timestamp 변환)
-- R2.5 자연 update 감지 (자유 발화 흐름 안에서)
-- Importance gating + emotion/surprise context 정확도
-- Procedural memory (skill) — agent loop 안에서만 의미
-- Daily 사용 ground (수개월 history) — naia-os 통합 후만 가능
-
-이 항목들은 `naia-agent` / `naia-os` 의 별도 벤치 issue 에서 추적.
-
----
-
-## 개발
-
-```bash
-pnpm install
-pnpm exec tsc --noEmit  # 타입 체크
-pnpm exec vitest run    # 유닛 테스트
-```
-
----
-
-## AI-Native Open Source
-
-본 프로젝트는 AI-native 개발 철학으로 만들어집니다:
-
-- **AI 컨텍스트는 1급 산출물** — `.agents/` 컨텍스트 파일을 코드와 함께 버전 관리
-- **아키텍처 단위의 프라이버시** — 메모리는 로컬 저장. 서비스 제공자가 접근 X
-- **AI 주권** — 사용자가 자신의 AI 메모리 소유
-- **투명한 AI 협업** — AI 기여는 `Assisted-by:` git trailer 로 명시
-
-`.agents/` 와 `.users/` 의 AI 컨텍스트는 [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) 라이선스.
-
----
-
-## License
-
-Apache 2.0 — [LICENSE](LICENSE) 참고.
-
-[Naia OS](https://github.com/nextain/naia-os) 의 일부, [Nextain](https://nextain.io) 제작.
+Apache License 2.0 — [LICENSE](LICENSE) 참고. [Nextain](https://nextain.io) 제작, [Naia OS](https://github.com/nextain/naia-os) 의 일부입니다.
