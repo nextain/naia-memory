@@ -1384,9 +1384,19 @@ export class MemorySystem {
 		if (rs.recent.length > this.rollingHeadroom) {
 			const evicted = rs.recent.splice(0, rs.recent.length - this.rollingHeadroom);
 			if (evicted.length > 0) {
-				const compressed = compressEvictedMessages(evicted);
-				rs.compressed = rs.compressed ? `${rs.compressed}\n${compressed}` : compressed;
-				// Truncate from the front when the stem exceeds its cap.
+				// Aggregate, don't append. Eviction fires one message at a time
+				// (encode is per-message), so appending a compressEvictedMessages
+				// block per eviction produced one verbose stanza PER MESSAGE — the
+				// stem grew unbounded and the "compaction" recap ended up LARGER
+				// than the window it replaced. Instead keep a bounded digest: a
+				// running count + the oldest evicted quote (the real tail start).
+				if (rs.evictedCount === undefined) rs.evictedCount = 0;
+				if (rs.evictedFirst === undefined) rs.evictedFirst = truncateForRecap(evicted[0].content, 80);
+				rs.evictedCount += evicted.length;
+				rs.compressed = `${rs.evictedCount} earlier message(s) compacted; oldest: "${rs.evictedFirst}"`;
+				// Defensive cap: the aggregate stem is bounded by construction, but
+				// honour rollingCompressedMax as a hard ceiling (e.g. an extremely
+				// long oldest-quote) with the same truncation sentinel as before.
 				if (rs.compressed.length > this.rollingCompressedMax) {
 					const overflow = rs.compressed.length - this.rollingCompressedMax;
 					rs.compressed = `[…earlier stem truncated…]\n${rs.compressed.slice(overflow)}`;
@@ -1877,6 +1887,12 @@ interface RollingSummary {
 	 *  the oldest entry is evicted when the cap is reached. */
 	topics: Map<string, number>;
 	firstUser?: string;
+	/** Aggregate count of messages evicted past the headroom. The compressed
+	 *  stem is a bounded digest of this count (+ the oldest evicted quote),
+	 *  NOT a per-eviction log — see updateRollingSummary. */
+	evictedCount?: number;
+	/** Oldest evicted message content (the true start of the compacted tail). */
+	evictedFirst?: string;
 }
 
 /** Serializable snapshot of a RollingSummary. */
@@ -1891,22 +1907,6 @@ export interface RollingSummarySnapshot {
 	toolCount: number;
 	topics: readonly string[];
 	firstUser?: string;
-}
-
-function compressEvictedMessages(
-	msgs: readonly { role: string; content: string; timestamp: number }[],
-): string {
-	const userCount = msgs.filter((m) => m.role === "user").length;
-	const assistantCount = msgs.filter((m) => m.role === "assistant").length;
-	const toolCount = msgs.filter((m) => m.role === "tool").length;
-	const first = msgs[0];
-	const last = msgs[msgs.length - 1];
-	const lines: string[] = [
-		`[evicted ${msgs.length}: ${userCount}u/${assistantCount}a/${toolCount}t]`,
-	];
-	if (first) lines.push(`  first: "${truncateForRecap(first.content, 80)}"`);
-	if (last && last !== first) lines.push(`  last: "${truncateForRecap(last.content, 80)}"`);
-	return lines.join("\n");
 }
 
 /**

@@ -1,0 +1,45 @@
+{
+  "benchmark": "retrieval-latency-accuracy",
+  "generatedAt": "2024-07-03T09:46:40.000Z",
+  "config": {
+    "count": 100000,
+    "hot": 10000,
+    "samples": 300,
+    "topK": 10,
+    "dims": 384
+  },
+  "embedder": "deterministic-bag-of-tokens",
+  "methodologyNote": "Latency isolates retrieval (SqliteAdapter+FTS5+sqlite-vec+worker-IPC) from embedding-model cost via a deterministic bag-of-tokens embedder. sqlite-vec brute-force scan latency depends on (dims, corpus-size), not vector values, so latency is representative of the real embedder at the same dims. precision@k is a relative signal on the synthetic (shared-token) corpus, NOT a semantic-quality claim.",
+  "injectionMs": 61315.560681999996,
+  "injectionThroughputPerSec": 1631,
+  "footprint": {
+    "rssMB": 287.7,
+    "dbFileMB": 196.5
+  },
+  "results": {
+    "surface": {
+      "label": "surface (hot)",
+      "samples": 300,
+      "p50": 3.995839999995951,
+      "p95": 5.338982000001124,
+      "p99": 8.466693000002124,
+      "max": 9.494127999998454,
+      "mean": 4.154035403333231,
+      "min": 3.5072479999944335,
+      "hitRateAvg": 10,
+      "precisionAtKAvg": 0.5466666666666672
+    },
+    "deep": {
+      "label": "deep (full corpus)",
+      "samples": 300,
+      "p50": 40.6764000000112,
+      "p95": 43.77615099999821,
+      "p99": 49.28055199999653,
+      "max": 54.87847099998908,
+      "mean": 41.00929287333308,
+      "min": 39.54779100000451,
+      "hitRateAvg": 10,
+      "precisionAtKAvg": 0.13333333333333333
+    }
+  }
+}

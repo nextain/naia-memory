@@ -754,9 +754,18 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 					if (searchMode === "vector-only") {
 					        relevanceScore = vs + eb;
 					} else {
+					        // RRF fusion of the vector + BM25 rank streams. The
+					        // entity/KG bonus (eb) MUST also be added here — it is a
+					        // strong exact-match / spreading-activation signal and was
+					        // previously dropped in RRF mode (only used by vector-only),
+					        // so exact entity matches got no credit and RRF ranked below
+					        // raw vector similarity. eb lives on the raw score scale
+					        // (0.3 per exact entity match) which intentionally dominates
+					        // the compressed RRF base (~1/RRF_K) for confident matches.
 					        relevanceScore =
 					                1 / (RRF_K + (vectorRank.get(fact.id) ?? allFacts.length)) +
-					                1 / (RRF_K + (bm25Rank!.get(fact.id) ?? allFacts.length));
+					                1 / (RRF_K + (bm25Rank!.get(fact.id) ?? allFacts.length)) +
+					                eb;
 					}
 
 					// Apply boost to Flashbulb memories to ensure they survive slice(0, broadK)

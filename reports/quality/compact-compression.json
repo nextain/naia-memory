@@ -1,0 +1,61 @@
+{
+  "benchmark": "compact-compression",
+  "turns": 40,
+  "messages": 82,
+  "keepTail": 8,
+  "anchors": 10,
+  "results": [
+    {
+      "label": "A: deterministic recap",
+      "realtime": false,
+      "latencyMs": 0.863,
+      "inputTokens": 600,
+      "recapTokens": 147,
+      "compressionRatio": 0.245,
+      "inputChars": 2324,
+      "recapChars": 587,
+      "fidelityPct": 30,
+      "missing": [
+        "March-15",
+        "dark-roast",
+        "blue-Civic",
+        "peanut-allergy",
+        "Tuesday",
+        "guitar",
+        "Seattle"
+      ]
+    },
+    {
+      "label": "B: rolling-summary (primed)",
+      "realtime": true,
+      "latencyMs": 0.137,
+      "inputTokens": 600,
+      "recapTokens": 178,
+      "compressionRatio": 0.297,
+      "inputChars": 2324,
+      "recapChars": 710,
+      "fidelityPct": 50,
+      "missing": [
+        "dark-roast",
+        "blue-Civic",
+        "peanut-allergy",
+        "guitar",
+        "Seattle"
+      ]
+    },
+    {
+      "label": "C: mock LLM summarizer",
+      "realtime": true,
+      "latencyMs": 0.336,
+      "inputTokens": 600,
+      "recapTokens": 99,
+      "compressionRatio": 0.165,
+      "inputChars": 2324,
+      "recapChars": 396,
+      "fidelityPct": 90,
+      "missing": [
+        "Seattle"
+      ]
+    }
+  ]
+}
