@@ -72,6 +72,8 @@ export class NaiaMemoryProvider
 				role: input.role,
 				timestamp: input.timestamp,
 				context: input.context,
+				...(input.emotion !== undefined ? { emotion: input.emotion } : {}),
+				...(input.importance !== undefined ? { importance: input.importance } : {}),
 			},
 			{ project: opts?.project },
 		);

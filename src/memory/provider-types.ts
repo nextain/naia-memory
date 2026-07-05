@@ -12,6 +12,12 @@ export interface MemoryProviderInput {
 	role: "user" | "assistant" | "tool";
 	timestamp?: number;
 	context?: string;
+	/** First-class REACTION signal — emotional valence 0..1 (0.5 = neutral).
+	 *  Overrides the keyword-heuristic emotion so a caller can mark a memory as
+	 *  emotionally reacted-to → higher salience → flashbulb recall boost. */
+	emotion?: number;
+	/** Optional importance override 0..1 (goal-relevance). */
+	importance?: number;
 }
 
 export interface MemoryHit {

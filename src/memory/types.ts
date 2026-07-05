@@ -30,6 +30,14 @@ export interface MemoryInput {
         context?: string;
         /** Optional override for timestamp (used in benchmarks) */
         timestamp?: number;
+        /** First-class REACTION signal — emotional valence 0..1 (0.5 = neutral).
+         *  When set, overrides the keyword-heuristic `emotion` axis so a caller can
+         *  mark a memory as emotionally reacted-to. Propagates episode.importance.emotion
+         *  → fact.maxEmotion → flashbulb recall boost (selective, salience-weighted
+         *  recall). Absent = inferred from content keywords as before. */
+        emotion?: number;
+        /** Optional first-class importance override 0..1 (goal-relevance). */
+        importance?: number;
 }
 
 /** R4 #220 — Life epoch representing a significant time period or milestone. */

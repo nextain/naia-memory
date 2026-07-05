@@ -526,9 +526,22 @@ export class MemorySystem {
 		// disabled we neutralize the 3-axis score (utility=1.0) so all
 		// episodes carry equal weight through ranking, decay, and fact
 		// extraction. The scoreImportance() function itself is unchanged.
-		const score = this.disableImportanceGating
+		let score = this.disableImportanceGating
 			? { importance: 1.0, surprise: 0.0, emotion: 0.5, utility: 1.0 }
 			: scoreImportance(input);
+
+		// First-class REACTION signal: a caller-supplied emotion/importance overrides
+		// the keyword heuristic. Recompute utility with the same formula as
+		// importance.ts (arousal = |emotion-0.5|*2; utility = imp*0.5 + surprise*0.2
+		// + arousal*0.3) so strength/decay/flashbulb honor the override end-to-end.
+		if (input.emotion !== undefined || input.importance !== undefined) {
+			const clamp = (n: number) => Math.max(0, Math.min(1, n));
+			const emotion = input.emotion !== undefined ? clamp(input.emotion) : score.emotion;
+			const importance = input.importance !== undefined ? clamp(input.importance) : score.importance;
+			const arousal = Math.abs(emotion - 0.5) * 2;
+			const utility = Math.min(1, importance * 0.5 + score.surprise * 0.2 + arousal * 0.3);
+			score = { importance, surprise: score.surprise, emotion, utility };
+		}
 
 		const now = input.timestamp ?? Date.now();
 		const episode: Episode = {
