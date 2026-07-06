@@ -530,16 +530,23 @@ export class MemorySystem {
 			? { importance: 1.0, surprise: 0.0, emotion: 0.5, utility: 1.0 }
 			: scoreImportance(input);
 
-		// First-class REACTION signal: a caller-supplied emotion/importance overrides
-		// the keyword heuristic. Recompute utility with the same formula as
-		// importance.ts (arousal = |emotion-0.5|*2; utility = imp*0.5 + surprise*0.2
-		// + arousal*0.3) so strength/decay/flashbulb honor the override end-to-end.
-		if (input.emotion !== undefined || input.importance !== undefined) {
+		// First-class REACTION signal: a caller-supplied emotion(=VALENCE 0..1, 0.5
+		// neutral) / importance overrides the keyword heuristic. NOTE: emotion is
+		// VALENCE, not intensity — arousal (= |emotion-0.5|*2) is the "how strongly
+		// reacted-to" that drives utility; flashbulb (maxEmotion>=0.8) fires on
+		// positive valence only (a known naia-memory limitation — strong NEGATIVE
+		// reactions boost utility but not flashbulb). Guard with Number.isFinite so
+		// null/NaN (trivial from JSON) is treated as NO signal, not max-arousal.
+		if (Number.isFinite(input.emotion) || Number.isFinite(input.importance)) {
 			const clamp = (n: number) => Math.max(0, Math.min(1, n));
-			const emotion = input.emotion !== undefined ? clamp(input.emotion) : score.emotion;
-			const importance = input.importance !== undefined ? clamp(input.importance) : score.importance;
+			const emotion = Number.isFinite(input.emotion) ? clamp(input.emotion as number) : score.emotion;
+			const importance = Number.isFinite(input.importance) ? clamp(input.importance as number) : score.importance;
 			const arousal = Math.abs(emotion - 0.5) * 2;
-			const utility = Math.min(1, importance * 0.5 + score.surprise * 0.2 + arousal * 0.3);
+			// Preserve the disableImportanceGating equal-weight invariant (utility=1.0);
+			// otherwise recompute utility with the importance.ts formula.
+			const utility = this.disableImportanceGating
+				? 1.0
+				: Math.min(1, importance * 0.5 + score.surprise * 0.2 + arousal * 0.3);
 			score = { importance, surprise: score.surprise, emotion, utility };
 		}
 
