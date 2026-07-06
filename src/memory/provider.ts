@@ -97,6 +97,10 @@ export class NaiaMemoryProvider
 					entities: f.entities,
 					topics: f.topics,
 					importance: f.importance,
+					// Emotional salience (0..1) — surfaced so a consumer/agent can
+					// weigh contextual appropriateness, not just relevance. From the
+					// first-class reaction signal (fact.maxEmotion).
+					emotion: f.maxEmotion ?? 0,
 					status: f.status,
 				},
 			})),
@@ -107,6 +111,7 @@ export class NaiaMemoryProvider
 				createdAt: e.timestamp,
 				metadata: {
 					type: "episode" as const,
+					emotion: e.importance?.emotion ?? 0,
 					consolidated: e.consolidated,
 				},
 			})),
