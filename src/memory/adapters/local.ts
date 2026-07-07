@@ -745,7 +745,13 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			                const bs = bm25Scores.get(fact.id) ?? 0;
 			                const eb = entityBonuses.get(fact.id) ?? 0;
 
-			                const isFlashbulb = (fact.maxEmotion ?? 0) >= 0.8;
+			                // Flashbulb = strong emotional AROUSAL in EITHER valence (grief flashbulbs too),
+			                // not positive valence only. arousal = |valence-0.5|*2; threshold 0.6 is the
+			                // symmetric form of the previous positive-only 0.8 valence cut (|v-0.5|>=0.3),
+			                // so positive behavior is unchanged and strong-negative reactions now qualify.
+			                // Default 0.5 (neutral, arousal 0) when maxEmotion absent — NOT 0 (which would
+			                // read as max-negative and false-flashbulb an emotionless memory).
+			                const isFlashbulb = Math.abs((fact.maxEmotion ?? 0.5) - 0.5) * 2 >= 0.6;
 			                const relevanceThreshold = epochRange ? 0.0 : 0.12;
 
 			                const isRelevant = vs >= relevanceThreshold || bs > 0 || eb > 0 || isFlashbulb;

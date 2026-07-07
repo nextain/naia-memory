@@ -35,9 +35,8 @@ export interface MemoryInput {
          *  "how strongly reacted-to" quantity is arousal = |emotion-0.5|*2, which
          *  drives utility/strength for BOTH directions. A grief reaction = LOW value
          *  (≈0.05), a triumph = HIGH (≈0.95), a mundane note = 0.5. Flashbulb
-         *  (maxEmotion>=0.8) currently fires on positive valence only — strong
-         *  NEGATIVE reactions boost utility but not flashbulb (known limitation;
-         *  arousal-based flashbulb is a future fix). Absent = inferred from keywords. */
+         *  (arousal |v-0.5|*2>=0.6) fires on strong reactions in EITHER valence — strong
+         *  NEGATIVE reactions (grief) now flashbulb too (arousal-based, local.ts). Absent = inferred from keywords. */
         emotion?: number;
         /** Optional first-class importance override 0..1 (goal-relevance). */
         importance?: number;

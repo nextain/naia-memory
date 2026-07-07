@@ -14,9 +14,11 @@ encode time, overriding the keyword-heuristic score.
   extractors, `Fact.importance`. So a strongly-reacted memory (either valence)
   gets a higher recall rank through the `strength × 0.3` term.
 - **Flashbulb** (`Fact.maxEmotion >= 0.8` → +0.5 recall boost, `LocalAdapter`)
-  currently fires on **positive valence only**. Strong *negative* reactions
-  (grief) boost utility but do NOT flashbulb — a known limitation; an
-  arousal-based flashbulb (`|emotion-0.5|*2 >= 0.8`) is the correct future fix.
+  fires on emotional **AROUSAL** in EITHER valence (`|emotion-0.5|*2 >= 0.6`,
+  the symmetric form of the previous positive-only 0.8 valence cut) — so strong
+  *negative* reactions (grief) flashbulb too, and positive behavior is unchanged.
+  Implemented in `adapters/local.ts` (LocalAdapter, the default path; SqliteAdapter
+  parity is a separate gap). Default 0.5 (neutral) when maxEmotion absent.
 
 ## Propagation (encode → recall)
 `MemorySystem.encode` override → `Episode.importance.{emotion,importance,utility}`
