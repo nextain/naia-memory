@@ -461,8 +461,8 @@ export interface MemoryProviderConfig {
 | R2.3 ✅ | `TemporalCapable` — bi-temporal index + recallWithHistory (commit 346e8ae) | recall pool 이 시점 유효 fact 만 (existing -v{ts}/superseded scheme 활용). 실측 점수 #8 코멘트로 측정 후 보고 — issue #8 acceptance "0%→40%+" 는 천장 16% (R2.3+R2.5+date-parsing 모두 합쳐도). |
 | R2.4 | `CompactableCapable.compact` | 대화 요약 단위 테스트 |
 | **R2.5** ✅ | **Hybrid contradiction filter** — dual-process retrieval-rerank (1차 token-embedding-style candidate / 2차 small LLM filter). Issue #14 D.5 deferrals 정식 해결책. | `ContradictionFilterProvider` interface + `Heuristic` / `GeminiFlashLite` / `VllmReasoning` 구현. selectFilter env priority: `VLLM_REASONING_BASE > GEMINI_API_KEY > Heuristic`. commit be8f739 + 4737651 + 5027791. |
-| **R2.6** ✅ | **VllmReasoningContradictionFilter** 실제 구현 — local Gemma via vLLM. Default model: `google/gemma-4-E4B` (소형 모델 SOTA, ~10GB FP16, MatFormer Effective 4B). | Privacy-preserving, free at margin. Code-fenced JSON output 자동 stripping. Transport 실패 시 heuristic graceful fallback. commit 5027791. |
-| **R2.6.1** | 측정 — `serve-embedding.sh` (qwen3-emb 0.6B → :8001) + reasoning 서버 (gemma-4-E4B → :8002), GPU 1 (RTX 4060) 바인딩 | KO benchmark `--categories=contradiction_direct,temporal` 모드 비교 (heuristic / vllm) — issue #8/#14 코멘트 보고 |
+| **R2.6** ✅ | **VllmReasoningContradictionFilter** 실제 구현 — local vLLM-served reasoning model. Default model is configured via `VLLM_REASONING_MODEL`. | Privacy-preserving, free at margin. Code-fenced JSON output 자동 stripping. Transport 실패 시 heuristic graceful fallback. commit 5027791. |
+| **R2.6.1** | 측정 — `serve-embedding.sh` (qwen3-emb 0.6B → :8001) + reasoning server (`VLLM_REASONING_MODEL` → :8002), local GPU binding | KO benchmark `--categories=contradiction_direct,temporal` 모드 비교 (heuristic / vllm) — issue #8/#14 코멘트 보고 |
 | **R2.7** | (deferred) Date parsing slice — temporal benchmark 의 absolute_date / recurring / relative_date 카테고리 (~15/25 query) | issue #8 의 천장 40% 도달 위해 필수. 별도 슬라이스. |
 
 ### Phase R3 (1주): 한국어 강화 ✅ 완료

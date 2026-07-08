@@ -6,7 +6,7 @@
  *
  * 사용:
  *   const vs = new VectorStore("/path/to/vector.sqlite");
- *   const id = vs.add({ user_id, vector, source_model: "hubert-chroma-v1.0", ... });
+ *   const id = vs.add({ user_id, vector, source_model: "audio-embedding-v1.0", ... });
  *   const results = vs.search({ user_id, query_vector, source_model, limit: 5 });
  */
 import Database from "better-sqlite3";
