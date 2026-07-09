@@ -30,6 +30,16 @@ export interface MemoryInput {
         context?: string;
         /** Optional override for timestamp (used in benchmarks) */
         timestamp?: number;
+        /** First-class REACTION signal — emotional VALENCE 0..1 (0.5 = neutral, 0 =
+         *  very negative, 1 = very positive). ⚠ This is valence, NOT intensity: the
+         *  "how strongly reacted-to" quantity is arousal = |emotion-0.5|*2, which
+         *  drives utility/strength for BOTH directions. A grief reaction = LOW value
+         *  (≈0.05), a triumph = HIGH (≈0.95), a mundane note = 0.5. Flashbulb
+         *  (arousal |v-0.5|*2>=0.6) fires on strong reactions in EITHER valence — strong
+         *  NEGATIVE reactions (grief) now flashbulb too (arousal-based, local.ts). Absent = inferred from keywords. */
+        emotion?: number;
+        /** Optional first-class importance override 0..1 (goal-relevance). */
+        importance?: number;
 }
 
 /** R4 #220 — Life epoch representing a significant time period or milestone. */

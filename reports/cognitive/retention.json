@@ -1,0 +1,94 @@
+{
+  "benchmark": "cognitive-retention",
+  "model": {
+    "baseDecay": 0.08,
+    "importanceDamping": 0.85,
+    "pruneThreshold": 0.05
+  },
+  "survivalByImportance": [
+    {
+      "importance": 0.1,
+      "initialStrength": 0.1,
+      "halfLifeDays": 10,
+      "survivalDays": 10
+    },
+    {
+      "importance": 0.3,
+      "initialStrength": 0.3,
+      "halfLifeDays": 12,
+      "survivalDays": 31
+    },
+    {
+      "importance": 0.5,
+      "initialStrength": 0.5,
+      "halfLifeDays": 16,
+      "survivalDays": 51
+    },
+    {
+      "importance": 0.7,
+      "initialStrength": 0.7,
+      "halfLifeDays": 22,
+      "survivalDays": 82
+    },
+    {
+      "importance": 0.9,
+      "initialStrength": 0.9,
+      "halfLifeDays": 37,
+      "survivalDays": 154
+    }
+  ],
+  "recallReinforcement": {
+    "survivalVsRecallCount": [
+      {
+        "recallCount": 0,
+        "survivalDays": 51
+      },
+      {
+        "recallCount": 1,
+        "survivalDays": 55
+      },
+      {
+        "recallCount": 3,
+        "survivalDays": 61
+      },
+      {
+        "recallCount": 5,
+        "survivalDays": 66
+      },
+      {
+        "recallCount": 10,
+        "survivalDays": 74
+      }
+    ],
+    "clockReset": {
+      "neverRecalled": 0.04728449661549337,
+      "recalledAt30": 0.339170873309601
+    }
+  },
+  "discrimination": [
+    {
+      "day": 7,
+      "auc": 1,
+      "retainedImportantPct": 100,
+      "prunedTrivialPct": 0
+    },
+    {
+      "day": 30,
+      "auc": 1,
+      "retainedImportantPct": 100,
+      "prunedTrivialPct": 68
+    },
+    {
+      "day": 90,
+      "auc": 1,
+      "retainedImportantPct": 66,
+      "prunedTrivialPct": 100
+    },
+    {
+      "day": 180,
+      "auc": 0.66,
+      "retainedImportantPct": 0,
+      "prunedTrivialPct": 100
+    }
+  ]
+}

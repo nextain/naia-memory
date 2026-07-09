@@ -1,0 +1,27 @@
+{
+  "benchmark": "recall-at-k",
+  "model": "multilingual-e5-large",
+  "dims": 1024,
+  "facts": 200,
+  "withDistractor": false,
+  "evaluated": 172,
+  "rrf": {
+    "recall1": 0.005813953488372093,
+    "recall5": 0.023255813953488372,
+    "recall10": 0.0872093023255814,
+    "mrr": 0.017658730158730162,
+    "evaluated": 172
+  },
+  "vectorOnly": {
+    "recall1": 0.005813953488372093,
+    "recall5": 0.06395348837209303,
+    "recall10": 0.21511627906976744,
+    "mrr": 0.03875738279808047,
+    "evaluated": 172
+  },
+  "binaryQuant": {
+    "binaryOnlyOverlap": 0.3465116279069765,
+    "twoStageOverlap": 0.7767441860465114,
+    "coarse": 50
+  }
+}
