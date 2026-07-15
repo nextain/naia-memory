@@ -33,14 +33,17 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 		model:
 			| "all-MiniLM-L6-v2"
 			| "all-mpnet-base-v2"
-			| "multilingual-e5-large" = "all-MiniLM-L6-v2",
+			| "multilingual-e5-large"
+			| "paraphrase-multilingual-MiniLM-L12-v2" = "all-MiniLM-L6-v2",
 		device?: "cpu" | "gpu" | "auto",
 	) {
 		this.modelName = model;
 		this.device = device;
+		// paraphrase-multilingual-MiniLM-L12-v2 = 384d 다국어(한국어) 경량. all-MiniLM-L6-v2 와
+		// 같은 384d 지만 다국어 학습 → 한국어 회상 가능(실측 top-1 5/5). fp32 단일파일이라 로드 안정.
 		if (model === "multilingual-e5-large") this.dims = 1024;
 		else if (model === "all-mpnet-base-v2") this.dims = 768;
-		else this.dims = 384;
+		else this.dims = 384; // all-MiniLM-L6-v2 · paraphrase-multilingual-MiniLM-L12-v2
 	}
 
 	private init(): Promise<void> {
@@ -61,12 +64,29 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 						? "Xenova/multilingual-e5-large"
 						: `Xenova/${this.modelName}`;
 
+				// multilingual-e5-large: fp32 가중치가 2GB 초과 external-data
+				// (onnx/model.onnx_data)로 저장돼 onnxruntime-node 가 이 스택에서
+				// 역직렬화 실패(external-initializer offset 이 데이터 파일 길이 초과).
+				// q8 단일파일 변형은 CPU 에서 안정 로드되고 한국어 회상 품질을 보존한다
+				// (실측 top-1 5/5 vs all-mpnet 영어전용 2/5). 나머지 모델은 기본 fp32 로 정상 로드.
+				const dtype: "q8" | undefined =
+					this.modelName === "multilingual-e5-large" ? "q8" : undefined;
+
 				// device 매핑: gpu→"auto"(onnxruntime EP 가용 시 GPU, 없으면 CPU 폴백 — 메모리 비활성 회피) /
 				// cpu→"cpu" / auto→"auto" / 미지정→옵션 없이(transformers 기본, 현행 무변).
-				const pipeOpts =
+				const deviceOpt =
 					this.device === undefined
 						? undefined
-						: { device: this.device === "gpu" ? "auto" : this.device };
+						: this.device === "gpu"
+							? "auto"
+							: this.device;
+				const pipeOpts =
+					deviceOpt === undefined && dtype === undefined
+						? undefined
+						: {
+								...(deviceOpt !== undefined ? { device: deviceOpt } : {}),
+								...(dtype !== undefined ? { dtype } : {}),
+							};
 				this.pipeline = await pipelineFn("feature-extraction", hfModel, pipeOpts);
 			})();
 		}
