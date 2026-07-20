@@ -9,6 +9,8 @@ import type { CompactionSummarizer } from "./index.js";
 export interface LLMSummarizerOptions {
 	/** OpenAI-compat API key(로컬 서버는 빈 값 허용). */
 	apiKey: string;
+	/** Provider transport auth. 기본 bearer, Naia/AnyLLM gateway는 x-anyllm. */
+	auth?: "bearer" | "x-anyllm";
 	/** chat/completions base URL(끝 슬래시 포함 — fact-extractor 와 동형). 미지정 = Gemini direct. */
 	baseURL?: string;
 	/** 요약 모델. 미지정 = gemini-2.5-flash-lite(빠르고 저렴). */
@@ -30,6 +32,7 @@ export function buildLLMSummarizer(
 		: process.env.GATEWAY_MASTER_KEY || options.apiKey;
 	const baseURL = options.baseURL ?? DEFAULT_BASE_URL;
 	const model = options.model ?? DEFAULT_MODEL;
+	const auth = options.auth ?? "bearer";
 
 	return async (input) => {
 		const seed = (input.seedSummary ?? "").trim();
@@ -47,7 +50,11 @@ export function buildLLMSummarizer(
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					Authorization: `Bearer ${apiKey}`,
+					...(apiKey
+						? auth === "x-anyllm"
+							? { "X-AnyLLM-Key": `Bearer ${apiKey}` }
+							: { Authorization: `Bearer ${apiKey}` }
+						: {}),
 				},
 				body: JSON.stringify({
 					model,
