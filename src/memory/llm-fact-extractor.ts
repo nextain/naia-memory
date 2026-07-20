@@ -19,6 +19,8 @@ import type { Episode } from "./types.js";
 export interface LLMFactExtractorOptions {
 	/** Gemini (or OpenAI-compatible) API key */
 	apiKey: string;
+	/** Provider transport auth. Default bearer; Naia/AnyLLM gateway uses x-anyllm. */
+	auth?: "bearer" | "x-anyllm";
 	/** Base URL for the chat completions endpoint (without /chat/completions) */
 	baseURL?: string;
 	/** Model to use. Default: gemini-2.5-flash-lite (fast, cheap) */
@@ -69,6 +71,7 @@ export function buildLLMFactExtractor(
 		baseURL = DEFAULT_BASE_URL,
 		model = DEFAULT_MODEL,
 		batchSize = DEFAULT_BATCH_SIZE,
+		auth = "bearer",
 	} = options;
 
 	return async (episodes: Episode[]): Promise<ExtractedFact[]> => {
@@ -76,7 +79,7 @@ export function buildLLMFactExtractor(
 
 		for (let i = 0; i < episodes.length; i += batchSize) {
 			const batch = episodes.slice(i, i + batchSize);
-			const extracted = await extractBatch(batch, { apiKey, baseURL, model });
+			const extracted = await extractBatch(batch, { apiKey, baseURL, model, auth });
 			results.push(...extracted);
 		}
 
@@ -90,10 +93,15 @@ export function buildLLMFactExtractor(
  */
 async function extractBatch(
 	episodes: Episode[],
-	opts: Required<Omit<LLMFactExtractorOptions, "batchSize">>,
+	opts: {
+		apiKey: string;
+		baseURL: string;
+		model: string;
+		auth: "bearer" | "x-anyllm";
+	},
 	retries = 3,
 ): Promise<ExtractedFact[]> {
-	const { apiKey, baseURL, model } = opts;
+	const { apiKey, baseURL, model, auth } = opts;
 
 	const episodeList = episodes
 		.map((ep, i) => {
@@ -164,7 +172,11 @@ Format: {"1": ["fact", ...], "2": ["fact", ...], ...}`;
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				Authorization: `Bearer ${apiKey}`,
+				...(apiKey
+					? auth === "x-anyllm"
+						? { "X-AnyLLM-Key": `Bearer ${apiKey}` }
+						: { Authorization: `Bearer ${apiKey}` }
+					: {}),
 			},
 			body: JSON.stringify({
 				model,
