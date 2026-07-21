@@ -51,6 +51,7 @@
 | `.gitignore` | Git 제외 규칙 |
 | `.gitmodules` | 서브모듈 설정 |
 | `AGENTS.md` | AI 도구 진입점 — canonical SoT |
+| `AGENTS.en.md` | AI 도구 진입점 영어 번역 |
 | `CHANGELOG.md` | 변경 이력 |
 | `CLAUDE.md` | AGENTS.md mirror (Claude Code) |
 | `CODEX.md` | AGENTS.md mirror (Codex) |
@@ -102,11 +103,15 @@
 | 파일 | 역할 |
 |------|------|
 | `README.md` | docs 색인 허브 (진입점) |
+| `glossary.md` | 요구사항·메모리 계약 약어와 식별자 용어집 |
 | `project-structure.md` | 이 파일 — F12/F13 루트 화이트리스트, 구조 명세 |
 | `threat-model.md` | 보안 경계, 시크릿 격리(T3), 추적 금지 경로 |
 | `llm-roles.md` | 작은↔큰 모델 분담, CLI 어댑터, 검출 계층 |
 | `cognitive-architecture.md` | 4-store brain-inspired 메모리, dual-process retrieval |
+| `reaction-signal.md` | 대화 반응 기반 기억 강도 보정 신호 계약 |
 | `integration.md` | `@nextain/naia-memory` 연동 가이드 (naia-agent/naia-os) |
+| `user-scenarios.md` | V-model 사용자 시나리오(UC)와 테스트 커버리지 맵 |
+| `requirements.md` | 인증 분리·멱등성 기능/비기능 요구사항과 완료 상태 |
 | `design/sqlite-migration.md` | SQLite (sqlite-vec/FTS5/R-Tree) 하이브리드 스토리지 설계 |
 | `laptop-vllm-experiment.md` | 로컬 임베딩/추론 서빙 실측 |
 | `reports/README.md` | 벤치마크 리포트 색인 (R-시리즈 + A/B 가이드) |

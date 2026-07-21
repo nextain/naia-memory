@@ -73,5 +73,70 @@ describe("Mem0Adapter episode idempotency", () => {
 		expect(persisted).toEqual([
 			expect.objectContaining({ memory: "last payload" }),
 		]);
+		expect(await adapter.episode.getRecent(1)).toEqual([
+			expect.objectContaining({ id: "episode-1", content: "last payload" }),
+		]);
+	});
+
+	it("runs a same-ID retry that was queued before the first write failed", async () => {
+		let attempts = 0;
+		const client = {
+			getAll: vi.fn(async () => {
+				if (attempts++ === 0) throw new Error("transient lookup failure");
+				return { results: [] };
+			}),
+			add: vi.fn(async () => undefined),
+			update: vi.fn(async () => undefined),
+		};
+		const adapter = new Mem0Adapter({
+			mem0Config: {
+				embedder: { provider: "test", config: {} },
+				vectorStore: { provider: "test", config: {} },
+				llm: { provider: "test", config: {} },
+			},
+			memoryFactory: async () => client,
+		});
+
+		const first = adapter.episode.store(episode("episode-retry", "first payload"));
+		const queuedRetry = adapter.episode.store(episode("episode-retry", "retry payload"));
+		expect(await Promise.allSettled([first, queuedRetry])).toEqual([
+			expect.objectContaining({ status: "rejected" }),
+			expect.objectContaining({ status: "fulfilled" }),
+		]);
+		expect(client.getAll).toHaveBeenCalledTimes(2);
+		expect(client.add).toHaveBeenCalledTimes(1);
+		expect(await adapter.episode.getRecent(1)).toEqual([
+			expect.objectContaining({ id: "episode-retry", content: "retry payload" }),
+		]);
+	});
+
+	it("does not serialize writes for different episode IDs behind one lock", async () => {
+		let releaseFirst!: () => void;
+		const firstBlocked = new Promise<void>((resolve) => { releaseFirst = resolve; });
+		let secondEntered!: () => void;
+		const secondStarted = new Promise<void>((resolve) => { secondEntered = resolve; });
+		const client = {
+			getAll: vi.fn(async () => ({ results: [] })),
+			add: vi.fn(async (_messages: unknown, options: { metadata: { episodeId: string } }) => {
+				if (options.metadata.episodeId === "episode-1") await firstBlocked;
+				else secondEntered();
+			}),
+			update: vi.fn(async () => undefined),
+		};
+		const adapter = new Mem0Adapter({
+			mem0Config: {
+				embedder: { provider: "test", config: {} },
+				vectorStore: { provider: "test", config: {} },
+				llm: { provider: "test", config: {} },
+			},
+			memoryFactory: async () => client,
+		});
+
+		const first = adapter.episode.store(episode("episode-1"));
+		const second = adapter.episode.store(episode("episode-2"));
+		await secondStarted;
+		releaseFirst();
+		await Promise.all([first, second]);
+		expect(client.add).toHaveBeenCalledTimes(2);
 	});
 });

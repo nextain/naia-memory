@@ -1,3 +1,6 @@
+<!-- src-sha: 8918964fc1ddf0af -->
+<!-- 수동 검증 미러. 원본: .agents/context/process-status.json -->
+
 # 프로세스 현황
 
 > **SoT**: `.agents/context/process-status.json`
@@ -18,11 +21,9 @@
 
 ## 현재 작업
 
-_(신규 이슈 시작 시 업데이트)_
-
-**이슈**: —
-**제목**: —
-**상태**: idle
+**이슈**: integration-llm-auth-idempotency
+**제목**: LLM 인증 헤더 분리와 Mem0 에피소드 멱등성 V-model 추적
+**상태**: completed
 
 ---
 
@@ -30,13 +31,13 @@ _(신규 이슈 시작 시 업데이트)_
 
 | 게이트 | 상태 | 산출물(deliverable) |
 |--------|:----:|---------------------|
-| P01 사용자시나리오 | — | — |
-| P02 테스트시나리오 | — | — |
-| P03 요구사항 | — | — |
-| P04 통합테스트 | — | — |
-| P05 완료 | — | — |
+| P01 사용자시나리오 | done | `docs/user-scenarios.md` — UC-MEM-AUTH-01, UC-MEM-IDEMP-01 |
+| P02 테스트시나리오 | done | `docs/user-scenarios.md#test-coverage-map` |
+| P03 요구사항 | done | `docs/requirements.md` |
+| P04 통합테스트 | done | 핵심 30/30, 전체 393/393, typecheck/build/구조/문서/mirror/용어 통과 |
+| P05 완료 | done | `docs/requirements.md` 전체 Done |
 
-마지막 업데이트: —
+마지막 업데이트: 2026-07-21T10:37:18+09:00
 
 ---
 

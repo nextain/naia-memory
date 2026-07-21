@@ -40,7 +40,6 @@ locomo-memory.json
 
 # session / user-side mirror
 .claude/
-.users/context/agents-rules.md
 
 # T3 보안 — 키/시크릿/개인정보 (절대 추적 금지, README 마커만) — harden 2026-05-30
 data-private/

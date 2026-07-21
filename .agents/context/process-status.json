@@ -9,25 +9,25 @@
   },
 
   "current_work": {
-    "issue": null,
-    "title": null,
-    "issue_doc": null,
+    "issue": "integration-llm-auth-idempotency",
+    "title": "LLM 인증 헤더 분리와 Mem0 에피소드 멱등성 V-model 추적",
+    "issue_doc": "docs/user-scenarios.md",
     "github_issue": null,
-    "started": null,
-    "last_updated": null,
-    "status": "idle"
+    "started": "2026-07-21T10:25:53+09:00",
+    "last_updated": "2026-07-21T10:37:18+09:00",
+    "status": "completed"
   },
 
   "sdlc_gates": {
-    "P01": { "status": "n/a", "name": "user_scenarios", "deliverable": null, "ref": null },
-    "P02": { "status": "n/a", "name": "test_scenarios", "deliverable": null, "ref": null },
-    "P03": { "status": "n/a", "name": "requirements", "deliverable": null, "ref": null },
-    "P04": { "status": "n/a", "name": "integration_test", "deliverable": null, "ref": null },
-    "P05": { "status": "n/a", "name": "requirements_complete", "deliverable": null, "ref": null }
+    "P01": { "status": "done", "name": "user_scenarios", "deliverable": "docs/user-scenarios.md", "ref": "UC-MEM-AUTH-01, UC-MEM-IDEMP-01" },
+    "P02": { "status": "done", "name": "test_scenarios", "deliverable": "docs/user-scenarios.md#test-coverage-map", "ref": "llm-auth.test.ts, mem0-idempotency.test.ts, memory-system.test.ts" },
+    "P03": { "status": "done", "name": "requirements", "deliverable": "docs/requirements.md", "ref": "FR-MEM-AUTH-1..3, FR-MEM-IDEMP-1..3, NFR-MEM-SEC-1, NFR-MEM-IDEMP-1..2" },
+    "P04": { "status": "done", "name": "integration_test", "deliverable": "30/30 focused; 393/393 full; typecheck; build; root/doc/mirror/terminology gates", "ref": "src/memory/__tests__/llm-auth.test.ts, src/memory/__tests__/mem0-idempotency.test.ts, src/memory/__tests__/memory-system.test.ts" },
+    "P05": { "status": "done", "name": "requirements_complete", "deliverable": "docs/requirements.md statuses Done", "ref": "docs/requirements.md#v-model-추적" }
   },
 
   "resource_registry": {
-    "last_enforce_run": null,
+    "last_enforce_run": "2026-07-21T10:36:59+09:00",
     "violations": []
   },
 

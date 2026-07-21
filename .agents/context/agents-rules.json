@@ -196,6 +196,7 @@
 			".gitignore",
 			".gitmodules",
 			"AGENTS.md",
+			"AGENTS.en.md",
 			"CHANGELOG.md",
 			"CLAUDE.md",
 			"CODEX.md",

@@ -9,44 +9,46 @@ preferentially) get the same Single Source of Truth as AGENTS.md.
 Standard: AAIF / agents.md (https://agents.md/)
 -->
 
-# Naia Memory: Technical Specification
+[한국어](AGENTS.md) | [English](AGENTS.en.md)
 
-## Core Philosophy: Self-Rigor
-- **No Magic Numbers**: All retrieval weights must be empirically derived.
-- **Scale Verification**: Performance claims require a measurement on a ≥100k fact corpus.
-- **Honest Latency**: Report Surface (Tier 1) and Deep (full scan) latency separately, and never present an unverified number as "measured".
+# Naia Memory: 기술 명세
 
-## Storage Adapters
-naia-memory ships two interchangeable adapters behind the `MemoryAdapter` interface (`src/memory/types.ts`):
+## 핵심 철학: 자기 엄격성(Self-Rigor)
+- **매직 넘버 금지(No Magic Numbers)**: 모든 검색 가중치는 경험적으로 도출되어야 한다.
+- **스케일 검증(Scale Verification)**: 성능 주장에는 10만(≥100k) 사실 코퍼스 규모의 측정이 필요하다.
+- **정직한 지연(Honest Latency)**: Surface(Tier 1)와 Deep(전체 스캔) 지연을 따로 보고하고, 검증되지 않은 수치를 절대 "측정값(measured)"으로 제시하지 않는다.
+
+## 스토리지 어댑터(Storage Adapters)
+naia-memory는 `MemoryAdapter` 인터페이스(`src/memory/types.ts`) 뒤에 교체 가능한 두 개의 어댑터를 제공한다:
 
 | Adapter | Backend | Status | Use when |
 |---|---|---|---|
 | **LocalAdapter** (default) | JSON file + in-memory cosine + BM25 + KnowledgeGraph | **Complete** — the path `MemorySystem` uses by default and that `naia-agent` integrates against | Desktop / single-user, up to ~tens of thousands of facts |
 | **SqliteAdapter** | SQLite 3 (better-sqlite3) + FTS5/BM25 + sqlite-vec (vec0) + R-Tree, DB I/O in a worker thread | **In progress** — store / keyword recall / `getAll` work; flashbulb-emotion gating, epoch anchoring, and KG association are not yet at LocalAdapter parity | High-performance scaling path (100k+ facts) |
 
-`MemorySystem` defaults to `LocalAdapter` (`src/memory/index.ts`). Pass a `SqliteAdapter` explicitly to opt into the SQLite path.
+`MemorySystem`은 기본값으로 `LocalAdapter`를 사용한다(`src/memory/index.ts`). SQLite 경로를 쓰려면 `SqliteAdapter`를 명시적으로 전달한다.
 
-## SqliteAdapter Engine (high-performance path)
+## SqliteAdapter 엔진 (고성능 경로)
 
-### 1. Hybrid Storage
-- **Relational / episodic**: SQLite 3 (better-sqlite3).
-- **Keyword**: FTS5 with BM25 ranking. Two tiers — `facts_fts` (full corpus) + `facts_fts_hot` (high-strength surface tier).
-- **Vector**: `sqlite-vec` (vec0), brute-force linear scan (`vec_facts` + `vec_facts_hot`).
-- **Temporal**: R-Tree (`facts_time_idx`) for bi-temporal point/interval queries.
+### 1. 하이브리드 스토리지(Hybrid Storage)
+- **관계형 / 에피소드(Relational / episodic)**: SQLite 3 (better-sqlite3).
+- **키워드(Keyword)**: BM25 랭킹을 적용한 FTS5. 두 개의 티어 — `facts_fts`(전체 코퍼스) + `facts_fts_hot`(고강도 surface 티어).
+- **벡터(Vector)**: `sqlite-vec`(vec0), 브루트포스 선형 스캔(`vec_facts` + `vec_facts_hot`).
+- **시간(Temporal)**: 이중 시간(bi-temporal) 점/구간 질의를 위한 R-Tree(`facts_time_idx`).
 
-### 2. Worker Isolation
-- DB I/O runs in a dedicated worker thread (`sqlite-worker.ts`) so the main thread stays responsive during heavy recall or decay. Command-based message protocol with monotonic message IDs.
-- The built package ships `sqlite-worker.js`; dev/test load the `.ts` worker through `tsx`.
+### 2. 워커 격리(Worker Isolation)
+- DB I/O는 전용 워커 스레드(`sqlite-worker.ts`)에서 실행되어, 무거운 recall이나 decay 중에도 메인 스레드가 응답성을 유지한다. 단조 증가하는 메시지 ID를 사용하는 커맨드 기반 메시지 프로토콜.
+- 빌드된 패키지는 `sqlite-worker.js`를 제공한다. dev/test는 `tsx`를 통해 `.ts` 워커를 로드한다.
 
-### 3. Tiered Recall
-- **Tier 1 (Surface / hot)**: high-strength facts, target sub-25ms.
-- **Tier 2 (Deep)**: full corpus scan (O(N) linear).
+### 3. 계층적 회상(Tiered Recall)
+- **Tier 1 (Surface / hot)**: 고강도 사실, 목표 sub-25ms.
+- **Tier 2 (Deep)**: 전체 코퍼스 스캔(O(N) 선형).
 
-## Performance Targets (unverified)
-The SqliteAdapter *targets* sub-25ms surface recall and sub-100ms deep recall at 100k facts.
-**These are design targets, not measured results.** Per the Self-Rigor ethos above, no latency is published here as "measured" until a reproducible ≥100k benchmark artifact is committed to the repo. Measured figures that DO exist are reported per-run in `docs/reports/` (LocalAdapter).
+## 성능 목표(Performance Targets, 미검증)
+SqliteAdapter는 10만 사실 규모에서 surface recall sub-25ms, deep recall sub-100ms를 *목표(targets)*로 한다.
+**이는 설계 목표이지 측정된 결과가 아니다.** 위의 자기 엄격성(Self-Rigor) 기조에 따라, 재현 가능한 10만(≥100k) 벤치마크 산출물이 레포에 커밋되기 전까지는 어떤 지연도 "측정값(measured)"으로 게시하지 않는다. 실제로 존재하는 측정 수치는 `docs/reports/`(LocalAdapter)에 실행별로 보고된다.
 
-## Current Status / Technical Debt
-- **SqliteAdapter parity**: advanced retrieval (flashbulb-emotion gating, epoch anchoring, KG cross-domain association, insight distillation) is not yet at LocalAdapter parity — covered by the `*.test.ts` suites under `src/memory/__tests__/`.
-- **Linear scan**: deep recall degrades linearly; ANN (e.g. HNSW) required for 1M+ facts.
-- **KnowledgeGraph**: loads fully into RAM; incremental/streaming load required at scale.
+## 현재 상태 / 기술 부채(Current Status / Technical Debt)
+- **SqliteAdapter parity**: 고급 검색(flashbulb-emotion gating, epoch anchoring, KG 도메인 간 association, insight distillation)은 아직 LocalAdapter 수준에 도달하지 못했다 — `src/memory/__tests__/` 아래 `*.test.ts` 스위트로 커버된다.
+- **선형 스캔(Linear scan)**: deep recall은 선형으로 성능이 저하된다. 100만(1M+) 사실 이상에서는 ANN(예: HNSW)이 필요하다.
+- **KnowledgeGraph**: 전체를 RAM에 로드한다. 규모가 커지면 증분/스트리밍 로드가 필요하다.

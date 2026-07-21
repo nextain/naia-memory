@@ -6,6 +6,7 @@
 
 ## 표준·구조 (하네스)
 
+- [용어집](./glossary.md) — 요구사항·메모리 계약에서 사용하는 약어와 식별자
 - [프로젝트 구조 표준](./project-structure.md) — F12/F13 루트 화이트리스트, 디렉터리 규약
 - [위협 모델](./threat-model.md) — 보안 경계, 시크릿 격리(T3), 추적 금지 경로
 - [LLM 역할 분담](./llm-roles.md) — 작은(라이트) 모델 ↔ 큰 모델 분담, 단일 CLI 어댑터, 검출 계층
@@ -13,7 +14,10 @@
 ## 설계·아키텍처 (naia-memory)
 
 - [인지 아키텍처](./cognitive-architecture.md) — 4-store brain-inspired 메모리, dual-process retrieval
+- [반응 신호](./reaction-signal.md) — 대화 반응으로 기억 강도를 보정하는 신호 계약
 - [통합 가이드](./integration.md) — `@nextain/naia-memory` 라이브러리 연동 (naia-agent/naia-os)
+- [사용자 시나리오](./user-scenarios.md) — V-model UC와 테스트 커버리지 맵
+- [요구사항](./requirements.md) — 인증 헤더 분리·Mem0 멱등성 요구사항과 검증 상태
 - [SQLite 마이그레이션 설계](./design/sqlite-migration.md) — sqlite-vec/FTS5/R-Tree 하이브리드 스토리지
 - [노트북 vLLM 실험](./laptop-vllm-experiment.md) — 로컬 임베딩/추론 서빙 실측
 - [벤치마크 리포트 색인](./reports/README.md) — R-시리즈 정확도/지연 벤치마크 + [A/B 테스트 가이드](./reports/ab-testing-guide.md)

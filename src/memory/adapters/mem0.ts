@@ -106,7 +106,10 @@ export class Mem0Adapter implements MemoryAdapter {
 	episode = {
 		store: async (event: Episode): Promise<void> => {
 			const previous = this.episodeWrites.get(event.id) ?? Promise.resolve();
-			const write = previous.then(async () => {
+			// A retry may be queued before an earlier same-ID write settles. Recover
+			// that queue after a rejected predecessor so the retry can re-read Mem0
+			// instead of inheriting the earlier transport failure.
+			const write = previous.catch(() => undefined).then(async () => {
 				// Mem0 does not provide a metadata uniqueness constraint. Serialize
 				// writes for one deterministic episode ID so concurrent retries cannot
 				// both observe absence and append duplicates.
