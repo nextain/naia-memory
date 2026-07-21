@@ -70,4 +70,52 @@ describe("OpenAI-compatible LLM auth", () => {
 		expect(headers.Authorization).toBe("Bearer test-secret");
 		expect(headers["X-AnyLLM-Key"]).toBeUndefined();
 	});
+
+	it("fact extractor의 기본 인증은 기존 bearer 계약을 유지한다", async () => {
+		let capturedHeaders: HeadersInit | undefined;
+		vi.stubGlobal("fetch", vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+			capturedHeaders = init?.headers;
+			return new Response(JSON.stringify({ choices: [{ message: { content: '{"1":[]}' } }] }), {
+				status: 200,
+				headers: { "content-type": "application/json" },
+			});
+		}));
+
+		await buildLLMFactExtractor({
+			apiKey: "test-secret",
+			baseURL: "https://provider.test/v1/",
+			model: "test-model",
+		})([episode]);
+
+		const headers = capturedHeaders as Record<string, string>;
+		expect(headers.Authorization).toBe("Bearer test-secret");
+		expect(headers["X-AnyLLM-Key"]).toBeUndefined();
+	});
+
+	it("summarizer가 Naia gateway에는 X-AnyLLM-Key만 전송한다", async () => {
+		let capturedHeaders: HeadersInit | undefined;
+		vi.stubGlobal("fetch", vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+			capturedHeaders = init?.headers;
+			return new Response(JSON.stringify({ choices: [{ message: { content: "요약" } }] }), {
+				status: 200,
+				headers: { "content-type": "application/json" },
+			});
+		}));
+
+		await buildLLMSummarizer({
+			apiKey: "test-secret",
+			auth: "x-anyllm",
+			baseURL: "https://gateway.test/v1/",
+			model: "test-model",
+		})({
+			messages: [{ role: "user", content: "기억할 내용" }],
+			seedSummary: "",
+			keepTail: 0,
+			targetTokens: 100,
+		});
+
+		const headers = capturedHeaders as Record<string, string>;
+		expect(headers["X-AnyLLM-Key"]).toBe("Bearer test-secret");
+		expect(headers.Authorization).toBeUndefined();
+	});
 });
