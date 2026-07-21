@@ -61,6 +61,7 @@ export class Mem0Adapter implements MemoryAdapter {
 	private mem0: Mem0Memory | null = null;
 	private initPromise: Promise<void> | null = null;
 	private readonly config: Mem0AdapterOptions;
+	private readonly episodeWrites = new Map<string, Promise<void>>();
 	private readonly userId: string;
 
 	// Local stores for Naia-specific data that mem0 doesn't handle
@@ -104,27 +105,40 @@ export class Mem0Adapter implements MemoryAdapter {
 
 	episode = {
 		store: async (event: Episode): Promise<void> => {
-			const existing = this.episodes.findIndex((episode) => episode.id === event.id);
-			if (existing >= 0) return;
-
-			// Also store in mem0 for vector search
-			const m = await this.ensureMem0();
-			const persisted = await m.getAll({ userId: this.userId });
-			const persistedItems = persisted?.results ?? persisted ?? [];
-			if (persistedItems.some((item: any) => item.metadata?.episodeId === event.id)) {
-				this.episodes.push(event);
-				return;
-			}
-			await m.add([{ role: "user", content: event.content }], {
-				userId: this.userId,
-				metadata: {
-					type: "episode",
-					episodeId: event.id,
-					project: event.encodingContext.project,
-					timestamp: event.timestamp,
-				},
+			const previous = this.episodeWrites.get(event.id) ?? Promise.resolve();
+			const write = previous.then(async () => {
+				// Mem0 does not provide a metadata uniqueness constraint. Serialize
+				// writes for one deterministic episode ID so concurrent retries cannot
+				// both observe absence and append duplicates.
+				const m = await this.ensureMem0();
+				const persisted = await m.getAll({ userId: this.userId });
+				const persistedItems = persisted?.results ?? persisted ?? [];
+				const persistedEpisode = persistedItems.find(
+					(item: any) => item.metadata?.episodeId === event.id,
+				);
+				if (persistedEpisode?.id) {
+					await m.update(persistedEpisode.id, event.content);
+				} else {
+					await m.add([{ role: "user", content: event.content }], {
+						userId: this.userId,
+						metadata: {
+							type: "episode",
+							episodeId: event.id,
+							project: event.encodingContext.project,
+							timestamp: event.timestamp,
+						},
+					});
+				}
+				const existing = this.episodes.findIndex((episode) => episode.id === event.id);
+				if (existing >= 0) this.episodes[existing] = event;
+				else this.episodes.push(event);
 			});
-			this.episodes.push(event);
+			this.episodeWrites.set(event.id, write);
+			try {
+				await write;
+			} finally {
+				if (this.episodeWrites.get(event.id) === write) this.episodeWrites.delete(event.id);
+			}
 		},
 
 		recall: async (
