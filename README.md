@@ -154,7 +154,7 @@ FTS5·sqlite-vec·R-Tree 를 묶어 인지 기능까지 `LocalAdapter` 와 같�
 
 Naia Memory 는 Naia 오픈소스 AI 플랫폼을 이루는 네 개 레포 중 하나로, 기억을 담당합니다.
 
-- [naia-os](https://github.com/nextain/naia-os) — 데스크톱 셸과 OS 이미지 (호스트)
+- [naia-shell](https://github.com/nextain/naia-shell) — 데스크톱 셸 코드베이스 (호스트; naia-os = 이를 부팅 이미지로 묶는 배포판 계층)
 - [naia-agent](https://github.com/nextain/naia-agent) — 대화 루프·도구·컨텍스트 압축 런타임
 - [naia-adk](https://github.com/nextain/naia-adk) — 워크스페이스 포맷과 스킬 라이브러리
 - **naia-memory** (이 레포) — 기억 구현체
@@ -206,7 +206,7 @@ GEMINI_API_KEY=xxx \
 - 기억별 성질을 켜고 끄며 비교하는 A/B 측정
 - 다른 한국어 데이터셋으로 일반화 확인
 
-망각의 자연 발생, 자유 발화 흐름 속의 모순 감지, 절차 기억 같은 성질은 naia-agent·naia-os 와 결합한 통합 환경에서만 제대로 검증됩니다. 이 항목들은 해당 레포의 통합 벤치에서 추적합니다.
+망각의 자연 발생, 자유 발화 흐름 속의 모순 감지, 절차 기억 같은 성질은 naia-agent·naia-shell 와 결합한 통합 환경에서만 제대로 검증됩니다. 이 항목들은 해당 레포의 통합 벤치에서 추적합니다.
 
 ## AI-Native 오픈소스
 
@@ -216,4 +216,4 @@ GEMINI_API_KEY=xxx \
 
 ## 라이선스
 
-Apache License 2.0 — [LICENSE](LICENSE) 참고. [Nextain](https://nextain.io) 제작, [Naia OS](https://github.com/nextain/naia-os) 의 일부입니다.
+Apache License 2.0 — [LICENSE](LICENSE) 참고. [Nextain](https://nextain.io) 제작, [naia-shell](https://github.com/nextain/naia-shell) 을 포함한 Naia 스택의 일부입니다.

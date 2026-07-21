@@ -93,7 +93,7 @@ describe("compact() v3 — anchored iterative summarization (#47 P3)", () => {
 			messages: [
 				{
 					role: "user",
-					content: "Help me design a real-time avatar voice pipeline using LiveKit and VoxCPM2",
+					content: "Help me design a real-time avatar voice pipeline using LiveKit and a local TTS model",
 				},
 				{ role: "assistant", content: "Sure — here is the cascade ..." },
 				{ role: "user", content: "follow-up question that should not be the Goal" },

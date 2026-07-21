@@ -239,11 +239,11 @@ app.delete("/memories", async (req, res) => {
 // POST /memories/vector
 //   body: {
 //     user_id: string,
-//     vector: number[],                    // pre-computed embedding (e.g. HuBERT 768 + chroma 12)
+//     vector: number[],                    // pre-computed embedding (e.g. audio embedding + chroma features)
 //     content?: string,                    // optional human-readable description
 //     metadata?: {
 //       source_type: "audio_fingerprint" | "image" | ...,
-//       source_model: "hubert-chroma-v1.0",   // ★ embedding versioning
+//       source_model: "audio-embedding-v1.0",   // ★ embedding versioning
 //       timestamp?: number | string,
 //       additional_data?: object,
 //     }

@@ -1,7 +1,7 @@
 {
   "name": "@nextain/naia-memory",
   "version": "0.1.4",
-  "description": "Naia Memory System — Naia OS cognitive memory architecture",
+  "description": "Naia Memory System — cognitive memory for Naia, the Visual Agent",
   "type": "module",
   "license": "Apache-2.0",
   "repository": {

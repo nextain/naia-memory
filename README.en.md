@@ -155,7 +155,7 @@ Bringing the cognitive features up to `LocalAdapter` parity on top of FTS5, sqli
 
 Naia Memory is one of four repos that make up the Naia open-source AI platform; it owns memory.
 
-- [naia-os](https://github.com/nextain/naia-os) — desktop shell and OS image (the host)
+- [naia-shell](https://github.com/nextain/naia-shell) — desktop shell codebase (the host; naia-os = the distro layer that bundles it into a bootable image)
 - [naia-agent](https://github.com/nextain/naia-agent) — conversation loop, tools, context compaction runtime
 - [naia-adk](https://github.com/nextain/naia-adk) — workspace format and skill library
 - **naia-memory** (this repo) — the memory implementation
@@ -207,7 +207,7 @@ It's tempting to line up another system's published score (say, the judge score 
 - A/B measurements that toggle individual memory properties on and off
 - Generalization checks on other Korean datasets
 
-Properties like naturally occurring forgetting, contradiction detection within free-flowing speech, and procedural memory are only properly verified in an integrated setup combined with naia-agent and naia-os. Those items are tracked in the integration benchmarks of the respective repos.
+Properties like naturally occurring forgetting, contradiction detection within free-flowing speech, and procedural memory are only properly verified in an integrated setup combined with naia-agent and naia-shell. Those items are tracked in the integration benchmarks of the respective repos.
 
 ## AI-Native open source
 
@@ -217,4 +217,4 @@ The AI context under `.agents/` and `.users/` is licensed under [CC-BY-SA 4.0](h
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE). Built by [Nextain](https://nextain.io), part of [Naia OS](https://github.com/nextain/naia-os).
+Apache License 2.0 — see [LICENSE](LICENSE). Built by [Nextain](https://nextain.io), part of the Naia stack (incl. [naia-shell](https://github.com/nextain/naia-shell)).

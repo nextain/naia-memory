@@ -293,7 +293,7 @@ export interface VllmReasoningFilterOptions {
 	/** Base URL of the vLLM OpenAI-compatible server. Defaults to
 	 *  `VLLM_REASONING_BASE` env. Example: `http://localhost:8002/v1`. */
 	baseURL?: string;
-	/** Model name as served by vLLM (e.g. `google/gemma-3-4b-it`). Defaults to
+	/** Model name as served by vLLM. Defaults to
 	 *  `VLLM_REASONING_MODEL` env. */
 	model?: string;
 	/** Per-call candidate cap. Default: 10 */
@@ -303,10 +303,10 @@ export interface VllmReasoningFilterOptions {
 	confidenceThreshold?: number;
 }
 
-const VLLM_DEFAULT_MODEL = "google/gemma-4-E4B";
+const VLLM_DEFAULT_MODEL = "local-reasoning-model";
 const VLLM_DEFAULT_BATCH_SIZE = 10;
 
-/** Local Gemma (or any vLLM-served instruct model) contradiction filter.
+/** Local vLLM-served instruct model contradiction filter.
  *  Same prompt structure as `GeminiFlashLiteContradictionFilter`; the only
  *  difference is the endpoint and model. Privacy-preserving and free at the
  *  margin — limited only by GPU throughput. */
