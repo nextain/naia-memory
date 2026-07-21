@@ -40,6 +40,9 @@ export interface MemoryInput {
         emotion?: number;
         /** Optional first-class importance override 0..1 (goal-relevance). */
         importance?: number;
+        /** Stable caller key. Replaying the same key replaces the same episode
+         * instead of appending a duplicate. Keys are scoped by encoding context. */
+        idempotencyKey?: string;
 }
 
 /** R4 #220 — Life epoch representing a significant time period or milestone. */
@@ -357,6 +360,9 @@ export interface MemoryAdapter {
 
 	/** Run a full consolidation cycle (sleep cycle analog) */
 	consolidate(): Promise<ConsolidationResult>;
+
+	/** Force pending writes to their durable backing store. */
+	flush?(): Promise<void>;
 
 	/** Close the adapter and release resources */
 	close(): Promise<void>;

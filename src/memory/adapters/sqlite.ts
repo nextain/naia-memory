@@ -108,7 +108,7 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
     episode = {
         store: async (event: Episode): Promise<void> => {
             await this.callWorker("prepare-run", {
-                sql: "INSERT INTO episodes (id, content, timestamp, role, consolidated, importance_importance, importance_surprise, importance_emotion, importance_utility, encoding_context) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                sql: "INSERT OR REPLACE INTO episodes (id, content, timestamp, role, consolidated, importance_importance, importance_surprise, importance_emotion, importance_utility, encoding_context) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 params: [event.id, event.content, event.timestamp, event.role, event.consolidated ? 1 : 0, event.importance?.importance, event.importance?.surprise, event.importance?.emotion, event.importance?.utility, JSON.stringify(event.encodingContext)]
             });
         },

@@ -116,6 +116,43 @@ describe("MemorySystem.encode", () => {
 		await system.close();
 	});
 
+	it("MS-03b stable idempotency key stores one episode across replay", async () => {
+		const { system } = makeSystem();
+		const payload = input({
+			content: "DJ preference payload",
+			idempotencyKey: "naia-dj:42:user",
+		});
+		const first = await system.encode(payload, { project: "p", sessionId: "s" });
+		const replay = await system.encode(payload, { project: "p", sessionId: "s" });
+		expect(replay.id).toBe(first.id);
+		const recent = await system.recall("DJ preference", RECALL_CTX);
+		expect(recent.episodes.filter((episode) => episode.id === first.id)).toHaveLength(1);
+		await system.close();
+	});
+
+	it("MS-03c flush makes an idempotent episode visible after immediate reopen", async () => {
+		const path = join(rootDir, "durable-idempotency.json");
+		const first = new MemorySystem({
+			adapter: new LocalAdapter(path),
+			consolidationIntervalMs: 0,
+		});
+		const payload = input({
+			content: "durable DJ preference payload",
+			idempotencyKey: "naia-dj:durable:user",
+		});
+		const episode = await first.encode(payload, { project: "p", sessionId: "s" });
+		await first.flush();
+
+		const reopened = new MemorySystem({
+			adapter: new LocalAdapter(path),
+			consolidationIntervalMs: 0,
+		});
+		const recalled = await reopened.recall("durable DJ preference", RECALL_CTX);
+		expect(recalled.episodes.map((item) => item.id)).toContain(episode.id);
+		await first.close();
+		await reopened.close();
+	});
+
 	it("MS-04 timestamp override preserved on stored episode", async () => {
 		const { system } = makeSystem();
 		const fixedTs = 1_700_000_000_000;
