@@ -49,6 +49,8 @@ export interface Mem0AdapterOptions {
 	 *  Default false. The KG itself is preserved (touchNode/strengthen
 	 *  remain reachable); only the lookup-side propagation is bypassed. */
 	disableKGSpreading?: boolean;
+	/** Test/runtime injection for a preconfigured local Mem0 client. */
+	memoryFactory?: () => Mem0Memory | Promise<Mem0Memory>;
 }
 
 /**
@@ -90,6 +92,10 @@ export class Mem0Adapter implements MemoryAdapter {
 	}
 
 	private async _initMem0(): Promise<void> {
+		if (this.config.memoryFactory) {
+			this.mem0 = await this.config.memoryFactory();
+			return;
+		}
 		const { Memory } = await import("mem0ai/oss");
 		this.mem0 = new Memory(this.config.mem0Config);
 	}
@@ -98,27 +104,27 @@ export class Mem0Adapter implements MemoryAdapter {
 
 	episode = {
 		store: async (event: Episode): Promise<void> => {
-			this.episodes.push(event);
+			const existing = this.episodes.findIndex((episode) => episode.id === event.id);
+			if (existing >= 0) return;
 
 			// Also store in mem0 for vector search
 			const m = await this.ensureMem0();
-			try {
-				await m.add([{ role: "user", content: event.content }], {
-					userId: this.userId,
-					metadata: {
-						type: "episode",
-						episodeId: event.id,
-						project: event.encodingContext.project,
-						timestamp: event.timestamp,
-					},
-				});
-			} catch (err: any) {
-				// mem0 internal errors (like 'Memory with ID undefined not found')
-				// are logged but shouldn't crash episodic storage.
-				console.warn(
-					`[Mem0Adapter] episode.store internal error: ${err.message}`,
-				);
+			const persisted = await m.getAll({ userId: this.userId });
+			const persistedItems = persisted?.results ?? persisted ?? [];
+			if (persistedItems.some((item: any) => item.metadata?.episodeId === event.id)) {
+				this.episodes.push(event);
+				return;
 			}
+			await m.add([{ role: "user", content: event.content }], {
+				userId: this.userId,
+				metadata: {
+					type: "episode",
+					episodeId: event.id,
+					project: event.encodingContext.project,
+					timestamp: event.timestamp,
+				},
+			});
+			this.episodes.push(event);
 		},
 
 		recall: async (

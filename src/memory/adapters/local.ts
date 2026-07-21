@@ -366,6 +366,10 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		this.dirty = false;
 	}
 
+	async flush(): Promise<void> {
+		this.saveImmediate();
+	}
+
 	/** Embed text with in-memory cache to avoid redundant API calls. */
 	private async embedWithCache(text: string): Promise<number[] | null> {
 		if (!this.embedder) return null;
@@ -407,7 +411,9 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	// ─── Episodic Memory ──────────────────────────────────────────────────
 	episode = {
 		store: async (event: Episode): Promise<void> => {
-			this.store.episodes.push(event);
+			const existing = this.store.episodes.findIndex((episode) => episode.id === event.id);
+			if (existing >= 0) this.store.episodes[existing] = event;
+			else this.store.episodes.push(event);
 			// Embed content if provider is available (cached to avoid redundant API calls)
 			const epVec = await this.embedWithCache(event.content);
 			if (epVec) this.store.episodeEmbeddings![event.id] = epVec;

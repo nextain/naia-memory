@@ -49,6 +49,19 @@ import type {
 	Reflection,
 } from "./types.js";
 
+function deterministicEpisodeId(
+	key: string,
+	role: string,
+	context: EncodingContext,
+): string {
+	const hex = crypto
+		.createHash("sha256")
+		.update(JSON.stringify([context.project ?? "", context.sessionId ?? "", role, key]))
+		.digest("hex")
+		.slice(0, 32);
+	return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 // Re-exports for package consumers
 export type { EmbeddingProvider };
 export {
@@ -551,8 +564,11 @@ export class MemorySystem {
 		}
 
 		const now = input.timestamp ?? Date.now();
+		const episodeId = input.idempotencyKey
+			? deterministicEpisodeId(input.idempotencyKey, input.role, context)
+			: randomUUID();
 		const episode: Episode = {
-			id: randomUUID(),
+			id: episodeId,
 			content: input.content,
 			role: input.role,
 			summary: input.content.slice(0, 200),
@@ -1834,6 +1850,11 @@ export class MemorySystem {
 	/** Run a decay cycle. Returns number of facts archived/weakened. */
 	async applyDecay(): Promise<number> {
 	        return this.adapter.semantic.decay(Date.now());
+	}
+
+	/** Force adapter writes to stable storage before an external outbox is acknowledged. */
+	async flush(): Promise<void> {
+		await this.adapter.flush?.();
 	}
 
 	async close(): Promise<void> {		this.stopConsolidation();
