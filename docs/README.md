@@ -18,6 +18,7 @@
 - [통합 가이드](./integration.md) — `@nextain/naia-memory` 라이브러리 연동 (naia-agent/naia-os)
 - [사용자 시나리오](./user-scenarios.md) — V-model UC와 테스트 커버리지 맵
 - [요구사항](./requirements.md) — 인증 헤더 분리·Mem0 멱등성 요구사항과 검증 상태
+- [V-model 추적표](./v-model.md) — 인증·멱등성 REQ→UC→TEST-S→SPEC→TEST-F 정공·역추적
 - [SQLite 마이그레이션 설계](./design/sqlite-migration.md) — sqlite-vec/FTS5/R-Tree 하이브리드 스토리지
 - [노트북 vLLM 실험](./laptop-vllm-experiment.md) — 로컬 임베딩/추론 서빙 실측
 - [벤치마크 리포트 색인](./reports/README.md) — R-시리즈 정확도/지연 벤치마크 + [A/B 테스트 가이드](./reports/ab-testing-guide.md)
