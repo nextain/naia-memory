@@ -231,6 +231,21 @@ function keywordScore(query: string, document: string): number {
 	return hits / queryTokens.length;
 }
 
+/** Lexical overlap with document-length normalization for hybrid ranking. */
+function compactKeywordScore(query: string, document: string): number {
+	const queryTokens = tokenize(query);
+	const documentTokens = tokenize(document);
+	if (queryTokens.length === 0 || documentTokens.length === 0) return 0;
+	const documentSet = new Set(documentTokens);
+	const documentLower = document.toLowerCase();
+	let hits = 0;
+	for (const token of queryTokens) {
+		if (documentSet.has(token)) hits += 1;
+		else if (documentLower.includes(token)) hits += 0.8;
+	}
+	return hits / Math.sqrt(queryTokens.length * documentTokens.length);
+}
+
 export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private store: MemoryStore;
 	private readonly storePath: string;
@@ -448,6 +463,17 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 							)
 						: this.store.episodes.filter((ep) => !ep.encodingContext?.project)
 					: this.store.episodes;
+			// Embeddings alone are vulnerable to long prompt/response episodes that
+			// are semantically broad but only contain the exact query as a tiny
+			// fragment. Keep a length-normalized lexical signal in the episode path,
+			// just as semantic facts already combine vector and BM25 retrieval.
+			const episodeLexicalScores = new Map<string, number>();
+			let maxEpisodeLexical = 0;
+			for (const ep of eligibleEpisodes) {
+				const score = compactKeywordScore(query, ep.content);
+				episodeLexicalScores.set(ep.id, score);
+				maxEpisodeLexical = Math.max(maxEpisodeLexical, score);
+			}
 			const scored = eligibleEpisodes
 				.map((ep) => {
 					// R3 보존 우선 (Step 6 fix): archived episode 는 default recall hide.
@@ -468,10 +494,13 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 
 					// Relevance: vector similarity when available, else keyword
 					const epVec = queryVec ? this.store.episodeEmbeddings?.[ep.id] : null;
-					const textScore =
-						epVec && queryVec
-							? cosineSimilarity(queryVec, epVec)
-							: keywordScore(query, `${ep.content} ${ep.summary}`);
+					const keyword = keywordScore(query, `${ep.content} ${ep.summary}`);
+					const lexicalScore = maxEpisodeLexical > 0
+						? (episodeLexicalScores.get(ep.id) ?? 0) / maxEpisodeLexical
+						: keyword;
+					const textScore = epVec && queryVec
+						? Math.max(0, cosineSimilarity(queryVec, epVec)) * 0.65 + lexicalScore * 0.35
+						: keyword;
 
 					// Context bonus (encoding specificity)
 					let contextBonus = 0;
@@ -489,9 +518,12 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 					}
 
 					// deepRecall: ignore decay in scoring
+					// Relevance remains primary. Multiplication by strength allowed a
+					// high-utility, broad assistant episode to suppress an exact but
+					// ordinary user episode. Strength is a bounded tie-breaker instead.
 					const finalScore = deepRecall
 						? textScore + contextBonus
-						: textScore * strength + contextBonus;
+						: textScore * 0.85 + strength * 0.15 + contextBonus;
 					return { episode: ep, score: finalScore, strength };
 				})
 				.filter((x): x is NonNullable<typeof x> => x !== null && x.score > 0)
