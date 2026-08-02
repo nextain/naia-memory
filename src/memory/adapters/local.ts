@@ -49,12 +49,13 @@ const pbkdf2Async = promisify(pbkdf2);
 
 /** On-disk schema for JSON persistence */
 interface MemoryStore {
-        version: 1;
-        episodes: Episode[];
-        facts: Fact[];
-        /** R4 #220 — Life epochs for temporal anchoring */
-        epochs?: import("../types.js").Epoch[];
-        skills: Skill[];	reflections: Reflection[];
+	version: 1;
+	episodes: Episode[];
+	facts: Fact[];
+	/** R4 #220 — Life epochs for temporal anchoring */
+	epochs?: import("../types.js").Epoch[];
+	skills: Skill[];
+	reflections: Reflection[];
 	/** Hebbian association weights: "entityA::entityB" → weight */
 	associations: Record<string, number>;
 	/** Knowledge graph state (Phase 2) */
@@ -201,7 +202,9 @@ class BM25 {
 
 			const dfVal = this.df.get(qt) ?? 0;
 			const idf = Math.log(1 + (this.N - dfVal + 0.5) / (dfVal + 0.5));
-			const tfNorm = (tf * (this.k1 + 1)) / (tf + this.k1 * (1 - this.b + this.b * dl / this.avgDl));
+			const tfNorm =
+				(tf * (this.k1 + 1)) /
+				(tf + this.k1 * (1 - this.b + (this.b * dl) / this.avgDl));
 			total += idf * tfNorm;
 		}
 		return total;
@@ -244,6 +247,13 @@ function compactKeywordScore(query: string, document: string): number {
 		else if (documentLower.includes(token)) hits += 0.8;
 	}
 	return hits / Math.sqrt(queryTokens.length * documentTokens.length);
+}
+
+function isSyntheticSystemEcho(episode: Episode): boolean {
+	return (
+		episode.role === "assistant" &&
+		episode.content.trimStart().startsWith("SYSTEM_ECHO:")
+	);
 }
 
 export class LocalAdapter implements MemoryAdapter, BackupCapable {
@@ -304,38 +314,38 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	 *  and whose successor (if any) was created strictly after `atTimestamp`.
 	 */
 	private factsValidAtTime(atTimestamp: number): Fact[] {
-	        return this.factsInTimeRange(atTimestamp, atTimestamp);
+		return this.factsInTimeRange(atTimestamp, atTimestamp);
 	}
 
 	/** Return the fact versions that were active within the [start, end] range.
 	 *  Bi-temporal range recall: identifies facts whose validity overlaps with the epoch.
 	 */
 	private factsInTimeRange(start: number, end: number | null): Fact[] {
-	        const actualEnd = end ?? Date.now();
-	        const groups = new Map<string, Fact[]>();
-	        for (const f of this.store.facts) {
-	                const base = LocalAdapter.baseIdOf(f.id);
-	                const group = groups.get(base);
-	                if (group) group.push(f);
-	                else groups.set(base, [f]);
-	        }
+		const actualEnd = end ?? Date.now();
+		const groups = new Map<string, Fact[]>();
+		for (const f of this.store.facts) {
+			const base = LocalAdapter.baseIdOf(f.id);
+			const group = groups.get(base);
+			if (group) group.push(f);
+			else groups.set(base, [f]);
+		}
 
-	        const valid: Fact[] = [];
-	        for (const group of groups.values()) {
-	                const sorted = [...group].sort((a, b) => b.createdAt - a.createdAt); // Latest version first
-	                for (const f of sorted) {
-	                        // A fact is relevant if its validity [validFrom, validTo] overlaps with [start, actualEnd]
-	                        const fStart = f.validFrom ?? f.createdAt;
-	                        const fEnd = f.validTo ?? Infinity;
+		const valid: Fact[] = [];
+		for (const group of groups.values()) {
+			const sorted = [...group].sort((a, b) => b.createdAt - a.createdAt); // Latest version first
+			for (const f of sorted) {
+				// A fact is relevant if its validity [validFrom, validTo] overlaps with [start, actualEnd]
+				const fStart = f.validFrom ?? f.createdAt;
+				const fEnd = f.validTo ?? Infinity;
 
-	                        if (fStart <= actualEnd && fEnd >= start) {
-	                                // Pick the most recent version that was active in this range for this group
-	                                valid.push(f);
-	                                break; 
-	                        }
-	                }
-	        }
-	        return valid;
+				if (fStart <= actualEnd && fEnd >= start) {
+					// Pick the most recent version that was active in this range for this group
+					valid.push(f);
+					break;
+				}
+			}
+		}
+		return valid;
 	}
 	// ─── Persistence ──────────────────────────────────────────────────────
 	private load(): MemoryStore {
@@ -400,33 +410,37 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	}
 
 	private markDirty(): void {
-	        this.dirty = true;
+		this.dirty = true;
 	}
 
 	// ─── Epoch Memory (R4 #220) ───────────────────────────────────────────
 
 	/** Register or update a life epoch (e.g., 'Before moving to Seoul'). */
 	async upsertEpoch(epoch: import("../types.js").Epoch): Promise<void> {
-	        if (!this.store.epochs) this.store.epochs = [];
-	        const idx = this.store.epochs.findIndex((e) => e.id === epoch.id || e.name === epoch.name);
-	        if (idx >= 0) {
-	                this.store.epochs[idx] = epoch;
-	        } else {
-	                this.store.epochs.push(epoch);
-	        }
-	        this.markDirty();
-	        this.save();
+		if (!this.store.epochs) this.store.epochs = [];
+		const idx = this.store.epochs.findIndex(
+			(e) => e.id === epoch.id || e.name === epoch.name,
+		);
+		if (idx >= 0) {
+			this.store.epochs[idx] = epoch;
+		} else {
+			this.store.epochs.push(epoch);
+		}
+		this.markDirty();
+		this.save();
 	}
 
 	/** Get all defined life epochs. */
 	getEpochs(): import("../types.js").Epoch[] {
-	        return this.store.epochs ?? [];
+		return this.store.epochs ?? [];
 	}
 
 	// ─── Episodic Memory ──────────────────────────────────────────────────
 	episode = {
 		store: async (event: Episode): Promise<void> => {
-			const existing = this.store.episodes.findIndex((episode) => episode.id === event.id);
+			const existing = this.store.episodes.findIndex(
+				(episode) => episode.id === event.id,
+			);
 			if (existing >= 0) this.store.episodes[existing] = event;
 			else this.store.episodes.push(event);
 			// Embed content if provider is available (cached to avoid redundant API calls)
@@ -455,7 +469,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			const epScopeMode = (context as any)?.scopeMode ?? "soft";
 			const epCrossProject = (context as any)?.crossProject ?? false;
 			const epProj = context.project;
-			const eligibleEpisodes =
+			const projectEpisodes =
 				epScopeMode === "strict" && !epCrossProject
 					? epProj
 						? this.store.episodes.filter(
@@ -463,6 +477,15 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 							)
 						: this.store.episodes.filter((ep) => !ep.encodingContext?.project)
 					: this.store.episodes;
+			// Older echo-system sessions persisted the complete synthetic system
+			// prompt as assistant memory. New writes are blocked in naia-agent, but
+			// existing stores must also stop feeding that recursive diagnostic payload
+			// back into later prompts.
+			const eligibleEpisodes = projectEpisodes.filter(
+				(episode) =>
+					!isSyntheticSystemEcho(episode) &&
+					episode.content.trim() !== query.trim(),
+			);
 			// Embeddings alone are vulnerable to long prompt/response episodes that
 			// are semantically broad but only contain the exact query as a tiny
 			// fragment. Keep a length-normalized lexical signal in the episode path,
@@ -495,12 +518,15 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 					// Relevance: vector similarity when available, else keyword
 					const epVec = queryVec ? this.store.episodeEmbeddings?.[ep.id] : null;
 					const keyword = keywordScore(query, `${ep.content} ${ep.summary}`);
-					const lexicalScore = maxEpisodeLexical > 0
-						? (episodeLexicalScores.get(ep.id) ?? 0) / maxEpisodeLexical
-						: keyword;
-					const textScore = epVec && queryVec
-						? Math.max(0, cosineSimilarity(queryVec, epVec)) * 0.65 + lexicalScore * 0.35
-						: keyword;
+					const lexicalScore =
+						maxEpisodeLexical > 0
+							? (episodeLexicalScores.get(ep.id) ?? 0) / maxEpisodeLexical
+							: keyword;
+					const textScore =
+						epVec && queryVec
+							? Math.max(0, cosineSimilarity(queryVec, epVec)) * 0.65 +
+								lexicalScore * 0.35
+							: keyword;
 
 					// Context bonus (encoding specificity)
 					let contextBonus = 0;
@@ -523,7 +549,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 					// ordinary user episode. Strength is a bounded tie-breaker instead.
 					const finalScore = deepRecall
 						? textScore + contextBonus
-						: textScore * 0.85 + strength * 0.15 + contextBonus;
+						: textScore * 0.95 + strength * 0.05 + contextBonus;
 					return { episode: ep, score: finalScore, strength };
 				})
 				.filter((x): x is NonNullable<typeof x> => x !== null && x.score > 0)
@@ -620,29 +646,32 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			this.save();
 		},
 
- 		search: async (
- 		        query: string,
- 		        topK: number,
- 		        deepRecall = false,
- 		        context?: {
- 		                project?: string;
- 		                atTimestamp?: number;
- 		                /** R2.5 v2 recall mode. default 'latest' (backward compat). */
- 		                mode?: "latest" | "history" | "at-time";
- 		                /** #27 minimum confidence threshold (default 0). */
- 		                minConfidence?: number;
- 		                /** #27 HyDE — caller-provided 가상 답. embedding 시 사용. */
- 		                queryHint?: string;
- 		                /** R5 #28 — privacy scope mode. strict 권장 production. */
- 		                scopeMode?: "strict" | "soft";
- 		                /** R5 #28 — explicit cross-project recall (strict mode). */
- 		                crossProject?: boolean;
- 		                /** R4 #220 — Epoch anchor. */
- 		                epochAnchor?: string;
- 		        },
- 		): Promise<Fact[]> => {
- 		        const now = Date.now();
- 		        const BROAD_FACTOR = 3;			const searchMode = process.env.NAIA_SEARCH_MODE ?? (this.embedder && this.embedder.dims >= 2000 ? "vector-only" : "rrf");
+		search: async (
+			query: string,
+			topK: number,
+			deepRecall = false,
+			context?: {
+				project?: string;
+				atTimestamp?: number;
+				/** R2.5 v2 recall mode. default 'latest' (backward compat). */
+				mode?: "latest" | "history" | "at-time";
+				/** #27 minimum confidence threshold (default 0). */
+				minConfidence?: number;
+				/** #27 HyDE — caller-provided 가상 답. embedding 시 사용. */
+				queryHint?: string;
+				/** R5 #28 — privacy scope mode. strict 권장 production. */
+				scopeMode?: "strict" | "soft";
+				/** R5 #28 — explicit cross-project recall (strict mode). */
+				crossProject?: boolean;
+				/** R4 #220 — Epoch anchor. */
+				epochAnchor?: string;
+			},
+		): Promise<Fact[]> => {
+			const now = Date.now();
+			const BROAD_FACTOR = 3;
+			const searchMode =
+				process.env.NAIA_SEARCH_MODE ??
+				(this.embedder && this.embedder.dims >= 2000 ? "vector-only" : "rrf");
 
 			// #27 HyDE — caller 가 queryHint 주면 그것으로 embedding (가상 답 →
 			// fact form 정합). 미설정 시 query 그대로.
@@ -673,58 +702,61 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 
 			// R4 #220 — Resolve epoch anchor to range or timestamp
 			if (epochAnchor && atT === undefined) {
-			        const epochs = this.getEpochs();
-			        const matched = epochs.find(e => 
-			                e.name.toLowerCase().includes(epochAnchor.toLowerCase()) ||
-			                (e.description && e.description.toLowerCase().includes(epochAnchor.toLowerCase()))
-			        );
-			        if (matched) {
-			                epochRange = { start: matched.start, end: matched.end };
-			        }
+				const epochs = this.getEpochs();
+				const matched = epochs.find(
+					(e) =>
+						e.name.toLowerCase().includes(epochAnchor.toLowerCase()) ||
+						(e.description &&
+							e.description.toLowerCase().includes(epochAnchor.toLowerCase())),
+				);
+				if (matched) {
+					epochRange = { start: matched.start, end: matched.end };
+				}
 			}
 
 			// R2.5 v2 fix #1: mode='at-time' requires atTimestamp (either explicit or resolved via epoch).
 			if (context?.mode === "at-time" && atT === undefined && !epochRange) {
-			        throw new Error(
-			                "semantic.search: mode='at-time' requires `atTimestamp` or a valid `epochAnchor` to be set",
-			        );
+				throw new Error(
+					"semantic.search: mode='at-time' requires `atTimestamp` or a valid `epochAnchor` to be set",
+				);
 			}
 
-			const scopeMode = (context as any)?.scopeMode ?? "soft";                    const crossProject = (context as any)?.crossProject ?? false;
+			const scopeMode = (context as any)?.scopeMode ?? "soft";
+			const crossProject = (context as any)?.crossProject ?? false;
 
 			let baseFacts: Fact[];
 			if (epochRange) {
-			        baseFacts = this.factsInTimeRange(epochRange.start, epochRange.end);
+				baseFacts = this.factsInTimeRange(epochRange.start, epochRange.end);
 			} else if (atT !== undefined) {
-			        baseFacts = this.factsValidAtTime(atT);
+				baseFacts = this.factsValidAtTime(atT);
 			} else {
-			        baseFacts = this.store.facts;
+				baseFacts = this.store.facts;
 			}
 
 			let allFacts: Fact[];
 			if (scopeMode === "strict" && !crossProject) {
-			        if (proj) {
-			                allFacts = baseFacts.filter(
-			                        (f) =>
-			                                f.encodingContext?.project === proj ||
-			                                (f.topics?.includes(proj) ?? false),
-			                );
-			        } else {
-			                // strict + no project: cross-project leak 방지 → project 없는 fact 만
-			                allFacts = baseFacts.filter((f) => !f.encodingContext?.project);
-			        }
+				if (proj) {
+					allFacts = baseFacts.filter(
+						(f) =>
+							f.encodingContext?.project === proj ||
+							(f.topics?.includes(proj) ?? false),
+					);
+				} else {
+					// strict + no project: cross-project leak 방지 → project 없는 fact 만
+					allFacts = baseFacts.filter((f) => !f.encodingContext?.project);
+				}
 			} else if (crossProject) {
-			        // explicit cross-project recall: no filtering
-			        allFacts = baseFacts;
+				// explicit cross-project recall: no filtering
+				allFacts = baseFacts;
 			} else {
-			        // soft mode (legacy default).
-			        allFacts = proj
-			                ? baseFacts.filter(
-			                                (f) =>
-			                                        f.encodingContext?.project === proj ||
-			                                        (f.topics?.includes(proj) ?? false),
-			                        )
-			                : baseFacts;
+				// soft mode (legacy default).
+				allFacts = proj
+					? baseFacts.filter(
+							(f) =>
+								f.encodingContext?.project === proj ||
+								(f.topics?.includes(proj) ?? false),
+						)
+					: baseFacts;
 			}
 
 			const vectorScores: Map<string, number> = new Map();
@@ -733,90 +765,102 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 
 			let bm25Instance: BM25 | null = null;
 			if (useBM25) {
-			        bm25Instance = new BM25();
-			        const docMap = new Map<string, string>();
-			        for (const f of allFacts) {
-			                docMap.set(f.id, [f.content, ...f.entities, ...f.topics].join(" "));
-			        }
-			        bm25Instance.index(docMap);
+				bm25Instance = new BM25();
+				const docMap = new Map<string, string>();
+				for (const f of allFacts) {
+					docMap.set(f.id, [f.content, ...f.entities, ...f.topics].join(" "));
+				}
+				bm25Instance.index(docMap);
 			}
 
 			for (const fact of allFacts) {
-			        const factVec = this.store.factEmbeddings?.[fact.id];
-			        const vs = factVec && queryVec ? cosineSimilarity(queryVec, factVec) : 0;
-			        vectorScores.set(fact.id, vs);
+				const factVec = this.store.factEmbeddings?.[fact.id];
+				const vs =
+					factVec && queryVec ? cosineSimilarity(queryVec, factVec) : 0;
+				vectorScores.set(fact.id, vs);
 
-			        if (bm25Instance) {
-			                const bs = bm25Instance.score(query, fact.id);
-			                bm25Scores.set(fact.id, bs);
-			        }
+				if (bm25Instance) {
+					const bs = bm25Instance.score(query, fact.id);
+					bm25Scores.set(fact.id, bs);
+				}
 
-			        let eb = 0;
-			        for (const qt of queryTokens) {
-			                if (fact.entities.some((e) => e.toLowerCase().includes(qt))) {
-			                        eb += 0.3;
-			                }
-			        }
-			        // R4 #220 — KG spreading activation bonus.
-			        for (const ent of fact.entities) {
-			                const act = activationMap.get(ent.toLowerCase());
-			                if (act && act > 0.01) {
-			                        eb += act * 2.0;
-			                }
-			        }
-			        entityBonuses.set(fact.id, eb);			        }
+				let eb = 0;
+				for (const qt of queryTokens) {
+					if (fact.entities.some((e) => e.toLowerCase().includes(qt))) {
+						eb += 0.3;
+					}
+				}
+				// R4 #220 — KG spreading activation bonus.
+				for (const ent of fact.entities) {
+					const act = activationMap.get(ent.toLowerCase());
+					if (act && act > 0.01) {
+						eb += act * 2.0;
+					}
+				}
+				entityBonuses.set(fact.id, eb);
+			}
 
-			        const byVector = [...allFacts].sort((a, b) => (vectorScores.get(b.id) ?? 0) - (vectorScores.get(a.id) ?? 0));
-			        const vectorRank = new Map<string, number>();
-			        for (let i = 0; i < byVector.length; i++) vectorRank.set(byVector[i].id, i + 1);
+			const byVector = [...allFacts].sort(
+				(a, b) => (vectorScores.get(b.id) ?? 0) - (vectorScores.get(a.id) ?? 0),
+			);
+			const vectorRank = new Map<string, number>();
+			for (let i = 0; i < byVector.length; i++)
+				vectorRank.set(byVector[i].id, i + 1);
 
-			        let bm25Rank: Map<string, number> | null = null;
-			        if (useBM25) {
-			        const byBM25 = [...allFacts].sort((a, b) => (bm25Scores.get(b.id) ?? 0) - (bm25Scores.get(a.id) ?? 0));
-			        bm25Rank = new Map<string, number>();
-			        for (let i = 0; i < byBM25.length; i++) bm25Rank.set(byBM25[i].id, i + 1);
-			        }
+			let bm25Rank: Map<string, number> | null = null;
+			if (useBM25) {
+				const byBM25 = [...allFacts].sort(
+					(a, b) => (bm25Scores.get(b.id) ?? 0) - (bm25Scores.get(a.id) ?? 0),
+				);
+				bm25Rank = new Map<string, number>();
+				for (let i = 0; i < byBM25.length; i++)
+					bm25Rank.set(byBM25[i].id, i + 1);
+			}
 
-			        const candidates = allFacts
-			        .map((fact) => {
-			                const vs = vectorScores.get(fact.id) ?? 0;
-			                const bs = bm25Scores.get(fact.id) ?? 0;
-			                const eb = entityBonuses.get(fact.id) ?? 0;
+			const candidates = allFacts
+				.map((fact) => {
+					const vs = vectorScores.get(fact.id) ?? 0;
+					const bs = bm25Scores.get(fact.id) ?? 0;
+					const eb = entityBonuses.get(fact.id) ?? 0;
 
-			                // Flashbulb = strong emotional AROUSAL in EITHER valence (grief flashbulbs too),
-			                // not positive valence only. arousal = |valence-0.5|*2; threshold 0.6 is the
-			                // symmetric form of the previous positive-only 0.8 valence cut (|v-0.5|>=0.3),
-			                // so positive behavior is unchanged and strong-negative reactions now qualify.
-			                // Default 0.5 (neutral, arousal 0) when maxEmotion absent — NOT 0 (which would
-			                // read as max-negative and false-flashbulb an emotionless memory).
-			                const isFlashbulb = Math.abs((fact.maxEmotion ?? 0.5) - 0.5) * 2 >= 0.6;
-			                const relevanceThreshold = epochRange ? 0.0 : 0.12;
+					// Flashbulb = strong emotional AROUSAL in EITHER valence (grief flashbulbs too),
+					// not positive valence only. arousal = |valence-0.5|*2; threshold 0.6 is the
+					// symmetric form of the previous positive-only 0.8 valence cut (|v-0.5|>=0.3),
+					// so positive behavior is unchanged and strong-negative reactions now qualify.
+					// Default 0.5 (neutral, arousal 0) when maxEmotion absent — NOT 0 (which would
+					// read as max-negative and false-flashbulb an emotionless memory).
+					const isFlashbulb =
+						Math.abs((fact.maxEmotion ?? 0.5) - 0.5) * 2 >= 0.6;
+					const relevanceThreshold = epochRange ? 0.0 : 0.12;
 
-			                const isRelevant = vs >= relevanceThreshold || bs > 0 || eb > 0 || isFlashbulb;
+					const isRelevant =
+						vs >= relevanceThreshold || bs > 0 || eb > 0 || isFlashbulb;
 
-			                if (!isRelevant && !deepRecall) return null;					let relevanceScore: number;
+					if (!isRelevant && !deepRecall) return null;
+					let relevanceScore: number;
 					if (searchMode === "vector-only") {
-					        relevanceScore = vs + eb;
+						relevanceScore = vs + eb;
 					} else {
-					        // RRF fusion of the vector + BM25 rank streams. The
-					        // entity/KG bonus (eb) MUST also be added here — it is a
-					        // strong exact-match / spreading-activation signal and was
-					        // previously dropped in RRF mode (only used by vector-only),
-					        // so exact entity matches got no credit and RRF ranked below
-					        // raw vector similarity. eb lives on the raw score scale
-					        // (0.3 per exact entity match) which intentionally dominates
-					        // the compressed RRF base (~1/RRF_K) for confident matches.
-					        relevanceScore =
-					                1 / (RRF_K + (vectorRank.get(fact.id) ?? allFacts.length)) +
-					                1 / (RRF_K + (bm25Rank!.get(fact.id) ?? allFacts.length)) +
-					                eb;
+						// RRF fusion of the vector + BM25 rank streams. The
+						// entity/KG bonus (eb) MUST also be added here — it is a
+						// strong exact-match / spreading-activation signal and was
+						// previously dropped in RRF mode (only used by vector-only),
+						// so exact entity matches got no credit and RRF ranked below
+						// raw vector similarity. eb lives on the raw score scale
+						// (0.3 per exact entity match) which intentionally dominates
+						// the compressed RRF base (~1/RRF_K) for confident matches.
+						relevanceScore =
+							1 / (RRF_K + (vectorRank.get(fact.id) ?? allFacts.length)) +
+							1 / (RRF_K + (bm25Rank!.get(fact.id) ?? allFacts.length)) +
+							eb;
 					}
 
 					// Apply boost to Flashbulb memories to ensure they survive slice(0, broadK)
 					if (isFlashbulb) relevanceScore += 0.5;
 
 					return { fact, relevanceScore, vectorScore: vs };
-					})				.filter((x): x is NonNullable<typeof x> => x !== null)
+				})
+				.filter((x): x is NonNullable<typeof x> => x !== null)
 				.sort((a, b) => b.relevanceScore - a.relevanceScore)
 				.slice(0, broadK);
 
@@ -847,15 +891,18 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			//  - mode='history': superseded 도 포함 — chain 회상
 			//  - mode='at-time': atT 가 set 된 path (이미 위 factsValidAtTime 처리)
 			const mode = context?.mode ?? "latest";
-			const includeSuperseded = mode === "history" || deepRecall || epochRange !== null;
+			const includeSuperseded =
+				mode === "history" || deepRecall || epochRange !== null;
 			if (!includeSuperseded && atT === undefined) {
-			        if (deepRecall) {
-			                // deepRecall + latest mode: 기존 동작 — superseded 만 제외 (loose).
-			                scored = scored.filter((f) => f.fact.status !== "superseded");
-			        } else {
-			                // latest 명시 mode: status === 'active' 만 (strict, archived 제외).
-			                scored = scored.filter((f) => (f.fact.status ?? "active") === "active");
-			        }
+				if (deepRecall) {
+					// deepRecall + latest mode: 기존 동작 — superseded 만 제외 (loose).
+					scored = scored.filter((f) => f.fact.status !== "superseded");
+				} else {
+					// latest 명시 mode: status === 'active' 만 (strict, archived 제외).
+					scored = scored.filter(
+						(f) => (f.fact.status ?? "active") === "active",
+					);
+				}
 			}
 			// #27 confidence threshold — preservation-first 의 짝.
 			// score 가 minConfidence 미만인 fact 는 제외. 사용자 directive
@@ -939,30 +986,33 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 
 			// Update recall counts
 			for (const { fact } of scored) {
-			        fact.recallCount++;
-			        fact.lastAccessed = now;
-			        fact.strength = calculateStrength(
-			                fact.importance,
-			                fact.createdAt,
-			                fact.recallCount,
-			                fact.lastAccessed,
-			                now,
-			        );
+				fact.recallCount++;
+				fact.lastAccessed = now;
+				fact.strength = calculateStrength(
+					fact.importance,
+					fact.createdAt,
+					fact.recallCount,
+					fact.lastAccessed,
+					now,
+				);
 			}
 
 			if (epochRange) {
-			    console.log(`[LocalAdapter] Final scored count for epoch: ${scored.length}`);
+				console.log(
+					`[LocalAdapter] Final scored count for epoch: ${scored.length}`,
+				);
 			}
 
 			if (scored.length > 0) {
-			        this.markDirty();
-			        this.save();
+				this.markDirty();
+				this.save();
 			}
 
 			return scored.map((s) => {
-			        s.fact.relevanceScore = s.score;
-			        return s.fact;
-			});		},
+				s.fact.relevanceScore = s.score;
+				return s.fact;
+			});
+		},
 
 		decay: async (now: number): Promise<number> => {
 			// R3 보존 우선 (사용자 directive 2026-05-08, #25):
@@ -997,7 +1047,11 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 				ep.strength = strength;
 				// Consolidated episode 는 유지 (semantic memory 에 기여).
 				// 그 외 strength 약하면 archived.
-				if (shouldPrune(strength) && !ep.consolidated && ep.status !== "archived") {
+				if (
+					shouldPrune(strength) &&
+					!ep.consolidated &&
+					ep.status !== "archived"
+				) {
 					ep.status = "archived";
 					archivedCount++;
 				}
