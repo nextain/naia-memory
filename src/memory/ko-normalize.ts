@@ -90,6 +90,21 @@ export function normalizeEnding(token: string): string {
 	return token;
 }
 
+/**
+ * Preserve a productive Korean compound while also exposing its searchable stem.
+ *
+ * Preference queries commonly use the noun form ("매운맛") while conversational
+ * memories use the attributive form ("매운 거"). Keeping both tokens avoids
+ * sacrificing exact compound matches and gives keyword-only recall a shared term.
+ */
+function expandCompound(token: string): string[] {
+	if (token.endsWith("맛")) {
+		const stem = token.slice(0, -1);
+		if (stem.length >= 2) return [token, stem];
+	}
+	return [token];
+}
+
 export function tokenize(text: string): string[] {
 	if (!text) return [];
 	const cleaned = text.replace(PUNCT, " ").replace(/\s+/g, " ").trim();
@@ -98,6 +113,7 @@ export function tokenize(text: string): string[] {
 		.map((w) => w.toLowerCase())
 		.map(stripParticle)
 		.map(normalizeEnding)
+		.flatMap(expandCompound)
 		.filter((w) => w.length >= 2 && !STOPWORDS.has(w));
 }
 
