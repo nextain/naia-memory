@@ -3,13 +3,30 @@
   "contract_id": "naia-memory-benchmark-evidence-loop-2026-08-13",
   "contract_digest": "c3ce2a585198252c872e04df3c8f9e26174a41d5fa540d740d079b56c19dfdaf",
   "issue": "naia-memory benchmark evidence loop",
-  "current_phase": "understand",
-  "current_task": "Bind the benchmark evidence and improvement work to this session, then establish the Korean baseline and evaluation contract.",
-  "gates_cleared": [],
+  "current_phase": "complete",
+  "current_task": "Established reproducible CPU benchmarks and a Korean retrieval contract; published the measured trade-off without changing the default search mode.",
+  "gates_cleared": ["P01", "P02", "P03", "P04", "P05"],
   "key_decisions": [
     "Use CPU only; GPU 1 belongs to another session.",
     "Treat existing reports without revision, dataset digest, configuration, and environment as historical evidence, not certified comparisons.",
-    "Keep retrieval measurement separate from agent response and abstention decisions."
+    "Keep retrieval measurement separate from agent response and abstention decisions.",
+    "Do not adopt vector-only as the default: it improved hit@1 and MRR but increased forbidden-fact exposure at top-5 on the fixed Korean contract.",
+    "Discord DM delivery is blocked by an absent local configuration and exact recipient binding; no message was sent."
   ],
-  "updated_at": "2026-08-13T00:00:00.000Z"
+  "evidence": {
+    "commit": "1a9dcab",
+    "reports": [
+      "reports/perf/latency-accuracy-count1000.json",
+      "reports/quality/korean-retrieval-contract-v1-rrf.json",
+      "reports/quality/korean-retrieval-contract-v1-vector-only.json",
+      "reports/benchmark-evidence-loop-2026-08-13.md"
+    ],
+    "verification": [
+      "pnpm typecheck",
+      "pnpm exec vitest run src/memory/__tests__/ko-normalize.test.ts",
+      "node scripts/check-doc-graph.mjs docs docs/README.md reaction-signal.md --exempt progress --exempt reports --exempt archive",
+      "git diff --check"
+    ]
+  },
+  "updated_at": "2026-08-13T01:05:00.000Z"
 }
