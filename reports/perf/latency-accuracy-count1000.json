@@ -1,0 +1,67 @@
+{
+  "benchmark": "retrieval-latency-accuracy",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-12T18:18:30.966Z",
+    "git": {
+      "revision": "8ab6283cf3e1ed5e7ca12161a11c129564bb5807",
+      "dirty": true
+    },
+    "datasets": {},
+    "config": {
+      "count": 1000,
+      "hot": 100,
+      "samples": 30,
+      "topK": 10,
+      "dims": 384,
+      "benchmarkClock": "2024-07-03T09:46:40.000Z"
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "config": {
+    "count": 1000,
+    "hot": 100,
+    "samples": 30,
+    "topK": 10,
+    "dims": 384
+  },
+  "embedder": "deterministic-bag-of-tokens",
+  "methodologyNote": "Latency isolates retrieval (SqliteAdapter+FTS5+sqlite-vec+worker-IPC) from embedding-model cost via a deterministic bag-of-tokens embedder. sqlite-vec brute-force scan latency depends on (dims, corpus-size), not vector values, so latency is representative of the real embedder at the same dims. precision@k is a relative signal on the synthetic (shared-token) corpus, NOT a semantic-quality claim.",
+  "injectionMs": 177.60071,
+  "injectionThroughputPerSec": 5631,
+  "footprint": {
+    "rssMB": 180.6,
+    "dbFileMB": 3.5
+  },
+  "results": {
+    "surface": {
+      "label": "surface (hot)",
+      "samples": 30,
+      "p50": 0.7461410000000228,
+      "p95": 0.832380999999998,
+      "p99": 1.343437999999992,
+      "max": 1.343437999999992,
+      "mean": 0.7511249333333277,
+      "min": 0.6475610000000529,
+      "hitRateAvg": 10,
+      "precisionAtKAvg": 0.15333333333333335
+    },
+    "deep": {
+      "label": "deep (full corpus)",
+      "samples": 30,
+      "p50": 0.6651400000000649,
+      "p95": 1.0821540000000596,
+      "p99": 1.4494439999999713,
+      "max": 1.4494439999999713,
+      "mean": 0.7269656333333387,
+      "min": 0.6212150000000065,
+      "hitRateAvg": 10,
+      "precisionAtKAvg": 0.37333333333333324
+    }
+  }
+}

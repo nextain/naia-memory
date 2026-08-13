@@ -19,8 +19,9 @@ import { SqliteAdapter } from "../../memory/adapters/sqlite.js";
 import { DeterministicEmbeddingProvider } from "./deterministic-embedder.js";
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
-import { homedir } from "node:os";
+import { tmpdir } from "node:os";
 import { unlinkSync, existsSync, mkdirSync, writeFileSync, statSync } from "node:fs";
+import { benchmarkReceipt } from "../provenance.js";
 
 const COUNT = Number(process.env.BENCH_COUNT ?? 100000);
 const HOT = Math.min(10000, Math.floor(COUNT / 10));
@@ -105,7 +106,7 @@ async function benchRecall(
 
 async function main() {
 	console.log(`=== Naia Memory Perf Bench (count=${COUNT}, hot=${HOT}, samples=${SAMPLES}, topK=${TOPK}, dims=${DIMS}) ===`);
-	const dbPath = join(homedir(), ".naia", "memory", "perf-bench-latency.db");
+	const dbPath = process.env.BENCH_DB_PATH ?? join(tmpdir(), `naia-memory-perf-${process.pid}.db`);
 	if (existsSync(dbPath)) unlinkSync(dbPath);
 
 	const embedder = new DeterministicEmbeddingProvider(DIMS);
@@ -163,7 +164,7 @@ async function main() {
 
 	const report = {
 		benchmark: "retrieval-latency-accuracy",
-		generatedAt: new Date(NOW).toISOString(),
+		receipt: benchmarkReceipt([], { count: COUNT, hot: HOT, samples: SAMPLES, topK: TOPK, dims: DIMS, benchmarkClock: new Date(NOW).toISOString() }),
 		config: { count: COUNT, hot: HOT, samples: SAMPLES, topK: TOPK, dims: DIMS },
 		embedder: embedder.name,
 		methodologyNote:

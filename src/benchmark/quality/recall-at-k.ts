@@ -25,6 +25,7 @@ import { readFileSync, mkdirSync, writeFileSync, existsSync, unlinkSync } from "
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { randomUUID } from "node:crypto";
+import { benchmarkReceipt } from "../provenance.js";
 
 const TOPK = Number(process.env.BENCH_TOPK ?? 10);
 const NOW = 1_720_000_000_000;
@@ -136,7 +137,11 @@ async function main() {
 
 	const outDir = join(process.cwd(), "reports", "quality");
 	mkdirSync(outDir, { recursive: true });
-	writeFileSync(join(outDir, "recall-at-k.json"), JSON.stringify({ benchmark: "recall-at-k", model: MODEL, dims: embedder.dims, facts: facts.length, withDistractor, evaluated: rrf.evaluated, rrf, vectorOnly: vec, binaryQuant: binq }, null, 2));
+	const receipt = benchmarkReceipt(
+		["src/benchmark/fact-bank-v2.json", "src/benchmark/query-templates-v2.json"],
+		{ model: MODEL, topK: TOPK, withDistractor, benchmarkClock: new Date(NOW).toISOString() },
+	);
+	writeFileSync(join(outDir, "recall-at-k.json"), JSON.stringify({ benchmark: "recall-at-k", receipt, model: MODEL, dims: embedder.dims, facts: facts.length, withDistractor, evaluated: rrf.evaluated, rrf, vectorOnly: vec, binaryQuant: binq }, null, 2));
 	console.log(`\nArtifact: reports/quality/recall-at-k.json`);
 }
 

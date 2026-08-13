@@ -1,0 +1,365 @@
+{
+  "benchmark": "korean-retrieval-contract-v1",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-13T01:00:01.100Z",
+    "git": {
+      "revision": "8ab6283cf3e1ed5e7ca12161a11c129564bb5807",
+      "dirty": true
+    },
+    "datasets": {
+      "src/benchmark/fact-bank-v2.json": "e1ff0e495f81f9bc6123fdad9f164434781fb4c87da9ad7ad8bca866651d361a",
+      "src/benchmark/quality/korean-retrieval-contract-v1.json": "52b464b5cfc4e33da8c5edafdc74504b99b073ca08e89d6b4105b08ed10b5b9f"
+    },
+    "config": {
+      "model": "paraphrase-multilingual-MiniLM-L12-v2",
+      "device": "cpu",
+      "topK": 5,
+      "searchMode": "rrf",
+      "benchmarkClock": "2024-07-03T09:46:40.000Z",
+      "corpusFacts": 310
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "dimensions": 384,
+  "score": {
+    "evaluated": 16,
+    "hitAt1": 0.0625,
+    "hitAtK": 0.5625,
+    "mrr": 0.2260416666666667,
+    "forbiddenAt1": 0.25,
+    "forbiddenAtK": 0.4375,
+    "cases": [
+      {
+        "id": "KO-01",
+        "category": "particle_ending",
+        "query": "언니가 커피를 마시나요?",
+        "acceptable_fact_ids": [
+          "F003"
+        ],
+        "forbidden_fact_ids": [
+          "F003d"
+        ],
+        "retrieved_ids": [
+          "F003d",
+          "F003",
+          "F011d",
+          "F079d",
+          "F079"
+        ],
+        "acceptable_rank": 2,
+        "forbidden_ranks": [
+          1
+        ]
+      },
+      {
+        "id": "KO-02",
+        "category": "particle_ending",
+        "query": "담배를 피우는 편이야?",
+        "acceptable_fact_ids": [
+          "F137"
+        ],
+        "forbidden_fact_ids": [
+          "F137d"
+        ],
+        "retrieved_ids": [
+          "F003d",
+          "F003",
+          "F011d",
+          "F137",
+          "F137d"
+        ],
+        "acceptable_rank": 4,
+        "forbidden_ranks": [
+          5
+        ]
+      },
+      {
+        "id": "KO-03",
+        "category": "compound_taste",
+        "query": "매운맛은 좋아해, 싫어해?",
+        "acceptable_fact_ids": [
+          "F046"
+        ],
+        "forbidden_fact_ids": [
+          "F046d"
+        ],
+        "retrieved_ids": [
+          "F011d",
+          "F003d",
+          "F003",
+          "F046",
+          "F046d"
+        ],
+        "acceptable_rank": 4,
+        "forbidden_ranks": [
+          5
+        ]
+      },
+      {
+        "id": "KO-04",
+        "category": "semantic_paraphrase",
+        "query": "어떤 클라우드 서비스를 쓰고 있어?",
+        "acceptable_fact_ids": [
+          "F035"
+        ],
+        "forbidden_fact_ids": [],
+        "retrieved_ids": [
+          "F035",
+          "F178",
+          "F170",
+          "F160",
+          "F070"
+        ],
+        "acceptable_rank": 1,
+        "forbidden_ranks": []
+      },
+      {
+        "id": "KO-05",
+        "category": "negation_conflict",
+        "query": "술 마시니?",
+        "acceptable_fact_ids": [
+          "F048"
+        ],
+        "forbidden_fact_ids": [
+          "F048d"
+        ],
+        "retrieved_ids": [
+          "F003",
+          "F003d",
+          "F011d",
+          "F002",
+          "F002d"
+        ],
+        "acceptable_rank": null,
+        "forbidden_ranks": []
+      },
+      {
+        "id": "KO-06",
+        "category": "negation_conflict",
+        "query": "차도 마셔?",
+        "acceptable_fact_ids": [
+          "F011"
+        ],
+        "forbidden_fact_ids": [
+          "F011d"
+        ],
+        "retrieved_ids": [
+          "F011d",
+          "F003",
+          "F003d",
+          "F079",
+          "F079d"
+        ],
+        "acceptable_rank": null,
+        "forbidden_ranks": [
+          1
+        ]
+      },
+      {
+        "id": "KO-07",
+        "category": "entity_disambiguation",
+        "query": "언니는 커피를 좋아해?",
+        "acceptable_fact_ids": [
+          "F003"
+        ],
+        "forbidden_fact_ids": [
+          "F003d",
+          "F011"
+        ],
+        "retrieved_ids": [
+          "F003d",
+          "F011d",
+          "F003",
+          "F079d",
+          "F079"
+        ],
+        "acceptable_rank": 3,
+        "forbidden_ranks": [
+          1
+        ]
+      },
+      {
+        "id": "KO-08",
+        "category": "entity_disambiguation",
+        "query": "나는 차를 마시지 않는다고 했지?",
+        "acceptable_fact_ids": [
+          "F011"
+        ],
+        "forbidden_fact_ids": [
+          "F011d",
+          "F003"
+        ],
+        "retrieved_ids": [
+          "F003",
+          "F003d",
+          "F011d",
+          "F079d",
+          "F002"
+        ],
+        "acceptable_rank": null,
+        "forbidden_ranks": [
+          1,
+          3
+        ]
+      },
+      {
+        "id": "KO-09",
+        "category": "temporal_context",
+        "query": "요즘 하루에 몇 시간 자?",
+        "acceptable_fact_ids": [
+          "F125"
+        ],
+        "forbidden_fact_ids": [
+          "F125d"
+        ],
+        "retrieved_ids": [
+          "F003d",
+          "F003",
+          "F011d",
+          "F002",
+          "F002d"
+        ],
+        "acceptable_rank": null,
+        "forbidden_ranks": []
+      },
+      {
+        "id": "KO-10",
+        "category": "medication_time",
+        "query": "약은 언제 먹어?",
+        "acceptable_fact_ids": [
+          "F139"
+        ],
+        "forbidden_fact_ids": [],
+        "retrieved_ids": [
+          "F003",
+          "F139",
+          "F122",
+          "F050",
+          "F133"
+        ],
+        "acceptable_rank": 2,
+        "forbidden_ranks": []
+      },
+      {
+        "id": "KO-11",
+        "category": "social_relation",
+        "query": "시우와 자주 하는 게 뭐야?",
+        "acceptable_fact_ids": [
+          "F157"
+        ],
+        "forbidden_fact_ids": [],
+        "retrieved_ids": [
+          "F011d",
+          "F002",
+          "F002d",
+          "F051d",
+          "F144d"
+        ],
+        "acceptable_rank": null,
+        "forbidden_ranks": []
+      },
+      {
+        "id": "KO-12",
+        "category": "financial_negation",
+        "query": "대출이 있나?",
+        "acceptable_fact_ids": [
+          "F175"
+        ],
+        "forbidden_fact_ids": [
+          "F175d"
+        ],
+        "retrieved_ids": [
+          "F003",
+          "F003d",
+          "F002",
+          "F002d",
+          "F175"
+        ],
+        "acceptable_rank": 5,
+        "forbidden_ranks": []
+      },
+      {
+        "id": "KO-13",
+        "category": "habit_paraphrase",
+        "query": "독서 습관이 어떻게 돼?",
+        "acceptable_fact_ids": [
+          "F190"
+        ],
+        "forbidden_fact_ids": [],
+        "retrieved_ids": [
+          "F003",
+          "F051d",
+          "F189d",
+          "F189",
+          "F001"
+        ],
+        "acceptable_rank": null,
+        "forbidden_ranks": []
+      },
+      {
+        "id": "KO-14",
+        "category": "surface_variant",
+        "query": "아침에 복용하는 약 얘기 기억나?",
+        "acceptable_fact_ids": [
+          "F139"
+        ],
+        "forbidden_fact_ids": [],
+        "retrieved_ids": [
+          "F003",
+          "F003d",
+          "F011d",
+          "F002",
+          "F002d"
+        ],
+        "acceptable_rank": null,
+        "forbidden_ranks": []
+      },
+      {
+        "id": "KO-15",
+        "category": "negation_conflict",
+        "query": "매운 음식을 즐겨 먹어?",
+        "acceptable_fact_ids": [
+          "F046"
+        ],
+        "forbidden_fact_ids": [
+          "F046d"
+        ],
+        "retrieved_ids": [
+          "F003d",
+          "F051d",
+          "F046",
+          "F046d",
+          "F050"
+        ],
+        "acceptable_rank": 3,
+        "forbidden_ranks": [
+          4
+        ]
+      },
+      {
+        "id": "KO-16",
+        "category": "habit_paraphrase",
+        "query": "한 달에 책은 대략 몇 권 읽어?",
+        "acceptable_fact_ids": [
+          "F190"
+        ],
+        "forbidden_fact_ids": [],
+        "retrieved_ids": [
+          "F003",
+          "F002",
+          "F001",
+          "F190",
+          "F100"
+        ],
+        "acceptable_rank": 4,
+        "forbidden_ranks": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": "naia-memory-korean-retrieval-contract-v1",
+  "purpose": "A small, manually reviewed Korean retrieval contract. Each query names acceptable and known-contradictory facts so a generic intent is never forced to a single arbitrary fact.",
+  "source_corpus": "src/benchmark/fact-bank-v2.json",
+  "cases": [
+    { "id": "KO-01", "category": "particle_ending", "query": "언니가 커피를 마시나요?", "acceptable_fact_ids": ["F003"], "forbidden_fact_ids": ["F003d"] },
+    { "id": "KO-02", "category": "particle_ending", "query": "담배를 피우는 편이야?", "acceptable_fact_ids": ["F137"], "forbidden_fact_ids": ["F137d"] },
+    { "id": "KO-03", "category": "compound_taste", "query": "매운맛은 좋아해, 싫어해?", "acceptable_fact_ids": ["F046"], "forbidden_fact_ids": ["F046d"] },
+    { "id": "KO-04", "category": "semantic_paraphrase", "query": "어떤 클라우드 서비스를 쓰고 있어?", "acceptable_fact_ids": ["F035"], "forbidden_fact_ids": [] },
+    { "id": "KO-05", "category": "negation_conflict", "query": "술 마시니?", "acceptable_fact_ids": ["F048"], "forbidden_fact_ids": ["F048d"] },
+    { "id": "KO-06", "category": "negation_conflict", "query": "차도 마셔?", "acceptable_fact_ids": ["F011"], "forbidden_fact_ids": ["F011d"] },
+    { "id": "KO-07", "category": "entity_disambiguation", "query": "언니는 커피를 좋아해?", "acceptable_fact_ids": ["F003"], "forbidden_fact_ids": ["F003d", "F011"] },
+    { "id": "KO-08", "category": "entity_disambiguation", "query": "나는 차를 마시지 않는다고 했지?", "acceptable_fact_ids": ["F011"], "forbidden_fact_ids": ["F011d", "F003"] },
+    { "id": "KO-09", "category": "temporal_context", "query": "요즘 하루에 몇 시간 자?", "acceptable_fact_ids": ["F125"], "forbidden_fact_ids": ["F125d"] },
+    { "id": "KO-10", "category": "medication_time", "query": "약은 언제 먹어?", "acceptable_fact_ids": ["F139"], "forbidden_fact_ids": [] },
+    { "id": "KO-11", "category": "social_relation", "query": "시우와 자주 하는 게 뭐야?", "acceptable_fact_ids": ["F157"], "forbidden_fact_ids": [] },
+    { "id": "KO-12", "category": "financial_negation", "query": "대출이 있나?", "acceptable_fact_ids": ["F175"], "forbidden_fact_ids": ["F175d"] },
+    { "id": "KO-13", "category": "habit_paraphrase", "query": "독서 습관이 어떻게 돼?", "acceptable_fact_ids": ["F190"], "forbidden_fact_ids": [] },
+    { "id": "KO-14", "category": "surface_variant", "query": "아침에 복용하는 약 얘기 기억나?", "acceptable_fact_ids": ["F139"], "forbidden_fact_ids": [] },
+    { "id": "KO-15", "category": "negation_conflict", "query": "매운 음식을 즐겨 먹어?", "acceptable_fact_ids": ["F046"], "forbidden_fact_ids": ["F046d"] },
+    { "id": "KO-16", "category": "habit_paraphrase", "query": "한 달에 책은 대략 몇 권 읽어?", "acceptable_fact_ids": ["F190"], "forbidden_fact_ids": [] }
+  ]
+}
