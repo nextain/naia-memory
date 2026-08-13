@@ -4,7 +4,7 @@
   "contract_digest": "c3ce2a585198252c872e04df3c8f9e26174a41d5fa540d740d079b56c19dfdaf",
   "issue": "naia-memory benchmark evidence loop",
   "current_phase": "complete",
-  "current_task": "Established reproducible CPU benchmarks and a Korean retrieval contract; published the measured trade-off without changing the default search mode.",
+  "current_task": "Adversarial RRF candidate was measured and rejected: it raised retrieval hits but increased forbidden-fact exposure on the fixed Korean contract. No production search behavior changed.",
   "gates_cleared": ["P01", "P02", "P03", "P04", "P05"],
   "key_decisions": [
     "Use CPU only; GPU 1 belongs to another session.",
@@ -12,6 +12,7 @@
     "Keep retrieval measurement separate from agent response and abstention decisions.",
     "Do not adopt vector-only as the default: it improved hit@1 and MRR but increased forbidden-fact exposure at top-5 on the fixed Korean contract.",
     "Discord DM delivery is blocked by an absent local configuration and exact recipient binding; no message was sent."
+    ,"Reject the RRF zero-score candidate: forbidden@1 rose from 25.0% to 31.3% and forbidden@5 from 43.8% to 50.0% on two reproducible CPU runs."
   ],
   "evidence": {
     "commit": "1a9dcab",
@@ -20,6 +21,7 @@
       "reports/quality/korean-retrieval-contract-v1-rrf.json",
       "reports/quality/korean-retrieval-contract-v1-vector-only.json",
       "reports/benchmark-evidence-loop-2026-08-13.md"
+      ,"reports/rrf-correction-adversarial-review-2026-08-13.md"
     ],
     "verification": [
       "pnpm typecheck",
@@ -28,5 +30,5 @@
       "git diff --check"
     ]
   },
-  "updated_at": "2026-08-13T01:05:00.000Z"
+  "updated_at": "2026-08-13T02:30:00.000Z"
 }

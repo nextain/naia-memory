@@ -2,9 +2,9 @@
   "benchmark": "korean-retrieval-contract-v1",
   "receipt": {
     "schemaVersion": "naia-memory-benchmark-receipt-v1",
-    "generatedAt": "2026-08-13T01:00:01.100Z",
+    "generatedAt": "2026-08-13T01:25:07.681Z",
     "git": {
-      "revision": "8ab6283cf3e1ed5e7ca12161a11c129564bb5807",
+      "revision": "db5378f2c719dc1df3d12edfd7c9ca10b5463d0e",
       "dirty": true
     },
     "datasets": {
