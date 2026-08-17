@@ -1,0 +1,233 @@
+{
+  "benchmark": "structured-supersession-contract-v2-mem0-oss-raw-control",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-16T09:45:17.140Z",
+    "git": {
+      "revision": "722dfc5e2af7098b01b49a3229c5477b80a4e547",
+      "dirty": true
+    },
+    "datasets": {
+      "src/benchmark/quality/structured-supersession-contract-v2.json": "9727678f15da5f73d3c3ca96d62e5b3dc80e60239d537577dbeb977afa980de7"
+    },
+    "implementations": {
+      "src/benchmark/quality/structured-supersession-mem0-control.ts": "31b9e38c5af571d293a2843b8457b60dac2c0ffe5a4d23d5b7d6fb04ddba2128",
+      "src/benchmark/provenance.ts": "9119dfb795218cfb4759e0f21fcfde21ac6f6f58f413f1aa542e90a713ee31cc",
+      "src/memory/embeddings.ts": "59d44b2efa6baa06a08d3c3c36c8311039bc90114e92a9056edcff7f4e1eb926",
+      "package.json": "04b30cbab48c380caeda218591d5d29829d2fbe595d593cc64ca03ca501e515b",
+      "pnpm-lock.yaml": "ec62124952aeffb10134cf3c57b50f4de30aec27c1e930013ad316fb457b4a1c"
+    },
+    "config": {
+      "engine": "mem0ai-oss",
+      "engineVersion": "2.4.5",
+      "mode": "infer:false raw memory",
+      "model": "paraphrase-multilingual-MiniLM-L12-v2",
+      "modelRepository": "Xenova/paraphrase-multilingual-MiniLM-L12-v2",
+      "modelRevision": "2c4055b12046f11709e9df2c122e59ffbdc2f900",
+      "device": "cpu",
+      "embeddingDtype": "fp32",
+      "topK": 5
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "interpretation": "Executable retrieval control only. infer:false disables Mem0 LLM extraction/update logic; lifecycle and history are unsupported by this control and are not scored.",
+  "score": {
+    "evaluated": 10,
+    "hitAt1": 0.3,
+    "hitAtK": 0.8,
+    "mrr": 0.48666666666666664,
+    "forbiddenAt1": 0.3,
+    "forbiddenAtK": 0.5,
+    "staleForbiddenAtK": 0.5,
+    "activeDistractorAtK": 0.2,
+    "cases": [
+      {
+        "id": "ko-residence-replacement",
+        "language": "ko",
+        "query": "사용자의 현재 거주지는 어디인가?",
+        "retrieved_statement_ids": [
+          "en-home-new",
+          "en-home-old",
+          "ja-residence",
+          "en-residence",
+          "ko-current-city-new"
+        ],
+        "acceptable_rank": null,
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-editor-replacement",
+        "language": "en",
+        "query": "Which editor does the user currently prefer?",
+        "retrieved_statement_ids": [
+          "en-editor-new",
+          "en-editor-old",
+          "en-home-new",
+          "en-home-old",
+          "ja-work-base-new"
+        ],
+        "acceptable_rank": 1,
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-timezone-replacement",
+        "language": "ja",
+        "query": "ユーザーの現在のタイムゾーンは何ですか？",
+        "retrieved_statement_ids": [
+          "ja-timezone-old",
+          "ja-timezone-new",
+          "en-home-new",
+          "ko-current-city-new",
+          "en-home-old"
+        ],
+        "acceptable_rank": 2,
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-multi-value-retention",
+        "language": "ko",
+        "query": "사용자의 기술은 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-current-city-new",
+          "ja-work-base-new",
+          "ja-timezone-new",
+          "en-home-new",
+          "ja-work-base-old"
+        ],
+        "acceptable_rank": null,
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-negated-retention",
+        "language": "en",
+        "query": "What is known about the user's residence?",
+        "retrieved_statement_ids": [
+          "en-home-new",
+          "en-home-old",
+          "en-residence",
+          "ja-residence",
+          "ko-current-city-new"
+        ],
+        "acceptable_rank": 3,
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-property-boundary",
+        "language": "ja",
+        "query": "ユーザーの居住地と勤務先はどこですか？",
+        "retrieved_statement_ids": [
+          "en-home-new",
+          "ja-residence",
+          "en-home-old",
+          "en-residence",
+          "ja-work-base-new"
+        ],
+        "acceptable_rank": 2,
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-project-boundary",
+        "language": "ko",
+        "query": "개인 프로필의 사용자는 어디에 사는가?",
+        "retrieved_statement_ids": [
+          "ko-personal-residence"
+        ],
+        "acceptable_rank": 1,
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-paraphrase-entity-confusion",
+        "language": "ko",
+        "query": "서울에 살던 사용자가 요즘 머무는 곳은 어디야? 동료 이야기는 제외해.",
+        "retrieved_statement_ids": [
+          "ko-current-city-old",
+          "en-residence",
+          "ko-residence-old",
+          "en-not-residence",
+          "ko-current-city-new"
+        ],
+        "acceptable_rank": 5,
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-paraphrase-entity-confusion",
+        "language": "en",
+        "query": "Where is the user based these days, rather than Alex?",
+        "retrieved_statement_ids": [
+          "en-home-new",
+          "en-home-old",
+          "ko-current-city-new",
+          "ja-residence",
+          "en-alex-home"
+        ],
+        "acceptable_rank": 1,
+        "forbidden_ranks": [
+          2,
+          5
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          5
+        ]
+      },
+      {
+        "id": "ja-paraphrase-entity-confusion",
+        "language": "ja",
+        "query": "以前大阪にいたユーザーは、今はどこを拠点にしていますか？同僚の情報ではありません。",
+        "retrieved_statement_ids": [
+          "ja-work-base-old",
+          "ja-residence",
+          "ja-work-base-new",
+          "ja-office",
+          "ja-colleague-work-base"
+        ],
+        "acceptable_rank": 3,
+        "forbidden_ranks": [
+          1,
+          5
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": [
+          5
+        ]
+      }
+    ]
+  }
+}

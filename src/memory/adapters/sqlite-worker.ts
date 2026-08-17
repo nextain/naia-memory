@@ -10,6 +10,11 @@ sqliteVec.load(db);
 let kgCache: any = null;
 let kgDirty = true;
 
+function bumpFactGeneration() {
+    db.prepare(`INSERT INTO memory_metadata (key, value) VALUES ('facts_generation', '1')
+        ON CONFLICT(key) DO UPDATE SET value = CAST(value AS INTEGER) + 1`).run();
+}
+
 parentPort?.on("message", async (msg) => {
     const { id, type, payload } = msg;
     try {
@@ -36,6 +41,59 @@ parentPort?.on("message", async (msg) => {
                 });
                 result = tx(payload.ops);
                 break;
+            case "upsert-fact": {
+                const tx = db.transaction((p: any) => {
+                    const previous = db.prepare("SELECT fid FROM id_map WHERE fact_id = ?").get(p.factId) as { fid?: number } | undefined;
+                    const fid = previous?.fid ?? Number((db.prepare("SELECT COALESCE(MAX(fid), 0) + 1 AS fid FROM id_map").get() as { fid: number }).fid);
+                    db.prepare(p.factSql).run(...p.factParams);
+                    db.prepare("INSERT OR REPLACE INTO id_map (fid, fact_id) VALUES (?, ?)").run(fid, p.factId);
+                    db.prepare("INSERT OR REPLACE INTO facts_time_idx (id, min_ts, max_ts) VALUES (?, ?, ?)").run(fid, p.minTs, p.maxTs);
+                    for (const table of ["facts_fts", "facts_fts_hot"]) db.prepare(`DELETE FROM ${table} WHERE rowid = ?`).run(fid);
+                    for (const table of ["vec_facts", "vec_facts_hot"]) db.prepare(`DELETE FROM ${table} WHERE fact_id = ?`).run(p.factId);
+                    db.prepare("INSERT INTO facts_fts (rowid, content, entities, topics) VALUES (?, ?, ?, ?)").run(fid, p.content, p.entities, p.topics);
+                    if (p.hot) db.prepare("INSERT INTO facts_fts_hot (rowid, content, entities, topics) VALUES (?, ?, ?, ?)").run(fid, p.content, p.entities, p.topics);
+                    if (p.vector) {
+                        db.prepare("INSERT INTO vec_facts (fact_id, embedding) VALUES (?, ?)").run(p.factId, p.vector);
+                        if (p.hot) db.prepare("INSERT INTO vec_facts_hot (fact_id, embedding) VALUES (?, ?)").run(p.factId, p.vector);
+                    }
+                    bumpFactGeneration();
+                });
+                result = tx(payload);
+                break;
+            }
+            case "archive-fact": {
+                const tx = db.transaction((factId: string) => {
+                    const mapped = db.prepare("SELECT fid FROM id_map WHERE fact_id = ?").get(factId) as { fid?: number } | undefined;
+                    const changed = db.prepare("UPDATE facts SET status = 'archived', updated_at = ? WHERE id = ?").run(Date.now(), factId);
+                    if (!changed.changes) return false;
+                    if (mapped?.fid !== undefined) {
+                        db.prepare("DELETE FROM facts_fts_hot WHERE rowid = ?").run(mapped.fid);
+                    }
+                    db.prepare("DELETE FROM vec_facts_hot WHERE fact_id = ?").run(factId);
+                    bumpFactGeneration();
+                    return true;
+                });
+                result = tx(payload.factId);
+                break;
+            }
+            case "replace-vectors": {
+                const tx = db.transaction((p: any) => {
+                    const generation = Number((db.prepare("SELECT value FROM memory_metadata WHERE key = 'facts_generation'").get() as { value?: string } | undefined)?.value ?? 0);
+                    if (generation !== p.expectedGeneration) throw new Error("Facts changed during embedding reindex; retry required");
+                    db.exec("DROP TABLE IF EXISTS vec_facts; DROP TABLE IF EXISTS vec_facts_hot;");
+                    db.exec(`CREATE VIRTUAL TABLE vec_facts USING vec0(fact_id TEXT PRIMARY KEY, embedding float[${p.dims}]); CREATE VIRTUAL TABLE vec_facts_hot USING vec0(fact_id TEXT PRIMARY KEY, embedding float[${p.dims}]);`);
+                    const insert = db.prepare("INSERT INTO vec_facts (fact_id, embedding) VALUES (?, ?)");
+                    const insertHot = db.prepare("INSERT INTO vec_facts_hot (fact_id, embedding) VALUES (?, ?)");
+                    for (const vector of p.vectors) {
+                        insert.run(vector.factId, vector.embedding);
+                        if (vector.hot) insertHot.run(vector.factId, vector.embedding);
+                    }
+                    db.prepare("INSERT OR REPLACE INTO memory_metadata (key, value) VALUES ('embedding_space_id', ?)").run(p.embeddingSpaceId);
+                    db.prepare("INSERT OR REPLACE INTO memory_metadata (key, value) VALUES ('embedding_dimensions', ?)").run(String(p.dims));
+                });
+                result = tx(payload);
+                break;
+            }
             default:
                 throw new Error(`Unknown worker command: ${type}`);
         }

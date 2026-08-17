@@ -19,9 +19,12 @@
 | 설정 | hit@1 | hit@5 | MRR | forbidden@1 | forbidden@5 |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | RRF (기본) | 6.3% | 56.3% | 0.226 | 25.0% | 43.8% |
+| RRF, KG spreading 비활성 | 6.3% | 56.3% | 0.226 | 25.0% | 43.8% |
 | vector-only | 25.0% | 50.0% | 0.365 | 18.8% | 56.3% |
 
-영수증: `reports/quality/korean-retrieval-contract-v1-rrf.json`, `reports/quality/korean-retrieval-contract-v1-vector-only.json`. 둘 다 fact-bank/계약 데이터 해시, Git revision·dirty 상태, Node·OS·CPU, CPU 고정 설정을 기록한다.
+영수증: `reports/quality/korean-retrieval-contract-v1-rrf.json`, `reports/quality/korean-retrieval-contract-v1-rrf-no-kg-spreading.json`, `reports/quality/korean-retrieval-contract-v1-vector-only.json`. 둘 다 fact-bank/계약 데이터 해시, Git revision·dirty 상태, Node·OS·CPU, CPU 고정 설정을 기록한다.
+
+KG spreading 비활성 실행은 기본 RRF와 전 지표가 같았다. 이 고정 코퍼스에는 KG 확산을 판별할 연결된 사실 그래프가 없으므로, 이 설정을 품질 개선 후보나 원인으로 해석하지 않는다.
 
 결론은 아직 개선 완료가 아니다. vector-only는 1위 정확도와 MRR을 높였지만 금지 사실의 top-5 노출을 악화한다. 이 트레이드오프 때문에 기본 검색 모드를 바꾸지 않았으며, 다음 변경은 이 고정 계약에서 forbidden@1·@5를 함께 낮추는 경우에만 채택한다. 이 벤치는 retrieval만 점수화하고, 의도·응답·abstention은 naia-memory 범위 밖이다.
 

@@ -75,6 +75,24 @@ describe("LocalAdapter backup", () => {
 		expect(episodes[0].content).toBe("Luke uses TypeScript");
 	});
 
+	it("search reads the imported store after backup replaces adapter state", async () => {
+		const source = makeTmpAdapter();
+		await source.semantic.upsert(makeFact("Naia memory uses Korean retrieval"));
+		const blob = await source.export("password123");
+
+		const target = makeTmpAdapter();
+		await target.semantic.upsert(makeFact("stale target-only fact"));
+		await target.import(blob, "password123");
+
+		const found = await target.semantic.search("Korean retrieval", 5);
+		expect(found.map((fact) => fact.content)).toContain(
+			"Naia memory uses Korean retrieval",
+		);
+		expect(found.map((fact) => fact.content)).not.toContain(
+			"stale target-only fact",
+		);
+	});
+
 	it("blob has NAIA magic header", async () => {
 		const adapter = makeTmpAdapter();
 		const blob = await adapter.export("test");

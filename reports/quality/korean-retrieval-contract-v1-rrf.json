@@ -2,20 +2,44 @@
   "benchmark": "korean-retrieval-contract-v1",
   "receipt": {
     "schemaVersion": "naia-memory-benchmark-receipt-v1",
-    "generatedAt": "2026-08-13T01:25:07.681Z",
+    "generatedAt": "2026-08-16T09:45:00.269Z",
     "git": {
-      "revision": "db5378f2c719dc1df3d12edfd7c9ca10b5463d0e",
+      "revision": "722dfc5e2af7098b01b49a3229c5477b80a4e547",
       "dirty": true
     },
     "datasets": {
       "src/benchmark/fact-bank-v2.json": "e1ff0e495f81f9bc6123fdad9f164434781fb4c87da9ad7ad8bca866651d361a",
       "src/benchmark/quality/korean-retrieval-contract-v1.json": "52b464b5cfc4e33da8c5edafdc74504b99b073ca08e89d6b4105b08ed10b5b9f"
     },
+    "implementations": {
+      "src/benchmark/quality/korean-retrieval-contract.ts": "0b45f6ab6653dee79f1406aa085dfc7f97ea601e1f7f6011f4a87c7c146a68d6",
+      "src/benchmark/provenance.ts": "9119dfb795218cfb4759e0f21fcfde21ac6f6f58f413f1aa542e90a713ee31cc",
+      "src/memory/index.ts": "8b90a79b33a8516287ef1099936110a91c3469e6b2e416de1fc9771b1de33c85",
+      "src/memory/memory-system.ts": "88f0d4831b830b194c32032f0f198a49e8f4cfb1e45e255e64af18f3e5b68fc1",
+      "src/memory/memory-system-api.ts": "bb7664de4c028eb9d7ee27e6483113e06e8215e765115f4bf07b4ec1495af7c9",
+      "src/memory/memory-system-core.ts": "fc5e640e4d165660ddba7253366af4b64a915686e67678768a9182ec1129cf68",
+      "src/memory/adapters/local.ts": "724e9e93eba9cb2b5b85342feade0c9962652693be952e30c9aeb054a2e72130",
+      "src/memory/adapters/local-search.ts": "10d8eec4f3aba2354d90c3ac84297d83602cacfbd85cb6d9563c53e7cd765b4b",
+      "src/memory/adapters/local-semantic-search.ts": "cca2bb0321361b761c02e705cefad3616da7372044bf57b2bfe4e7171c44c1dc",
+      "src/memory/embeddings.ts": "59d44b2efa6baa06a08d3c3c36c8311039bc90114e92a9056edcff7f4e1eb926",
+      "src/memory/decay.ts": "4e23c810fff3866eaea9dc036296d1448d3fea674ba661319f94757b1b867825",
+      "src/memory/knowledge-graph.ts": "d4c0bbfdf224e6e97da6d39519c59f4d4505d831f76897d44fc33383fb9c6813",
+      "src/memory/ko-normalize.ts": "82bb48d9d32abf4b54f3be0a0b172ddee33bb8ea7ec918e4e905a113a58b2945",
+      "src/memory/reranker.ts": "727abe4c6f353a2c26487056e6d5ec9171e4df5de17964197d0233e9674722e2",
+      "package.json": "04b30cbab48c380caeda218591d5d29829d2fbe595d593cc64ca03ca501e515b",
+      "pnpm-lock.yaml": "ec62124952aeffb10134cf3c57b50f4de30aec27c1e930013ad316fb457b4a1c"
+    },
     "config": {
       "model": "paraphrase-multilingual-MiniLM-L12-v2",
+      "modelRepository": "Xenova/paraphrase-multilingual-MiniLM-L12-v2",
+      "modelRevision": "2c4055b12046f11709e9df2c122e59ffbdc2f900",
       "device": "cpu",
+      "embeddingDtype": "fp32",
       "topK": 5,
       "searchMode": "rrf",
+      "mmr": "on",
+      "reranker": "none",
+      "disableKGSpreading": false,
       "benchmarkClock": "2024-07-03T09:46:40.000Z",
       "corpusFacts": 310
     },
@@ -29,11 +53,11 @@
   "dimensions": 384,
   "score": {
     "evaluated": 16,
-    "hitAt1": 0.0625,
-    "hitAtK": 0.5625,
-    "mrr": 0.2260416666666667,
-    "forbiddenAt1": 0.25,
-    "forbiddenAtK": 0.4375,
+    "hitAt1": 0.5,
+    "hitAtK": 0.8125,
+    "mrr": 0.6354166666666666,
+    "forbiddenAt1": 0.3125,
+    "forbiddenAtK": 0.5625,
     "cases": [
       {
         "id": "KO-01",
@@ -68,15 +92,15 @@
           "F137d"
         ],
         "retrieved_ids": [
-          "F003d",
-          "F003",
-          "F011d",
           "F137",
-          "F137d"
+          "F137d",
+          "F003d",
+          "F001",
+          "F002d"
         ],
-        "acceptable_rank": 4,
+        "acceptable_rank": 1,
         "forbidden_ranks": [
-          5
+          2
         ]
       },
       {
@@ -90,15 +114,15 @@
           "F046d"
         ],
         "retrieved_ids": [
-          "F011d",
-          "F003d",
-          "F003",
           "F046",
-          "F046d"
+          "F046d",
+          "F024",
+          "F002d",
+          "F002"
         ],
-        "acceptable_rank": 4,
+        "acceptable_rank": 1,
         "forbidden_ranks": [
-          5
+          2
         ]
       },
       {
@@ -132,9 +156,9 @@
         "retrieved_ids": [
           "F003",
           "F003d",
-          "F011d",
           "F002",
-          "F002d"
+          "F002d",
+          "F001d"
         ],
         "acceptable_rank": null,
         "forbidden_ranks": []
@@ -151,12 +175,12 @@
         ],
         "retrieved_ids": [
           "F011d",
-          "F003",
-          "F003d",
+          "F011",
           "F079",
+          "F003",
           "F079d"
         ],
-        "acceptable_rank": null,
+        "acceptable_rank": 2,
         "forbidden_ranks": [
           1
         ]
@@ -198,14 +222,14 @@
         "retrieved_ids": [
           "F003",
           "F003d",
+          "F011",
           "F011d",
-          "F079d",
-          "F002"
+          "F001d"
         ],
-        "acceptable_rank": null,
+        "acceptable_rank": 3,
         "forbidden_ranks": [
           1,
-          3
+          4
         ]
       },
       {
@@ -219,14 +243,16 @@
           "F125d"
         ],
         "retrieved_ids": [
-          "F003d",
-          "F003",
-          "F011d",
-          "F002",
-          "F002d"
+          "F125d",
+          "F125",
+          "F134",
+          "F010d",
+          "F010"
         ],
-        "acceptable_rank": null,
-        "forbidden_ranks": []
+        "acceptable_rank": 2,
+        "forbidden_ranks": [
+          1
+        ]
       },
       {
         "id": "KO-10",
@@ -237,13 +263,13 @@
         ],
         "forbidden_fact_ids": [],
         "retrieved_ids": [
-          "F003",
           "F139",
           "F122",
           "F050",
+          "F003",
           "F133"
         ],
-        "acceptable_rank": 2,
+        "acceptable_rank": 1,
         "forbidden_ranks": []
       },
       {
@@ -255,11 +281,11 @@
         ],
         "forbidden_fact_ids": [],
         "retrieved_ids": [
-          "F011d",
-          "F002",
-          "F002d",
           "F051d",
-          "F144d"
+          "F144d",
+          "F171",
+          "F001",
+          "F048d"
         ],
         "acceptable_rank": null,
         "forbidden_ranks": []
@@ -275,14 +301,16 @@
           "F175d"
         ],
         "retrieved_ids": [
-          "F003",
-          "F003d",
+          "F175",
+          "F175d",
           "F002",
-          "F002d",
-          "F175"
+          "F001",
+          "F001d"
         ],
-        "acceptable_rank": 5,
-        "forbidden_ranks": []
+        "acceptable_rank": 1,
+        "forbidden_ranks": [
+          2
+        ]
       },
       {
         "id": "KO-13",
@@ -293,11 +321,11 @@
         ],
         "forbidden_fact_ids": [],
         "retrieved_ids": [
-          "F003",
-          "F051d",
           "F189d",
           "F189",
-          "F001"
+          "F001",
+          "F010d",
+          "F001d"
         ],
         "acceptable_rank": null,
         "forbidden_ranks": []
@@ -311,13 +339,13 @@
         ],
         "forbidden_fact_ids": [],
         "retrieved_ids": [
-          "F003",
-          "F003d",
-          "F011d",
-          "F002",
-          "F002d"
+          "F139",
+          "F050",
+          "F078",
+          "F010",
+          "F003d"
         ],
-        "acceptable_rank": null,
+        "acceptable_rank": 1,
         "forbidden_ranks": []
       },
       {
@@ -331,15 +359,15 @@
           "F046d"
         ],
         "retrieved_ids": [
-          "F003d",
-          "F051d",
           "F046",
+          "F080d",
           "F046d",
-          "F050"
+          "F050",
+          "F106"
         ],
-        "acceptable_rank": 3,
+        "acceptable_rank": 1,
         "forbidden_ranks": [
-          4
+          3
         ]
       },
       {
@@ -351,13 +379,13 @@
         ],
         "forbidden_fact_ids": [],
         "retrieved_ids": [
-          "F003",
-          "F002",
-          "F001",
           "F190",
-          "F100"
+          "F100",
+          "F029",
+          "F047",
+          "F010"
         ],
-        "acceptable_rank": 4,
+        "acceptable_rank": 1,
         "forbidden_ranks": []
       }
     ]

@@ -21,6 +21,46 @@ afterEach(() => {
 });
 
 describe("OpenAI-compatible LLM auth", () => {
+	it("fact extractor preserves only valid explicit structured facts", async () => {
+		vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+			choices: [{ message: { content: JSON.stringify({
+				"1": [
+					{
+						content: "사용자 거주지: 서울",
+						structured: {
+							subject: "사용자",
+							property: "거주지",
+							value: "서울",
+							polarity: "affirmed",
+							cardinality: "single",
+						},
+					},
+					{
+						content: "불완전한 구조도 원문은 남긴다",
+						structured: { subject: "사용자" },
+					},
+				],
+			}) } }],
+		}), { status: 200, headers: { "content-type": "application/json" } })));
+
+		const facts = await buildLLMFactExtractor({
+			apiKey: "test-secret",
+			baseURL: "https://provider.test/v1/",
+			model: "test-model",
+		})([episode]);
+
+		expect(facts).toHaveLength(2);
+		expect(facts[0].structured).toEqual({
+			subject: "사용자",
+			property: "거주지",
+			value: "서울",
+			polarity: "affirmed",
+			cardinality: "single",
+			provenance: "extractor",
+		});
+		expect(facts[1].structured).toBeUndefined();
+	});
+
 	it("fact extractor가 Naia gateway에는 X-AnyLLM-Key만 전송한다", async () => {
 		let capturedHeaders: HeadersInit | undefined;
 		const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {

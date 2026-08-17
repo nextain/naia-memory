@@ -108,6 +108,7 @@
 | `cognitive-architecture.md` | 4-store brain-inspired 메모리, dual-process retrieval |
 | `integration.md` | `@nextain/naia-memory` 연동 가이드 (naia-agent/naia-os) |
 | `design/sqlite-migration.md` | SQLite (sqlite-vec/FTS5/R-Tree) 하이브리드 스토리지 설계 |
+| `design/conflict-aware-structured-facts.md` | 원문 보존형 구조화 사실·충돌 체인·다국어 안전 폴백 설계 |
 | `laptop-vllm-experiment.md` | 로컬 임베딩/추론 서빙 실측 |
 | `reports/README.md` | 벤치마크 리포트 색인 (R-시리즈 + A/B 가이드) |
 | `user-scenarios.md` | 사용자 가치와 테스트 시나리오 매핑 |

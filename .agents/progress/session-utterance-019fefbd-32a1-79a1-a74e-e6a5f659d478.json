@@ -1,18 +1,34 @@
 {
   "schema_version": "1.0",
   "contract_id": "naia-memory-benchmark-evidence-loop-2026-08-13",
-  "contract_digest": "c3ce2a585198252c872e04df3c8f9e26174a41d5fa540d740d079b56c19dfdaf",
-  "issue": "naia-memory benchmark evidence loop",
-  "current_phase": "complete",
-  "current_task": "Adversarial RRF candidate was measured and rejected: it raised retrieval hits but increased forbidden-fact exposure on the fixed Korean contract. No production search behavior changed.",
+  "contract_digest": "7761784226076edd4e686cf37e3f4d60fceeba5a7f24a54c7ed59e1d1dced14d",
+  "issue": "https://github.com/nextain/naia-memory/issues/12#issuecomment-5301734882",
+  "current_phase": "in-progress",
+  "current_task": "A repeated independent-case E5-large candidate materially improved both frozen contracts. Measuring smaller E5 variants for a quality/resource curve, then checking Naia Shell and Naia Agent model/dimension compatibility before any default change.",
   "gates_cleared": ["P01", "P02", "P03", "P04", "P05"],
   "key_decisions": [
     "Use CPU only; GPU 1 belongs to another session.",
     "Treat existing reports without revision, dataset digest, configuration, and environment as historical evidence, not certified comparisons.",
     "Keep retrieval measurement separate from agent response and abstention decisions.",
     "Do not adopt vector-only as the default: it improved hit@1 and MRR but increased forbidden-fact exposure at top-5 on the fixed Korean contract.",
-    "Discord DM delivery is blocked by an absent local configuration and exact recipient binding; no message was sent."
-    ,"Reject the RRF zero-score candidate: forbidden@1 rose from 25.0% to 31.3% and forbidden@5 from 43.8% to 50.0% on two reproducible CPU runs."
+    "Discord DM delivery was verified through the configured alpha-ds-bot direct-message route; concise notices are reserved for material improvements."
+    ,"Reject the RRF zero-score candidate: forbidden@1 rose from 25.0% to 31.3% and forbidden@5 from 43.8% to 50.0% on two reproducible CPU runs.",
+    "Separate structured-supersession mechanism evidence from broad retrieval evidence: the new fixed Korean/English/Japanese contract scores lifecycle preservation, retrieval relevance, and stale/foreign exposure without language-specific tuning.",
+    "Reject vector-only as a default candidate: on the structured contract it matched RRF safety and improved MRR only from 0.564 to 0.571, while the broad Korean contract still has higher forbidden@5 exposure (56.3% versus 43.8%).",
+    "Reject KG-spreading configuration as a quality candidate: disabling it produced identical results on all six Korean-contract measures, so this corpus contains no discriminating graph path.",
+    "Reject the global MMR-off candidate: it left every v2 multilingual and broad Korean contract metric unchanged, including Japanese entity-confusion retrieval; the bottleneck is candidate relevance before diversification.",
+    "Defer the optional CPU BGE reranker: the v2 ten-case run loaded successfully but exceeded eight minutes without a completed receipt. It cannot be accepted for quality and is unsuitable as a default CPU path without batched warm-run evidence.",
+    "Reject the corrected batched q8 BGE reranker as a ranking candidate: on v2 explicit structure, hit@5 rose 60.0% to 70.0% but hit@1 fell 40.0% to 30.0%, MRR fell 0.500 to 0.433, and the ten-case run cost 210.12 seconds with 1,729,480 KB max RSS. Keep the pair-scoring correctness fix optional; do not change the default path.",
+    "Correct benchmark case-state contamination: restore recallCount, lastAccessed, and strength before every measured query. Earlier sequential ranking values are superseded; independent broad Korean RRF is hit@1 50.0%, hit@5 81.3%, MRR 0.635, forbidden@1 31.3%, forbidden@5 56.3%.",
+    "Reject candidate-pool expansion: multipliers 6 and 12 were metric-identical to 3 on corrected v2 and broad Korean contracts, so configurable broad-factor product code was removed.",
+    "Supersede the pre-correction multilingual-e5-large rejection: two independent-case repetitions produced identical material gains. Broad Korean moved from 50.0/81.3/.635 to 68.8/87.5/.781 and forbidden@1 fell 31.3% to 12.5% while forbidden@5 stayed 56.3%; v2 moved from 40.0/70.0/.525 to 50.0/70.0/.570 with zero stale exposure and 100% lifecycle.",
+    "Keep E5-large as a measured candidate, not yet the default: max RSS was approximately 1.80-1.85 GB and the cached model is roughly 562 MB. Require a smaller-model quality/resource curve and Shell/Agent dimension compatibility gate.",
+    "Select multilingual-e5-small q8 as the resource-balanced candidate: two broad Korean runs reproduced 62.5% hit@1, 87.5% hit@5, 0.740 MRR, 18.8% forbidden@1, and 56.3% forbidden@5; v2 preserved 40.0/70.0/0.525, zero stale exposure, and 100% lifecycle at approximately 648-659 MB max RSS.",
+    "Reject multilingual-e5-base q8: it matched small hit@1/hit@5, reduced broad MRR from 0.740 to 0.729, and increased max RSS to approximately 0.97-1.04 GB; its lower forbidden@1 did not change forbidden@5.",
+    "Integration trace: the existing E5-large path is wired Shell settings -> Agent closed union -> Naia Memory, but E5-small is not accepted by the Shell/Agent unions. Do not claim small is product-selectable until separately authorized repository contracts update those boundaries.",
+    "Keep the lifecycle prefilter correctness fix: inactive rows can no longer starve active rows before candidate truncation; targeted regression tests pass, with no quality-score uplift claimed.",
+    "Block any embedding default switch until storage migration is explicit: Local JSON persists vectors without model identity, so same-dimension MiniLM to E5-small can silently mix incompatible vector spaces; SQLite vec0 can retain an incompatible dimension schema."
+    ,"Implement the Local JSON migration floor: persist a preprocessing-versioned embedding-space ID, fail loudly on mismatched or unidentified vectors, and require explicit full reindex before recall. SQLite and Agent/Shell gates remain open."
   ],
   "evidence": {
     "commit": "1a9dcab",
@@ -20,15 +36,52 @@
       "reports/perf/latency-accuracy-count1000.json",
       "reports/quality/korean-retrieval-contract-v1-rrf.json",
       "reports/quality/korean-retrieval-contract-v1-vector-only.json",
+      "reports/quality/korean-retrieval-contract-v1-rrf-no-kg-spreading.json",
       "reports/benchmark-evidence-loop-2026-08-13.md"
-      ,"reports/rrf-correction-adversarial-review-2026-08-13.md"
+      ,"reports/rrf-correction-adversarial-review-2026-08-13.md",
+      "reports/quality/structured-supersession-research-2026-08-14.md",
+      "reports/quality/structured-supersession-contract-v1.json",
+      "reports/quality/structured-supersession-contract-v1-vector-only.json",
+      "reports/quality/structured-supersession-contract-v2.json",
+      "reports/quality/structured-supersession-contract-v2-vector-only.json",
+      "reports/quality/structured-supersession-contract-v2-no-mmr.json",
+      "reports/quality/korean-retrieval-contract-v1-rrf-no-mmr.json",
+      "reports/quality/structured-supersession-contract-v2-bge-reranker-base-q8.json"
+      ,"reports/quality/structured-supersession-contract-v2-multilingual-e5-large.json"
+      ,"reports/quality/structured-supersession-contract-v2-top20.json"
     ],
     "verification": [
       "pnpm typecheck",
       "pnpm exec vitest run src/memory/__tests__/ko-normalize.test.ts",
+      "pnpm typecheck",
+      "pnpm exec vitest run src/memory/__tests__/structured-facts.test.ts",
+      "pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "BENCH_SEARCH_MODE=vector-only pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "BENCH_CONTRACT=src/benchmark/quality/structured-supersession-contract-v2.json pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "BENCH_CONTRACT=src/benchmark/quality/structured-supersession-contract-v2.json BENCH_SEARCH_MODE=vector-only pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "BENCH_DISABLE_KG_SPREADING=1 pnpm exec tsx src/benchmark/quality/korean-retrieval-contract.ts",
+      "BENCH_CONTRACT=src/benchmark/quality/structured-supersession-contract-v2.json NAIA_MMR=off pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "NAIA_MMR=off pnpm exec tsx src/benchmark/quality/korean-retrieval-contract.ts",
       "node scripts/check-doc-graph.mjs docs docs/README.md reaction-signal.md --exempt progress --exempt reports --exempt archive",
-      "git diff --check"
+      "git diff --check",
+      "BENCH_VALIDATE_ONLY=1 pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "BENCH_VALIDATE_ONLY=1 pnpm exec tsx src/benchmark/quality/korean-retrieval-contract.ts",
+      "BENCH_CONTRACT=src/benchmark/quality/structured-supersession-contract-v2.json BENCH_RERANKER=bge-reranker-base pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts (interrupted after eight minutes without a receipt)",
+      "pnpm exec vitest run src/memory/__tests__/reranker.test.ts (2 passed)",
+      "pnpm typecheck",
+      "BENCH_CONTRACT=src/benchmark/quality/structured-supersession-contract-v2.json BENCH_RERANKER=bge-reranker-base pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts (q8: 210.12 seconds, 1,729,480 KB max RSS)",
+      "pnpm exec vitest run src/memory/__tests__/lifecycle-candidate-filter.test.ts src/memory/__tests__/reranker.test.ts (3 passed)",
+      "pnpm exec tsc --noEmit",
+      "Independent-case structured v2 RRF: hit@1 40.0%, hit@5 70.0%, MRR 0.525, forbidden@5 0.0%, lifecycle 100.0%",
+      "Independent-case broad Korean RRF: hit@1 50.0%, hit@5 81.3%, MRR 0.635, forbidden@1 31.3%, forbidden@5 56.3%",
+      "Independent-case broad Korean vector-only: hit@1 37.5%, hit@5 68.8%, MRR 0.497, forbidden@1 25.0%, forbidden@5 50.0%"
+      ,"multilingual-e5-small broad Korean repeated: hit@1 62.5%, hit@5 87.5%, MRR 0.740, forbidden@1 18.8%, forbidden@5 56.3%, cached max RSS 648,304 KB"
+      ,"multilingual-e5-small structured v2: hit@1 40.0%, hit@5 70.0%, MRR 0.525, forbidden@5 0.0%, lifecycle 100.0%, max RSS 659,240 KB"
+      ,"multilingual-e5-base broad Korean: hit@1 62.5%, hit@5 87.5%, MRR 0.729, forbidden@1 12.5%, forbidden@5 56.3%, max RSS 972,176 KB"
+      ,"multilingual-e5-base structured v2: hit@1 40.0%, hit@5 70.0%, MRR 0.533, forbidden@5 0.0%, lifecycle 100.0%, max RSS 1,040,264 KB"
+      ,"pnpm test: 28 files, 403 tests passed after Local embedding-space migration guard"
+      ,"pnpm exec tsc --noEmit and git diff --check passed"
     ]
   },
-  "updated_at": "2026-08-13T02:30:00.000Z"
+  "updated_at": "2026-08-15T19:54:00+09:00"
 }

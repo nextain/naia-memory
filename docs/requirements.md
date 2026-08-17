@@ -23,3 +23,27 @@
 상태: Done — 계약과 보고서에 전역 설정 원칙을 기록.
 
 모든 평가 범주는 하나의 전역 검색 설정으로 실행한다. 범주별 가중치·임계값·질의별 예외는 허용하지 않는다.
+
+## MEM-FR-01 — 선택적 구조화 사실과 원문 보존
+
+상태: Pending — #39.
+
+`Fact`는 원문 `content`와 `sourceEpisodes`를 정본으로 유지하고, 선택적 구조화 사실(subject, property, value, polarity, cardinality, extraction provenance)을 추가로 보관할 수 있어야 한다. 구조화 필드가 없거나 검증할 수 없으면 기존 텍스트 기반 저장·검색 동작을 유지해야 한다.
+
+## MEM-FR-02 — 보수적 단일값 충돌 체인
+
+상태: Pending — #39.
+
+동일하게 정규화된 subject와 property를 가진 단일값 사실만 자동 supersede 대상이다. 값이 다를 때 기존 사실은 삭제·내용 재작성 없이 `superseded`, `validTo`, `successorId`로 보존하고, 새 사실은 `supersedes`, `validFrom`과 원본 출처를 가져야 한다. 다중값 속성, polarity 불일치, 추출 모호성, 다른 subject/property는 자동 대체하지 않는다.
+
+## MEM-FR-03 — 다국어 안전 폴백
+
+상태: Pending — #39.
+
+구조 키 비교는 Unicode 정규화와 공통 공백 정리에 한정하며 언어별 형태소 규칙·순위 상수·질의별 예외를 두지 않는다. 한국어는 첫 검증 세트로 삼지만, 다른 언어의 구조화되지 않은 원문은 손실 없이 기존 경로로 처리되어야 한다.
+
+## MEM-NFR-01 — 검색 책임과 평가 분리
+
+상태: Pending — #39.
+
+naia-memory는 현재·이력 사실 후보를 반환만 하며 자연어 의도, 응답, abstention을 판단하지 않는다. 구조화 충돌 변경은 공개 한국어 진단과 분리된 보류 케이스에서 동일한 전역 설정으로 검증하고, 금지 사실 노출 악화가 있으면 채택하지 않는다.

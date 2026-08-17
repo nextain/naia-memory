@@ -2,9 +2,9 @@
   "benchmark": "korean-retrieval-contract-v1",
   "receipt": {
     "schemaVersion": "naia-memory-benchmark-receipt-v1",
-    "generatedAt": "2026-08-13T01:00:09.984Z",
+    "generatedAt": "2026-08-15T09:46:22.747Z",
     "git": {
-      "revision": "8ab6283cf3e1ed5e7ca12161a11c129564bb5807",
+      "revision": "722dfc5e2af7098b01b49a3229c5477b80a4e547",
       "dirty": true
     },
     "datasets": {
@@ -15,7 +15,11 @@
       "model": "paraphrase-multilingual-MiniLM-L12-v2",
       "device": "cpu",
       "topK": 5,
+      "broadFactor": 3,
       "searchMode": "vector-only",
+      "mmr": "on",
+      "reranker": "none",
+      "disableKGSpreading": false,
       "benchmarkClock": "2024-07-03T09:46:40.000Z",
       "corpusFacts": 310
     },
@@ -29,11 +33,11 @@
   "dimensions": 384,
   "score": {
     "evaluated": 16,
-    "hitAt1": 0.25,
-    "hitAtK": 0.5,
-    "mrr": 0.36458333333333337,
-    "forbiddenAt1": 0.1875,
-    "forbiddenAtK": 0.5625,
+    "hitAt1": 0.375,
+    "hitAtK": 0.6875,
+    "mrr": 0.496875,
+    "forbiddenAt1": 0.25,
+    "forbiddenAtK": 0.5,
     "cases": [
       {
         "id": "KO-01",
@@ -72,7 +76,7 @@
           "F137",
           "F135d",
           "F003d",
-          "F079"
+          "F012d"
         ],
         "acceptable_rank": 2,
         "forbidden_ranks": [
@@ -133,8 +137,8 @@
           "F042",
           "F042d",
           "F135d",
-          "F079",
-          "F003d"
+          "F135",
+          "F079"
         ],
         "acceptable_rank": null,
         "forbidden_ranks": []
@@ -150,15 +154,15 @@
           "F011d"
         ],
         "retrieved_ids": [
+          "F011d",
           "F003d",
           "F079",
-          "F011d",
-          "F135d",
-          "F042"
+          "F011",
+          "F079d"
         ],
-        "acceptable_rank": null,
+        "acceptable_rank": 4,
         "forbidden_ranks": [
-          3
+          1
         ]
       },
       {
@@ -174,10 +178,10 @@
         ],
         "retrieved_ids": [
           "F003d",
-          "F079",
           "F011d",
-          "F135d",
-          "F079d"
+          "F079d",
+          "F079",
+          "F135d"
         ],
         "acceptable_rank": null,
         "forbidden_ranks": [
@@ -196,14 +200,15 @@
           "F003"
         ],
         "retrieved_ids": [
-          "F079",
-          "F003d",
-          "F135d",
+          "F011",
+          "F003",
+          "F135",
           "F011d",
           "F079d"
         ],
-        "acceptable_rank": null,
+        "acceptable_rank": 1,
         "forbidden_ranks": [
+          2,
           4
         ]
       },
@@ -238,13 +243,13 @@
         ],
         "forbidden_fact_ids": [],
         "retrieved_ids": [
-          "F135d",
           "F130",
           "F139",
           "F122",
-          "F100"
+          "F100",
+          "F135d"
         ],
-        "acceptable_rank": 3,
+        "acceptable_rank": 2,
         "forbidden_ranks": []
       },
       {
@@ -256,11 +261,11 @@
         ],
         "forbidden_fact_ids": [],
         "retrieved_ids": [
-          "F002d",
           "F051d",
           "F181d",
           "F192",
-          "F160"
+          "F160",
+          "F181"
         ],
         "acceptable_rank": null,
         "forbidden_ranks": []
@@ -277,14 +282,14 @@
         ],
         "retrieved_ids": [
           "F175",
-          "F160",
           "F175d",
           "F172",
-          "F177d"
+          "F177d",
+          "F177"
         ],
         "acceptable_rank": 1,
         "forbidden_ranks": [
-          3
+          2
         ]
       },
       {
@@ -299,10 +304,10 @@
           "F189d",
           "F047",
           "F047d",
-          "F010d",
-          "F051d"
+          "F141d",
+          "F190"
         ],
-        "acceptable_rank": null,
+        "acceptable_rank": 5,
         "forbidden_ranks": []
       },
       {
@@ -314,13 +319,13 @@
         ],
         "forbidden_fact_ids": [],
         "retrieved_ids": [
-          "F135d",
           "F139",
-          "F003d",
-          "F079",
-          "F011d"
+          "F135d",
+          "F135",
+          "F050",
+          "F076"
         ],
-        "acceptable_rank": 2,
+        "acceptable_rank": 1,
         "forbidden_ranks": []
       },
       {
@@ -334,16 +339,14 @@
           "F046d"
         ],
         "retrieved_ids": [
-          "F003d",
+          "F080d",
           "F046",
-          "F192",
-          "F046d",
-          "F080d"
+          "F049",
+          "F106",
+          "F106d"
         ],
         "acceptable_rank": 2,
-        "forbidden_ranks": [
-          4
-        ]
+        "forbidden_ranks": []
       },
       {
         "id": "KO-16",
@@ -355,10 +358,10 @@
         "forbidden_fact_ids": [],
         "retrieved_ids": [
           "F190",
+          "F162",
           "F047",
           "F189d",
-          "F047d",
-          "F125d"
+          "F123"
         ],
         "acceptable_rank": 1,
         "forbidden_ranks": []

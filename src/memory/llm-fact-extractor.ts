@@ -14,7 +14,7 @@
  */
 
 import type { ExtractedFact } from "./index.js";
-import type { Episode } from "./types.js";
+import type { Episode, StructuredFact } from "./types.js";
 
 export interface LLMFactExtractorOptions {
 	/** Gemini (or OpenAI-compatible) API key */
@@ -164,8 +164,14 @@ Korean-specific rules (apply when episode is Korean):
 Conversation turns:
 ${episodeList}
 
+For a fact whose subject, property, and single-vs-multi value are explicit,
+you MAY attach structure. Never guess a missing field. Keep all labels and
+values in the episode's original language. Use "single" only for one current
+value; use "multi" for lists, skills, or preferences that can coexist.
+
 Respond with ONLY a JSON object mapping episode number to fact array. No other text.
-Format: {"1": ["fact", ...], "2": ["fact", ...], ...}`;
+Backward-compatible format: {"1": ["fact", ...], "2": ["fact", ...], ...}
+Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":{"subject":"사용자","property":"거주지","value":"서울","polarity":"affirmed","cardinality":"single"}}], ...}`;
 
 	const call = () =>
 		fetch(`${baseURL}chat/completions`, {
@@ -236,21 +242,51 @@ Format: {"1": ["fact", ...], "2": ["fact", ...], ...}`;
 					`[LLMFactExtractor] Unexpected value for key "${i + 1}": ${typeof rawFacts}. Keys: ${Object.keys(parsed).join(", ")}`,
 				);
 			}
-			const facts: string[] = Array.isArray(rawFacts)
-				? rawFacts.filter((f): f is string => typeof f === "string")
+			const facts: Array<{ content: string; structured?: StructuredFact }> = Array.isArray(rawFacts)
+				? rawFacts.flatMap((fact) => {
+						if (typeof fact === "string") return [{ content: fact }];
+						if (!fact || typeof fact !== "object") return [];
+						const candidate = fact as { content?: unknown; structured?: unknown };
+						if (typeof candidate.content !== "string") return [];
+						return [{
+							content: candidate.content,
+							structured: parseStructuredFact(candidate.structured),
+						}];
+					})
 				: [];
 			if (facts.length === 0) return [];
 			return facts.map((fact) => ({
-				content: fact,
+				content: fact.content,
 				entities: [],
 				topics: ep.encodingContext.project ? [ep.encodingContext.project] : [],
 				importance: ep.importance.utility,
 				maxEmotion: ep.importance.emotion ?? 0,
 				sourceEpisodeIds: [ep.id],
+				structured: fact.structured,
 			}));
 		});
 	} catch (err) {
 		console.warn(`[LLMFactExtractor] Parse error, skipping batch:`, err);
 		return [];
 	}
+}
+
+function parseStructuredFact(value: unknown): StructuredFact | undefined {
+	if (!value || typeof value !== "object") return undefined;
+	const candidate = value as Record<string, unknown>;
+	if (
+		typeof candidate.subject !== "string" ||
+		typeof candidate.property !== "string" ||
+		typeof candidate.value !== "string" ||
+		(candidate.polarity !== "affirmed" && candidate.polarity !== "negated") ||
+		(candidate.cardinality !== "single" && candidate.cardinality !== "multi")
+	) return undefined;
+	return {
+		subject: candidate.subject,
+		property: candidate.property,
+		value: candidate.value,
+		polarity: candidate.polarity,
+		cardinality: candidate.cardinality,
+		provenance: "extractor",
+	};
 }

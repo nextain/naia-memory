@@ -11,16 +11,25 @@ function git(args: string[]): string | null {
 	}
 }
 
-export function benchmarkReceipt(datasetPaths: string[], config: Record<string, unknown>) {
-	const datasets = Object.fromEntries(datasetPaths.map((path) => [
+function hashes(paths: string[]): Record<string, string> {
+	return Object.fromEntries(paths.map((path) => [
 		path,
 		createHash("sha256").update(readFileSync(path)).digest("hex"),
 	]));
+}
+
+export function benchmarkReceipt(
+	datasetPaths: string[],
+	config: Record<string, unknown>,
+	implementationPaths: string[] = [],
+	generatedAt = new Date().toISOString(),
+) {
 	return {
 		schemaVersion: "naia-memory-benchmark-receipt-v1",
-		generatedAt: new Date().toISOString(),
+		generatedAt,
 		git: { revision: git(["rev-parse", "HEAD"]), dirty: Boolean(git(["status", "--porcelain"])) },
-		datasets,
+		datasets: hashes(datasetPaths),
+		implementations: hashes(implementationPaths),
 		config,
 		runtime: {
 			node: process.version,
