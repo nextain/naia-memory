@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildLLMFactExtractor } from "../llm-fact-extractor.js";
+import { buildLLMQueryStructurer } from "../llm-query-structurer.js";
 import { buildLLMSummarizer } from "../llm-summarizer.js";
 import type { Episode } from "../types.js";
 
@@ -21,6 +22,40 @@ afterEach(() => {
 });
 
 describe("OpenAI-compatible LLM auth", () => {
+	it("query structurer extracts a bounded identity and preserves gateway auth", async () => {
+		let capturedHeaders: HeadersInit | undefined;
+		vi.stubGlobal("fetch", vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+			capturedHeaders = init?.headers;
+			return new Response(JSON.stringify({
+				choices: [{ message: { content: '```json\n{"subject":"사용자","property":"선호 에디터"}\n```' } }],
+			}), { status: 200, headers: { "content-type": "application/json" } });
+		}));
+
+		const result = await buildLLMQueryStructurer({
+			apiKey: "test-secret",
+			auth: "x-anyllm",
+			baseURL: "https://gateway.test/v1",
+			model: "test-model",
+		})("내가 선호하는 에디터가 뭐였지?");
+
+		expect(result).toEqual({ subject: "사용자", property: "선호 에디터" });
+		const headers = capturedHeaders as Record<string, string>;
+		expect(headers["X-AnyLLM-Key"]).toBe("Bearer test-secret");
+		expect(headers.Authorization).toBeUndefined();
+	});
+
+	it("query structurer fails closed on empty, malformed, and nonspecific output", async () => {
+		const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+			choices: [{ message: { content: "{}" } }],
+		}), { status: 200, headers: { "content-type": "application/json" } }));
+		vi.stubGlobal("fetch", fetchMock);
+		const structure = buildLLMQueryStructurer({ apiKey: "", baseURL: "https://provider.test/v1/", model: "test" });
+
+		await expect(structure("   ")).resolves.toBeUndefined();
+		await expect(structure("안녕?")).resolves.toBeUndefined();
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+	});
+
 	it("fact extractor preserves only valid explicit structured facts", async () => {
 		vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
 			choices: [{ message: { content: JSON.stringify({

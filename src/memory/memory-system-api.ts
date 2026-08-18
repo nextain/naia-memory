@@ -74,6 +74,8 @@ export {
 } from "./embeddings.js";
 export { buildLLMFactExtractor } from "./llm-fact-extractor.js";
 export type { LLMFactExtractorOptions } from "./llm-fact-extractor.js";
+export { buildLLMQueryStructurer } from "./llm-query-structurer.js";
+export type { LLMQueryStructurerOptions, StructuredQuery } from "./llm-query-structurer.js";
 export { buildLLMSummarizer } from "./llm-summarizer.js";
 export type { LLMSummarizerOptions } from "./llm-summarizer.js";
 export {

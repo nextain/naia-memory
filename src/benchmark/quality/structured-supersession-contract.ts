@@ -25,7 +25,10 @@ const MMR_MODE = process.env.NAIA_MMR === "off" ? "off" : "on";
 const RERANKER = process.env.BENCH_RERANKER ?? "none";
 const CATEGORY_FILTER = process.env.BENCH_CATEGORY;
 const NOW = 1_720_000_000_000;
-type VariantName = "unstructured-control" | "explicit-structure-natural-query" | "explicit-structure-oracle-query" | "explicit-structure-wrong-query";
+type VariantName = "unstructured-control" | "explicit-structure-natural-query" | "explicit-structure-extracted-query" | "explicit-structure-oracle-query" | "explicit-structure-wrong-query";
+const PREDICTIONS = process.env.BENCH_QUERY_PREDICTIONS;
+type PredictionArtifact = { predictions: Record<string, Pick<StructuredFact, "subject" | "property"> | null> };
+let predictionArtifact: PredictionArtifact | undefined;
 type CaseResult = ContractCase & { retrieved_statement_ids: string[]; history_statement_ids: string[]; acceptable_rank: number | null; acceptable_ranks: number[]; forbidden_ranks: number[]; stale_forbidden_ranks: number[]; active_distractor_ranks: number[]; active_statement_ids: string[]; inactive_statement_ids: string[] };
 type Score = { evaluated: number; hitAt1: number; hitAtK: number; mrr: number; acceptableRecallAtK: number; completeAcceptableAtK: number; forbiddenAt1: number; forbiddenAtK: number; staleForbiddenAtK: number; activeDistractorAtK: number; lifecyclePass: number; transitionCases: number; transitionLifecyclePass: number | null; historyCoverageAtK: number; cases: CaseResult[] };
 
@@ -65,6 +68,11 @@ function summarize(cases: CaseResult[]): Score {
 }
 
 function recallStructure(name: VariantName, contract: Contract, current: ContractCase) {
+	if (name === "explicit-structure-extracted-query") {
+		if (!PREDICTIONS) throw new Error("BENCH_QUERY_PREDICTIONS is required for extracted-query variant");
+		predictionArtifact ??= JSON.parse(readFileSync(join(process.cwd(), PREDICTIONS), "utf8")) as PredictionArtifact;
+		return predictionArtifact.predictions[current.id] ?? undefined;
+	}
 	if (name === "explicit-structure-oracle-query") return current.recall_structured_query;
 	if (name !== "explicit-structure-wrong-query") return undefined;
 	const donor = contract.cases.find((candidate) =>
@@ -151,6 +159,7 @@ async function runBenchmark(generatedAt: string) {
 	const variants = {
 		"unstructured-control": await runVariant("unstructured-control", runContract, embedder, reranker),
 		"explicit-structure-natural-query": await runVariant("explicit-structure-natural-query", runContract, embedder, reranker),
+		...(PREDICTIONS ? { "explicit-structure-extracted-query": await runVariant("explicit-structure-extracted-query", runContract, embedder, reranker) } : {}),
 		"explicit-structure-oracle-query": await runVariant("explicit-structure-oracle-query", runContract, embedder, reranker),
 		"explicit-structure-wrong-query": await runVariant("explicit-structure-wrong-query", runContract, embedder, reranker),
 	};
@@ -198,6 +207,7 @@ async function runBenchmark(generatedAt: string) {
 		queryAssistanceDisclosure: {
 			"unstructured-control": "No structured write metadata and no query identity.",
 			"explicit-structure-natural-query": "Structured write metadata; natural-language query only.",
+			...(PREDICTIONS ? { "explicit-structure-extracted-query": `Structured write metadata plus model-extracted identity from ${PREDICTIONS}.` } : {}),
 			"explicit-structure-oracle-query": "Structured write metadata plus fixture-supplied correct subject/property identity.",
 			"explicit-structure-wrong-query": "Structured write metadata plus a different case's subject/property identity.",
 		},
