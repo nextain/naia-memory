@@ -16,6 +16,21 @@ must publish two separately scored tiers:
 
 Scores from the two tiers must never be aggregated.
 
+The semantic tier now has a score-free raw execution boundary. An engine bridge
+receives only chronological natural-language turns and the query; it never
+receives expected IDs, stale labels, deleted labels, or fixture lifecycle
+operations. Receipts contain the engine-native active state and top-k retrieval,
+with hashes over both input and output. Retrieved native IDs and content must
+round-trip exactly to the state captured from the same isolated execution, so an
+adapter cannot fabricate benchmark-friendly retrieval identities.
+
+No semantic score is implemented yet. Native engines can rewrite or summarize
+memory text, so exact string matching would systematically favor engines whose
+output resembles the annotation wording. A public score requires a separately
+frozen, engine-blind adjudication artifact (and signed raw decisions) or an
+independently labeled accepted-variant set. Until that exists, the raw runner is
+execution evidence only.
+
 ## Evidence audit
 
 The existing `structured-supersession-contract-v3` is a generated diagnostic
@@ -85,6 +100,12 @@ pass, and the publication gate remains closed.
    native authorship, family splits, and per-language reporting are mandatory.
 5. Cleanup or namespace reuse may leak earlier cases. Fresh state and narrow,
    receipt-recorded cleanup are mandatory.
+6. An adapter may emit benchmark logical IDs or fabricate retrieval objects.
+   Semantic execution accepts engine-native identity only and verifies every
+   retrieved item against the captured native state.
+7. An exact-text scorer may reward annotation mimicry rather than correct
+   memory. Semantic scoring remains gated on blind adjudication or frozen
+   independently reviewed accepted variants.
 
 ## Publication gate
 
