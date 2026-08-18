@@ -9,6 +9,7 @@ import { calculateStrength } from "../decay.js";
 import type { EmbeddingProvider } from "../embeddings.js";
 import type { KnowledgeGraph } from "../knowledge-graph.js";
 import type { Epoch, Fact, MemoryAdapter } from "../types.js";
+import { sameStructuredIdentity } from "../structured-facts.js";
 import { BM25, cosineSimilarity, tokenize } from "./local-search.js";
 
 export type SemanticSearchContext = Parameters<MemoryAdapter["semantic"]["search"]>[3];
@@ -45,9 +46,7 @@ export async function searchLocalSemanticMemory(
 			const queryVec = await host.embedWithCache(embedTarget);
 
 			const queryTokens = tokenize(query);
-			const structuredQueryKey = context?.structuredQuery
-				? `${context.structuredQuery.subject.trim().toLocaleLowerCase()}\u0000${context.structuredQuery.property.trim().toLocaleLowerCase()}`
-				: null;
+			const structuredQuery = context?.structuredQuery;
 			// Phase B-γ toggle: skip spreading activation entirely when disabled
 			// so ranking falls back to vector cosine + BM25 only. The graph
 			// itself is preserved (touchNode/strengthen still run on upsert)
@@ -218,10 +217,7 @@ export async function searchLocalSemanticMemory(
 					                1 / (RRF_K + (bm25Rank!.get(fact.id) ?? allFacts.length)) +
 					                eb;
 					}
-					const factStructuredKey = fact.structured
-						? `${fact.structured.subject.trim().toLocaleLowerCase()}\u0000${fact.structured.property.trim().toLocaleLowerCase()}`
-						: null;
-					if (structuredQueryKey !== null && factStructuredKey === structuredQueryKey) relevanceScore += 1;
+					if (structuredQuery && fact.structured && sameStructuredIdentity(structuredQuery, fact.structured)) relevanceScore += 1;
 
 					// Apply boost to Flashbulb memories to ensure they survive slice(0, broadK)
 					if (isFlashbulb) relevanceScore += 0.5;

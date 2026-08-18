@@ -157,6 +157,64 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		await system.close();
 	});
 
+	it("supersedes across languages only when the caller supplies the same opaque identity", async () => {
+		const korean = "사용자 거주지: 서울";
+		const english = "User residence: Busan";
+		const { system, adapter } = makeSystem({
+			factExtractor: structuredExtractor({
+				[korean]: { subject: "사용자", subjectId: "person:self", property: "거주지", propertyId: "profile:residence", value: "서울", polarity: "affirmed", cardinality: "single" },
+				[english]: { subject: "user", subjectId: "person:self", property: "residence", propertyId: "profile:residence", value: "Busan", polarity: "affirmed", cardinality: "single" },
+			}),
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		for (const content of [korean, english]) {
+			await system.encode(input({ content, timestamp }), DEFAULT_CTX);
+			await system.consolidateNow(true);
+		}
+		const facts = await adapter.semantic.getAll();
+		expect(facts.find((fact) => fact.content === korean)?.status).toBe("superseded");
+		expect(facts.find((fact) => fact.content === english)?.status).toBe("active");
+		await system.close();
+	});
+
+	it("does not merge equal labels when complete opaque identities disagree", async () => {
+		const first = "User residence: Seoul";
+		const second = "User residence: Busan";
+		const { system, adapter } = makeSystem({
+			factExtractor: structuredExtractor({
+				[first]: { subject: "user", subjectId: "person:a", property: "residence", propertyId: "profile:residence", value: "Seoul", polarity: "affirmed", cardinality: "single" },
+				[second]: { subject: "user", subjectId: "person:b", property: "residence", propertyId: "profile:residence", value: "Busan", polarity: "affirmed", cardinality: "single" },
+			}),
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		for (const content of [first, second]) {
+			await system.encode(input({ content, timestamp }), DEFAULT_CTX);
+			await system.consolidateNow(true);
+		}
+		expect((await adapter.semantic.getAll()).every((fact) => fact.status === "active")).toBe(true);
+		await system.close();
+	});
+
+	it("fails closed when only one side has IDs or an identity is incomplete", async () => {
+		const legacy = "User residence: Seoul";
+		const identified = "User residence: Busan";
+		const partial = "User residence: Tokyo";
+		const { system, adapter } = makeSystem({
+			factExtractor: structuredExtractor({
+				[legacy]: { subject: "user", property: "residence", value: "Seoul", polarity: "affirmed", cardinality: "single" },
+				[identified]: { subject: "user", subjectId: "person:self", property: "residence", propertyId: "profile:residence", value: "Busan", polarity: "affirmed", cardinality: "single" },
+				[partial]: { subject: "user", subjectId: "person:self", property: "residence", value: "Tokyo", polarity: "affirmed", cardinality: "single" },
+			}),
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		for (const content of [legacy, identified, partial]) {
+			await system.encode(input({ content, timestamp }), DEFAULT_CTX);
+			await system.consolidateNow(true);
+		}
+		expect((await adapter.semantic.getAll()).every((fact) => fact.status === "active")).toBe(true);
+		await system.close();
+	});
+
 	it("does not replace multi-valued, negated, or different-property facts", async () => {
 		const skills = "사용자 기술: TypeScript";
 		const moreSkills = "사용자 기술: Rust";

@@ -123,4 +123,31 @@ describe("latest lifecycle filtering", () => {
 
 		expect(result.map((item) => item.id)).toEqual([target.id]);
 	});
+
+	it("uses caller-owned opaque identity across query and fact languages", async () => {
+		const storePath = join(mkdtempSync(join(tmpdir(), "structured-query-id-")), "store.json");
+		const adapter = new LocalAdapter({ storePath });
+		const target = fact("shared retrieval phrase 사용자 거주지 부산", "active");
+		target.structured = {
+			subject: "사용자", subjectId: "person:self",
+			property: "거주지", propertyId: "profile:residence",
+			value: "부산", polarity: "affirmed", cardinality: "single",
+		};
+		const distractor = fact("shared retrieval phrase User residence Seoul", "active");
+		distractor.structured = {
+			subject: "user", subjectId: "person:other",
+			property: "residence", propertyId: "profile:residence",
+			value: "Seoul", polarity: "affirmed", cardinality: "single",
+		};
+		for (const item of [distractor, target]) await adapter.semantic.upsert(item);
+
+		const result = await adapter.semantic.search("shared retrieval phrase", 1, false, {
+			structuredQuery: {
+				subject: "I", subjectId: "person:self",
+				property: "live", propertyId: "profile:residence",
+			},
+		});
+
+		expect(result.map((item) => item.id)).toEqual([target.id]);
+	});
 });

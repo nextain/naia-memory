@@ -4,14 +4,42 @@ function comparisonKey(value: string): string {
 	return value.normalize("NFC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
 
+function opaqueId(value: string | undefined): string {
+	return value?.normalize("NFC").trim() ?? "";
+}
+
+/**
+ * Compares a subject/property pair without interpreting either language.
+ * Complete opaque IDs take precedence; labels are the migration fallback.
+ */
+export function sameStructuredIdentity(
+	left: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">,
+	right: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">,
+): boolean {
+	const leftSubjectId = opaqueId(left.subjectId);
+	const leftPropertyId = opaqueId(left.propertyId);
+	const rightSubjectId = opaqueId(right.subjectId);
+	const rightPropertyId = opaqueId(right.propertyId);
+	const hasAnyId = Boolean(leftSubjectId || leftPropertyId || rightSubjectId || rightPropertyId);
+	if (hasAnyId) {
+		return Boolean(
+			leftSubjectId && leftPropertyId && rightSubjectId && rightPropertyId &&
+			leftSubjectId === rightSubjectId && leftPropertyId === rightPropertyId,
+		);
+	}
+	return (
+		comparisonKey(left.subject) === comparisonKey(right.subject) &&
+		comparisonKey(left.property) === comparisonKey(right.property)
+	);
+}
+
 /** True only when every replacement-relevant field was explicitly identical. */
 export function sameStructuredFact(
 	left: StructuredFact,
 	right: StructuredFact,
 ): boolean {
 	return (
-		comparisonKey(left.subject) === comparisonKey(right.subject) &&
-		comparisonKey(left.property) === comparisonKey(right.property) &&
+		sameStructuredIdentity(left, right) &&
 		comparisonKey(left.value) === comparisonKey(right.value) &&
 		left.polarity === right.polarity &&
 		left.cardinality === right.cardinality
@@ -31,10 +59,8 @@ export function findStructuredSupersessions(
 	// Negation is not a safe replacement signal. For example, "does not live
 	// in Seoul" may be temporary, scoped, or refer to a past state.
 	if (candidate.cardinality !== "single" || candidate.polarity !== "affirmed") return [];
-	const subject = comparisonKey(candidate.subject);
-	const property = comparisonKey(candidate.property);
 	const value = comparisonKey(candidate.value);
-	if (!subject || !property || !value) return [];
+	if (!comparisonKey(candidate.subject) || !comparisonKey(candidate.property) || !value) return [];
 
 	return existingFacts.filter((fact) => {
 		const structured = fact.structured;
@@ -42,8 +68,7 @@ export function findStructuredSupersessions(
 			fact.status === "active" &&
 			structured?.cardinality === "single" &&
 			structured.polarity === "affirmed" &&
-			comparisonKey(structured.subject) === subject &&
-			comparisonKey(structured.property) === property &&
+			sameStructuredIdentity(structured, candidate) &&
 			comparisonKey(structured.value) !== value
 		);
 	});

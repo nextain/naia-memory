@@ -177,7 +177,7 @@ export interface RecallContext {
 	 */
 	queryHint?: string;
 	/** Optional language-agnostic identity extracted from the query by the caller. */
-	structuredQuery?: Pick<StructuredFact, "subject" | "property">;
+	structuredQuery?: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">;
 	/**
 	 * #27 Retrieval ranking 강화 — minimum confidence threshold.
 	 *
@@ -217,8 +217,12 @@ export interface RecallContext {
 export interface StructuredFact {
 	/** Stable subject label, such as "user" or "사용자". */
 	subject: string;
+	/** Optional caller-owned, language-neutral subject identity. */
+	subjectId?: string;
 	/** Stable property label, such as "residence" or "거주지". */
 	property: string;
+	/** Optional caller-owned, language-neutral property identity. */
+	propertyId?: string;
 	/** Original-language value; never translated or normalized for storage. */
 	value: string;
 	/** Whether the statement affirms or negates the property value. */
@@ -361,7 +365,7 @@ export interface MemoryAdapter {
 		 *  context.atTimestamp (optional, ms): bi-temporal recall — only fact versions valid
 		 *  at the given timestamp are considered. Adapters without bi-temporal support may
 		 *  ignore this option (degrades to standard search). */
-		search(query: string, topK: number, deepRecall?: boolean, context?: { project?: string; atTimestamp?: number; mode?: "latest" | "history" | "at-time"; minConfidence?: number; queryHint?: string; structuredQuery?: Pick<StructuredFact, "subject" | "property">; scopeMode?: "strict" | "soft"; crossProject?: boolean; epochAnchor?: string }): Promise<Fact[]>;
+		search(query: string, topK: number, deepRecall?: boolean, context?: { project?: string; atTimestamp?: number; mode?: "latest" | "history" | "at-time"; minConfidence?: number; queryHint?: string; structuredQuery?: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">; scopeMode?: "strict" | "soft"; crossProject?: boolean; epochAnchor?: string }): Promise<Fact[]>;
 		/** Run Ebbinghaus decay sweep, returns number of pruned memories */
 		decay(now: number): Promise<number>;
 		/** Strengthen association between two entities (Hebbian) */
