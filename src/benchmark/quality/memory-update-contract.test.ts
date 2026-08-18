@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	computeFamilySplitDigest,
 	type MemoryUpdateContract,
 	validateMemoryUpdateContract,
 } from "./memory-update-contract.js";
@@ -20,15 +21,57 @@ function semanticCase(language: "ko" | "en" | "ja", id = language) {
 	};
 }
 
+function reviewedCase(language: "ko" | "en" | "ja", id = language) {
+	return {
+		...semanticCase(language, id),
+		provenance: {
+			authorId: `author-${language}`,
+			authorNativeLanguages: [language],
+			authoredAt: "2026-01-02T00:00:00Z",
+			reviewerId: `reviewer-${language}`,
+			reviewerNativeLanguages: [language],
+			reviewedAt: "2026-01-03T00:00:00Z",
+			reviewDecision: "accepted" as const,
+		},
+	};
+}
+
 describe("memory update contract", () => {
 	it("accepts an independently reviewed multilingual semantic contract", () => {
+		const cases = [reviewedCase("ko"), reviewedCase("en"), reviewedCase("ja")];
 		const contract: MemoryUpdateContract = {
 			schemaVersion: "naia-memory-update-contract-v1",
 			tier: "semantic-update-interpretation",
 			construction: "independent-native-reviewed",
-			cases: [semanticCase("ko"), semanticCase("en"), semanticCase("ja")],
+			familySplitFreeze: {
+				frozenAt: "2026-01-04T00:00:00Z",
+				digest: computeFamilySplitDigest(cases) as `sha256:${string}`,
+			},
+			cases,
 		};
 		expect(() => validateMemoryUpdateContract(contract)).not.toThrow();
+	});
+
+	it("rejects self-reviewed evidence and a stale family split freeze", () => {
+		const cases = [reviewedCase("ko"), reviewedCase("en"), reviewedCase("ja")];
+		cases[0]!.provenance.reviewerId = cases[0]!.provenance.authorId;
+		const contract: MemoryUpdateContract = {
+			schemaVersion: "naia-memory-update-contract-v1",
+			tier: "semantic-update-interpretation",
+			construction: "independent-native-reviewed",
+			familySplitFreeze: {
+				frozenAt: "2026-01-04T00:00:00Z",
+				digest: `sha256:${"0".repeat(64)}`,
+			},
+			cases,
+		};
+		expect(() => validateMemoryUpdateContract(contract)).toThrow(
+			"author and reviewer must be independent",
+		);
+		cases[0]!.provenance.reviewerId = "reviewer-ko";
+		expect(() => validateMemoryUpdateContract(contract)).toThrow(
+			"freeze digest does not match",
+		);
 	});
 
 	it("forbids oracle lifecycle operations in the semantic tier", () => {
@@ -71,16 +114,16 @@ describe("memory update contract", () => {
 
 	it("prevents semantic families from leaking across development and test", () => {
 		const development = {
-			...semanticCase("ko", "dev"),
+			...reviewedCase("ko", "dev"),
 			familyId: "same-family",
 			split: "development" as const,
 		};
-		const test = { ...semanticCase("ko", "test"), familyId: "same-family" };
+		const test = { ...reviewedCase("ko", "test"), familyId: "same-family" };
 		const contract: MemoryUpdateContract = {
 			schemaVersion: "naia-memory-update-contract-v1",
 			tier: "semantic-update-interpretation",
 			construction: "independent-native-reviewed",
-			cases: [development, test, semanticCase("en"), semanticCase("ja")],
+			cases: [development, test, reviewedCase("en"), reviewedCase("ja")],
 		};
 		expect(() => validateMemoryUpdateContract(contract)).toThrow(
 			"family crosses evaluation splits",

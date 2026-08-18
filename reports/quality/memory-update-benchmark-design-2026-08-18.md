@@ -57,6 +57,10 @@ pass, and the publication gate remains closed.
   test cases; generated cases remain diagnostic only.
 - Freeze train/development/test family IDs before engine execution. Related
   entities and paraphrases stay in one family to prevent leakage.
+- For evidence marked `independent-native-reviewed`, require distinct
+  pseudonymous author/reviewer IDs, native-language declarations for both,
+  review chronology, and a SHA-256 digest over the frozen family-to-split map.
+  Self-review, missing provenance, and post-freeze split edits fail validation.
 - Include corrections, reversals, temporary states, negation, repeated values,
   and unrelated distractors in every language.
 - Run each case in fresh engine state and randomize engine/case execution order.
