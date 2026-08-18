@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFile, realpath } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 
 export type PublicEvidenceEngine = {
 	engine: string;
@@ -22,6 +23,7 @@ export type PublicEvidenceManifest = {
 	schemaVersion: "naia-memory-public-evidence-v1";
 	claim: string;
 	dataset: {
+		path: string;
 		benchmarkTier: string;
 		construction: string;
 		nativeReviewStatus: string;
@@ -49,6 +51,35 @@ export type PublicEvidenceDecision = { promotable: boolean; failures: string[] }
 
 const SHA256 = /^[a-f0-9]{64}$/;
 
+type PublicEvidenceReceipt = Omit<PublicEvidenceEngine, "executed" | "receiptPath" | "receiptSha256"> & {
+	schemaVersion: "naia-memory-public-engine-receipt-v1";
+	protocol: PublicEvidenceManifest["protocol"];
+};
+
+type PublicEvidenceDataset = {
+	schemaVersion: "naia-memory-public-dataset-v1";
+	cases: Array<{ id: string; language: string }>;
+};
+
+type PublicAdversarialReview = {
+	schemaVersion: "naia-memory-public-adversarial-review-v1";
+	reviewer: string;
+	evidenceScopeSha256: string;
+	verdict: string;
+};
+
+export function publicEvidenceScopeSha256(manifest: PublicEvidenceManifest): string {
+	const engines = manifest.engines.filter((engine) => engine.executed)
+		.map((engine) => ({ engine: engine.engine, receiptSha256: engine.receiptSha256 }))
+		.sort((left, right) => left.engine < right.engine ? -1 : left.engine > right.engine ? 1 : 0);
+	return createHash("sha256").update(JSON.stringify({
+		claim: manifest.claim,
+		dataset: manifest.dataset,
+		protocol: manifest.protocol,
+		engines,
+	})).digest("hex");
+}
+
 function evaluateManifest(manifest: PublicEvidenceManifest): PublicEvidenceDecision {
 	const failures: string[] = [];
 	const reject = (condition: boolean, message: string) => { if (condition) failures.push(message); };
@@ -61,6 +92,7 @@ function evaluateManifest(manifest: PublicEvidenceManifest): PublicEvidenceDecis
 	reject(dataset.construction !== "independent-authored", "dataset is not independently authored");
 	reject(dataset.nativeReviewStatus !== "reviewed", "dataset lacks completed native review");
 	reject(!dataset.sealedBeforeRun, "dataset was not sealed before execution");
+	reject(!dataset.path.trim(), "dataset path is missing");
 	reject(!SHA256.test(dataset.sha256), "dataset SHA-256 is invalid");
 	reject(dataset.caseCount < 100, "dataset has fewer than 100 cases");
 	reject(Object.values(dataset.languageCaseCounts).reduce((sum, count) => sum + count, 0) !== dataset.caseCount, "language counts do not equal dataset case count");
@@ -112,7 +144,7 @@ function evaluateManifest(manifest: PublicEvidenceManifest): PublicEvidenceDecis
 	reject(!review.independent, "adversarial review is not independent");
 	const adversarialReviewer = review.reviewer.trim();
 	reject(authors.has(adversarialReviewer) || reviewers.has(adversarialReviewer), "adversarial reviewer overlaps dataset authors or reviewers");
-	reject(review.evidenceScopeSha256 !== dataset.sha256, "adversarial review is not bound to the sealed evidence scope");
+	reject(review.evidenceScopeSha256 !== publicEvidenceScopeSha256(manifest), "adversarial review is not bound to the complete evidence scope");
 	reject(!review.reviewer.trim() || !review.artifactPath.trim() || !SHA256.test(review.artifactSha256), "adversarial review provenance is missing");
 	reject(review.verdict !== "PASS", "adversarial review did not pass");
 
@@ -132,6 +164,55 @@ function escapesRoot(root: string, target: string): boolean {
 	return pathFromRoot === ".." || pathFromRoot.startsWith(`..${sep}`) || isAbsolute(pathFromRoot);
 }
 
+function compareReceipt(receipt: PublicEvidenceReceipt, engine: PublicEvidenceEngine, protocol: PublicEvidenceManifest["protocol"]): string[] {
+	const failures: string[] = [];
+	const prefix = `${engine.engine}: receipt`;
+	const mismatch = (condition: boolean, field: string) => { if (condition) failures.push(`${prefix} ${field} mismatch`); };
+	mismatch(receipt.schemaVersion !== "naia-memory-public-engine-receipt-v1", "schema version");
+	mismatch(receipt.engine !== engine.engine, "engine identity");
+	mismatch(receipt.kind !== engine.kind, "engine kind");
+	mismatch(receipt.implementationFamily !== engine.implementationFamily, "implementation family");
+	mismatch(receipt.datasetSha256 !== engine.datasetSha256, "dataset hash");
+	mismatch(receipt.implementationRevision !== engine.implementationRevision, "implementation revision");
+	mismatch(!isDeepStrictEqual(receipt.providerModels, engine.providerModels), "provider/model identities");
+	mismatch(!isDeepStrictEqual(receipt.protocol, protocol), "frozen protocol");
+	mismatch(receipt.elapsedMs !== engine.elapsedMs, "elapsed time");
+	mismatch(receipt.estimatedCostUsd !== engine.estimatedCostUsd, "cost");
+	mismatch(receipt.failureCount !== engine.failureCount, "failure count");
+	mismatch(!isDeepStrictEqual(receipt.primaryMetric, engine.primaryMetric), "primary metric");
+	return failures;
+}
+
+function compareDataset(dataset: PublicEvidenceDataset, manifest: PublicEvidenceManifest["dataset"]): string[] {
+	const failures: string[] = [];
+	if (dataset.schemaVersion !== "naia-memory-public-dataset-v1") failures.push("dataset schema version mismatch");
+	if (!Array.isArray(dataset.cases)) return [...failures, "dataset cases are missing"];
+	const ids = new Set<string>();
+	const languageCounts = new Map<string, number>();
+	for (const item of dataset.cases) {
+		if (!item || typeof item.id !== "string" || !item.id.trim() || typeof item.language !== "string" || !item.language.trim()) {
+			failures.push("dataset case identity or language is invalid");
+			continue;
+		}
+		if (ids.has(item.id)) failures.push("dataset case identities are duplicated");
+		ids.add(item.id);
+		languageCounts.set(item.language, (languageCounts.get(item.language) ?? 0) + 1);
+	}
+	if (dataset.cases.length !== manifest.caseCount) failures.push("dataset case count mismatch");
+	const languageCaseCounts = Object.fromEntries(languageCounts);
+	if (!isDeepStrictEqual(languageCaseCounts, manifest.languageCaseCounts)) failures.push("dataset language counts mismatch");
+	return failures;
+}
+
+function compareReview(review: PublicAdversarialReview, manifest: PublicEvidenceManifest["adversarialReview"]): string[] {
+	const failures: string[] = [];
+	if (review.schemaVersion !== "naia-memory-public-adversarial-review-v1") failures.push("adversarial review schema version mismatch");
+	if (review.reviewer !== manifest.reviewer) failures.push("adversarial review reviewer mismatch");
+	if (review.evidenceScopeSha256 !== manifest.evidenceScopeSha256) failures.push("adversarial review evidence scope mismatch");
+	if (review.verdict !== manifest.verdict) failures.push("adversarial review verdict mismatch");
+	return failures;
+}
+
 export async function evaluatePublicEvidenceFiles(manifest: PublicEvidenceManifest, evidenceRoot: string): Promise<PublicEvidenceDecision> {
 	const decision = evaluatePublicEvidence(manifest);
 	if (decision.failures.includes("manifest shape is invalid")) return decision;
@@ -142,7 +223,8 @@ export async function evaluatePublicEvidenceFiles(manifest: PublicEvidenceManife
 		return { promotable: false, failures: [...decision.failures, "evidence root is unreadable"] };
 	}
 	const evidence = [
-		...manifest.engines.filter((engine) => engine.executed).map((engine) => ({ label: `${engine.engine}: receipt`, path: engine.receiptPath, sha256: engine.receiptSha256 })),
+		{ label: "dataset", path: manifest.dataset.path, sha256: manifest.dataset.sha256 },
+		...manifest.engines.filter((engine) => engine.executed).map((engine) => ({ label: `${engine.engine}: receipt`, path: engine.receiptPath, sha256: engine.receiptSha256, engine })),
 		{ label: "adversarial review", path: manifest.adversarialReview.artifactPath, sha256: manifest.adversarialReview.artifactSha256 },
 	];
 	for (const item of evidence) {
@@ -165,8 +247,31 @@ export async function evaluatePublicEvidenceFiles(manifest: PublicEvidenceManife
 			continue;
 		}
 		try {
-			const actual = createHash("sha256").update(await readFile(canonical)).digest("hex");
+			const bytes = await readFile(canonical);
+			const actual = createHash("sha256").update(bytes).digest("hex");
 			if (actual !== item.sha256) decision.failures.push(`${item.label} content hash mismatch`);
+			if (item.label === "dataset") {
+				try {
+					const dataset = JSON.parse(bytes.toString("utf8")) as PublicEvidenceDataset;
+					decision.failures.push(...compareDataset(dataset, manifest.dataset));
+				} catch {
+					decision.failures.push("dataset JSON is invalid");
+				}
+			} else if ("engine" in item) {
+				try {
+					const receipt = JSON.parse(bytes.toString("utf8")) as PublicEvidenceReceipt;
+					decision.failures.push(...compareReceipt(receipt, item.engine, manifest.protocol));
+				} catch {
+					decision.failures.push(`${item.label} JSON is invalid`);
+				}
+			} else {
+				try {
+					const review = JSON.parse(bytes.toString("utf8")) as PublicAdversarialReview;
+					decision.failures.push(...compareReview(review, manifest.adversarialReview));
+				} catch {
+					decision.failures.push("adversarial review JSON is invalid");
+				}
+			}
 		} catch {
 			decision.failures.push(`${item.label} file is unreadable`);
 		}
