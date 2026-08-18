@@ -1,11 +1,23 @@
-import { createHash } from "node:crypto";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { evaluatePublicEvidence, evaluatePublicEvidenceFiles, publicCaseOutputSha256, publicEvidenceScopeSha256, summarizePublicCaseRecords, type PublicEvidenceManifest } from "./public-evidence-gate.js";
+import { evaluatePublicEvidenceFiles, publicCaseJudgmentSha256, publicCaseOutputSha256, publicEvidenceScopeSha256, publicEvidenceSignaturePayload, summarizePublicCaseRecords, type PublicEvidenceManifest, type PublicEvidenceTrustPolicy, validatePublicEvidenceManifest } from "./public-evidence-gate.js";
 
 const hash = "a".repeat(64);
+const identities = ["nextain-release", "naia", "competitor-a", "competitor-b", "opencode/model@revision"] as const;
+const keys = Object.fromEntries(identities.map((identity) => [identity, generateKeyPairSync("ed25519")])) as Record<typeof identities[number], ReturnType<typeof generateKeyPairSync>>;
+const trustPolicy: PublicEvidenceTrustPolicy = {
+	publisherPublicKeys: { "nextain-release": keys["nextain-release"].publicKey.export({ type: "spki", format: "pem" }).toString() },
+	enginePublicKeys: Object.fromEntries(identities.slice(1, 4).map((identity) => [identity, keys[identity].publicKey.export({ type: "spki", format: "pem" }).toString()])),
+	reviewerPublicKeys: { "opencode/model@revision": keys["opencode/model@revision"].publicKey.export({ type: "spki", format: "pem" }).toString() },
+	approvedScoringPolicies: { "exact-hit-v1": createHash("sha256").update("export const scoringPolicy = 'exact-hit-v1';").digest("hex") },
+};
+
+function signed<T extends Record<string, unknown>>(value: T, identity: typeof identities[number]): T & { signatureBase64: string } {
+	return { ...value, signatureBase64: sign(null, publicEvidenceSignaturePayload(value), keys[identity].privateKey).toString("base64") };
+}
 
 function engine(engine: string, kind: "naia" | "external") {
 	return {
@@ -19,7 +31,9 @@ function engine(engine: string, kind: "naia" | "external") {
 
 function validManifest(): PublicEvidenceManifest {
 	const manifest: PublicEvidenceManifest = {
-		schemaVersion: "naia-memory-public-evidence-v2",
+		schemaVersion: "naia-memory-public-evidence-v3",
+		publisher: "nextain-release",
+		signatureBase64: "",
 		claim: "Naia improves current-fact retrieval under the frozen protocol.",
 		dataset: {
 			path: "dataset.json",
@@ -27,7 +41,7 @@ function validManifest(): PublicEvidenceManifest {
 			sealedBeforeRun: true, sha256: hash, caseCount: 120, languageCaseCounts: { ko: 40, en: 40, ja: 40 },
 			authorIds: ["author-1"], reviewerIdsByLanguage: { ko: ["reviewer-ko"], en: ["reviewer-en"], ja: ["reviewer-ja"] },
 		},
-		protocol: { sameInputSha256: hash, topK: 20, repetitions: 2, answerModel: "answer/model@revision", judgeModel: "judge/model@revision", primaryMetricName: "hit@1", frozenBeforeRun: true },
+		protocol: { sameInputSha256: hash, topK: 20, repetitions: 2, answerModel: "answer/model@revision", judgeModel: "judge/model@revision", primaryMetricName: "hit@1", scoringPolicyId: "exact-hit-v1", scorerArtifactPath: "scorer.js", scorerArtifactSha256: hash, frozenBeforeRun: true },
 		engines: [engine("naia", "naia"), engine("competitor-a", "external"), engine("competitor-b", "external")],
 		adversarialReview: { independent: true, reviewer: "opencode/model@revision", evidenceScopeSha256: hash, artifactPath: "review.md", artifactSha256: hash, verdict: "PASS" },
 	};
@@ -45,16 +59,19 @@ function datasetCases() {
 function receiptBytes(manifest: PublicEvidenceManifest, engine: PublicEvidenceManifest["engines"][number], cases = datasetCases()): string {
 	const caseRecords = cases.flatMap((item, index) => Array.from({ length: manifest.protocol.repetitions }, (_, repetition) => {
 		const output = `${engine.engine} output for ${item.id} repetition ${repetition + 1}`;
+		const score = index < 96 ? 1 : 0;
+		const judgment = score ? "expected fact present" : "expected fact absent";
 		return {
 		caseId: item.id, inputSha256: item.inputSha256, repetition: repetition + 1,
-		output, outputSha256: publicCaseOutputSha256(engine.engine, item.id, repetition + 1, output), score: index < 96 ? 1 : 0, failed: false,
+		output, outputSha256: publicCaseOutputSha256(engine.engine, item.id, repetition + 1, output), score, failed: false, judgment,
+		judgmentSha256: publicCaseJudgmentSha256(engine.engine, item.id, repetition + 1, publicCaseOutputSha256(engine.engine, item.id, repetition + 1, output), score, false, judgment, manifest.protocol.scoringPolicyId),
 		};
 	}));
 	const summary = summarizePublicCaseRecords(caseRecords);
 	engine.failureCount = summary.failureCount;
 	engine.primaryMetric = { name: manifest.protocol.primaryMetricName, value: summary.value, ci95Low: summary.ci95Low, ci95High: summary.ci95High };
-	return JSON.stringify({
-		schemaVersion: "naia-memory-public-engine-receipt-v2",
+	return JSON.stringify(signed({
+		schemaVersion: "naia-memory-public-engine-receipt-v3",
 		engine: engine.engine,
 		kind: engine.kind,
 		implementationFamily: engine.implementationFamily,
@@ -71,7 +88,7 @@ function receiptBytes(manifest: PublicEvidenceManifest, engine: PublicEvidenceMa
 		failureCount: engine.failureCount,
 		primaryMetric: engine.primaryMetric,
 		caseRecords,
-	});
+	}, engine.engine as "naia" | "competitor-a" | "competitor-b"));
 }
 
 async function writeValidEvidence(root: string, manifest: PublicEvidenceManifest): Promise<void> {
@@ -81,6 +98,9 @@ async function writeValidEvidence(root: string, manifest: PublicEvidenceManifest
 	await writeFile(join(root, manifest.dataset.path), datasetBytes);
 	manifest.dataset.sha256 = datasetSha256;
 	manifest.protocol.sameInputSha256 = datasetSha256;
+	const scorer = "export const scoringPolicy = 'exact-hit-v1';";
+	await writeFile(join(root, manifest.protocol.scorerArtifactPath), scorer);
+	manifest.protocol.scorerArtifactSha256 = createHash("sha256").update(scorer).digest("hex");
 	for (const engine of manifest.engines) {
 		engine.datasetSha256 = datasetSha256;
 		const artifact = `artifact:${engine.engine}`;
@@ -94,19 +114,20 @@ async function writeValidEvidence(root: string, manifest: PublicEvidenceManifest
 		engine.receiptSha256 = createHash("sha256").update(bytes).digest("hex");
 	}
 	manifest.adversarialReview.evidenceScopeSha256 = publicEvidenceScopeSha256(manifest);
-	const reviewBytes = JSON.stringify({
-		schemaVersion: "naia-memory-public-adversarial-review-v1",
+	const reviewBytes = JSON.stringify(signed({
+		schemaVersion: "naia-memory-public-adversarial-review-v2",
 		reviewer: manifest.adversarialReview.reviewer,
 		evidenceScopeSha256: manifest.adversarialReview.evidenceScopeSha256,
 		verdict: manifest.adversarialReview.verdict,
-	});
+	}, "opencode/model@revision"));
 	await writeFile(join(root, "review.md"), reviewBytes);
 	manifest.adversarialReview.artifactSha256 = createHash("sha256").update(reviewBytes).digest("hex");
+	manifest.signatureBase64 = signed(manifest as unknown as Record<string, unknown>, "nextain-release").signatureBase64;
 }
 
 describe("public evidence promotion gate", () => {
 	it("accepts complete held-out, reviewed, same-input evidence", () => {
-		expect(evaluatePublicEvidence(validManifest())).toEqual({ promotable: true, failures: [] });
+		expect(validatePublicEvidenceManifest(validManifest())).toEqual({ promotable: true, failures: [] });
 	});
 
 	it("rejects the current generated diagnostic even when its scores are strong", () => {
@@ -115,7 +136,7 @@ describe("public evidence promotion gate", () => {
 		manifest.dataset.construction = "template-generated";
 		manifest.dataset.nativeReviewStatus = "not-reviewed";
 		manifest.dataset.sealedBeforeRun = false;
-		const decision = evaluatePublicEvidence(manifest);
+		const decision = validatePublicEvidenceManifest(manifest);
 		expect(decision.promotable).toBe(false);
 		expect(decision.failures).toEqual(expect.arrayContaining([
 			"dataset is not held-out-public",
@@ -131,7 +152,7 @@ describe("public evidence promotion gate", () => {
 		manifest.engines[1].datasetSha256 = "b".repeat(64);
 		manifest.engines[1].receiptPath = "";
 		manifest.engines[1].primaryMetric.ci95Low = Number.NaN;
-		const decision = evaluatePublicEvidence(manifest);
+		const decision = validatePublicEvidenceManifest(manifest);
 		expect(decision.promotable).toBe(false);
 		expect(decision.failures).toEqual(expect.arrayContaining([
 			"fewer than two executed external engines",
@@ -146,7 +167,7 @@ describe("public evidence promotion gate", () => {
 		manifest.engines[2].engine = manifest.engines[1].engine;
 		manifest.engines[0].receiptSha256 = "not-a-hash";
 		manifest.dataset.languageCaseCounts.ja = 39;
-		const decision = evaluatePublicEvidence(manifest);
+		const decision = validatePublicEvidenceManifest(manifest);
 		expect(decision.failures).toEqual(expect.arrayContaining([
 			"language counts do not equal dataset case count",
 			"executed engine identities are missing or duplicated",
@@ -158,7 +179,7 @@ describe("public evidence promotion gate", () => {
 		const manifest = validManifest();
 		manifest.dataset.reviewerIdsByLanguage.ko = ["author-1"];
 		manifest.adversarialReview = { independent: false, reviewer: "", evidenceScopeSha256: "", artifactPath: "", artifactSha256: "", verdict: "BLOCK" };
-		const decision = evaluatePublicEvidence(manifest);
+		const decision = validatePublicEvidenceManifest(manifest);
 		expect(decision.promotable).toBe(false);
 		expect(decision.failures).toEqual(expect.arrayContaining([
 			"authors and native reviewers are not independent",
@@ -172,7 +193,7 @@ describe("public evidence promotion gate", () => {
 		const manifest = validManifest();
 		manifest.dataset.authorIds = [" author-1 "];
 		manifest.adversarialReview.reviewer = "author-1";
-		expect(evaluatePublicEvidence(manifest).failures).toContain("adversarial reviewer overlaps dataset authors or reviewers");
+		expect(validatePublicEvidenceManifest(manifest).failures).toContain("adversarial reviewer overlaps dataset authors or reviewers");
 	});
 
 	it("rejects aliased implementations, duplicate receipts, and incomparable metrics", () => {
@@ -180,7 +201,7 @@ describe("public evidence promotion gate", () => {
 		manifest.engines[2].implementationFamily = manifest.engines[1].implementationFamily;
 		manifest.engines[2].receiptSha256 = manifest.engines[1].receiptSha256;
 		manifest.engines[2].primaryMetric.name = "recall@256";
-		const decision = evaluatePublicEvidence(manifest);
+		const decision = validatePublicEvidenceManifest(manifest);
 		expect(decision.failures).toEqual(expect.arrayContaining([
 			"implementation families are missing or duplicated",
 			"executed engine receipts are duplicated",
@@ -189,7 +210,7 @@ describe("public evidence promotion gate", () => {
 	});
 
 	it("fails closed for a malformed runtime manifest", () => {
-		expect(evaluatePublicEvidence({} as PublicEvidenceManifest)).toEqual({
+		expect(validatePublicEvidenceManifest({} as PublicEvidenceManifest)).toEqual({
 			promotable: false,
 			failures: ["manifest shape is invalid"],
 		});
@@ -197,10 +218,9 @@ describe("public evidence promotion gate", () => {
 
 	it("fails closed when the evidence root is unreadable", async () => {
 		const missing = join(tmpdir(), `naia-public-evidence-missing-${Date.now()}`);
-		expect(await evaluatePublicEvidenceFiles(validManifest(), missing)).toEqual({
-			promotable: false,
-			failures: ["evidence root is unreadable"],
-		});
+		const decision = await evaluatePublicEvidenceFiles(validManifest(), missing, trustPolicy);
+		expect(decision.promotable).toBe(false);
+		expect(decision.failures).toContain("evidence root is unreadable");
 	});
 
 	it("verifies receipt bytes and confines evidence paths to the declared root", async () => {
@@ -208,12 +228,82 @@ describe("public evidence promotion gate", () => {
 		try {
 			const manifest = validManifest();
 			await writeValidEvidence(root, manifest);
-			const initialDecision = await evaluatePublicEvidenceFiles(manifest, root);
+			const initialDecision = await evaluatePublicEvidenceFiles(manifest, root, trustPolicy);
 			expect(initialDecision.failures).toEqual([]);
 
 			manifest.engines[0].receiptPath = "../outside.json";
-			const decision = await evaluatePublicEvidenceFiles(manifest, root);
+			const decision = await evaluatePublicEvidenceFiles(manifest, root, trustPolicy);
 			expect(decision.failures).toContain("naia: receipt path escapes evidence root");
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects a self-selected trust root without the verifier's publisher key", async () => {
+		const root = await mkdtemp(join(tmpdir(), "naia-public-evidence-trust-"));
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const attacker = generateKeyPairSync("ed25519");
+			const maliciousPolicy = { ...trustPolicy, publisherPublicKeys: { "nextain-release": attacker.publicKey.export({ type: "spki", format: "pem" }).toString() } };
+			expect((await evaluatePublicEvidenceFiles(manifest, root, maliciousPolicy)).failures).toContain("manifest signature is untrusted or invalid");
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects a manifest scoring policy not pinned by the external verifier", async () => {
+		const root = await mkdtemp(join(tmpdir(), "naia-public-evidence-policy-"));
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			manifest.protocol.scoringPolicyId = "always-pass-v1";
+			manifest.signatureBase64 = signed(manifest as unknown as Record<string, unknown>, "nextain-release").signatureBase64;
+			expect((await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)).failures).toContain("scoring policy is not approved by the verifier");
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects score inflation even when the attacker recomputes receipt and manifest hashes", async () => {
+		const root = await mkdtemp(join(tmpdir(), "naia-public-evidence-score-forgery-"));
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const target = manifest.engines[0];
+			const receipt = JSON.parse(await readFile(join(root, target.receiptPath), "utf8"));
+			receipt.caseRecords.at(-1).score = 1;
+			const summary = summarizePublicCaseRecords(receipt.caseRecords);
+			receipt.failureCount = summary.failureCount;
+			receipt.primaryMetric = { name: manifest.protocol.primaryMetricName, value: summary.value, ci95Low: summary.ci95Low, ci95High: summary.ci95High };
+			target.failureCount = summary.failureCount;
+			target.primaryMetric = receipt.primaryMetric;
+			const bytes = JSON.stringify(receipt);
+			await writeFile(join(root, target.receiptPath), bytes);
+			target.receiptSha256 = createHash("sha256").update(bytes).digest("hex");
+			manifest.adversarialReview.evidenceScopeSha256 = publicEvidenceScopeSha256(manifest);
+			const failures = (await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)).failures;
+			expect(failures).toEqual(expect.arrayContaining([
+				"naia: receipt case judgment hash is invalid",
+				"naia: receipt signature is untrusted or invalid",
+			]));
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects a review artifact signed by a key outside the verifier trust policy", async () => {
+		const root = await mkdtemp(join(tmpdir(), "naia-public-evidence-review-key-"));
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const review = JSON.parse(await readFile(join(root, manifest.adversarialReview.artifactPath), "utf8"));
+			const attacker = generateKeyPairSync("ed25519");
+			review.signatureBase64 = sign(null, publicEvidenceSignaturePayload(review), attacker.privateKey).toString("base64");
+			const bytes = JSON.stringify(review);
+			await writeFile(join(root, manifest.adversarialReview.artifactPath), bytes);
+			manifest.adversarialReview.artifactSha256 = createHash("sha256").update(bytes).digest("hex");
+			expect((await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)).failures).toContain("adversarial review signature is untrusted or invalid");
 		} finally {
 			await rm(root, { recursive: true, force: true });
 		}
@@ -230,7 +320,7 @@ describe("public evidence promotion gate", () => {
 			const forgedBytes = JSON.stringify(receipt);
 			await writeFile(join(root, manifest.engines[0].receiptPath), forgedBytes);
 			manifest.engines[0].receiptSha256 = createHash("sha256").update(forgedBytes).digest("hex");
-			const decision = await evaluatePublicEvidenceFiles(manifest, root);
+			const decision = await evaluatePublicEvidenceFiles(manifest, root, trustPolicy);
 			expect(decision.failures).toEqual(expect.arrayContaining([
 				"dataset content hash mismatch",
 				"naia: receipt engine identity mismatch",
@@ -254,7 +344,7 @@ describe("public evidence promotion gate", () => {
 			await writeFile(join(root, target.receiptPath), bytes);
 			target.receiptSha256 = createHash("sha256").update(bytes).digest("hex");
 			await writeFile(join(root, target.implementationArtifactPath), "substituted artifact");
-			const failures = (await evaluatePublicEvidenceFiles(manifest, root)).failures;
+			const failures = (await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)).failures;
 			expect(failures).toEqual(expect.arrayContaining([
 				"naia: receipt case coverage mismatch",
 				"naia: receipt recomputed primary metric mismatch",
@@ -277,7 +367,7 @@ describe("public evidence promotion gate", () => {
 			const bytes = JSON.stringify(receipt);
 			await writeFile(join(root, target.receiptPath), bytes);
 			target.receiptSha256 = createHash("sha256").update(bytes).digest("hex");
-			expect((await evaluatePublicEvidenceFiles(manifest, root)).failures).toContain("naia: receipt output hash is invalid");
+			expect((await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)).failures).toContain("naia: receipt output hash is invalid");
 		} finally {
 			await rm(root, { recursive: true, force: true });
 		}
@@ -308,7 +398,7 @@ describe("public evidence promotion gate", () => {
 				engine.receiptSha256 = createHash("sha256").update(bytes).digest("hex");
 			}
 			manifest.adversarialReview.evidenceScopeSha256 = publicEvidenceScopeSha256(manifest);
-			const decision = await evaluatePublicEvidenceFiles(manifest, root);
+			const decision = await evaluatePublicEvidenceFiles(manifest, root, trustPolicy);
 			expect(decision.failures).toEqual(expect.arrayContaining([
 				"dataset language counts mismatch",
 				"naia: receipt engine kind mismatch",
@@ -328,7 +418,7 @@ describe("public evidence promotion gate", () => {
 			const bytes = JSON.stringify(review);
 			await writeFile(join(root, manifest.adversarialReview.artifactPath), bytes);
 			manifest.adversarialReview.artifactSha256 = createHash("sha256").update(bytes).digest("hex");
-			expect((await evaluatePublicEvidenceFiles(manifest, root)).failures).toContain("adversarial review verdict mismatch");
+			expect((await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)).failures).toContain("adversarial review verdict mismatch");
 		} finally {
 			await rm(root, { recursive: true, force: true });
 		}
@@ -353,7 +443,7 @@ describe("public evidence promotion gate", () => {
 			await symlink(join(outside, "receipt.json"), join(root, "linked.json"));
 			manifest.engines[0].receiptPath = "linked.json";
 			manifest.engines[0].receiptSha256 = digest;
-			expect((await evaluatePublicEvidenceFiles(manifest, root)).failures).toContain("naia: receipt path escapes evidence root");
+			expect((await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)).failures).toContain("naia: receipt path escapes evidence root");
 		} finally {
 			await rm(root, { recursive: true, force: true });
 			await rm(outside, { recursive: true, force: true });

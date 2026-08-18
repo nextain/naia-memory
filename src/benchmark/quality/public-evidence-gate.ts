@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, verify } from "node:crypto";
 import { readFile, realpath } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { isDeepStrictEqual } from "node:util";
@@ -24,7 +24,9 @@ export type PublicEvidenceEngine = {
 };
 
 export type PublicEvidenceManifest = {
-	schemaVersion: "naia-memory-public-evidence-v2";
+	schemaVersion: "naia-memory-public-evidence-v3";
+	publisher: string;
+	signatureBase64: string;
 	claim: string;
 	dataset: {
 		path: string;
@@ -45,6 +47,9 @@ export type PublicEvidenceManifest = {
 		answerModel: string;
 		judgeModel: string;
 		primaryMetricName: string;
+		scoringPolicyId: string;
+		scorerArtifactPath: string;
+		scorerArtifactSha256: string;
 		frozenBeforeRun: boolean;
 	};
 	engines: PublicEvidenceEngine[];
@@ -53,12 +58,21 @@ export type PublicEvidenceManifest = {
 
 export type PublicEvidenceDecision = { promotable: boolean; failures: string[] };
 
+/** Trusted keys are supplied by the publisher/verifier, never by submitted evidence. */
+export type PublicEvidenceTrustPolicy = {
+	publisherPublicKeys: Record<string, string>;
+	enginePublicKeys: Record<string, string>;
+	reviewerPublicKeys: Record<string, string>;
+	approvedScoringPolicies: Record<string, string>;
+};
+
 const SHA256 = /^[a-f0-9]{64}$/;
 
 type PublicEvidenceReceipt = Omit<PublicEvidenceEngine, "executed" | "receiptPath" | "receiptSha256"> & {
-	schemaVersion: "naia-memory-public-engine-receipt-v2";
+	schemaVersion: "naia-memory-public-engine-receipt-v3";
 	protocol: PublicEvidenceManifest["protocol"];
 	caseRecords: PublicCaseRecord[];
+	signatureBase64: string;
 };
 
 type PublicDatasetCase = { id: string; language: string; input: string; expected: string[]; inputSha256: string };
@@ -68,7 +82,7 @@ type PublicEvidenceDataset = {
 	cases: PublicDatasetCase[];
 };
 
-type PublicCaseRecord = {
+export type PublicCaseRecord = {
 	caseId: string;
 	inputSha256: string;
 	repetition: number;
@@ -76,20 +90,47 @@ type PublicCaseRecord = {
 	outputSha256: string;
 	score: number;
 	failed: boolean;
+	judgment: string;
+	judgmentSha256: string;
 };
 
 type PublicAdversarialReview = {
-	schemaVersion: "naia-memory-public-adversarial-review-v1";
+	schemaVersion: "naia-memory-public-adversarial-review-v2";
 	reviewer: string;
 	evidenceScopeSha256: string;
 	verdict: string;
+	signatureBase64: string;
 };
+
+function canonicalJson(value: unknown): string {
+	if (value === null || typeof value !== "object") return JSON.stringify(value);
+	if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+	return `{${Object.entries(value as Record<string, unknown>)
+		.filter(([, item]) => item !== undefined)
+		.sort(([left], [right]) => left.localeCompare(right))
+		.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(",")}}`;
+}
+
+export function publicEvidenceSignaturePayload(value: Record<string, unknown>): Buffer {
+	const { signatureBase64: _signature, ...unsigned } = value;
+	return Buffer.from(canonicalJson(unsigned));
+}
+
+function hasValidSignature(value: Record<string, unknown>, publicKey: string | undefined): boolean {
+	const signature = value.signatureBase64;
+	if (!publicKey || typeof signature !== "string" || !/^[A-Za-z0-9+/]{86}==$/.test(signature)) return false;
+	try {
+		return verify(null, publicEvidenceSignaturePayload(value), publicKey, Buffer.from(signature, "base64"));
+	} catch {
+		return false;
+	}
+}
 
 export function publicEvidenceScopeSha256(manifest: PublicEvidenceManifest): string {
 	const engines = manifest.engines.filter((engine) => engine.executed)
 		.map((engine) => ({ engine: engine.engine, receiptSha256: engine.receiptSha256 }))
 		.sort((left, right) => left.engine < right.engine ? -1 : left.engine > right.engine ? 1 : 0);
-	return createHash("sha256").update(JSON.stringify({
+	return createHash("sha256").update(canonicalJson({
 		claim: manifest.claim,
 		dataset: manifest.dataset,
 		protocol: manifest.protocol,
@@ -103,7 +144,8 @@ function evaluateManifest(manifest: PublicEvidenceManifest): PublicEvidenceDecis
 	const dataset = manifest.dataset;
 	const protocol = manifest.protocol;
 
-	reject(manifest.schemaVersion !== "naia-memory-public-evidence-v2", "manifest schema version is unsupported");
+	reject(manifest.schemaVersion !== "naia-memory-public-evidence-v3", "manifest schema version is unsupported");
+	reject(!manifest.publisher.trim(), "publisher identity is missing");
 	reject(!manifest.claim.trim(), "claim is missing");
 	reject(dataset.benchmarkTier !== "held-out-public", "dataset is not held-out-public");
 	reject(dataset.construction !== "independent-authored", "dataset is not independently authored");
@@ -128,6 +170,9 @@ function evaluateManifest(manifest: PublicEvidenceManifest): PublicEvidenceDecis
 	reject(!protocol.answerModel.trim(), "answer model identity is missing");
 	reject(!protocol.judgeModel.trim(), "judge model identity is missing");
 	reject(!protocol.primaryMetricName.trim(), "frozen primary metric is missing");
+	reject(!protocol.scoringPolicyId.trim(), "scoring policy identity is missing");
+	reject(!protocol.scorerArtifactPath.trim(), "scorer artifact path is missing");
+	reject(!SHA256.test(protocol.scorerArtifactSha256), "scorer artifact SHA-256 is invalid");
 	reject(!protocol.frozenBeforeRun, "protocol was not frozen before execution");
 
 	const executed = manifest.engines.filter((engine) => engine.executed);
@@ -174,7 +219,8 @@ function evaluateManifest(manifest: PublicEvidenceManifest): PublicEvidenceDecis
 	return { promotable: failures.length === 0, failures };
 }
 
-export function evaluatePublicEvidence(manifest: PublicEvidenceManifest): PublicEvidenceDecision {
+/** Performs shape-only validation. This is not a promotion decision; use evaluatePublicEvidenceFiles for that. */
+export function validatePublicEvidenceManifest(manifest: PublicEvidenceManifest): PublicEvidenceDecision {
 	try {
 		return evaluateManifest(manifest);
 	} catch {
@@ -188,7 +234,11 @@ function escapesRoot(root: string, target: string): boolean {
 }
 
 export function publicCaseOutputSha256(engine: string, caseId: string, repetition: number, output: string): string {
-	return createHash("sha256").update(JSON.stringify({ engine, caseId, repetition, output })).digest("hex");
+	return createHash("sha256").update(canonicalJson({ engine, caseId, repetition, output })).digest("hex");
+}
+
+export function publicCaseJudgmentSha256(engine: string, caseId: string, repetition: number, outputSha256: string, score: number, failed: boolean, judgment: string, scoringPolicyId: string): string {
+	return createHash("sha256").update(canonicalJson({ engine, caseId, repetition, outputSha256, score, failed, judgment, scoringPolicyId })).digest("hex");
 }
 
 /** Computes a normal 95% CI across case means; failed repetitions contribute score zero. */
@@ -210,7 +260,7 @@ function compareReceipt(receipt: PublicEvidenceReceipt, engine: PublicEvidenceEn
 	const failures: string[] = [];
 	const prefix = `${engine.engine}: receipt`;
 	const mismatch = (condition: boolean, field: string) => { if (condition) failures.push(`${prefix} ${field} mismatch`); };
-	mismatch(receipt.schemaVersion !== "naia-memory-public-engine-receipt-v2", "schema version");
+	mismatch(receipt.schemaVersion !== "naia-memory-public-engine-receipt-v3", "schema version");
 	mismatch(receipt.engine !== engine.engine, "engine identity");
 	mismatch(receipt.kind !== engine.kind, "engine kind");
 	mismatch(receipt.implementationFamily !== engine.implementationFamily, "implementation family");
@@ -240,6 +290,8 @@ function compareReceipt(receipt: PublicEvidenceReceipt, engine: PublicEvidenceEn
 		else if (record.outputSha256 !== publicCaseOutputSha256(engine.engine, record.caseId, record.repetition, record.output)) failures.push(`${prefix} output hash is invalid`);
 		if (!Number.isFinite(record.score) || record.score < 0 || record.score > 1) failures.push(`${prefix} case score is invalid`);
 		if (typeof record.failed !== "boolean" || (record.failed && record.score !== 0)) failures.push(`${prefix} case failure semantics are invalid`);
+		if (typeof record.judgment !== "string" || !record.judgment.trim()) failures.push(`${prefix} case judgment is missing`);
+		else if (record.judgmentSha256 !== publicCaseJudgmentSha256(engine.engine, record.caseId, record.repetition, record.outputSha256, record.score, record.failed, record.judgment, protocol.scoringPolicyId)) failures.push(`${prefix} case judgment hash is invalid`);
 		const key = `${record.caseId}\0${record.repetition}`;
 		if (recordKeys.has(key)) failures.push(`${prefix} case records are duplicated`);
 		recordKeys.add(key);
@@ -282,16 +334,18 @@ function compareDataset(dataset: PublicEvidenceDataset, manifest: PublicEvidence
 
 function compareReview(review: PublicAdversarialReview, manifest: PublicEvidenceManifest["adversarialReview"]): string[] {
 	const failures: string[] = [];
-	if (review.schemaVersion !== "naia-memory-public-adversarial-review-v1") failures.push("adversarial review schema version mismatch");
+	if (review.schemaVersion !== "naia-memory-public-adversarial-review-v2") failures.push("adversarial review schema version mismatch");
 	if (review.reviewer !== manifest.reviewer) failures.push("adversarial review reviewer mismatch");
 	if (review.evidenceScopeSha256 !== manifest.evidenceScopeSha256) failures.push("adversarial review evidence scope mismatch");
 	if (review.verdict !== manifest.verdict) failures.push("adversarial review verdict mismatch");
 	return failures;
 }
 
-export async function evaluatePublicEvidenceFiles(manifest: PublicEvidenceManifest, evidenceRoot: string): Promise<PublicEvidenceDecision> {
-	const decision = evaluatePublicEvidence(manifest);
+export async function evaluatePublicEvidenceFiles(manifest: PublicEvidenceManifest, evidenceRoot: string, trustPolicy: PublicEvidenceTrustPolicy): Promise<PublicEvidenceDecision> {
+	const decision = validatePublicEvidenceManifest(manifest);
 	if (decision.failures.includes("manifest shape is invalid")) return decision;
+	if (!hasValidSignature(manifest as unknown as Record<string, unknown>, trustPolicy.publisherPublicKeys[manifest.publisher])) decision.failures.push("manifest signature is untrusted or invalid");
+	if (trustPolicy.approvedScoringPolicies[manifest.protocol.scoringPolicyId] !== manifest.protocol.scorerArtifactSha256) decision.failures.push("scoring policy is not approved by the verifier");
 	let root: string;
 	try {
 		root = await realpath(resolve(evidenceRoot));
@@ -300,6 +354,7 @@ export async function evaluatePublicEvidenceFiles(manifest: PublicEvidenceManife
 	}
 	const evidence = [
 		{ label: "dataset", path: manifest.dataset.path, sha256: manifest.dataset.sha256 },
+		{ label: "scorer artifact", path: manifest.protocol.scorerArtifactPath, sha256: manifest.protocol.scorerArtifactSha256 },
 		...manifest.engines.filter((engine) => engine.executed).flatMap((engine) => [
 			{ label: `${engine.engine}: implementation artifact`, path: engine.implementationArtifactPath, sha256: engine.implementationArtifactSha256 },
 			{ label: `${engine.engine}: configuration`, path: engine.configurationPath, sha256: engine.configurationSha256 },
@@ -344,6 +399,7 @@ export async function evaluatePublicEvidenceFiles(manifest: PublicEvidenceManife
 				try {
 					const receipt = JSON.parse(bytes.toString("utf8")) as PublicEvidenceReceipt;
 					decision.failures.push(...compareReceipt(receipt, item.engine, manifest.protocol, datasetCases));
+					if (!hasValidSignature(receipt as unknown as Record<string, unknown>, trustPolicy.enginePublicKeys[item.engine.engine])) decision.failures.push(`${item.engine.engine}: receipt signature is untrusted or invalid`);
 				} catch {
 					decision.failures.push(`${item.label} JSON is invalid`);
 				}
@@ -351,6 +407,7 @@ export async function evaluatePublicEvidenceFiles(manifest: PublicEvidenceManife
 				try {
 					const review = JSON.parse(bytes.toString("utf8")) as PublicAdversarialReview;
 					decision.failures.push(...compareReview(review, manifest.adversarialReview));
+					if (!hasValidSignature(review as unknown as Record<string, unknown>, trustPolicy.reviewerPublicKeys[review.reviewer])) decision.failures.push("adversarial review signature is untrusted or invalid");
 				} catch {
 					decision.failures.push("adversarial review JSON is invalid");
 				}
