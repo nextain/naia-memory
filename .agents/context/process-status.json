@@ -14,7 +14,7 @@
     "issue_doc": "https://github.com/nextain/naia-memory/issues/39",
     "github_issue": "https://github.com/nextain/naia-memory/issues/39",
     "started": "2026-08-13T06:37:43Z",
-    "last_updated": "2026-08-13T07:34:00Z",
+    "last_updated": "2026-08-18T09:10:00Z",
     "status": "in_progress"
   },
 
@@ -22,8 +22,8 @@
     "P01": { "status": "done", "name": "user_scenarios", "deliverable": "docs/user-scenarios.md", "ref": "UC-MEM-01, UC-MEM-02 (#39)" },
     "P02": { "status": "done", "name": "test_scenarios", "deliverable": "docs/user-scenarios.md", "ref": "Test Coverage Map: memory-system.test.ts (#39)" },
     "P03": { "status": "done", "name": "requirements", "deliverable": "docs/requirements.md", "ref": "MEM-FR-01..03, MEM-NFR-01 (#39)" },
-    "P04": { "status": "done", "name": "integration_test", "deliverable": "CPU-only structured-fact regression, storage round-trip, typecheck and adversarial review", "ref": "reports/quality/issue-39-adversarial-review-2026-08-13.md (NOT_CLEAN gate)" },
-    "P05": { "status": "pending", "name": "requirements_complete", "deliverable": "Validated #39 implementation and evidence report", "ref": "#39; P05 structural split in progress; typecheck + 395 tests pass, official preflight still NOT_CLEAN for local.ts and MemorySystem modules" }
+    "P04": { "status": "done", "name": "integration_test", "deliverable": "CPU-only structured-fact regression, storage round-trip, public-evidence adversarial review, provenance-gate deterministic verification", "ref": "reports/quality/public-dataset-provenance-gate-2026-08-18.md; 494 tests pass; unchanged-tree OpenCode adversarial review CLEAN/CLEAN" },
+    "P05": { "status": "pending", "name": "requirements_complete", "deliverable": "Externally owned held-out corpus and same-input global-engine receipts", "ref": "#39; public evidence integrity passes, external multilingual comparison evidence remains absent" }
   },
 
   "resource_registry": {

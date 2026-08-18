@@ -83,6 +83,8 @@ export function isPublicEvidenceManifest(
 			"construction",
 			"nativeReviewStatus",
 			"sha256",
+			"provenancePath",
+			"provenanceSha256",
 		]) ||
 		typeof dataset.sealedBeforeRun !== "boolean" ||
 		typeof dataset.caseCount !== "number" ||
@@ -159,7 +161,7 @@ function evaluateManifest(
 	const protocol = manifest.protocol;
 
 	reject(
-		manifest.schemaVersion !== "naia-memory-public-evidence-v4",
+		manifest.schemaVersion !== "naia-memory-public-evidence-v5",
 		"manifest schema version is unsupported",
 	);
 	reject(!manifest.publisher.trim(), "publisher identity is missing");
@@ -183,6 +185,11 @@ function evaluateManifest(
 	reject(!dataset.sealedBeforeRun, "dataset was not sealed before execution");
 	reject(!dataset.path.trim(), "dataset path is missing");
 	reject(!SHA256.test(dataset.sha256), "dataset SHA-256 is invalid");
+	reject(!dataset.provenancePath.trim(), "dataset provenance path is missing");
+	reject(
+		!SHA256.test(dataset.provenanceSha256),
+		"dataset provenance SHA-256 is invalid",
+	);
 	reject(dataset.caseCount < 100, "dataset has fewer than 100 cases");
 	reject(
 		Object.values(dataset.languageCaseCounts).reduce(

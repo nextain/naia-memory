@@ -112,6 +112,30 @@ describe("public evidence promotion gate manifest and provenance", () => {
 		}
 	});
 
+	it("checks every language-scoped native reviewer key for role overlap", async () => {
+		const root = await mkdtemp(
+			join(tmpdir(), "naia-public-native-role-overlap-"),
+		);
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const policy = {
+				...trustPolicy,
+				nativeReviewerPublicKeysByLanguage: {
+					...trustPolicy.nativeReviewerPublicKeysByLanguage,
+					ko: {
+						"reviewer-ko": trustPolicy.publisherPublicKeys["nextain-release"],
+					},
+				},
+			};
+			expect(
+				(await evaluatePublicEvidenceFiles(manifest, root, policy)).failures,
+			).toContain("trusted role keys overlap: nextain-release and reviewer-ko");
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
 	it("rejects the current generated diagnostic even when its scores are strong", () => {
 		const manifest = validManifest();
 		manifest.dataset.benchmarkTier = "generated-diagnostic";

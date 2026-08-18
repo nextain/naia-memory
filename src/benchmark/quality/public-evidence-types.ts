@@ -30,7 +30,7 @@ export type PublicEvidenceEngine = {
 };
 
 export type PublicEvidenceManifest = {
-	schemaVersion: "naia-memory-public-evidence-v4";
+	schemaVersion: "naia-memory-public-evidence-v5";
 	publisher: string;
 	signatureBase64: string;
 	claim: string;
@@ -41,6 +41,8 @@ export type PublicEvidenceManifest = {
 		nativeReviewStatus: string;
 		sealedBeforeRun: boolean;
 		sha256: string;
+		provenancePath: string;
+		provenanceSha256: string;
 		caseCount: number;
 		languageCaseCounts: Record<string, number>;
 		authorIds: string[];
@@ -79,9 +81,35 @@ export type PublicEvidenceTrustPolicy = {
 	publisherPublicKeys: Record<string, string>;
 	enginePublicKeys: Record<string, string>;
 	reviewerPublicKeys: Record<string, string>;
+	datasetAuthorPublicKeys: Record<string, string>;
+	nativeReviewerPublicKeysByLanguage: Record<string, Record<string, string>>;
 	challengeIssuerPublicKeys: Record<string, string>;
 	runnerPublicKeys: Record<string, string>;
 	approvedScoringPolicies: Record<string, string>;
+};
+
+export type PublicDatasetAuthorAttestation = {
+	schemaVersion: "naia-memory-public-dataset-author-attestation-v1";
+	author: string;
+	datasetSha256: string;
+	statement: "AUTHORED_INDEPENDENTLY";
+	signatureBase64: string;
+};
+
+export type PublicDatasetNativeReviewAttestation = {
+	schemaVersion: "naia-memory-public-dataset-native-review-v1";
+	reviewer: string;
+	language: string;
+	datasetSha256: string;
+	verdict: "PASS";
+	signatureBase64: string;
+};
+
+export type PublicDatasetProvenance = {
+	schemaVersion: "naia-memory-public-dataset-provenance-v1";
+	datasetSha256: string;
+	authors: PublicDatasetAuthorAttestation[];
+	nativeReviews: PublicDatasetNativeReviewAttestation[];
 };
 
 export const PUBLIC_EVIDENCE_SHA256 = /^[a-f0-9]{64}$/;

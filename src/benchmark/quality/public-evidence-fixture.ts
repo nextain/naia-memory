@@ -33,6 +33,10 @@ export const identities = [
 	"runner-naia",
 	"runner-competitor-a",
 	"runner-competitor-b",
+	"author-1",
+	"reviewer-ko",
+	"reviewer-en",
+	"reviewer-ja",
 ] as const;
 export const keys = Object.fromEntries(
 	identities.map((identity) => [identity, generateKeyPairSync("ed25519")]),
@@ -61,6 +65,27 @@ export const trustPolicy: PublicEvidenceTrustPolicy = {
 			.export({ type: "spki", format: "pem" })
 			.toString(),
 	},
+	datasetAuthorPublicKeys: {
+		"author-1": keys["author-1"].publicKey
+			.export({ type: "spki", format: "pem" })
+			.toString(),
+	},
+	nativeReviewerPublicKeysByLanguage: Object.fromEntries(
+		["ko", "en", "ja"].map((language) => {
+			const identity = `reviewer-${language}` as
+				| "reviewer-ko"
+				| "reviewer-en"
+				| "reviewer-ja";
+			return [
+				language,
+				{
+					[identity]: keys[identity].publicKey
+						.export({ type: "spki", format: "pem" })
+						.toString(),
+				},
+			];
+		}),
+	),
 	challengeIssuerPublicKeys: {
 		"independent-challenge-service": keys[
 			"independent-challenge-service"
@@ -69,14 +94,14 @@ export const trustPolicy: PublicEvidenceTrustPolicy = {
 			.toString(),
 	},
 	runnerPublicKeys: Object.fromEntries(
-		identities
-			.slice(6)
-			.map((identity) => [
+		["runner-naia", "runner-competitor-a", "runner-competitor-b"].map(
+			(identity) => [
 				identity,
-				keys[identity].publicKey
+				keys[identity as "runner-naia"].publicKey
 					.export({ type: "spki", format: "pem" })
 					.toString(),
-			]),
+			],
+		),
 	),
 	approvedScoringPolicies: {
 		[PUBLIC_RETRIEVAL_SCORING_POLICY_ID]: createHash("sha256")
@@ -144,7 +169,7 @@ export function engine(engine: string, kind: "naia" | "external") {
 
 export function validManifest(): PublicEvidenceManifest {
 	const manifest: PublicEvidenceManifest = {
-		schemaVersion: "naia-memory-public-evidence-v4",
+		schemaVersion: "naia-memory-public-evidence-v5",
 		publisher: "nextain-release",
 		signatureBase64: "",
 		claim: PUBLIC_EVIDENCE_CLAIM,
@@ -155,6 +180,8 @@ export function validManifest(): PublicEvidenceManifest {
 			nativeReviewStatus: "reviewed",
 			sealedBeforeRun: true,
 			sha256: hash,
+			provenancePath: "dataset.provenance.json",
+			provenanceSha256: hash,
 			caseCount: 120,
 			languageCaseCounts: { ko: 40, en: 40, ja: 40 },
 			authorIds: ["author-1"],
@@ -305,6 +332,41 @@ export async function writeValidEvidence(
 	await writeFile(join(root, manifest.dataset.path), datasetBytes);
 	manifest.dataset.sha256 = datasetSha256;
 	manifest.protocol.sameInputSha256 = datasetSha256;
+	const provenanceBytes = JSON.stringify({
+		schemaVersion: "naia-memory-public-dataset-provenance-v1",
+		datasetSha256,
+		authors: manifest.dataset.authorIds.map((author) =>
+			signed(
+				{
+					schemaVersion: "naia-memory-public-dataset-author-attestation-v1",
+					author,
+					datasetSha256,
+					statement: "AUTHORED_INDEPENDENTLY",
+				},
+				author as "author-1",
+			),
+		),
+		nativeReviews: Object.entries(
+			manifest.dataset.reviewerIdsByLanguage,
+		).flatMap(([language, reviewers]) =>
+			reviewers.map((reviewer) =>
+				signed(
+					{
+						schemaVersion: "naia-memory-public-dataset-native-review-v1",
+						reviewer,
+						language,
+						datasetSha256,
+						verdict: "PASS",
+					},
+					reviewer as "reviewer-ko",
+				),
+			),
+		),
+	});
+	await writeFile(join(root, manifest.dataset.provenancePath), provenanceBytes);
+	manifest.dataset.provenanceSha256 = createHash("sha256")
+		.update(provenanceBytes)
+		.digest("hex");
 	const scorer = JSON.stringify(PUBLIC_RETRIEVAL_SCORING_POLICY);
 	await writeFile(join(root, manifest.protocol.scorerArtifactPath), scorer);
 	manifest.protocol.scorerArtifactSha256 = createHash("sha256")

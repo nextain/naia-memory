@@ -6,6 +6,7 @@ import { hasValidEvidenceSignature } from "./public-evidence-crypto.js";
 import type {
 	PublicAdversarialReview,
 	PublicDatasetCase,
+	PublicDatasetProvenance,
 	PublicEvidenceDataset,
 	PublicEvidenceEngine,
 	PublicEvidenceManifest,
@@ -19,7 +20,13 @@ import { PUBLIC_RETRIEVAL_SCORING_POLICY } from "./public-retrieval-scorer.js";
 
 type EvidenceFile =
 	| {
-			kind: "dataset" | "scorer" | "artifact" | "configuration" | "review";
+			kind:
+				| "dataset"
+				| "provenance"
+				| "scorer"
+				| "artifact"
+				| "configuration"
+				| "review";
 			label: string;
 			path: string;
 			sha256: string;
@@ -71,6 +78,103 @@ function isReview(value: unknown): value is PublicAdversarialReview {
 		typeof value.verdict === "string" &&
 		typeof value.signatureBase64 === "string"
 	);
+}
+
+function isDatasetProvenance(value: unknown): value is PublicDatasetProvenance {
+	return (
+		isPublicEvidenceRecord(value) &&
+		value.schemaVersion === "naia-memory-public-dataset-provenance-v1" &&
+		typeof value.datasetSha256 === "string" &&
+		Array.isArray(value.authors) &&
+		Array.isArray(value.nativeReviews)
+	);
+}
+
+function compareDatasetProvenance(
+	provenance: PublicDatasetProvenance,
+	manifest: PublicEvidenceManifest["dataset"],
+	trustPolicy: PublicEvidenceTrustPolicy,
+): string[] {
+	const failures: string[] = [];
+	if (provenance.datasetSha256 !== manifest.sha256)
+		failures.push("dataset provenance hash binding mismatch");
+	const authorIds: string[] = [];
+	for (const author of provenance.authors) {
+		if (
+			!isPublicEvidenceRecord(author) ||
+			author.schemaVersion !==
+				"naia-memory-public-dataset-author-attestation-v1" ||
+			typeof author.author !== "string" ||
+			typeof author.datasetSha256 !== "string" ||
+			author.statement !== "AUTHORED_INDEPENDENTLY" ||
+			typeof author.signatureBase64 !== "string"
+		) {
+			failures.push("dataset author attestation shape is invalid");
+			continue;
+		}
+		authorIds.push(author.author);
+		if (author.datasetSha256 !== manifest.sha256)
+			failures.push(`${author.author}: author attestation dataset mismatch`);
+		if (
+			!hasValidEvidenceSignature(
+				author,
+				trustPolicy.datasetAuthorPublicKeys[author.author],
+			)
+		)
+			failures.push(
+				`${author.author}: author attestation is untrusted or invalid`,
+			);
+	}
+	const nativeReviewerIdsByLanguage: Record<string, string[]> = {};
+	for (const review of provenance.nativeReviews) {
+		if (
+			!isPublicEvidenceRecord(review) ||
+			review.schemaVersion !== "naia-memory-public-dataset-native-review-v1" ||
+			typeof review.reviewer !== "string" ||
+			typeof review.language !== "string" ||
+			typeof review.datasetSha256 !== "string" ||
+			review.verdict !== "PASS" ||
+			typeof review.signatureBase64 !== "string"
+		) {
+			failures.push("dataset native review attestation shape is invalid");
+			continue;
+		}
+		const languageReviewers =
+			nativeReviewerIdsByLanguage[review.language] ?? [];
+		languageReviewers.push(review.reviewer);
+		nativeReviewerIdsByLanguage[review.language] = languageReviewers;
+		if (review.datasetSha256 !== manifest.sha256)
+			failures.push(`${review.reviewer}: native review dataset mismatch`);
+		if (
+			!hasValidEvidenceSignature(
+				review,
+				trustPolicy.nativeReviewerPublicKeysByLanguage[review.language]?.[
+					review.reviewer
+				],
+			)
+		)
+			failures.push(
+				`${review.reviewer}: native review attestation is untrusted or invalid`,
+			);
+	}
+	const normalized = (items: string[]) => [...items].sort();
+	if (!isDeepStrictEqual(normalized(authorIds), normalized(manifest.authorIds)))
+		failures.push("dataset author attestations do not match manifest");
+	for (const language of Object.keys(manifest.reviewerIdsByLanguage)) {
+		if (
+			!isDeepStrictEqual(
+				normalized(nativeReviewerIdsByLanguage[language] ?? []),
+				normalized(manifest.reviewerIdsByLanguage[language]),
+			)
+		)
+			failures.push(
+				`${language} native review attestations do not match manifest`,
+			);
+	}
+	for (const language of Object.keys(nativeReviewerIdsByLanguage))
+		if (!(language in manifest.reviewerIdsByLanguage))
+			failures.push(`${language} native review attestation is undeclared`);
+	return failures;
 }
 
 function escapesRoot(root: string, target: string): boolean {
@@ -174,6 +278,12 @@ function evidenceFiles(manifest: PublicEvidenceManifest): EvidenceFile[] {
 			label: "dataset",
 			path: manifest.dataset.path,
 			sha256: manifest.dataset.sha256,
+		},
+		{
+			kind: "provenance",
+			label: "dataset provenance",
+			path: manifest.dataset.provenancePath,
+			sha256: manifest.dataset.provenanceSha256,
 		},
 		{
 			kind: "scorer",
@@ -294,6 +404,15 @@ export async function loadPublicEvidenceFiles(
 
 	for (const { item, parsed } of loadedJson) {
 		if (item.kind === "dataset") continue;
+		if (item.kind === "provenance") {
+			if (!isDatasetProvenance(parsed))
+				failures.push("dataset provenance content shape is invalid");
+			else
+				failures.push(
+					...compareDatasetProvenance(parsed, manifest.dataset, trustPolicy),
+				);
+			continue;
+		}
 		if (item.kind === "scorer") {
 			if (!isDeepStrictEqual(parsed, PUBLIC_RETRIEVAL_SCORING_POLICY))
 				failures.push("scorer artifact semantics mismatch");

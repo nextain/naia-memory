@@ -24,6 +24,7 @@ export type {
 	PublicEvidenceManifest,
 	PublicEvidenceReceipt,
 	PublicEvidenceTrustPolicy,
+	PublicDatasetProvenance,
 } from "./public-evidence-types.js";
 export {
 	publicCaseJudgmentSha256,
@@ -54,11 +55,23 @@ function validateTrustPolicy(
 		["publisher", trustPolicy.publisherPublicKeys],
 		["engine", trustPolicy.enginePublicKeys],
 		["reviewer", trustPolicy.reviewerPublicKeys],
+		["dataset author", trustPolicy.datasetAuthorPublicKeys],
 		["challenge issuer", trustPolicy.challengeIssuerPublicKeys],
 		["runner", trustPolicy.runnerPublicKeys],
 	] as const;
-	const roleKeys = roleGroups.flatMap(([role, keys]) =>
-		Object.entries(keys).map(([identity, key]) => ({ identity, key, role })),
+	const roleKeys: { identity: string; key: string; role: string }[] =
+		roleGroups.flatMap(([role, keys]) =>
+			Object.entries(keys).map(([identity, key]) => ({ identity, key, role })),
+		);
+	roleKeys.push(
+		...Object.values(trustPolicy.nativeReviewerPublicKeysByLanguage).flatMap(
+			(keys) =>
+				Object.entries(keys).map(([identity, key]) => ({
+					identity,
+					key,
+					role: "native reviewer",
+				})),
+		),
 	);
 	const keyOwners = new Map<string, string>();
 	const identityRoles = new Map<string, string>();

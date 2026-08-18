@@ -4,7 +4,7 @@
   "contract_digest": "7761784226076edd4e686cf37e3f4d60fceeba5a7f24a54c7ed59e1d1dced14d",
   "issue": "https://github.com/nextain/naia-memory/issues/12#issuecomment-5301734882",
   "current_phase": "in-progress",
-  "current_task": "Tamper-evident public execution evidence is implemented and twice adversarially reviewed. Next: produce an independently owned ko/en/ja corpus and collect verifier-challenged same-input receipts from Naia and at least two global engines.",
+  "current_task": "Signed dataset-author and language-scoped native-review provenance is implemented, deterministically verified, and adversarially reviewed CLEAN/CLEAN. Next produce an independently owned ko/en/ja corpus and collect verifier-challenged same-input receipts from Naia and at least two global engines.",
   "gates_cleared": ["P01", "P02", "P03", "P04", "P05"],
   "key_decisions": [
     "Use CPU only; GPU 1 belongs to another session.",
@@ -37,6 +37,8 @@
     ,"Authorize only the exact claim that artifacts are tamper-evident under the frozen public evidence protocol; reject performance, multilingual-quality, generalization, organizational-independence, and semantic-execution claims."
     ,"Reject non-zero result claims on unexecuted engines and require receipt hash completeness against the full executed-engine set."
     ,"Keep public readiness blocked until externally owned corpus, challenge, runner, and real global-engine receipts exist; this gate improves evidence integrity, not benchmark performance."
+    ,"Reject publisher self-attestation as proof of corpus independence: require trusted author signatures and language-scoped native-reviewer signatures bound to the exact dataset digest."
+    ,"Accept the provenance gate after two unchanged-tree OpenCode/DeepSeek adversarial rounds returned CLEAN; record that Claude headless failed and an additional Azure-hosted GPT review was rate-limited, so this is not a multi-model consensus claim."
   ],
   "evidence": {
     "commit": "1a9dcab",
@@ -103,7 +105,11 @@
       ,"Public execution evidence full suite: 36 files, 490 tests passed"
       ,"Biome public evidence checks, strict main/benchmark typecheck, production build, and git diff --check passed"
       ,"Two consecutive unchanged-tree adversarial rounds: security CLEAN/CLEAN, claim scope CLEAN/CLEAN, architecture ACCEPTED/ACCEPTED"
+      ,"Public dataset provenance full suite: 36 files, 494 tests passed"
+      ,"Strict main/benchmark typecheck, production build, Biome checks, doc graph, and git diff --check passed"
+      ,"Public dataset provenance unchanged-tree OpenCode/DeepSeek adversarial review: CLEAN/CLEAN; no actionable signature replay, role/language confusion, undeclared-language, key-reuse, or fail-open defect"
+      ,"Review diversity limitation: Claude headless failed to complete and an additional Azure-hosted GPT review was rate-limited"
     ]
   },
-  "updated_at": "2026-08-18T16:48:00+09:00"
+  "updated_at": "2026-08-18T18:10:00+09:00"
 }

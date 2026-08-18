@@ -8,6 +8,10 @@
 
 개발자는 고정된 공개 한국어 평가 세트와 별도의 보류 세트를 사용해 검색 로직 변경 전후를 재실행한다. 검색 계층은 후보 문서를 반환할 뿐 응답 또는 abstention 결정을 하지 않는다. 범주별 가중치나 임계값을 조정하지 않고 하나의 동일한 설정으로 모든 질의를 평가한다.
 
+## UC-BENCH-03 — 검증자가 독립 다국어 데이터셋의 출처를 확인한다
+
+검증자는 게시자의 “독립 작성” 표기만 신뢰하지 않고 데이터셋 해시에 결박된 저자 서명과 언어별 원어민 검수 서명을 확인한다. 한국어 검수자의 유효한 서명이라도 영어 검수 증거로 제출되면 공개 비교를 승인하지 않는다.
+
 ## UC-MEM-01 — 사용자가 바뀐 단일값 사실을 현재값과 이력으로 모두 신뢰한다
 
 사용자는 “성수동에 산다” 뒤 “판교로 이사했다”처럼 같은 대상·속성의 값이 바뀌었을 때, 최신 회상에서는 판교만 우선 보되 이력 회상에서는 두 원문과 각 출처를 추적할 수 있기를 원한다. 추출기가 대상·속성을 확실히 식별하지 못하면 시스템은 어떤 원문도 자동으로 대체하지 않는다.
@@ -23,5 +27,6 @@
 | UC-BENCH-01 | 결과 영수증의 시각·리비전·데이터셋 해시·환경 누락 방지 | `src/benchmark/**` 검증 및 생성 벤치마크 결과 |
 | UC-BENCH-01 | 한국어 실패 유형과 기대/금지 후보 라벨의 구조 | `BENCH_VALIDATE_ONLY=1 pnpm exec tsx src/benchmark/quality/korean-retrieval-contract.ts` |
 | UC-BENCH-02 | 동일 설정으로 전체 범주를 평가하고 retrieval만 채점 | `BENCH_SEARCH_MODE=rrf|vector-only pnpm exec tsx src/benchmark/quality/korean-retrieval-contract.ts` |
+| UC-BENCH-03 | 데이터셋 저자·언어별 원어민 검수의 신뢰 키, 서명, 목록 일치 | `src/benchmark/quality/public-evidence-review.test.ts` — provenance forgery and cross-language trust attacks |
 | UC-MEM-01 | 동일 subject/property의 단일값 변경만 supersede하고 원본·출처·시간 체인을 보존 | `src/memory/__tests__/memory-system.test.ts` — Korean current/history, ambiguity, multi-value cases |
 | UC-MEM-02 | 구조화 추출이 없는 비한국어 사실은 기존 검색·저장을 유지하고, 구조가 있으면 언어 중립 비교로 체인 연결 | `src/memory/__tests__/memory-system.test.ts` — English/Japanese fallback and normalized-key cases |

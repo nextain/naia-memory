@@ -28,6 +28,94 @@ import {
 } from "./public-retrieval-scorer.js";
 
 describe("public evidence review attacks", () => {
+	it("rejects publisher-asserted authorship without a trusted author signature", async () => {
+		const root = await mkdtemp(
+			join(tmpdir(), "naia-public-provenance-author-"),
+		);
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const path = join(root, manifest.dataset.provenancePath);
+			const provenance = JSON.parse(await readFile(path, "utf8"));
+			provenance.authors[0].signatureBase64 = "A".repeat(88);
+			const bytes = JSON.stringify(provenance);
+			await writeFile(path, bytes);
+			manifest.dataset.provenanceSha256 = createHash("sha256")
+				.update(bytes)
+				.digest("hex");
+			expect(
+				(await evaluatePublicEvidenceFiles(manifest, root, trustPolicy))
+					.failures,
+			).toContain("author-1: author attestation is untrusted or invalid");
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects a native review signature replayed for another language", async () => {
+		const root = await mkdtemp(
+			join(tmpdir(), "naia-public-provenance-native-"),
+		);
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const path = join(root, manifest.dataset.provenancePath);
+			const provenance = JSON.parse(await readFile(path, "utf8"));
+			provenance.nativeReviews[0].language = "en";
+			const bytes = JSON.stringify(provenance);
+			await writeFile(path, bytes);
+			manifest.dataset.provenanceSha256 = createHash("sha256")
+				.update(bytes)
+				.digest("hex");
+			const failures = (
+				await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)
+			).failures;
+			expect(failures).toEqual(
+				expect.arrayContaining([
+					"reviewer-ko: native review attestation is untrusted or invalid",
+					"ko native review attestations do not match manifest",
+					"en native review attestations do not match manifest",
+				]),
+			);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects a valid signature from a reviewer not trusted for that language", async () => {
+		const root = await mkdtemp(
+			join(tmpdir(), "naia-public-provenance-language-scope-"),
+		);
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const path = join(root, manifest.dataset.provenancePath);
+			const provenance = JSON.parse(await readFile(path, "utf8"));
+			const review = provenance.nativeReviews.find(
+				(candidate: { language: string }) => candidate.language === "en",
+			);
+			review.reviewer = "reviewer-ko";
+			review.signatureBase64 = sign(
+				null,
+				publicEvidenceSignaturePayload(review),
+				keys["reviewer-ko"].privateKey,
+			).toString("base64");
+			const bytes = JSON.stringify(provenance);
+			await writeFile(path, bytes);
+			manifest.dataset.provenanceSha256 = createHash("sha256")
+				.update(bytes)
+				.digest("hex");
+			const failures = (
+				await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)
+			).failures;
+			expect(failures).toContain(
+				"reviewer-ko: native review attestation is untrusted or invalid",
+			);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
 	it("derives case and language counts from dataset contents and binds engine kind", async () => {
 		const root = await mkdtemp(
 			join(tmpdir(), "naia-public-evidence-semantics-"),
