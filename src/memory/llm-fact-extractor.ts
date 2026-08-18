@@ -47,6 +47,24 @@ const DEFAULT_MODEL = USE_GATEWAY
 	: "gemini-2.5-flash-lite";
 const DEFAULT_BATCH_SIZE = 10;
 
+const EXTRACTOR_SUBJECT_IDS = new Set(["person:self"]);
+const EXTRACTOR_PROPERTY_IDS = new Set([
+	"profile:name",
+	"profile:pronouns",
+	"profile:residence",
+	"profile:occupation",
+	"profile:organization",
+	"profile:timezone",
+	"profile:language",
+	"profile:allergy",
+	"profile:diet",
+	"profile:medication",
+	"profile:beverage-consumption",
+	"preference:editor",
+	"preference:tool",
+	"preference:communication",
+]);
+
 /**
  * Factory: returns a FactExtractor function that calls Gemini Flash.
  * Pass the result as `factExtractor` in MemorySystemOptions.
@@ -170,26 +188,37 @@ Do not turn the request into a new negated fact. Delete requires complete
 subject, property, value, polarity="affirmed", and cardinality. Never infer a
 delete from uncertainty, correction, temporary exceptions, or ordinary negation.
 
-Korean-specific rules (apply when episode is Korean):
-- 한국어 에피소드에서는 반드시 한국어로 fact를 작성. 영어로 번역하지 마라.
-- 조사(은/는/이/가/을/를)는 생략하고 명사구 중심으로 작성: "사용자 직업: 소프트웨어 엔지니어"
-- 고유명사(회사명, 제품명, 사람 이름)는 원형 그대로 보존.
-- 영어 혼용(Konglish)은 원문 그대로 유지: "VS Code", "React", "TypeScript"
-- 한국어 fact 예시:
-  {"1": ["사용자 선호 에디터: VS Code", "사용자 코딩 스타일: 탭 들여쓰기", "사용자 거주지: 서울"]}
+Language-preservation rules (apply independently to every episode):
+- Never translate the fact, structured labels, or value into another language.
+- Korean: omit particles when a compact noun phrase is natural, and preserve
+  mixed English product names. Example: "사용자 거주지: 서울".
+- English: use English labels and values. Example: "User residence: London".
+- Japanese: use Japanese labels and values. Example: "ユーザーの居住地: 東京".
+- Preserve proper nouns and product names exactly in every language.
 
 Conversation turns:
 ${episodeList}
 
 For a fact whose subject, property, and single-vs-multi value are explicit,
-you MAY attach structure. Never guess a missing field. Keep all labels and
+you MUST attach structure. Never guess a missing field. Keep all labels and
 values in the episode's original language. Use "single" only for one current
 value; use "multi" for lists, skills, or preferences that can coexist.
 
+When the identity is unambiguous and belongs to this vocabulary, you MUST
+attach BOTH language-independent IDs from
+the closed vocabulary below. Never invent an ID, attach only one ID, or force
+an unknown concept into the nearest category. Omit both IDs when uncertain.
+- subjectId: "person:self" only for the speaker/user
+- propertyId: "profile:name", "profile:pronouns", "profile:residence",
+  "profile:occupation", "profile:organization", "profile:timezone",
+  "profile:language", "profile:allergy", "profile:diet",
+  "profile:medication", "profile:beverage-consumption",
+  "preference:editor", "preference:tool", or "preference:communication"
+
 Respond with ONLY a JSON object mapping episode number to fact array. No other text.
 Backward-compatible format: {"1": ["fact", ...], "2": ["fact", ...], ...}
-Structured format: {"1": [{"content":"사용자 거주지: 서울","operation":"upsert","structured":{"subject":"사용자","property":"거주지","value":"서울","polarity":"affirmed","cardinality":"single"}}], ...}
-Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"delete","structured":{"subject":"사용자","property":"알레르기","value":"땅콩","polarity":"affirmed","cardinality":"multi"}}]}`;
+Structured format: {"1": [{"content":"사용자 거주지: 서울","operation":"upsert","structured":{"subject":"사용자","subjectId":"person:self","property":"거주지","propertyId":"profile:residence","value":"서울","polarity":"affirmed","cardinality":"single"}}], ...}
+Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"delete","structured":{"subject":"사용자","subjectId":"person:self","property":"알레르기","propertyId":"profile:allergy","value":"땅콩","polarity":"affirmed","cardinality":"multi"}}]}`;
 
 	const call = () =>
 		fetch(`${baseURL}chat/completions`, {
@@ -336,9 +365,21 @@ function parseStructuredFact(value: unknown): StructuredFact | undefined {
 		(candidate.cardinality !== "single" && candidate.cardinality !== "multi")
 	)
 		return undefined;
+	const subjectId =
+		typeof candidate.subjectId === "string" &&
+		EXTRACTOR_SUBJECT_IDS.has(candidate.subjectId)
+			? candidate.subjectId
+			: undefined;
+	const propertyId =
+		typeof candidate.propertyId === "string" &&
+		EXTRACTOR_PROPERTY_IDS.has(candidate.propertyId)
+			? candidate.propertyId
+			: undefined;
+	const identityIds = subjectId && propertyId ? { subjectId, propertyId } : {};
 	return {
 		subject: candidate.subject,
 		property: candidate.property,
+		...identityIds,
 		value: candidate.value,
 		polarity: candidate.polarity,
 		cardinality: candidate.cardinality,

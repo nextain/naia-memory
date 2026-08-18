@@ -15,6 +15,16 @@ import {
 } from "./structured-facts.js";
 import type { ConsolidationResult, Fact } from "./types.js";
 
+function normalizedContent(value: string): string {
+	return value
+		.normalize("NFC")
+		.trim()
+		.replace(/[.。!?！？]+$/u, "")
+		.trimEnd()
+		.replace(/\s+/g, " ")
+		.toLocaleLowerCase();
+}
+
 /** Sleep-cycle consolidation and adapter backup operations. */
 export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 	private consolidationTimer: ReturnType<typeof setInterval> | null = null;
@@ -155,8 +165,11 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					const duplicate = ef.structured
 						? existingFacts.find(
 								(fact) =>
-									!!fact.structured &&
-									sameStructuredFact(fact.structured, ef.structured!),
+									fact.status === "active" &&
+									(normalizedContent(fact.content) ===
+										normalizedContent(ef.content) ||
+										(!!fact.structured &&
+											sameStructuredFact(fact.structured, ef.structured!))),
 							)
 						: existingFacts.find((f) => {
 								const sim = jaccardSimilarity(

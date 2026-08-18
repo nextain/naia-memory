@@ -94,9 +94,11 @@ describe("OpenAI-compatible LLM auth", () => {
 											"1": [
 												{
 													content: "사용자 거주지: 서울",
-													structured: {
-														subject: "사용자",
-														property: "거주지",
+											structured: {
+												subject: "사용자",
+												subjectId: "person:self",
+												property: "거주지",
+												propertyId: "profile:residence",
 														value: "서울",
 														polarity: "affirmed",
 														cardinality: "single",
@@ -109,9 +111,11 @@ describe("OpenAI-compatible LLM auth", () => {
 												{
 													content: "사용자 알레르기: 땅콩",
 													operation: "delete",
-													structured: {
-														subject: "사용자",
-														property: "알레르기",
+											structured: {
+												subject: "사용자",
+												subjectId: "person:self",
+												property: "알레르기",
+												propertyId: "invented:allergy",
 														value: "땅콩",
 														polarity: "affirmed",
 														cardinality: "multi",
@@ -137,7 +141,9 @@ describe("OpenAI-compatible LLM auth", () => {
 		expect(facts).toHaveLength(3);
 		expect(facts[0].structured).toEqual({
 			subject: "사용자",
+			subjectId: "person:self",
 			property: "거주지",
+			propertyId: "profile:residence",
 			value: "서울",
 			polarity: "affirmed",
 			cardinality: "single",
@@ -147,6 +153,8 @@ describe("OpenAI-compatible LLM auth", () => {
 		expect(facts[1].operation).toBe("upsert");
 		expect(facts[2].operation).toBe("delete");
 		expect(facts[2].structured?.value).toBe("땅콩");
+		expect(facts[2].structured?.subjectId).toBeUndefined();
+		expect(facts[2].structured?.propertyId).toBeUndefined();
 	});
 
 	it("fact extractor benchmark policy throws on provider and parse failures", async () => {

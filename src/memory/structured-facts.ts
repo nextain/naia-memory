@@ -8,6 +8,15 @@ function opaqueId(value: string | undefined): string {
 	return value?.normalize("NFC").trim() ?? "";
 }
 
+function sameMultiValue(left: string, right: string): boolean {
+	const a = comparisonKey(left);
+	const b = comparisonKey(right);
+	if (a === b) return true;
+	if (!/^[a-z]{4,}$/.test(a) || !/^[a-z]{4,}$/.test(b)) return false;
+	const [shorter, longer] = a.length < b.length ? [a, b] : [b, a];
+	return !shorter.endsWith("s") && longer === `${shorter}s`;
+}
+
 /**
  * Compares a subject/property pair without interpreting either language.
  * Complete opaque IDs take precedence; labels are the migration fallback.
@@ -52,7 +61,9 @@ export function sameStructuredFact(
 ): boolean {
 	return (
 		sameStructuredIdentity(left, right) &&
-		comparisonKey(left.value) === comparisonKey(right.value) &&
+		(left.cardinality === "multi"
+			? sameMultiValue(left.value, right.value)
+			: comparisonKey(left.value) === comparisonKey(right.value)) &&
 		left.polarity === right.polarity &&
 		left.cardinality === right.cardinality
 	);

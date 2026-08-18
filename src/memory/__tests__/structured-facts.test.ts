@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { LocalAdapter } from "../adapters/local.js";
 import { MemorySystem } from "../index.js";
+import { sameStructuredFact } from "../structured-facts.js";
 import type {
 	EncodingContext,
 	Episode,
@@ -40,6 +41,77 @@ const RECALL_CTX: RecallContext = { topK: 20 };
 function input(overrides: Partial<MemoryInput> = {}): MemoryInput {
 	return { content: "", role: "user", ...overrides };
 }
+
+describe("structured value comparison safety", () => {
+	const base: StructuredFact = {
+		subject: "user",
+		subjectId: "person:self",
+		property: "allergy",
+		propertyId: "profile:allergy",
+		value: "peanut",
+		polarity: "affirmed",
+		cardinality: "multi",
+	};
+
+	it("accepts a terminal-s variant only for a one-token multi value", () => {
+		expect(sameStructuredFact(base, { ...base, value: "peanuts" })).toBe(true);
+		expect(
+			sameStructuredFact(
+				{ ...base, cardinality: "single", value: "state" },
+				{ ...base, cardinality: "single", value: "states" },
+			),
+		).toBe(false);
+		expect(
+			sameStructuredFact(base, { ...base, value: "tree nuts" }),
+		).toBe(false);
+		expect(sameStructuredFact(base, { ...base, value: "땅콩들" })).toBe(
+			false,
+		);
+	});
+});
+
+describe("structured consolidation idempotency", () => {
+	it("deduplicates exact active content when extractor structure drifts", async () => {
+		let extraction = 0;
+		const content = "ユーザーはコーヒーを飲みません";
+		const { system, adapter } = makeSystem({
+			factExtractor: async (episodes) => {
+				extraction++;
+				return episodes.map((ep) => ({
+					content: extraction === 1 ? `${content}。` : content,
+					entities: [],
+					topics: [],
+					importance: 0.8,
+					sourceEpisodeIds: [ep.id],
+					structured:
+						extraction === 2
+							? {
+									subject: "user",
+									subjectId: "person:self",
+									property: "beverage consumption",
+									propertyId: "profile:beverage-consumption",
+									value: "coffee",
+									polarity: "negated" as const,
+									cardinality: "multi" as const,
+								}
+							: undefined,
+				}));
+			},
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		await system.encode(input({ content, timestamp }), DEFAULT_CTX);
+		await system.consolidateNow(true);
+		await system.encode(input({ content, timestamp: timestamp + 1 }), DEFAULT_CTX);
+		await system.consolidateNow(true);
+
+		const active = (await adapter.semantic.getAll()).filter(
+			(fact) => fact.status === "active",
+		);
+		expect(active).toHaveLength(1);
+		expect(active[0].sourceEpisodes).toHaveLength(2);
+		await system.close();
+	});
+});
 
 describe("[D.2 RC-04 integration] value-replacement flows through consolidation", () => {
 	it("MR-05 encode old fact → consolidate → encode replacement → consolidate → recall returns the replacement only", async () => {
@@ -497,6 +569,43 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 
 		expect(result.factsUpdated).toBe(0);
 		expect((await adapter.semantic.getAll())[0].status).toBe("active");
+		await system.close();
+	});
+
+	it("uses complete ontology IDs across language label drift for exact deletion", async () => {
+		const storedContent = "User allergy: peanut";
+		const deleteContent = "땅콩 알레르기 기억은 지워줘";
+		const { system, adapter } = makeSystem({
+			factExtractor: async (episodes) =>
+				episodes.map((ep) => ({
+					content: ep.content,
+					entities: [],
+					topics: [],
+					importance: 0.8,
+					sourceEpisodeIds: [ep.id],
+					structured: {
+						subject: ep.content === deleteContent ? "사용자" : "user",
+						subjectId: "person:self",
+						property: ep.content === deleteContent ? "알레르기" : "allergy",
+						propertyId: "profile:allergy",
+						value: ep.content === deleteContent ? "peanuts" : "peanut",
+						polarity: "affirmed" as const,
+						cardinality: "multi" as const,
+					},
+					operation: ep.content === deleteContent ? "delete" : "upsert",
+				})),
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		await system.encode(input({ content: storedContent, timestamp }), DEFAULT_CTX);
+		await system.consolidateNow(true);
+		await system.encode(
+			input({ content: deleteContent, timestamp: timestamp + 1 }),
+			DEFAULT_CTX,
+		);
+		const result = await system.consolidateNow(true);
+
+		expect(result.factsUpdated).toBe(1);
+		expect((await adapter.semantic.getAll())[0].status).toBe("archived");
 		await system.close();
 	});
 });

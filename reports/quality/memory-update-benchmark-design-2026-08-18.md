@@ -238,6 +238,54 @@ blind judge exists yet.
 | ja delete | no deleted fact retrieved | no deleted fact retrieved | no deleted fact retrieved |
 | ja no-update | duplicate variants | one fact | one fact |
 
+## 2026-08-19 language-neutral identity and idempotency checkpoint
+
+The extractor now emits a closed, language-neutral identity pair for explicit
+user profile and preference facts. Both `subjectId` and `propertyId` must be
+present and belong to the allowlist; partial, unknown, and invented identifiers
+are discarded as a pair. Labels and values remain in the episode language.
+This lets Korean, English, and Japanese labels converge on the same mutation
+identity without translating stored content.
+
+Two model-output drifts were observed rather than assumed. First, the
+Korean-only prompt examples biased an English allergy fact into Korean. The
+prompt now gives symmetric Korean, English, and Japanese language-preservation
+rules. Second, an English delete emitted `peanuts` for a stored `peanut` value.
+Deletion remains fail-closed, but a multi-valued, one-token ASCII value now
+accepts only the narrow terminal-`s` variant. Single-valued facts, phrases, and
+non-ASCII values do not receive this morphology rule.
+
+Repeated no-update turns exposed structure-presence and punctuation drift.
+Consolidation now treats active facts with identical NFC-normalized content as
+idempotent even when extractor structure differs, ignoring only whitespace,
+case, and terminal sentence punctuation. It does not fuzzy-merge different
+content. A regression test covers Japanese terminal punctuation plus structured
+metadata drift.
+
+The final post-fix Gemini 2.5 Flash diagnostic execution produced the expected
+qualitative behavior in all nine generated cells:
+
+| Language | update | delete | no-update |
+|---|---|---|---|
+| Korean | latest only | retrieval empty | one active fact |
+| English | latest only | retrieval empty | one active fact |
+| Japanese | latest only | retrieval empty | one active fact |
+
+This is a meaningful implementation result, not publication evidence. Earlier
+intermediate repeats exposed English and Japanese no-update instability, and
+the nine cases directly informed these changes. They are therefore a
+development set susceptible to overfitting. The closed ontology covers only a
+small profile/preference vocabulary, the morphology exception is deliberately
+English-specific, all live runs used one Gemini model/provider, and no native
+speaker blind review or external-engine rerun was performed at this checkpoint.
+No global superiority claim follows. The next evidence gate remains a frozen
+held-out corpus with unseen property families, native independent authorship,
+repeated seeds/models, and Mem0 plus another production engine under the same
+provider and budget contract.
+
+Deterministic verification: 47 test files / 550 tests passed, both TypeScript
+configurations passed, the package build passed, and `git diff --check` passed.
+
 This is meaningful diagnostic progress, not evidence that Naia is globally
 better. It isolates the next ceiling: extractor-generated subject/property
 identity drifts across paraphrases (for example `lives in` versus `residence`),
