@@ -3,14 +3,15 @@ import { mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { evaluatePublicEvidence, evaluatePublicEvidenceFiles, publicEvidenceScopeSha256, type PublicEvidenceManifest } from "./public-evidence-gate.js";
+import { evaluatePublicEvidence, evaluatePublicEvidenceFiles, publicCaseOutputSha256, publicEvidenceScopeSha256, summarizePublicCaseRecords, type PublicEvidenceManifest } from "./public-evidence-gate.js";
 
 const hash = "a".repeat(64);
 
 function engine(engine: string, kind: "naia" | "external") {
 	return {
 		engine, kind, implementationFamily: engine, executed: true, receiptPath: `${engine}.json`, receiptSha256: createHash("sha256").update(engine).digest("hex"), datasetSha256: hash,
-		implementationRevision: "revision", providerModels: ["provider/model@revision"],
+		implementationRevision: "revision", implementationArtifactPath: `${engine}.artifact`, implementationArtifactSha256: createHash("sha256").update(`artifact:${engine}`).digest("hex"),
+		configurationPath: `${engine}.config`, configurationSha256: createHash("sha256").update(`config:${engine}`).digest("hex"), providerModels: ["provider/model@revision"],
 		elapsedMs: 100, estimatedCostUsd: 0, failureCount: 0,
 		primaryMetric: { name: "hit@1", value: 0.8, ci95Low: 0.7, ci95High: 0.9 },
 	};
@@ -18,7 +19,7 @@ function engine(engine: string, kind: "naia" | "external") {
 
 function validManifest(): PublicEvidenceManifest {
 	const manifest: PublicEvidenceManifest = {
-		schemaVersion: "naia-memory-public-evidence-v1",
+		schemaVersion: "naia-memory-public-evidence-v2",
 		claim: "Naia improves current-fact retrieval under the frozen protocol.",
 		dataset: {
 			path: "dataset.json",
@@ -34,36 +35,61 @@ function validManifest(): PublicEvidenceManifest {
 	return manifest;
 }
 
-function receiptBytes(manifest: PublicEvidenceManifest, engine: PublicEvidenceManifest["engines"][number]): string {
+function datasetCases() {
+	return ["ko", "en", "ja"].flatMap((language) => Array.from({ length: 40 }, (_, index) => {
+		const input = `${language} input ${index + 1}`;
+		return { id: `${language}-${index + 1}`, language, input, expected: [`expected-${index + 1}`], inputSha256: createHash("sha256").update(input).digest("hex") };
+	}));
+}
+
+function receiptBytes(manifest: PublicEvidenceManifest, engine: PublicEvidenceManifest["engines"][number], cases = datasetCases()): string {
+	const caseRecords = cases.flatMap((item, index) => Array.from({ length: manifest.protocol.repetitions }, (_, repetition) => {
+		const output = `${engine.engine} output for ${item.id} repetition ${repetition + 1}`;
+		return {
+		caseId: item.id, inputSha256: item.inputSha256, repetition: repetition + 1,
+		output, outputSha256: publicCaseOutputSha256(engine.engine, item.id, repetition + 1, output), score: index < 96 ? 1 : 0, failed: false,
+		};
+	}));
+	const summary = summarizePublicCaseRecords(caseRecords);
+	engine.failureCount = summary.failureCount;
+	engine.primaryMetric = { name: manifest.protocol.primaryMetricName, value: summary.value, ci95Low: summary.ci95Low, ci95High: summary.ci95High };
 	return JSON.stringify({
-		schemaVersion: "naia-memory-public-engine-receipt-v1",
+		schemaVersion: "naia-memory-public-engine-receipt-v2",
 		engine: engine.engine,
 		kind: engine.kind,
 		implementationFamily: engine.implementationFamily,
 		datasetSha256: engine.datasetSha256,
 		implementationRevision: engine.implementationRevision,
+		implementationArtifactPath: engine.implementationArtifactPath,
+		implementationArtifactSha256: engine.implementationArtifactSha256,
+		configurationPath: engine.configurationPath,
+		configurationSha256: engine.configurationSha256,
 		providerModels: engine.providerModels,
 		protocol: manifest.protocol,
 		elapsedMs: engine.elapsedMs,
 		estimatedCostUsd: engine.estimatedCostUsd,
 		failureCount: engine.failureCount,
 		primaryMetric: engine.primaryMetric,
+		caseRecords,
 	});
 }
 
 async function writeValidEvidence(root: string, manifest: PublicEvidenceManifest): Promise<void> {
-	const datasetBytes = JSON.stringify({
-		schemaVersion: "naia-memory-public-dataset-v1",
-		cases: ["ko", "en", "ja"].flatMap((language) =>
-			Array.from({ length: 40 }, (_, index) => ({ id: `${language}-${index + 1}`, language }))),
-	});
+	const cases = datasetCases();
+	const datasetBytes = JSON.stringify({ schemaVersion: "naia-memory-public-dataset-v2", cases });
 	const datasetSha256 = createHash("sha256").update(datasetBytes).digest("hex");
 	await writeFile(join(root, manifest.dataset.path), datasetBytes);
 	manifest.dataset.sha256 = datasetSha256;
 	manifest.protocol.sameInputSha256 = datasetSha256;
 	for (const engine of manifest.engines) {
 		engine.datasetSha256 = datasetSha256;
-		const bytes = receiptBytes(manifest, engine);
+		const artifact = `artifact:${engine.engine}`;
+		const config = `config:${engine.engine}`;
+		await writeFile(join(root, engine.implementationArtifactPath), artifact);
+		await writeFile(join(root, engine.configurationPath), config);
+		engine.implementationArtifactSha256 = createHash("sha256").update(artifact).digest("hex");
+		engine.configurationSha256 = createHash("sha256").update(config).digest("hex");
+		const bytes = receiptBytes(manifest, engine, cases);
 		await writeFile(join(root, engine.receiptPath), bytes);
 		engine.receiptSha256 = createHash("sha256").update(bytes).digest("hex");
 	}
@@ -182,7 +208,8 @@ describe("public evidence promotion gate", () => {
 		try {
 			const manifest = validManifest();
 			await writeValidEvidence(root, manifest);
-			expect((await evaluatePublicEvidenceFiles(manifest, root)).promotable).toBe(true);
+			const initialDecision = await evaluatePublicEvidenceFiles(manifest, root);
+			expect(initialDecision.failures).toEqual([]);
 
 			manifest.engines[0].receiptPath = "../outside.json";
 			const decision = await evaluatePublicEvidenceFiles(manifest, root);
@@ -211,6 +238,54 @@ describe("public evidence promotion gate", () => {
 		} finally {
 			await rm(root, { recursive: true, force: true });
 		}
+	});
+
+	it("recomputes aggregates from complete per-case records and verifies implementation bytes", async () => {
+		const root = await mkdtemp(join(tmpdir(), "naia-public-evidence-recompute-"));
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const target = manifest.engines[0];
+			const receipt = JSON.parse(await readFile(join(root, target.receiptPath), "utf8"));
+			receipt.caseRecords.pop();
+			receipt.primaryMetric.value = 1;
+			target.primaryMetric.value = 1;
+			const bytes = JSON.stringify(receipt);
+			await writeFile(join(root, target.receiptPath), bytes);
+			target.receiptSha256 = createHash("sha256").update(bytes).digest("hex");
+			await writeFile(join(root, target.implementationArtifactPath), "substituted artifact");
+			const failures = (await evaluatePublicEvidenceFiles(manifest, root)).failures;
+			expect(failures).toEqual(expect.arrayContaining([
+				"naia: receipt case coverage mismatch",
+				"naia: receipt recomputed primary metric mismatch",
+				"naia: implementation artifact content hash mismatch",
+			]));
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects case outputs copied from another engine arm", async () => {
+		const root = await mkdtemp(join(tmpdir(), "naia-public-evidence-cross-arm-"));
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const target = manifest.engines[0];
+			const donor = JSON.parse(await readFile(join(root, manifest.engines[1].receiptPath), "utf8"));
+			const receipt = JSON.parse(await readFile(join(root, target.receiptPath), "utf8"));
+			receipt.caseRecords = donor.caseRecords;
+			const bytes = JSON.stringify(receipt);
+			await writeFile(join(root, target.receiptPath), bytes);
+			target.receiptSha256 = createHash("sha256").update(bytes).digest("hex");
+			expect((await evaluatePublicEvidenceFiles(manifest, root)).failures).toContain("naia: receipt output hash is invalid");
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it("refuses to summarize empty or non-finite case evidence", () => {
+		expect(() => summarizePublicCaseRecords([])).toThrow("finite scores");
+		expect(() => summarizePublicCaseRecords([{ caseId: "x", score: Number.NaN, failed: false } as never])).toThrow("finite scores");
 	});
 
 	it("derives case and language counts from dataset contents and binds engine kind", async () => {
