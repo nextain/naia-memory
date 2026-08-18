@@ -4,7 +4,7 @@
   "contract_digest": "7761784226076edd4e686cf37e3f4d60fceeba5a7f24a54c7ed59e1d1dced14d",
   "issue": "https://github.com/nextain/naia-memory/issues/12#issuecomment-5301734882",
   "current_phase": "in-progress",
-  "current_task": "Deterministic public retrieval replay is implemented and adversarially reviewed. Next: bind receipts to independently reproduced engine execution and signed multilingual dataset attestations, then collect same-input receipts from Naia and at least two global engines.",
+  "current_task": "Tamper-evident public execution evidence is implemented and twice adversarially reviewed. Next: produce an independently owned ko/en/ja corpus and collect verifier-challenged same-input receipts from Naia and at least two global engines.",
   "gates_cleared": ["P01", "P02", "P03", "P04", "P05"],
   "key_decisions": [
     "Use CPU only; GPU 1 belongs to another session.",
@@ -34,6 +34,9 @@
     ,"Keep the public benchmark claim blocked: the v3 gate implementation passed adversarial review, but independent multilingual corpus construction and real external-engine receipts remain absent."
     ,"Replay every public retrieval record from raw signed output under exact-current-hit-at-k-v1; bind top-k to the metric identity and fail a case when any forbidden or stale ID appears in the frozen window."
     ,"Do not equate deterministic receipt consistency with execution provenance: require verifier-issued run nonces, immutable adapter/configuration/executable digests, independent reproduction, and signed corpus author/native-reviewer attestations before public comparison."
+    ,"Authorize only the exact claim that artifacts are tamper-evident under the frozen public evidence protocol; reject performance, multilingual-quality, generalization, organizational-independence, and semantic-execution claims."
+    ,"Reject non-zero result claims on unexecuted engines and require receipt hash completeness against the full executed-engine set."
+    ,"Keep public readiness blocked until externally owned corpus, challenge, runner, and real global-engine receipts exist; this gate improves evidence integrity, not benchmark performance."
   ],
   "evidence": {
     "commit": "1a9dcab",
@@ -56,6 +59,7 @@
       ,"reports/quality/structured-supersession-contract-v2-top20.json"
       ,"reports/quality/public-evidence-authenticity-gate-2026-08-18.md"
       ,"reports/quality/public-evidence-semantic-replay-2026-08-18.md"
+      ,"reports/quality/public-execution-attestation-2026-08-18.md"
     ],
     "verification": [
       "pnpm typecheck",
@@ -96,7 +100,10 @@
       ,"Public semantic replay full suite: 32 files, 474 tests passed"
       ,"pnpm typecheck and pnpm build passed after semantic replay gate"
       ,"Two adversarial rounds from OpenCode and Claude headless found no actionable replay, top-k, stale-ID, neutrality, or overfit defect; execution provenance remains explicitly out of scope"
+      ,"Public execution evidence full suite: 36 files, 490 tests passed"
+      ,"Biome public evidence checks, strict main/benchmark typecheck, production build, and git diff --check passed"
+      ,"Two consecutive unchanged-tree adversarial rounds: security CLEAN/CLEAN, claim scope CLEAN/CLEAN, architecture ACCEPTED/ACCEPTED"
     ]
   },
-  "updated_at": "2026-08-18T16:47:00+09:00"
+  "updated_at": "2026-08-18T16:48:00+09:00"
 }

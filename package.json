@@ -1,82 +1,80 @@
 {
-  "name": "@nextain/naia-memory",
-  "version": "0.1.4",
-  "description": "Naia Memory System — cognitive memory for Naia, the Visual Agent",
-  "type": "module",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nextain/naia-memory.git"
-  },
-  "keywords": [
-    "memory",
-    "ai",
-    "naia",
-    "vector-search",
-    "knowledge-graph",
-    "llm-memory"
-  ],
-  "exports": {
-    ".": {
-      "import": "./dist/memory/index.js",
-      "types": "./dist/memory/index.d.ts"
-    }
-  },
-  "types": "./dist/memory/index.d.ts",
-  "files": [
-    "dist/memory/",
-    "dist/utils/",
-    "src/memory/",
-    "src/utils/",
-    "README.md",
-    "README.en.md",
-    "LICENSE"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
-    "test": "vitest run",
-    "test:sqlite": "node scripts/test-sqlite.mjs",
-    "benchmark": "tsx src/benchmark/comparison/run-comparison.ts",
-    "check": "biome check --write ."
-  },
-  "peerDependencies": {
-    "@huggingface/transformers": "^3.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@huggingface/transformers": {
-      "optional": true
-    }
-  },
-  "dependencies": {
-    "@langchain/community": "^1.1.27",
-    "@langchain/core": "^1.1.42",
-    "@qdrant/js-client-rest": "^1.8.0",
-    "better-sqlite3": "^12.10.0",
-    "express": "^5.2.1",
-    "sqlite-vec": "^0.1.9"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.0",
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/express": "^5.0.6",
-    "@types/node": "^22.0.0",
-    "@vitest/coverage-v8": "^4.1.5",
-    "mem0ai": "^2.4.2",
-    "tsx": "^4.19.0",
-    "typescript": "^5.6.0",
-    "vectra": "^0.2.2",
-    "vitest": "^4.0.18"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3"
-    ]
-  }
+	"name": "@nextain/naia-memory",
+	"version": "0.1.4",
+	"description": "Naia Memory System — cognitive memory for Naia, the Visual Agent",
+	"type": "module",
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nextain/naia-memory.git"
+	},
+	"keywords": [
+		"memory",
+		"ai",
+		"naia",
+		"vector-search",
+		"knowledge-graph",
+		"llm-memory"
+	],
+	"exports": {
+		".": {
+			"import": "./dist/memory/index.js",
+			"types": "./dist/memory/index.d.ts"
+		}
+	},
+	"types": "./dist/memory/index.d.ts",
+	"files": [
+		"dist/memory/",
+		"dist/utils/",
+		"src/memory/",
+		"src/utils/",
+		"README.md",
+		"README.en.md",
+		"LICENSE"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsc",
+		"typecheck": "tsc --noEmit -p tsconfig.typecheck.json && tsc --noEmit -p tsconfig.benchmark.json",
+		"test": "vitest run",
+		"test:sqlite": "node scripts/test-sqlite.mjs",
+		"benchmark": "tsx src/benchmark/comparison/run-comparison.ts",
+		"check": "biome check --write ."
+	},
+	"peerDependencies": {
+		"@huggingface/transformers": "^3.0.0"
+	},
+	"peerDependenciesMeta": {
+		"@huggingface/transformers": {
+			"optional": true
+		}
+	},
+	"dependencies": {
+		"@langchain/community": "^1.1.27",
+		"@langchain/core": "^1.1.42",
+		"@qdrant/js-client-rest": "^1.8.0",
+		"better-sqlite3": "^12.10.0",
+		"express": "^5.2.1",
+		"sqlite-vec": "^0.1.9"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.0",
+		"@types/better-sqlite3": "^7.6.13",
+		"@types/express": "^5.0.6",
+		"@types/node": "^22.0.0",
+		"@vitest/coverage-v8": "^4.1.5",
+		"mem0ai": "^2.4.2",
+		"tsx": "^4.19.0",
+		"typescript": "^5.6.0",
+		"vectra": "^0.2.2",
+		"vitest": "^4.0.18"
+	},
+	"engines": {
+		"node": ">=20"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": ["better-sqlite3"]
+	}
 }
