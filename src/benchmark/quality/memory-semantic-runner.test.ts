@@ -41,6 +41,9 @@ describe("semantic raw runner", () => {
 		const bridge: SemanticEngineBridge = {
 			isolationPolicy: "fresh-case-state-v1",
 			identityPolicy: "engine-native-memory-v1",
+			ingestionPolicy: "sequential-turn-commit-v1",
+			temporalInputPolicy: "engine-default-ingest-time-v1",
+			retrievalSurface: "engine-native-semantic-memory-v1",
 			ingestTurn,
 			search,
 			getNativeState: vi.fn(async () => [
@@ -58,12 +61,14 @@ describe("semantic raw runner", () => {
 			3,
 		);
 		expect(ingestTurn.mock.calls).toEqual([
-			[{ content: "나는 서울에 살아.", at: "2026-01-01T00:00:00Z" }],
-			[{ content: "이제 부산으로 이사했어.", at: "2026-01-02T00:00:00Z" }],
+			[{ content: "나는 서울에 살아." }],
+			[{ content: "이제 부산으로 이사했어." }],
 		]);
 		expect(search).toHaveBeenCalledWith("지금 어디에 살아?", 3);
 		expect(receipt?.retrieved[0]?.nativeId).toBe("engine-2");
-		expect(receipt?.inputSha256).toMatch(/^[a-f0-9]{64}$/);
+		expect(receipt?.fixtureSha256).toMatch(/^[a-f0-9]{64}$/);
+		expect(receipt?.engineInputSha256).toMatch(/^[a-f0-9]{64}$/);
+		expect(receipt?.fixtureSha256).not.toBe(receipt?.engineInputSha256);
 		expect(receipt?.outputSha256).toMatch(/^[a-f0-9]{64}$/);
 		expect(close).toHaveBeenCalledOnce();
 	});
@@ -73,6 +78,9 @@ describe("semantic raw runner", () => {
 		const bridge: SemanticEngineBridge = {
 			isolationPolicy: "fresh-case-state-v1",
 			identityPolicy: "engine-native-memory-v1",
+			ingestionPolicy: "sequential-turn-commit-v1",
+			temporalInputPolicy: "engine-default-ingest-time-v1",
+			retrievalSurface: "engine-native-semantic-memory-v1",
 			ingestTurn: vi.fn(async () => undefined),
 			search: vi.fn(async () => [
 				{ nativeId: "same", content: "one" },
@@ -91,6 +99,9 @@ describe("semantic raw runner", () => {
 		const bridge: SemanticEngineBridge = {
 			isolationPolicy: "fresh-case-state-v1",
 			identityPolicy: "engine-native-memory-v1",
+			ingestionPolicy: "sequential-turn-commit-v1",
+			temporalInputPolicy: "engine-default-ingest-time-v1",
+			retrievalSurface: "engine-native-semantic-memory-v1",
 			ingestTurn: vi.fn(async () => undefined),
 			search: vi.fn(async () => [
 				{ nativeId: "fabricated", content: "사용자는 부산에 산다." },

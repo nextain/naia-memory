@@ -24,6 +24,24 @@ with hashes over both input and output. Retrieved native IDs and content must
 round-trip exactly to the state captured from the same isolated execution, so an
 adapter cannot fabricate benchmark-friendly retrieval identities.
 
+Real semantic bridges now exist for Mem0 OSS and Naia. Mem0 executes native
+`add(..., infer:true)` once per turn. Naia executes public `encode()` followed
+by `consolidate()` once per turn. Both expose only engine-native semantic
+memories for state and retrieval; Naia episodes are deliberately excluded.
+This is an apples-to-apples semantic-memory surface, not a claim about either
+product's full end-to-end recall experience. Receipts freeze the ingestion and
+retrieval-surface policies.
+
+Fixture timestamps are not sent to either engine. The raw receipt therefore
+records separate fixture and engine-input hashes: the former preserves the
+annotated corpus chronology, while the latter hashes only the language, turn
+content, and query actually crossing the engine boundary. Mem0's OSS add interface does
+not accept an event timestamp, so passing one only to Naia would create an
+oracle-like input advantage. Both engines receive turn order and natural
+language only, and use their default ingestion time. Consequently, relative-
+time cases are ineligible for this comparison; temporal-memory behavior needs
+a separate tier whose competitors all accept equivalent event-time input.
+
 No semantic score is implemented yet. Native engines can rewrite or summarize
 memory text, so exact string matching would systematically favor engines whose
 output resembles the annotation wording. A public score requires a separately
@@ -58,13 +76,18 @@ bridge maps replace to its native `update(memoryId, content)` operation. These
 are disclosed operation mappings for CRUD conformance, not evidence that either
 engine inferred an update from conversation text.
 
-The implementation checkpoint passes 528 tests across 43 files plus both
-TypeScript configurations. An adversarial self-review found and fixed a Mem0
-adapter ordering defect: duplicate logical IDs are now rejected before a native
-write or update can occur. Independent reviewer execution remains **NOT_RUN**:
-both the headless OpenCode path and the governed sub-agent path were rejected by
-the workspace's nested-runtime guard. This is a tooling limitation, not a review
-pass, and the publication gate remains closed.
+The current implementation checkpoint passes 537 tests across 46 files plus
+both TypeScript configurations. A headless OpenCode adversarial review found
+three material receipt/isolation defects: ambiguous timestamp hashing, stale
+Naia facts missing from native-state evidence, and a reusable local store path.
+The implementation now separates fixture and engine-input hashes, preserves
+project-scoped inactive facts so stale retrieval remains measurable, and owns a
+unique removable store file per case. Five lower-value or incorrect findings
+were checked against the implementation; for example, chronology is strictly
+increasing rather than permitting identical timestamps. Follow-up OpenCode and
+Claude runs timed out without a verdict, so this is evidence of independent
+defect discovery and remediation, **not** a converged CLEAN review. The
+publication gate remains closed.
 
 ## Frozen anti-overfit requirements
 
@@ -79,10 +102,11 @@ pass, and the publication gate remains closed.
 - Include corrections, reversals, temporary states, negation, repeated values,
   and unrelated distractors in every language.
 - Run each case in fresh engine state and randomize engine/case execution order.
-- Give semantic-tier engines the same turn text, chronology, query, provider
+- Give semantic-tier engines the same turn text, order, query, provider
   budget, and top-k. Product-native prompts and update logic remain enabled and
   are disclosed rather than normalized away.
-- Preserve native memory IDs plus benchmark logical IDs in signed raw receipts.
+- Preserve engine-native memory IDs in signed raw receipts. Benchmark logical
+  IDs remain outside the engine and raw-output boundary.
 - Primary semantic metrics: current-fact hit@1, stale-fact exposure@k,
   deletion leakage@k, update decision accuracy, and no-update preservation.
 - Report per-language confidence intervals and paired case-level deltas. No
@@ -106,6 +130,9 @@ pass, and the publication gate remains closed.
 7. An exact-text scorer may reward annotation mimicry rather than correct
    memory. Semantic scoring remains gated on blind adjudication or frozen
    independently reviewed accepted variants.
+8. Fixture timestamps may advantage engines that accept event time over engines
+   that do not. The shared tier withholds them from all engines and excludes
+   relative-time cases; temporal behavior must be benchmarked separately.
 
 ## Publication gate
 
