@@ -5,7 +5,7 @@ export type StructuredContractCase = {
 	id: string;
 	language: string;
 	query: string;
-	recall_structured_query?: Pick<StructuredFact, "subject" | "property">;
+	recall_structured_query?: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">;
 	statements: StructuredStatement[];
 	acceptable_statement_ids: string[];
 	forbidden_statement_ids: string[];
