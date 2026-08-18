@@ -19,6 +19,7 @@ const episode: Episode = {
 
 afterEach(() => {
 	vi.unstubAllGlobals();
+	vi.useRealTimers();
 });
 
 describe("OpenAI-compatible LLM auth", () => {
@@ -94,6 +95,55 @@ describe("OpenAI-compatible LLM auth", () => {
 			provenance: "extractor",
 		});
 		expect(facts[1].structured).toBeUndefined();
+	});
+
+	it("fact extractor benchmark policy throws on provider and parse failures", async () => {
+		const extract = buildLLMFactExtractor({
+			apiKey: "test-secret",
+			baseURL: "https://provider.test/v1/",
+			model: "test-model",
+			failurePolicy: "throw",
+		});
+
+		vi.stubGlobal("fetch", vi.fn(async () => new Response("denied", { status: 401 })));
+		await expect(extract([episode])).rejects.toThrow(
+			"LLM fact extraction failed with HTTP 401",
+		);
+
+		vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
+			choices: [{ message: { content: "not-json" } }],
+		}), { status: 200, headers: { "content-type": "application/json" } })));
+		await expect(extract([episode])).rejects.toThrow(
+			"LLM fact extraction returned an invalid response",
+		);
+	});
+
+	it("fact extractor benchmark policy fails closed after transport retries", async () => {
+		vi.useFakeTimers();
+		vi.stubGlobal("fetch", vi.fn(async () => {
+			throw new Error("secret-bearing transport detail");
+		}));
+		const extract = buildLLMFactExtractor({
+			apiKey: "test-secret",
+			baseURL: "https://provider.test/v1/",
+			model: "test-model",
+			failurePolicy: "throw",
+		});
+
+		const pending = extract([episode]);
+		const observed = pending.then(
+			() => undefined,
+			(error: unknown) => error,
+		);
+		await vi.runAllTimersAsync();
+		const error = await observed;
+		expect(error).toBeInstanceOf(Error);
+		expect((error as Error).message).toBe(
+			"LLM fact extraction transport failed after 3 attempts",
+		);
+		expect((error as Error).message).not.toContain(
+			"secret-bearing transport detail",
+		);
 	});
 
 	it("fact extractor가 Naia gateway에는 X-AnyLLM-Key만 전송한다", async () => {

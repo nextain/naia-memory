@@ -27,6 +27,8 @@ export interface LLMFactExtractorOptions {
 	model?: string;
 	/** Max episodes to send in a single API call. Default: 10 */
 	batchSize?: number;
+	/** Product default skips failed batches; benchmarks should use throw. */
+	failurePolicy?: "skip" | "throw";
 }
 
 const GEMINI_DIRECT_BASE_URL =
@@ -72,6 +74,7 @@ export function buildLLMFactExtractor(
 		model = DEFAULT_MODEL,
 		batchSize = DEFAULT_BATCH_SIZE,
 		auth = "bearer",
+		failurePolicy = "skip",
 	} = options;
 
 	return async (episodes: Episode[]): Promise<ExtractedFact[]> => {
@@ -79,7 +82,13 @@ export function buildLLMFactExtractor(
 
 		for (let i = 0; i < episodes.length; i += batchSize) {
 			const batch = episodes.slice(i, i + batchSize);
-			const extracted = await extractBatch(batch, { apiKey, baseURL, model, auth });
+			const extracted = await extractBatch(batch, {
+				apiKey,
+				baseURL,
+				model,
+				auth,
+				failurePolicy,
+			});
 			results.push(...extracted);
 		}
 
@@ -98,10 +107,11 @@ async function extractBatch(
 		baseURL: string;
 		model: string;
 		auth: "bearer" | "x-anyllm";
+		failurePolicy: "skip" | "throw";
 	},
 	retries = 3,
 ): Promise<ExtractedFact[]> {
-	const { apiKey, baseURL, model, auth } = opts;
+	const { apiKey, baseURL, model, auth, failurePolicy } = opts;
 
 	const episodeList = episodes
 		.map((ep, i) => {
@@ -205,6 +215,12 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":
 			await new Promise((r) => setTimeout(r, delay));
 		} catch (err: any) {
 			if (attempt === retries) {
+				if (failurePolicy === "throw") {
+					throw new Error(
+						`LLM fact extraction transport failed after ${retries} attempts`,
+						{ cause: err },
+					);
+				}
 				console.warn(
 					`[LLMFactExtractor] Batch failed after ${retries} retries (${episodes.length} episodes), skipping`,
 				);
@@ -215,6 +231,11 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":
 	}
 
 	if (!response || !response.ok) {
+		if (failurePolicy === "throw") {
+			throw new Error(
+				`LLM fact extraction failed with HTTP ${response?.status ?? "unavailable"}`,
+			);
+		}
 		console.warn(
 			`[LLMFactExtractor] API ${response?.status ?? "timeout"}, skipping ${episodes.length} episodes`,
 		);
@@ -266,6 +287,11 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":
 			}));
 		});
 	} catch (err) {
+		if (failurePolicy === "throw") {
+			throw new Error("LLM fact extraction returned an invalid response", {
+				cause: err,
+			});
+		}
 		console.warn(`[LLMFactExtractor] Parse error, skipping batch:`, err);
 		return [];
 	}

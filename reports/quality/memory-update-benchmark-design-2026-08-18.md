@@ -76,8 +76,16 @@ bridge maps replace to its native `update(memoryId, content)` operation. These
 are disclosed operation mappings for CRUD conformance, not evidence that either
 engine inferred an update from conversation text.
 
-The current implementation checkpoint passes 537 tests across 46 files plus
-both TypeScript configurations. A headless OpenCode adversarial review found
+The current implementation checkpoint passes 541 tests across 47 files, both
+TypeScript configurations, and the package build. It adds a semantic raw CLI
+for Naia and Mem0 that uses the same provider models, top-k, natural-language
+turns, query, fresh per-case state, and engine-native inference surface. Naia's
+benchmark extractor now fails closed on provider, transport, and parse errors;
+the product default remains backward-compatible and skips failed batches. Raw
+artifacts refuse overwrite, disclose the provider endpoint and model IDs, and
+are explicitly marked unscored.
+
+A headless OpenCode adversarial review found
 three material receipt/isolation defects: ambiguous timestamp hashing, stale
 Naia facts missing from native-state evidence, and a reusable local store path.
 The implementation now separates fixture and engine-input hashes, preserves
@@ -87,7 +95,10 @@ were checked against the implementation; for example, chronology is strictly
 increasing rather than permitting identical timestamps. Follow-up OpenCode and
 Claude runs timed out without a verdict, so this is evidence of independent
 defect discovery and remediation, **not** a converged CLEAN review. The
-publication gate remains closed.
+publication gate remains closed. A later OpenCode inspection reached the
+relevant runner, bridge, cleanup, and hash paths but exceeded its 180-second
+limit before issuing a verdict; two Claude headless attempts likewise produced
+no verdict. These attempts are recorded as unavailable, not as passes.
 
 ## Frozen anti-overfit requirements
 
