@@ -197,7 +197,7 @@ function compareDataset(
 	manifest: PublicEvidenceManifest["dataset"],
 ): { failures: string[]; cases: Map<string, PublicDatasetCase> } {
 	const failures: string[] = [];
-	if (dataset.schemaVersion !== "naia-memory-public-dataset-v2")
+	if (dataset.schemaVersion !== "naia-memory-public-dataset-v3")
 		failures.push("dataset schema version mismatch");
 	if (!Array.isArray(dataset.cases))
 		return {
@@ -217,6 +217,19 @@ function compareDataset(
 			!item.id.trim() ||
 			typeof item.language !== "string" ||
 			!item.language.trim() ||
+			!Array.isArray(item.memories) ||
+			item.memories.length === 0 ||
+			item.memories.some(
+				(memory) =>
+					!memory ||
+					typeof memory.id !== "string" ||
+					!memory.id.trim() ||
+					typeof memory.content !== "string" ||
+					!memory.content.trim() ||
+					(memory.date !== undefined &&
+						(typeof memory.date !== "string" ||
+							!Number.isFinite(Date.parse(memory.date)))),
+			) ||
 			typeof item.input !== "string" ||
 			!item.input.trim() ||
 			!Array.isArray(item.expected) ||
@@ -233,6 +246,23 @@ function compareDataset(
 			failures.push("dataset case content is invalid");
 			continue;
 		}
+		const memoryIds = item.memories.map((memory) => memory.id);
+		const normalizedMemoryContents = item.memories.map((memory) =>
+			memory.content.normalize("NFKC").trim().replace(/\s+/gu, " "),
+		);
+		if (new Set(memoryIds).size !== memoryIds.length)
+			failures.push("dataset case memory IDs are duplicated");
+		if (
+			new Set(normalizedMemoryContents).size !== normalizedMemoryContents.length
+		)
+			failures.push("dataset case memory contents are duplicated");
+		const availableMemoryIds = new Set(memoryIds);
+		if (
+			[...item.expected, ...(item.forbidden ?? [])].some(
+				(id) => !availableMemoryIds.has(id),
+			)
+		)
+			failures.push("dataset answer IDs do not reference case memories");
 		if (
 			(item.forbidden ?? []).some((forbidden) =>
 				item.expected.includes(forbidden),

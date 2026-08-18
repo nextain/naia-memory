@@ -36,7 +36,7 @@ export type PublicEvidenceEngine = {
 };
 
 export type PublicEvidenceManifest = {
-	schemaVersion: "naia-memory-public-evidence-v7";
+	schemaVersion: "naia-memory-public-evidence-v8";
 	publisher: string;
 	signatureBase64: string;
 	claim: string;
@@ -186,6 +186,11 @@ export type PublicEvidenceReceipt = Omit<
 export type PublicDatasetCase = {
 	id: string;
 	language: string;
+	memories: Array<{
+		id: string;
+		content: string;
+		date?: string;
+	}>;
 	input: string;
 	expected: string[];
 	forbidden?: string[];
@@ -193,7 +198,7 @@ export type PublicDatasetCase = {
 };
 
 export type PublicEvidenceDataset = {
-	schemaVersion: "naia-memory-public-dataset-v2";
+	schemaVersion: "naia-memory-public-dataset-v3";
 	cases: PublicDatasetCase[];
 };
 

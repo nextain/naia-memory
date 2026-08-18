@@ -86,7 +86,7 @@ export function isPublicEvidenceManifest(
 	value: unknown,
 ): value is PublicEvidenceManifest {
 	if (!isPublicEvidenceRecord(value)) return false;
-	if (value.schemaVersion !== "naia-memory-public-evidence-v7") return false;
+	if (value.schemaVersion !== "naia-memory-public-evidence-v8") return false;
 	const dataset = value.dataset;
 	const protocol = value.protocol;
 	const review = value.adversarialReview;
@@ -199,7 +199,7 @@ function evaluateManifest(
 	const protocol = manifest.protocol;
 
 	reject(
-		manifest.schemaVersion !== "naia-memory-public-evidence-v7",
+		manifest.schemaVersion !== "naia-memory-public-evidence-v8",
 		"manifest schema version is unsupported",
 	);
 	reject(!manifest.publisher.trim(), "publisher identity is missing");

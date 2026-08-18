@@ -188,6 +188,34 @@ describe("public evidence review attacks", () => {
 		}
 	});
 
+	it("rejects non-executable cases and answer IDs outside the stored memories", async () => {
+		const root = await mkdtemp(
+			join(tmpdir(), "naia-public-evidence-unexecutable-cases-"),
+		);
+		try {
+			const manifest = validManifest();
+			const cases = datasetCases();
+			cases[0].memories = [];
+			cases[1].memories[1].id = cases[1].memories[0].id;
+			cases[2].memories[1].content = `  ${cases[2].memories[0].content}  `;
+			cases[3].expected = ["not-stored"];
+			await writeValidEvidence(root, manifest, cases);
+			const failures = (
+				await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)
+			).failures;
+			expect(failures).toEqual(
+				expect.arrayContaining([
+					"dataset case content is invalid",
+					"dataset case memory IDs are duplicated",
+					"dataset case memory contents are duplicated",
+					"dataset answer IDs do not reference case memories",
+				]),
+			);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
 	it("rejects answer ID reuse and contradictory labels across cases", async () => {
 		const root = await mkdtemp(
 			join(tmpdir(), "naia-public-evidence-reused-answer-ids-"),

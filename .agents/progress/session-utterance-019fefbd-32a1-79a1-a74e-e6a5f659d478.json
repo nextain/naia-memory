@@ -44,6 +44,10 @@
     ,"Treat public benchmark cases as independent evidence units: reject normalized duplicate inputs, answer-ID reuse across cases, and expected/forbidden label contradictions that could inflate effective sample size or make the contract incoherent."
     ,"Narrow scoring-policy wording after adversarial review: compare outputs only against each frozen case's labels; do not claim or enforce a complete shared-ID registry that could exclude a valid zero-scoring competitor."
     ,"Require language-stratified primary metrics in manifest v7 and receipt v4, with exact dataset-language coverage and recomputation from per-case records."
+    ,"Reject public dataset v2 as non-executable: query and answer IDs without an ordered memory state cannot reproduce a real memory-engine comparison."
+    ,"Require dataset v3 cases to bind ordered memories with stable IDs and require labels to reference inserted memories; manifest v8 rejects legacy non-executable bundles."
+    ,"Require engine bridges to round-trip frozen dataset IDs through native metadata and fail closed when that capability is absent; do not infer identity from retrieved text."
+    ,"Keep each engine's production retrieval mode and disclose it through the immutable configuration artifact; reject a forced embedding-only mode as a component ablation rather than a product comparison."
   ],
   "evidence": {
     "commit": "838e91b",
@@ -70,6 +74,7 @@
       ,"reports/quality/public-evidence-intake-cli-2026-08-18.md"
       ,"reports/quality/public-model-free-protocol-v6-2026-08-18.md"
       ,"reports/quality/public-case-independence-policy-v2-2026-08-18.md"
+      ,"reports/quality/public-executable-dataset-contract-v3-2026-08-18.md"
     ],
     "verification": [
       "pnpm typecheck",
@@ -132,7 +137,10 @@
       ,"Claim limitation: language-stratified evidence prevents aggregate masking but does not establish multilingual quality or performance uplift"
       ,"Public evidence v7 final regression: 37 files, 506 tests passed; Biome, strict main/benchmark typecheck, production build, and git diff check passed"
       ,"Post-remediation OpenCode analysis found no new concrete publication-integrity bypass in policy v2 or language metrics v7; retain PASS-WITH-LIMITATIONS because independent corpus and real engine receipts are still absent"
+      ,"Public executable dataset v3 regression: 38 files, 510 tests passed; Biome, strict main/benchmark typecheck, production build, and git diff check passed"
+      ,"OpenCode identified dataset v2 as non-reproducible because it omitted stored memories and ID mapping; fixed-design review returned CLEAN and its ID-preservation concern was hardened with a fail-closed bridge policy"
+      ,"Claim limitation: manifest v8 makes real same-input runs expressible but no external bridge receipt, independent multilingual corpus, or performance uplift exists yet"
     ]
   },
-  "updated_at": "2026-08-18T18:43:00+09:00"
+  "updated_at": "2026-08-18T18:49:00+09:00"
 }

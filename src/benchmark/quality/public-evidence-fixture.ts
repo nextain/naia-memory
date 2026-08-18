@@ -178,7 +178,7 @@ export function engine(engine: string, kind: "naia" | "external") {
 
 export function validManifest(): PublicEvidenceManifest {
 	const manifest: PublicEvidenceManifest = {
-		schemaVersion: "naia-memory-public-evidence-v7",
+		schemaVersion: "naia-memory-public-evidence-v8",
 		publisher: "nextain-release",
 		signatureBase64: "",
 		claim: PUBLIC_EVIDENCE_CLAIM,
@@ -233,12 +233,26 @@ export function datasetCases() {
 	return ["ko", "en", "ja"].flatMap((language) =>
 		Array.from({ length: 40 }, (_, index) => {
 			const input = `${language} input ${index + 1}`;
+			const currentId = `current-${language}-${index + 1}`;
+			const staleId = `stale-${language}-${index + 1}`;
 			return {
 				id: `${language}-${index + 1}`,
 				language,
+				memories: [
+					{
+						id: staleId,
+						content: `${language} stale memory ${index + 1}`,
+						date: "2026-01-01T00:00:00.000Z",
+					},
+					{
+						id: currentId,
+						content: `${language} current memory ${index + 1}`,
+						date: "2026-01-02T00:00:00.000Z",
+					},
+				],
 				input,
-				expected: [`current-${language}-${index + 1}`],
-				forbidden: [`stale-${language}-${index + 1}`],
+				expected: [currentId],
+				forbidden: [staleId],
 				inputSha256: createHash("sha256").update(input).digest("hex"),
 			};
 		}),
@@ -360,7 +374,7 @@ export async function writeValidEvidence(
 	cases = datasetCases(),
 ): Promise<void> {
 	const datasetBytes = JSON.stringify({
-		schemaVersion: "naia-memory-public-dataset-v2",
+		schemaVersion: "naia-memory-public-dataset-v3",
 		cases,
 	});
 	const datasetSha256 = createHash("sha256").update(datasetBytes).digest("hex");
