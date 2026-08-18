@@ -1,0 +1,1 @@
+Review the three bridge files and relevant installed adapter/client definitions. Treat type casts without runtime API evidence as suspicious. Check setup/search failure cleanup, primary-error masking, and LocalAdapter file isolation. Report only concrete defects and smallest fixes.
