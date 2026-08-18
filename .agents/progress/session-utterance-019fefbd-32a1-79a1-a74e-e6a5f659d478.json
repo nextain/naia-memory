@@ -4,7 +4,7 @@
   "contract_digest": "7761784226076edd4e686cf37e3f4d60fceeba5a7f24a54c7ed59e1d1dced14d",
   "issue": "https://github.com/nextain/naia-memory/issues/12#issuecomment-5301734882",
   "current_phase": "in-progress",
-  "current_task": "Public evidence v3 authenticity and score-provenance gate passed adversarial implementation review. Next: freeze an independently authored multilingual corpus and replayable scorer, then collect same-input receipts from Naia and at least two global engines.",
+  "current_task": "Deterministic public retrieval replay is implemented and adversarially reviewed. Next: bind receipts to independently reproduced engine execution and signed multilingual dataset attestations, then collect same-input receipts from Naia and at least two global engines.",
   "gates_cleared": ["P01", "P02", "P03", "P04", "P05"],
   "key_decisions": [
     "Use CPU only; GPU 1 belongs to another session.",
@@ -32,6 +32,8 @@
     ,"Require verifier-owned Ed25519 trust roots for publisher, engine, and reviewer identities; submitted evidence cannot select its own trust root."
     ,"Pin each approved scoring policy to an exact scorer artifact SHA-256 and bind every case judgment to engine, case, repetition, output, score, failure state, and policy identity."
     ,"Keep the public benchmark claim blocked: the v3 gate implementation passed adversarial review, but independent multilingual corpus construction and real external-engine receipts remain absent."
+    ,"Replay every public retrieval record from raw signed output under exact-current-hit-at-k-v1; bind top-k to the metric identity and fail a case when any forbidden or stale ID appears in the frozen window."
+    ,"Do not equate deterministic receipt consistency with execution provenance: require verifier-issued run nonces, immutable adapter/configuration/executable digests, independent reproduction, and signed corpus author/native-reviewer attestations before public comparison."
   ],
   "evidence": {
     "commit": "1a9dcab",
@@ -53,6 +55,7 @@
       ,"reports/quality/structured-supersession-contract-v2-multilingual-e5-large.json"
       ,"reports/quality/structured-supersession-contract-v2-top20.json"
       ,"reports/quality/public-evidence-authenticity-gate-2026-08-18.md"
+      ,"reports/quality/public-evidence-semantic-replay-2026-08-18.md"
     ],
     "verification": [
       "pnpm typecheck",
@@ -89,7 +92,11 @@
       ,"Public evidence v3 full suite: 31 files, 462 tests passed"
       ,"pnpm typecheck, pnpm build, and git diff --check passed after authenticity gate"
       ,"OpenCode adversarial review PASS under fixed honest trust-policy and uncompromised-key threat model"
+      ,"Public semantic replay targeted tests: 34 passed"
+      ,"Public semantic replay full suite: 32 files, 474 tests passed"
+      ,"pnpm typecheck and pnpm build passed after semantic replay gate"
+      ,"Two adversarial rounds from OpenCode and Claude headless found no actionable replay, top-k, stale-ID, neutrality, or overfit defect; execution provenance remains explicitly out of scope"
     ]
   },
-  "updated_at": "2026-08-18T14:28:00+09:00"
+  "updated_at": "2026-08-18T16:47:00+09:00"
 }
