@@ -25,12 +25,25 @@ afterEach(() => {
 describe("OpenAI-compatible LLM auth", () => {
 	it("query structurer extracts a bounded identity and preserves gateway auth", async () => {
 		let capturedHeaders: HeadersInit | undefined;
-		vi.stubGlobal("fetch", vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-			capturedHeaders = init?.headers;
-			return new Response(JSON.stringify({
-				choices: [{ message: { content: '```json\n{"subject":"사용자","property":"선호 에디터"}\n```' } }],
-			}), { status: 200, headers: { "content-type": "application/json" } });
-		}));
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+				capturedHeaders = init?.headers;
+				return new Response(
+					JSON.stringify({
+						choices: [
+							{
+								message: {
+									content:
+										'```json\n{"subject":"사용자","property":"선호 에디터"}\n```',
+								},
+							},
+						],
+					}),
+					{ status: 200, headers: { "content-type": "application/json" } },
+				);
+			}),
+		);
 
 		const result = await buildLLMQueryStructurer({
 			apiKey: "test-secret",
@@ -46,11 +59,21 @@ describe("OpenAI-compatible LLM auth", () => {
 	});
 
 	it("query structurer fails closed on empty, malformed, and nonspecific output", async () => {
-		const fetchMock = vi.fn(async () => new Response(JSON.stringify({
-			choices: [{ message: { content: "{}" } }],
-		}), { status: 200, headers: { "content-type": "application/json" } }));
+		const fetchMock = vi.fn(
+			async () =>
+				new Response(
+					JSON.stringify({
+						choices: [{ message: { content: "{}" } }],
+					}),
+					{ status: 200, headers: { "content-type": "application/json" } },
+				),
+		);
 		vi.stubGlobal("fetch", fetchMock);
-		const structure = buildLLMQueryStructurer({ apiKey: "", baseURL: "https://provider.test/v1/", model: "test" });
+		const structure = buildLLMQueryStructurer({
+			apiKey: "",
+			baseURL: "https://provider.test/v1/",
+			model: "test",
+		});
 
 		await expect(structure("   ")).resolves.toBeUndefined();
 		await expect(structure("안녕?")).resolves.toBeUndefined();
@@ -58,26 +81,52 @@ describe("OpenAI-compatible LLM auth", () => {
 	});
 
 	it("fact extractor preserves only valid explicit structured facts", async () => {
-		vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
-			choices: [{ message: { content: JSON.stringify({
-				"1": [
-					{
-						content: "사용자 거주지: 서울",
-						structured: {
-							subject: "사용자",
-							property: "거주지",
-							value: "서울",
-							polarity: "affirmed",
-							cardinality: "single",
-						},
-					},
-					{
-						content: "불완전한 구조도 원문은 남긴다",
-						structured: { subject: "사용자" },
-					},
-				],
-			}) } }],
-		}), { status: 200, headers: { "content-type": "application/json" } })));
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						JSON.stringify({
+							choices: [
+								{
+									message: {
+										content: JSON.stringify({
+											"1": [
+												{
+													content: "사용자 거주지: 서울",
+													structured: {
+														subject: "사용자",
+														property: "거주지",
+														value: "서울",
+														polarity: "affirmed",
+														cardinality: "single",
+													},
+												},
+												{
+													content: "불완전한 구조도 원문은 남긴다",
+													structured: { subject: "사용자" },
+												},
+												{
+													content: "사용자 알레르기: 땅콩",
+													operation: "delete",
+													structured: {
+														subject: "사용자",
+														property: "알레르기",
+														value: "땅콩",
+														polarity: "affirmed",
+														cardinality: "multi",
+													},
+												},
+											],
+										}),
+									},
+								},
+							],
+						}),
+						{ status: 200, headers: { "content-type": "application/json" } },
+					),
+			),
+		);
 
 		const facts = await buildLLMFactExtractor({
 			apiKey: "test-secret",
@@ -85,7 +134,7 @@ describe("OpenAI-compatible LLM auth", () => {
 			model: "test-model",
 		})([episode]);
 
-		expect(facts).toHaveLength(2);
+		expect(facts).toHaveLength(3);
 		expect(facts[0].structured).toEqual({
 			subject: "사용자",
 			property: "거주지",
@@ -95,6 +144,9 @@ describe("OpenAI-compatible LLM auth", () => {
 			provenance: "extractor",
 		});
 		expect(facts[1].structured).toBeUndefined();
+		expect(facts[1].operation).toBe("upsert");
+		expect(facts[2].operation).toBe("delete");
+		expect(facts[2].structured?.value).toBe("땅콩");
 	});
 
 	it("fact extractor benchmark policy throws on provider and parse failures", async () => {
@@ -105,14 +157,26 @@ describe("OpenAI-compatible LLM auth", () => {
 			failurePolicy: "throw",
 		});
 
-		vi.stubGlobal("fetch", vi.fn(async () => new Response("denied", { status: 401 })));
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response("denied", { status: 401 })),
+		);
 		await expect(extract([episode])).rejects.toThrow(
 			"LLM fact extraction failed with HTTP 401",
 		);
 
-		vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({
-			choices: [{ message: { content: "not-json" } }],
-		}), { status: 200, headers: { "content-type": "application/json" } })));
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						JSON.stringify({
+							choices: [{ message: { content: "not-json" } }],
+						}),
+						{ status: 200, headers: { "content-type": "application/json" } },
+					),
+			),
+		);
 		await expect(extract([episode])).rejects.toThrow(
 			"LLM fact extraction returned an invalid response",
 		);
@@ -120,9 +184,12 @@ describe("OpenAI-compatible LLM auth", () => {
 
 	it("fact extractor benchmark policy fails closed after transport retries", async () => {
 		vi.useFakeTimers();
-		vi.stubGlobal("fetch", vi.fn(async () => {
-			throw new Error("secret-bearing transport detail");
-		}));
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => {
+				throw new Error("secret-bearing transport detail");
+			}),
+		);
 		const extract = buildLLMFactExtractor({
 			apiKey: "test-secret",
 			baseURL: "https://provider.test/v1/",
@@ -148,12 +215,17 @@ describe("OpenAI-compatible LLM auth", () => {
 
 	it("fact extractor가 Naia gateway에는 X-AnyLLM-Key만 전송한다", async () => {
 		let capturedHeaders: HeadersInit | undefined;
-		const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-			capturedHeaders = init?.headers;
-			return new Response(JSON.stringify({
-				choices: [{ message: { content: '{"1":[]}' } }],
-			}), { status: 200, headers: { "content-type": "application/json" } });
-		});
+		const fetchMock = vi.fn(
+			async (_input: RequestInfo | URL, init?: RequestInit) => {
+				capturedHeaders = init?.headers;
+				return new Response(
+					JSON.stringify({
+						choices: [{ message: { content: '{"1":[]}' } }],
+					}),
+					{ status: 200, headers: { "content-type": "application/json" } },
+				);
+			},
+		);
 		vi.stubGlobal("fetch", fetchMock);
 
 		const extract = buildLLMFactExtractor({
@@ -171,12 +243,17 @@ describe("OpenAI-compatible LLM auth", () => {
 
 	it("summarizer의 기본 인증은 기존 bearer 계약을 유지한다", async () => {
 		let capturedHeaders: HeadersInit | undefined;
-		const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-			capturedHeaders = init?.headers;
-			return new Response(JSON.stringify({
-				choices: [{ message: { content: "요약" } }],
-			}), { status: 200, headers: { "content-type": "application/json" } });
-		});
+		const fetchMock = vi.fn(
+			async (_input: RequestInfo | URL, init?: RequestInit) => {
+				capturedHeaders = init?.headers;
+				return new Response(
+					JSON.stringify({
+						choices: [{ message: { content: "요약" } }],
+					}),
+					{ status: 200, headers: { "content-type": "application/json" } },
+				);
+			},
+		);
 		vi.stubGlobal("fetch", fetchMock);
 
 		const summarize = buildLLMSummarizer({
@@ -198,13 +275,19 @@ describe("OpenAI-compatible LLM auth", () => {
 
 	it("fact extractor의 기본 인증은 기존 bearer 계약을 유지한다", async () => {
 		let capturedHeaders: HeadersInit | undefined;
-		vi.stubGlobal("fetch", vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-			capturedHeaders = init?.headers;
-			return new Response(JSON.stringify({ choices: [{ message: { content: '{"1":[]}' } }] }), {
-				status: 200,
-				headers: { "content-type": "application/json" },
-			});
-		}));
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+				capturedHeaders = init?.headers;
+				return new Response(
+					JSON.stringify({ choices: [{ message: { content: '{"1":[]}' } }] }),
+					{
+						status: 200,
+						headers: { "content-type": "application/json" },
+					},
+				);
+			}),
+		);
 
 		await buildLLMFactExtractor({
 			apiKey: "test-secret",
@@ -219,13 +302,19 @@ describe("OpenAI-compatible LLM auth", () => {
 
 	it("summarizer가 Naia gateway에는 X-AnyLLM-Key만 전송한다", async () => {
 		let capturedHeaders: HeadersInit | undefined;
-		vi.stubGlobal("fetch", vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-			capturedHeaders = init?.headers;
-			return new Response(JSON.stringify({ choices: [{ message: { content: "요약" } }] }), {
-				status: 200,
-				headers: { "content-type": "application/json" },
-			});
-		}));
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+				capturedHeaders = init?.headers;
+				return new Response(
+					JSON.stringify({ choices: [{ message: { content: "요약" } }] }),
+					{
+						status: 200,
+						headers: { "content-type": "application/json" },
+					},
+				);
+			}),
+		);
 
 		await buildLLMSummarizer({
 			apiKey: "test-secret",

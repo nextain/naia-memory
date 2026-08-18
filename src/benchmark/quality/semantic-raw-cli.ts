@@ -9,6 +9,7 @@ import {
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { LocalAdapter } from "../../memory/adapters/local.js";
+import { GeminiFlashLiteContradictionFilter } from "../../memory/contradiction-filter.js";
 import { OpenAICompatEmbeddingProvider } from "../../memory/embeddings.js";
 import { buildLLMFactExtractor } from "../../memory/llm-fact-extractor.js";
 import { benchmarkReceipt } from "../provenance.js";
@@ -153,6 +154,11 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 							model: provider.llmModel,
 							auth: provider.auth,
 							failurePolicy: "throw",
+						}),
+						contradictionFilter: new GeminiFlashLiteContradictionFilter({
+							apiKey: provider.apiKey,
+							baseURL: provider.baseURL,
+							model: provider.llmModel,
 						}),
 					})
 			: async () =>

@@ -1,11 +1,19 @@
 import crypto from "node:crypto";
-import { filterNegativeCapture } from "./negative-capture.js";
-import { findContradictionsWith } from "./reconsolidation.js";
-import { findStructuredSupersessions, sameStructuredFact } from "./structured-facts.js";
-import type { ConsolidationResult, Fact } from "./types.js";
-import { contentTokens, jaccardSimilarity, MAX_EPISODES_PER_CYCLE } from "./consolidation-primitives.js";
+import {
+	MAX_EPISODES_PER_CYCLE,
+	contentTokens,
+	jaccardSimilarity,
+} from "./consolidation-primitives.js";
 import type { MemorySystemOptions } from "./memory-system-api.js";
 import { MemorySystemBackup } from "./memory-system-backup.js";
+import { filterNegativeCapture } from "./negative-capture.js";
+import { findContradictionsWith } from "./reconsolidation.js";
+import {
+	findStructuredDeletionTargets,
+	findStructuredSupersessions,
+	sameStructuredFact,
+} from "./structured-facts.js";
+import type { ConsolidationResult, Fact } from "./types.js";
 
 /** Sleep-cycle consolidation and adapter backup operations. */
 export abstract class MemorySystemConsolidation extends MemorySystemBackup {
@@ -14,7 +22,8 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 
 	constructor(options: MemorySystemOptions) {
 		super(options);
-		this.consolidationIntervalMs = options.consolidationIntervalMs ?? 30 * 60 * 1000;
+		this.consolidationIntervalMs =
+			options.consolidationIntervalMs ?? 30 * 60 * 1000;
 	}
 	/**
 	 * Start the background consolidation timer.
@@ -84,7 +93,8 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 				// harden into durable self-imposed constraints (e.g. "tool X is broken"). Deterministic
 				// backstop to the LLM extractor's prompt-level policy (negative-capture.ts). Single
 				// chokepoint here covers both the heuristic and the LLM extractor.
-				const { kept: extracted, dropped: negDropped } = filterNegativeCapture(extractedRaw);
+				const { kept: extracted, dropped: negDropped } =
+					filterNegativeCapture(extractedRaw);
 				if (negDropped.length > 0 && process.env.NAIA_FILTER_DEBUG === "1") {
 					console.error(
 						`[NEG_CAPTURE] dropped ${negDropped.length} fact(s): ${negDropped.map((d) => d.reason).join(", ")}`,
@@ -107,61 +117,81 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					// facts must reach the LLM filter so it can decide.
 					const existingFacts = ef.structured
 						? (await this.adapter.semantic.getAll()).filter(
-							// Supersession mutates the predecessor.  Unlike soft recall, it
-							// must never let an unscoped write update a project-scoped fact.
-							(fact) => fact.encodingContext?.project === efProject,
-						)
+								// Supersession mutates the predecessor.  Unlike soft recall, it
+								// must never let an unscoped write update a project-scoped fact.
+								(fact) => fact.encodingContext?.project === efProject,
+							)
 						: await this.adapter.semantic.search(
-							ef.content,
-							10,
-							true,
-							efProject ? { project: efProject } : undefined,
-						);
+								ef.content,
+								10,
+								true,
+								efProject ? { project: efProject } : undefined,
+							);
 					if (process.env.NAIA_FILTER_DEBUG === "1") {
-						const totalFacts = (this.adapter as any).getStore?.()?.facts?.length ?? "?";
+						const totalFacts =
+							(this.adapter as any).getStore?.()?.facts?.length ?? "?";
 						console.error(
 							`[FILTER_DEBUG] search("${ef.content.slice(0, 40)}", topK=10, deepRecall=true, proj=${efProject ?? "—"}) → ${existingFacts.length} hits | store total facts: ${totalFacts}`,
 						);
 					}
 
+					if (ef.operation === "delete") {
+						const targets = ef.structured
+							? findStructuredDeletionTargets(existingFacts, ef.structured)
+							: [];
+						for (const target of targets) {
+							await this.adapter.semantic.upsert({
+								...target,
+								status: "archived",
+								updatedAt: now,
+								validTo: now,
+							});
+							factsUpdated++;
+						}
+						continue;
+					}
+
 					// Check for exact/near identity to prevent semantic redundancy (#4)
 					const duplicate = ef.structured
 						? existingFacts.find(
-							(fact) => !!fact.structured && sameStructuredFact(fact.structured, ef.structured!),
-						)
+								(fact) =>
+									!!fact.structured &&
+									sameStructuredFact(fact.structured, ef.structured!),
+							)
 						: existingFacts.find((f) => {
-						const sim = jaccardSimilarity(
-							contentTokens(f.content),
-							contentTokens(ef.content),
-						);
-						return sim > 0.85; // High similarity threshold for identity
-						});
+								const sim = jaccardSimilarity(
+									contentTokens(f.content),
+									contentTokens(ef.content),
+								);
+								return sim > 0.85; // High similarity threshold for identity
+							});
 
 					if (duplicate) {
 						// Near-duplicate found — update metadata but don't create new entry
 						const newImportance = Math.max(
-						        duplicate.importance,
-						        ef.importance,
-						        0.7,
+							duplicate.importance,
+							ef.importance,
+							0.7,
 						);
 						const newMaxEmotion = Math.max(
-						        duplicate.maxEmotion ?? 0,
-						        ef.maxEmotion ?? 0,
+							duplicate.maxEmotion ?? 0,
+							ef.maxEmotion ?? 0,
 						);
 						await this.adapter.semantic.upsert({
-						        ...duplicate,
-						        updatedAt: now,
-						        lastAccessed: now, // Strengthening on reactivation
-						        importance: newImportance,
-						        maxEmotion: newMaxEmotion,
-						        strength: newImportance,
-						        sourceEpisodes: [
-						                ...new Set([
-						                   ...duplicate.sourceEpisodes,
-						                   ...ef.sourceEpisodeIds,
-						                ]),
-						        ],
-						});						factsUpdated++;
+							...duplicate,
+							updatedAt: now,
+							lastAccessed: now, // Strengthening on reactivation
+							importance: newImportance,
+							maxEmotion: newMaxEmotion,
+							strength: newImportance,
+							sourceEpisodes: [
+								...new Set([
+									...duplicate.sourceEpisodes,
+									...ef.sourceEpisodeIds,
+								]),
+							],
+						});
+						factsUpdated++;
 						continue;
 					}
 
@@ -170,14 +200,17 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						: [];
 					const contradictions = ef.structured
 						? structuredSupersessions.map((fact) => ({
-							fact,
-							result: { action: "update" as const, updatedContent: ef.content },
-						}))
+								fact,
+								result: {
+									action: "update" as const,
+									updatedContent: ef.content,
+								},
+							}))
 						: await findContradictionsWith(
-							existingFacts,
-							ef.content,
-							this.contradictionFilter,
-						);
+								existingFacts,
+								ef.content,
+								this.contradictionFilter,
+							);
 
 					if (contradictions.length > 0) {
 						// Update ALL contradicted facts to prevent stale contradictory data
@@ -186,47 +219,48 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						for (const { fact, result } of contradictions) {
 							if (result.action === "update" && result.updatedContent) {
 								const newImportance = Math.max(
-								   fact.importance,
-								   ef.importance,
-								   0.7,
+									fact.importance,
+									ef.importance,
+									0.7,
 								);
 								const newMaxEmotion = Math.max(
-								   fact.maxEmotion ?? 0,
-								   ef.maxEmotion ?? 0,
+									fact.maxEmotion ?? 0,
+									ef.maxEmotion ?? 0,
 								);
 								const successorId = `${fact.id}-v${Date.now()}`;
 								await this.adapter.semantic.upsert({
-								   ...fact,
-								   status: "superseded",
-								   updatedAt: now,
-								   validTo: now,
-								   successorId,
+									...fact,
+									status: "superseded",
+									updatedAt: now,
+									validTo: now,
+									successorId,
 								});
 								await this.adapter.semantic.upsert({
-								   ...fact,
-								   id: successorId,
-								   content: result.updatedContent,
-								   status: "active",
-								   createdAt: now,
-								   updatedAt: now,
-								   lastAccessed: now,
-								   importance: newImportance,
-								   maxEmotion: newMaxEmotion,
-								   strength: newImportance,
-								   sourceEpisodes: [
-								   ...new Set([
-								   ...fact.sourceEpisodes,
-								   ...ef.sourceEpisodeIds,
-								   ]),
-								   ],
-								   entities: ef.entities,
-								   topics: ef.topics,
-								   structured: ef.structured ?? fact.structured,
-								   encodingContext: fact.encodingContext ?? srcEp?.encodingContext,
-								   supersedes: fact.id,
-								   validFrom: now,
-								   validTo: null,
-								});								// R4 #26 Step 3a — supersede 시점 spike emit
+									...fact,
+									id: successorId,
+									content: result.updatedContent,
+									status: "active",
+									createdAt: now,
+									updatedAt: now,
+									lastAccessed: now,
+									importance: newImportance,
+									maxEmotion: newMaxEmotion,
+									strength: newImportance,
+									sourceEpisodes: [
+										...new Set([
+											...fact.sourceEpisodes,
+											...ef.sourceEpisodeIds,
+										]),
+									],
+									entities: ef.entities,
+									topics: ef.topics,
+									structured: ef.structured ?? fact.structured,
+									encodingContext:
+										fact.encodingContext ?? srcEp?.encodingContext,
+									supersedes: fact.id,
+									validFrom: now,
+									validTo: null,
+								}); // R4 #26 Step 3a — supersede 시점 spike emit
 								// (consolidate path).
 								await this.emitSpike({
 									factId: successorId,
@@ -256,22 +290,23 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 
 						const newImportance = Math.max(ef.importance, 0.7);
 						const newFact: Fact = {
-						        id: deterministicId,
-						        content: ef.content,
-						        entities: ef.entities,
-						        topics: ef.topics,
-						        createdAt: now,
-						        updatedAt: now,
-						        importance: newImportance,
-						        maxEmotion: ef.maxEmotion,
-						        recallCount: 0,
-						        lastAccessed: now,
-						        strength: newImportance,
-						        status: "active",
-						        sourceEpisodes: ef.sourceEpisodeIds,
-						        encodingContext: srcEp?.encodingContext,
-						        structured: ef.structured,
-						};						await this.adapter.semantic.upsert(newFact);
+							id: deterministicId,
+							content: ef.content,
+							entities: ef.entities,
+							topics: ef.topics,
+							createdAt: now,
+							updatedAt: now,
+							importance: newImportance,
+							maxEmotion: ef.maxEmotion,
+							recallCount: 0,
+							lastAccessed: now,
+							strength: newImportance,
+							status: "active",
+							sourceEpisodes: ef.sourceEpisodeIds,
+							encodingContext: srcEp?.encodingContext,
+							structured: ef.structured,
+						};
+						await this.adapter.semantic.upsert(newFact);
 						factsCreated++;
 						// R4 #26 Step 3b — high-importance + active context relevant
 						// 시점 spike emit. naia-agent 가 active context push 했고,
@@ -345,129 +380,139 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 			const fourteenDays = 14 * 24 * 60 * 60 * 1000;
 			let replayBoosted = 0;
 			try {
-			        const allFacts = await this.adapter.semantic.getAll();
-			        for (const fact of allFacts) {
-			                if (fact.status !== "active") continue;
-			                const isRecent = now - fact.createdAt < fourteenDays;
-			                const isImportant = fact.importance >= 0.7;
-			                const recentRecall = now - fact.lastAccessed < sevenDays;
-			                if (!(isRecent && isImportant) && !recentRecall) continue;
-			                // boost = +5% strength, capped 1.0
-			                const boost = this.matchesActiveContextFact(fact) ? 0.1 : 0.05;
-			                fact.strength = Math.min(1.0, fact.strength + boost);
-			                await this.adapter.semantic.upsert(fact);
-			                replayBoosted++;
-			        }
+				const allFacts = await this.adapter.semantic.getAll();
+				for (const fact of allFacts) {
+					if (fact.status !== "active") continue;
+					const isRecent = now - fact.createdAt < fourteenDays;
+					const isImportant = fact.importance >= 0.7;
+					const recentRecall = now - fact.lastAccessed < sevenDays;
+					if (!(isRecent && isImportant) && !recentRecall) continue;
+					// boost = +5% strength, capped 1.0
+					const boost = this.matchesActiveContextFact(fact) ? 0.1 : 0.05;
+					fact.strength = Math.min(1.0, fact.strength + boost);
+					await this.adapter.semantic.upsert(fact);
+					replayBoosted++;
+				}
 			} catch (e: any) {
-			        console.warn(`[MemorySystem] replay boost failed: ${e?.message}`);
+				console.warn(`[MemorySystem] replay boost failed: ${e?.message}`);
 			}
 			// 측정 framework — replay 갯수 기록.
 			try {
-			        const { recordReplayBoost } = await import("./usage-tracker.js");
-			        recordReplayBoost(replayBoosted);
+				const { recordReplayBoost } = await import("./usage-tracker.js");
+				recordReplayBoost(replayBoosted);
 			} catch {}
 
 			return {
-			        episodesProcessed: readyEpisodes.length,
-			        factsCreated,
-			        factsUpdated,
-			        insightsCreated,
-			        memoriesPruned: adapterResult.memoriesPruned,
-			        associationsUpdated: adapterResult.associationsUpdated,
-			        // R4 Step 4 — replay boost count (informational, not part of legacy
-			        // ConsolidationResult contract; type-assert to extend).
-			        ...({ replayBoosted } as any),
+				episodesProcessed: readyEpisodes.length,
+				factsCreated,
+				factsUpdated,
+				insightsCreated,
+				memoriesPruned: adapterResult.memoriesPruned,
+				associationsUpdated: adapterResult.associationsUpdated,
+				// R4 Step 4 — replay boost count (informational, not part of legacy
+				// ConsolidationResult contract; type-assert to extend).
+				...({ replayBoosted } as any),
 			};
-			} finally {
+		} finally {
 			this._isConsolidating = false;
-			}
-			}
+		}
+	}
 
-			/**
-			* R4 #220 Step 3 — Semantic Consolidation (The Power of Forgetting).
-			*
-			* Distills clusters of related facts into high-level semantic insights.
-			* Prunes/archives the raw facts that have been fully consolidated to mirror
-			* human memory abstraction.
-			*/
-			private async distillInsights(now: number): Promise<number> {
-			let insightsCreated = 0;
-			try {
+	/**
+	 * R4 #220 Step 3 — Semantic Consolidation (The Power of Forgetting).
+	 *
+	 * Distills clusters of related facts into high-level semantic insights.
+	 * Prunes/archives the raw facts that have been fully consolidated to mirror
+	 * human memory abstraction.
+	 */
+	private async distillInsights(now: number): Promise<number> {
+		let insightsCreated = 0;
+		try {
 			// Get all active facts that are not already insights
 			const allFacts = await this.adapter.semantic.getAll();
 			const activeFacts = allFacts.filter(
-			        (f) =>
-			                f.status === "active" &&
-			                !(f.topics?.includes("system:insight") ?? false),
+				(f) =>
+					f.status === "active" &&
+					!(f.topics?.includes("system:insight") ?? false),
 			);
 
 			// Use KnowledgeGraph hubs to identify candidates for distillation
 			// This mirrors how the brain prioritizes highly-connected concepts for abstraction.
 			const hubs =
-			        "getHubs" in this.adapter
-			                ? await (this.adapter as any).getHubs()
-			                : "getStore" in this.adapter
-			                        ? (this.adapter as any).getStore().knowledgeGraph?.nodes ?? {}
-			                        : {};
+				"getHubs" in this.adapter
+					? await (this.adapter as any).getHubs()
+					: "getStore" in this.adapter
+						? ((this.adapter as any).getStore().knowledgeGraph?.nodes ?? {})
+						: {};
 			const hubNames = Object.keys(hubs).sort(
-			        (a, b) => (hubs[b].frequency ?? 0) - (hubs[a].frequency ?? 0),
+				(a, b) => (hubs[b].frequency ?? 0) - (hubs[a].frequency ?? 0),
 			);
 
 			for (const hubName of hubNames.slice(0, 10)) {
-			        const related = activeFacts.filter((f) =>
-			                f.entities.some((e) => e.toLowerCase() === hubName.toLowerCase()),
-			        );
+				const related = activeFacts.filter((f) =>
+					f.entities.some((e) => e.toLowerCase() === hubName.toLowerCase()),
+				);
 
-			        // Threshold for distillation: 3+ related facts about a hub entity
-			        if (related.length >= 3) {
-			                // R4 #220 — Genuine insight distillation.
-			                // Summarize the core themes of the related facts.
-			                const themes = [...new Set(related.flatMap(f => f.topics ?? []))].join(", ");
-			                const distilledContent = `Consolidated Insight on '${hubName}': Observed consistent patterns regarding ${themes}. Key observations include: ${related.map(f => f.content).join("; ")}`;
+				// Threshold for distillation: 3+ related facts about a hub entity
+				if (related.length >= 3) {
+					// R4 #220 — Genuine insight distillation.
+					// Summarize the core themes of the related facts.
+					const themes = [
+						...new Set(related.flatMap((f) => f.topics ?? [])),
+					].join(", ");
+					const distilledContent = `Consolidated Insight on '${hubName}': Observed consistent patterns regarding ${themes}. Key observations include: ${related.map((f) => f.content).join("; ")}`;
 
-			                const hashHex = crypto
-			                        .createHash("sha256")
-			                        .update("insight:" + hubName + related.map((f) => f.id).sort().join(","))
-			                        .digest("hex")
-			                        .slice(0, 32);			                const deterministicId = `insight-${hashHex.slice(0, 8)}-${hashHex.slice(8, 12)}-${hashHex.slice(12, 16)}-${hashHex.slice(16, 20)}-${hashHex.slice(20, 32)}`;
+					const hashHex = crypto
+						.createHash("sha256")
+						.update(
+							"insight:" +
+								hubName +
+								related
+									.map((f) => f.id)
+									.sort()
+									.join(","),
+						)
+						.digest("hex")
+						.slice(0, 32);
+					const deterministicId = `insight-${hashHex.slice(0, 8)}-${hashHex.slice(8, 12)}-${hashHex.slice(12, 16)}-${hashHex.slice(16, 20)}-${hashHex.slice(20, 32)}`;
 
-			                const insightFact: Fact = {
-			                        id: deterministicId,
-			                        content: distilledContent,
-			                        entities: [hubName],
-			                        topics: [
-			                                "system:insight",
-			                                ...new Set(related.flatMap((f) => f.topics ?? [])),
-			                        ],
-			                        createdAt: now,
-			                        updatedAt: now,
-			                        importance: 0.95, // Insights are highly important
-			                        maxEmotion: Math.max(...related.map((f) => f.maxEmotion ?? 0), 0.5),
-			                        recallCount: 0,
-			                        lastAccessed: now,
-			                        strength: 1.0, // Fresh insights start at full strength
-			                        status: "active",
-			                        sourceEpisodes: [
-			                                ...new Set(related.flatMap((f) => f.sourceEpisodes)),
-			                        ],
-			                        encodingContext: { category: "insight" },
-			                };
+					const insightFact: Fact = {
+						id: deterministicId,
+						content: distilledContent,
+						entities: [hubName],
+						topics: [
+							"system:insight",
+							...new Set(related.flatMap((f) => f.topics ?? [])),
+						],
+						createdAt: now,
+						updatedAt: now,
+						importance: 0.95, // Insights are highly important
+						maxEmotion: Math.max(...related.map((f) => f.maxEmotion ?? 0), 0.5),
+						recallCount: 0,
+						lastAccessed: now,
+						strength: 1.0, // Fresh insights start at full strength
+						status: "active",
+						sourceEpisodes: [
+							...new Set(related.flatMap((f) => f.sourceEpisodes)),
+						],
+						encodingContext: { category: "insight" },
+					};
 
-			                await this.adapter.semantic.upsert(insightFact);
-			                insightsCreated++;
+					await this.adapter.semantic.upsert(insightFact);
+					insightsCreated++;
 
-			                // "The Power of Forgetting": Archive source facts to prioritize the insight.
-			                // This reduces noise in standard retrieval.
-			                for (const f of related) {
-			                        f.status = "archived";
-			                        f.strength *= 0.5; // Weaken for Ebbinghaus decay sweep
-			                        await this.adapter.semantic.upsert(f);
-			                }
-			        }
+					// "The Power of Forgetting": Archive source facts to prioritize the insight.
+					// This reduces noise in standard retrieval.
+					for (const f of related) {
+						f.status = "archived";
+						f.strength *= 0.5; // Weaken for Ebbinghaus decay sweep
+						await this.adapter.semantic.upsert(f);
+					}
+				}
 			}
-			} catch (e: any) {
+		} catch (e: any) {
 			console.warn(`[MemorySystem] insight distillation failed: ${e?.message}`);
-			}
-			return insightsCreated;
-			}
+		}
+		return insightsCreated;
+	}
 }

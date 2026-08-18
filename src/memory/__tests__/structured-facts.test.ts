@@ -5,20 +5,41 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { LocalAdapter } from "../adapters/local.js";
 import { MemorySystem } from "../index.js";
-import type { EncodingContext, Episode, ExtractedFact, FactExtractor, MemoryInput, RecallContext, StructuredFact } from "../index.js";
+import type {
+	EncodingContext,
+	Episode,
+	ExtractedFact,
+	FactExtractor,
+	MemoryInput,
+	RecallContext,
+	StructuredFact,
+} from "../index.js";
 
 let rootDir: string;
-beforeEach(async () => { rootDir = await mkdtemp(join(tmpdir(), "structured-facts-test-")); });
-afterEach(async () => { await rm(rootDir, { recursive: true, force: true }).catch(() => {}); });
+beforeEach(async () => {
+	rootDir = await mkdtemp(join(tmpdir(), "structured-facts-test-"));
+});
+afterEach(async () => {
+	await rm(rootDir, { recursive: true, force: true }).catch(() => {});
+});
 
-function makeSystem(opts: { factExtractor?: FactExtractor } = {}): { system: MemorySystem; adapter: LocalAdapter } {
+function makeSystem(opts: { factExtractor?: FactExtractor } = {}): {
+	system: MemorySystem;
+	adapter: LocalAdapter;
+} {
 	const adapter = new LocalAdapter(join(rootDir, `store-${randomUUID()}.json`));
-	const system = new MemorySystem({ adapter, consolidationIntervalMs: 0, ...(opts.factExtractor ? { factExtractor: opts.factExtractor } : {}) });
+	const system = new MemorySystem({
+		adapter,
+		consolidationIntervalMs: 0,
+		...(opts.factExtractor ? { factExtractor: opts.factExtractor } : {}),
+	});
 	return { system, adapter };
 }
 const DEFAULT_CTX: EncodingContext = {};
 const RECALL_CTX: RecallContext = { topK: 20 };
-function input(overrides: Partial<MemoryInput> = {}): MemoryInput { return { content: "", role: "user", ...overrides }; }
+function input(overrides: Partial<MemoryInput> = {}): MemoryInput {
+	return { content: "", role: "user", ...overrides };
+}
 
 describe("[D.2 RC-04 integration] value-replacement flows through consolidation", () => {
 	it("MR-05 encode old fact → consolidate → encode replacement → consolidate → recall returns the replacement only", async () => {
@@ -69,15 +90,18 @@ describe("[D.2 RC-04 integration] value-replacement flows through consolidation"
 });
 
 describe("[#39 structured facts] conservative multilingual supersession", () => {
-	function structuredExtractor(values: Record<string, StructuredFact>): FactExtractor {
-		return async (episodes) => episodes.map((ep) => ({
-			content: ep.content,
-			entities: [],
-			topics: [],
-			importance: 0.8,
-			sourceEpisodeIds: [ep.id],
-			structured: values[ep.content],
-		}));
+	function structuredExtractor(
+		values: Record<string, StructuredFact>,
+	): FactExtractor {
+		return async (episodes) =>
+			episodes.map((ep) => ({
+				content: ep.content,
+				entities: [],
+				topics: [],
+				importance: 0.8,
+				sourceEpisodeIds: [ep.id],
+				structured: values[ep.content],
+			}));
 	}
 
 	it("Korean single-valued replacement keeps the raw predecessor and its chain", async () => {
@@ -85,14 +109,31 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		const newContent = "사용자 거주지: 부산";
 		const { system, adapter } = makeSystem({
 			factExtractor: structuredExtractor({
-				[oldContent]: { subject: "사용자", property: "거주지", value: "서울", polarity: "affirmed", cardinality: "single", provenance: "caller" },
-				[newContent]: { subject: "사용자", property: "거주지", value: "부산", polarity: "affirmed", cardinality: "single", provenance: "caller" },
+				[oldContent]: {
+					subject: "사용자",
+					property: "거주지",
+					value: "서울",
+					polarity: "affirmed",
+					cardinality: "single",
+					provenance: "caller",
+				},
+				[newContent]: {
+					subject: "사용자",
+					property: "거주지",
+					value: "부산",
+					polarity: "affirmed",
+					cardinality: "single",
+					provenance: "caller",
+				},
 			}),
 		});
 		const timestamp = Date.now() - 10 * 60 * 1000;
 		await system.encode(input({ content: oldContent, timestamp }), DEFAULT_CTX);
 		await system.consolidateNow(true);
-		await system.encode(input({ content: newContent, timestamp: timestamp + 1 }), DEFAULT_CTX);
+		await system.encode(
+			input({ content: newContent, timestamp: timestamp + 1 }),
+			DEFAULT_CTX,
+		);
 		const result = await system.consolidateNow(true);
 
 		expect(result.factsUpdated).toBe(1);
@@ -115,21 +156,43 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		const unscopedFact = "사용자 거주지: 부산";
 		const { system, adapter } = makeSystem({
 			factExtractor: structuredExtractor({
-				[projectFact]: { subject: "사용자", property: "거주지", value: "서울", polarity: "affirmed", cardinality: "single", provenance: "caller" },
-				[unscopedFact]: { subject: "사용자", property: "거주지", value: "부산", polarity: "affirmed", cardinality: "single", provenance: "caller" },
+				[projectFact]: {
+					subject: "사용자",
+					property: "거주지",
+					value: "서울",
+					polarity: "affirmed",
+					cardinality: "single",
+					provenance: "caller",
+				},
+				[unscopedFact]: {
+					subject: "사용자",
+					property: "거주지",
+					value: "부산",
+					polarity: "affirmed",
+					cardinality: "single",
+					provenance: "caller",
+				},
 			}),
 		});
 		const timestamp = Date.now() - 10 * 60 * 1000;
-		await system.encode(input({ content: projectFact, timestamp }), { project: "personal" });
+		await system.encode(input({ content: projectFact, timestamp }), {
+			project: "personal",
+		});
 		await system.consolidateNow(true);
-		await system.encode(input({ content: unscopedFact, timestamp: timestamp + 1 }), DEFAULT_CTX);
+		await system.encode(
+			input({ content: unscopedFact, timestamp: timestamp + 1 }),
+			DEFAULT_CTX,
+		);
 		const result = await system.consolidateNow(true);
 
 		expect(result.factsUpdated).toBe(0);
 		const facts = await adapter.semantic.getAll();
 		expect(facts).toHaveLength(2);
 		expect(facts.every((fact) => fact.status === "active")).toBe(true);
-		expect(facts.find((fact) => fact.content === projectFact)?.encodingContext?.project).toBe("personal");
+		expect(
+			facts.find((fact) => fact.content === projectFact)?.encodingContext
+				?.project,
+		).toBe("personal");
 		await system.close();
 	});
 
@@ -140,10 +203,34 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		const japaneseNew = "ユーザー居住地: 大阪";
 		const { system, adapter } = makeSystem({
 			factExtractor: structuredExtractor({
-				[englishOld]: { subject: "user", property: "preferred editor", value: "Vim", polarity: "affirmed", cardinality: "single" },
-				[englishNew]: { subject: "USER", property: "preferred   editor", value: "Helix", polarity: "affirmed", cardinality: "single" },
-				[japaneseOld]: { subject: "ユーザー", property: "居住地", value: "東京", polarity: "affirmed", cardinality: "single" },
-				[japaneseNew]: { subject: "ユーザー", property: "居住地", value: "大阪", polarity: "affirmed", cardinality: "single" },
+				[englishOld]: {
+					subject: "user",
+					property: "preferred editor",
+					value: "Vim",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[englishNew]: {
+					subject: "USER",
+					property: "preferred   editor",
+					value: "Helix",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[japaneseOld]: {
+					subject: "ユーザー",
+					property: "居住地",
+					value: "東京",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[japaneseNew]: {
+					subject: "ユーザー",
+					property: "居住地",
+					value: "大阪",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
 			}),
 		});
 		const timestamp = Date.now() - 10 * 60 * 1000;
@@ -152,8 +239,12 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 			await system.consolidateNow(true);
 		}
 		const facts = await adapter.semantic.getAll();
-		expect(facts.filter((fact) => fact.status === "active").map((fact) => fact.content).sort())
-			.toEqual([englishNew, japaneseNew].sort());
+		expect(
+			facts
+				.filter((fact) => fact.status === "active")
+				.map((fact) => fact.content)
+				.sort(),
+		).toEqual([englishNew, japaneseNew].sort());
 		await system.close();
 	});
 
@@ -162,8 +253,24 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		const english = "User residence: Busan";
 		const { system, adapter } = makeSystem({
 			factExtractor: structuredExtractor({
-				[korean]: { subject: "사용자", subjectId: "person:self", property: "거주지", propertyId: "profile:residence", value: "서울", polarity: "affirmed", cardinality: "single" },
-				[english]: { subject: "user", subjectId: "person:self", property: "residence", propertyId: "profile:residence", value: "Busan", polarity: "affirmed", cardinality: "single" },
+				[korean]: {
+					subject: "사용자",
+					subjectId: "person:self",
+					property: "거주지",
+					propertyId: "profile:residence",
+					value: "서울",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[english]: {
+					subject: "user",
+					subjectId: "person:self",
+					property: "residence",
+					propertyId: "profile:residence",
+					value: "Busan",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
 			}),
 		});
 		const timestamp = Date.now() - 10 * 60 * 1000;
@@ -172,8 +279,12 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 			await system.consolidateNow(true);
 		}
 		const facts = await adapter.semantic.getAll();
-		expect(facts.find((fact) => fact.content === korean)?.status).toBe("superseded");
-		expect(facts.find((fact) => fact.content === english)?.status).toBe("active");
+		expect(facts.find((fact) => fact.content === korean)?.status).toBe(
+			"superseded",
+		);
+		expect(facts.find((fact) => fact.content === english)?.status).toBe(
+			"active",
+		);
 		await system.close();
 	});
 
@@ -182,8 +293,24 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		const second = "User residence: Busan";
 		const { system, adapter } = makeSystem({
 			factExtractor: structuredExtractor({
-				[first]: { subject: "user", subjectId: "person:a", property: "residence", propertyId: "profile:residence", value: "Seoul", polarity: "affirmed", cardinality: "single" },
-				[second]: { subject: "user", subjectId: "person:b", property: "residence", propertyId: "profile:residence", value: "Busan", polarity: "affirmed", cardinality: "single" },
+				[first]: {
+					subject: "user",
+					subjectId: "person:a",
+					property: "residence",
+					propertyId: "profile:residence",
+					value: "Seoul",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[second]: {
+					subject: "user",
+					subjectId: "person:b",
+					property: "residence",
+					propertyId: "profile:residence",
+					value: "Busan",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
 			}),
 		});
 		const timestamp = Date.now() - 10 * 60 * 1000;
@@ -191,7 +318,11 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 			await system.encode(input({ content, timestamp }), DEFAULT_CTX);
 			await system.consolidateNow(true);
 		}
-		expect((await adapter.semantic.getAll()).every((fact) => fact.status === "active")).toBe(true);
+		expect(
+			(await adapter.semantic.getAll()).every(
+				(fact) => fact.status === "active",
+			),
+		).toBe(true);
 		await system.close();
 	});
 
@@ -201,9 +332,30 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		const partial = "User residence: Tokyo";
 		const { system, adapter } = makeSystem({
 			factExtractor: structuredExtractor({
-				[legacy]: { subject: "user", property: "residence", value: "Seoul", polarity: "affirmed", cardinality: "single" },
-				[identified]: { subject: "user", subjectId: "person:self", property: "residence", propertyId: "profile:residence", value: "Busan", polarity: "affirmed", cardinality: "single" },
-				[partial]: { subject: "user", subjectId: "person:self", property: "residence", value: "Tokyo", polarity: "affirmed", cardinality: "single" },
+				[legacy]: {
+					subject: "user",
+					property: "residence",
+					value: "Seoul",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[identified]: {
+					subject: "user",
+					subjectId: "person:self",
+					property: "residence",
+					propertyId: "profile:residence",
+					value: "Busan",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[partial]: {
+					subject: "user",
+					subjectId: "person:self",
+					property: "residence",
+					value: "Tokyo",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
 			}),
 		});
 		const timestamp = Date.now() - 10 * 60 * 1000;
@@ -211,7 +363,11 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 			await system.encode(input({ content, timestamp }), DEFAULT_CTX);
 			await system.consolidateNow(true);
 		}
-		expect((await adapter.semantic.getAll()).every((fact) => fact.status === "active")).toBe(true);
+		expect(
+			(await adapter.semantic.getAll()).every(
+				(fact) => fact.status === "active",
+			),
+		).toBe(true);
 		await system.close();
 	});
 
@@ -223,11 +379,41 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		const notSeoul = "사용자는 서울에 살지 않는다";
 		const { system, adapter } = makeSystem({
 			factExtractor: structuredExtractor({
-				[skills]: { subject: "사용자", property: "기술", value: "TypeScript", polarity: "affirmed", cardinality: "multi" },
-				[moreSkills]: { subject: "사용자", property: "기술", value: "Rust", polarity: "affirmed", cardinality: "multi" },
-				[residence]: { subject: "사용자", property: "거주지", value: "서울", polarity: "affirmed", cardinality: "single" },
-				[office]: { subject: "사용자", property: "근무지", value: "서울", polarity: "affirmed", cardinality: "single" },
-				[notSeoul]: { subject: "사용자", property: "거주지", value: "서울", polarity: "negated", cardinality: "single" },
+				[skills]: {
+					subject: "사용자",
+					property: "기술",
+					value: "TypeScript",
+					polarity: "affirmed",
+					cardinality: "multi",
+				},
+				[moreSkills]: {
+					subject: "사용자",
+					property: "기술",
+					value: "Rust",
+					polarity: "affirmed",
+					cardinality: "multi",
+				},
+				[residence]: {
+					subject: "사용자",
+					property: "거주지",
+					value: "서울",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[office]: {
+					subject: "사용자",
+					property: "근무지",
+					value: "서울",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[notSeoul]: {
+					subject: "사용자",
+					property: "거주지",
+					value: "서울",
+					polarity: "negated",
+					cardinality: "single",
+				},
 			}),
 		});
 		const timestamp = Date.now() - 10 * 60 * 1000;
@@ -235,7 +421,82 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 			await system.encode(input({ content, timestamp }), DEFAULT_CTX);
 			await system.consolidateNow(true);
 		}
-		expect((await adapter.semantic.getAll()).every((fact) => fact.status === "active")).toBe(true);
+		expect(
+			(await adapter.semantic.getAll()).every(
+				(fact) => fact.status === "active",
+			),
+		).toBe(true);
+		await system.close();
+	});
+
+	it("archives only an exact explicit structured deletion target", async () => {
+		const storedContent = "사용자 알레르기: 땅콩";
+		const deleteContent = "땅콩 알레르기 기억은 지워줘";
+		const target: StructuredFact = {
+			subject: "사용자",
+			property: "알레르기",
+			value: "땅콩",
+			polarity: "affirmed",
+			cardinality: "multi",
+		};
+		const { system, adapter } = makeSystem({
+			factExtractor: async (episodes) =>
+				episodes.map((ep) => ({
+					content: ep.content === deleteContent ? storedContent : ep.content,
+					entities: [],
+					topics: [],
+					importance: 0.8,
+					sourceEpisodeIds: [ep.id],
+					structured: target,
+					operation: ep.content === deleteContent ? "delete" : "upsert",
+				})),
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		await system.encode(
+			input({ content: storedContent, timestamp }),
+			DEFAULT_CTX,
+		);
+		await system.consolidateNow(true);
+		await system.encode(
+			input({ content: deleteContent, timestamp: timestamp + 1 }),
+			DEFAULT_CTX,
+		);
+		const result = await system.consolidateNow(true);
+
+		expect(result.factsUpdated).toBe(1);
+		expect((await adapter.semantic.getAll())[0].status).toBe("archived");
+		expect((await system.recall("땅콩", { topK: 10 })).facts).toHaveLength(0);
+		await system.close();
+	});
+
+	it("fails closed for an unstructured delete operation", async () => {
+		const storedContent = "User allergy: peanut";
+		const deleteContent = "Forget my peanut allergy";
+		const { system, adapter } = makeSystem({
+			factExtractor: async (episodes) =>
+				episodes.map((ep) => ({
+					content: ep.content,
+					entities: [],
+					topics: [],
+					importance: 0.8,
+					sourceEpisodeIds: [ep.id],
+					operation: ep.content === deleteContent ? "delete" : "upsert",
+				})),
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		await system.encode(
+			input({ content: storedContent, timestamp }),
+			DEFAULT_CTX,
+		);
+		await system.consolidateNow(true);
+		await system.encode(
+			input({ content: deleteContent, timestamp: timestamp + 1 }),
+			DEFAULT_CTX,
+		);
+		const result = await system.consolidateNow(true);
+
+		expect(result.factsUpdated).toBe(0);
+		expect((await adapter.semantic.getAll())[0].status).toBe("active");
 		await system.close();
 	});
 });

@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-	computeFamilySplitDigest,
 	type MemoryUpdateContract,
+	computeFamilySplitDigest,
 	validateMemoryUpdateContract,
+	validateSemanticDiagnosticCoverage,
 } from "./memory-update-contract.js";
+import diagnostic from "./memory-update-semantic-diagnostic-v1.json";
 
 function semanticCase(language: "ko" | "en" | "ja", id = language) {
 	return {
@@ -37,6 +39,24 @@ function reviewedCase(language: "ko" | "en" | "ja", id = language) {
 }
 
 describe("memory update contract", () => {
+	it("freezes update, delete, and no-update diagnostics in all three languages", () => {
+		expect(() =>
+			validateSemanticDiagnosticCoverage(diagnostic as MemoryUpdateContract),
+		).not.toThrow();
+		expect(diagnostic.cases).toHaveLength(9);
+	});
+
+	it("rejects a multilingual diagnostic with a missing decision cell", () => {
+		const contract = structuredClone(diagnostic) as MemoryUpdateContract;
+		contract.cases = contract.cases.filter(
+			(current) =>
+				!(current.language === "ja" && current.expectedDecision === "delete"),
+		);
+		expect(() => validateSemanticDiagnosticCoverage(contract)).toThrow(
+			"requires ja/delete",
+		);
+	});
+
 	it("accepts an independently reviewed multilingual semantic contract", () => {
 		const cases = [reviewedCase("ko"), reviewedCase("en"), reviewedCase("ja")];
 		const contract: MemoryUpdateContract = {

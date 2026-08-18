@@ -161,6 +161,15 @@ Anti-pattern (do NOT do):
 - Padding with relationship verbs ("switched", "changed") in the value;
   the value should be the new state alone.
 
+CRITICAL — EXPLICIT DELETE / FORGET statements:
+When the speaker explicitly asks to remove a previously stored fact (for
+example "forget my peanut allergy", "땅콩 알레르기 기억은 지워줘",
+or "ピーナッツアレルギーの記憶を削除して"), return an object with
+"operation":"delete" and the exact affirmative structured fact to remove.
+Do not turn the request into a new negated fact. Delete requires complete
+subject, property, value, polarity="affirmed", and cardinality. Never infer a
+delete from uncertainty, correction, temporary exceptions, or ordinary negation.
+
 Korean-specific rules (apply when episode is Korean):
 - 한국어 에피소드에서는 반드시 한국어로 fact를 작성. 영어로 번역하지 마라.
 - 조사(은/는/이/가/을/를)는 생략하고 명사구 중심으로 작성: "사용자 직업: 소프트웨어 엔지니어"
@@ -179,7 +188,8 @@ value; use "multi" for lists, skills, or preferences that can coexist.
 
 Respond with ONLY a JSON object mapping episode number to fact array. No other text.
 Backward-compatible format: {"1": ["fact", ...], "2": ["fact", ...], ...}
-Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":{"subject":"사용자","property":"거주지","value":"서울","polarity":"affirmed","cardinality":"single"}}], ...}`;
+Structured format: {"1": [{"content":"사용자 거주지: 서울","operation":"upsert","structured":{"subject":"사용자","property":"거주지","value":"서울","polarity":"affirmed","cardinality":"single"}}], ...}
+Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"delete","structured":{"subject":"사용자","property":"알레르기","value":"땅콩","polarity":"affirmed","cardinality":"multi"}}]}`;
 
 	const call = () =>
 		fetch(`${baseURL}chat/completions`, {
@@ -198,7 +208,9 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":
 				// Gemini 2.5 may spend part of this budget on internal reasoning. A
 				// 2K ceiling can therefore truncate even a short JSON payload.
 				max_tokens: Math.max(8192, episodes.length * 400),
-				temperature: 0.1,
+				// Extraction is a contract parse, not creative generation. Zero reduces
+				// multilingual key/cardinality drift across repeated benchmark runs.
+				temperature: 0,
 				response_format: { type: "json_object" },
 			}),
 		});
@@ -266,24 +278,30 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":
 					`[LLMFactExtractor] Unexpected value for key "${i + 1}": ${typeof rawFacts}. Keys: ${Object.keys(parsed).join(", ")}`,
 				);
 			}
-			const facts: Array<{ content: string; structured?: StructuredFact }> =
-				Array.isArray(rawFacts)
-					? rawFacts.flatMap((fact) => {
-							if (typeof fact === "string") return [{ content: fact }];
-							if (!fact || typeof fact !== "object") return [];
-							const candidate = fact as {
-								content?: unknown;
-								structured?: unknown;
-							};
-							if (typeof candidate.content !== "string") return [];
-							return [
-								{
-									content: candidate.content,
-									structured: parseStructuredFact(candidate.structured),
-								},
-							];
-						})
-					: [];
+			const facts: Array<{
+				content: string;
+				structured?: StructuredFact;
+				operation?: "upsert" | "delete";
+			}> = Array.isArray(rawFacts)
+				? rawFacts.flatMap((fact) => {
+						if (typeof fact === "string") return [{ content: fact }];
+						if (!fact || typeof fact !== "object") return [];
+						const candidate = fact as {
+							content?: unknown;
+							structured?: unknown;
+							operation?: unknown;
+						};
+						if (typeof candidate.content !== "string") return [];
+						return [
+							{
+								content: candidate.content,
+								structured: parseStructuredFact(candidate.structured),
+								operation:
+									candidate.operation === "delete" ? "delete" : "upsert",
+							},
+						];
+					})
+				: [];
 			if (facts.length === 0) return [];
 			return facts.map((fact) => ({
 				content: fact.content,
@@ -293,6 +311,7 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":
 				maxEmotion: ep.importance.emotion ?? 0,
 				sourceEpisodeIds: [ep.id],
 				structured: fact.structured,
+				operation: fact.operation,
 			}));
 		});
 	} catch (err) {

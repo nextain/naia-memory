@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 export const MEMORY_UPDATE_LANGUAGES = ["ko", "en", "ja"] as const;
 export type MemoryUpdateLanguage = (typeof MEMORY_UPDATE_LANGUAGES)[number];
 
@@ -44,8 +46,37 @@ export type MemoryUpdateContract = {
 	cases: MemoryUpdateCase[];
 };
 
+export const SEMANTIC_DIAGNOSTIC_DECISIONS = [
+	"update",
+	"delete",
+	"no-update",
+] as const;
+
+export function validateSemanticDiagnosticCoverage(
+	contract: MemoryUpdateContract,
+): void {
+	validateMemoryUpdateContract(contract);
+	if (
+		contract.tier !== "semantic-update-interpretation" ||
+		contract.construction !== "generated-diagnostic"
+	)
+		throw new Error("coverage gate requires a generated semantic diagnostic");
+	for (const language of MEMORY_UPDATE_LANGUAGES)
+		for (const decision of SEMANTIC_DIAGNOSTIC_DECISIONS)
+			if (
+				!contract.cases.some(
+					(current) =>
+						current.language === language &&
+						current.expectedDecision === decision,
+				)
+			)
+				throw new Error(`semantic diagnostic requires ${language}/${decision}`);
+}
+
 export function computeFamilySplitDigest(cases: MemoryUpdateCase[]): string {
-	const assignments = [...new Map(cases.map((item) => [item.familyId, item.split]))]
+	const assignments = [
+		...new Map(cases.map((item) => [item.familyId, item.split])),
+	]
 		.sort(([left], [right]) => left.localeCompare(right))
 		.map(([familyId, split]) => `${familyId}\u0000${split}`)
 		.join("\n");
@@ -117,11 +148,17 @@ export function validateMemoryUpdateContract(
 			)
 				throw new Error(`${current.id}: independent case requires provenance`);
 			if (provenance.authorId === provenance.reviewerId)
-				throw new Error(`${current.id}: author and reviewer must be independent`);
+				throw new Error(
+					`${current.id}: author and reviewer must be independent`,
+				);
 			if (!provenance.authorNativeLanguages.includes(current.language))
-				throw new Error(`${current.id}: author must be native in case language`);
+				throw new Error(
+					`${current.id}: author must be native in case language`,
+				);
 			if (!provenance.reviewerNativeLanguages.includes(current.language))
-				throw new Error(`${current.id}: reviewer must be native in case language`);
+				throw new Error(
+					`${current.id}: reviewer must be native in case language`,
+				);
 			const authoredAt = Date.parse(provenance.authoredAt);
 			const reviewedAt = Date.parse(provenance.reviewedAt);
 			if (
@@ -131,7 +168,9 @@ export function validateMemoryUpdateContract(
 			)
 				throw new Error(`${current.id}: invalid provenance chronology`);
 		} else if (current.provenance !== undefined) {
-			throw new Error(`${current.id}: diagnostic case must not claim provenance`);
+			throw new Error(
+				`${current.id}: diagnostic case must not claim provenance`,
+			);
 		}
 		if (
 			!current.turns.length ||
@@ -242,11 +281,13 @@ export function validateMemoryUpdateContract(
 			throw new Error("independent contract requires family split freeze");
 		if (!Number.isFinite(Date.parse(contract.familySplitFreeze.frozenAt)))
 			throw new Error("family split freeze timestamp is invalid");
-		if (contract.familySplitFreeze.digest !== computeFamilySplitDigest(contract.cases))
+		if (
+			contract.familySplitFreeze.digest !==
+			computeFamilySplitDigest(contract.cases)
+		)
 			throw new Error("family split freeze digest does not match cases");
 		for (const language of MEMORY_UPDATE_LANGUAGES)
 			if (!contract.cases.some((current) => current.language === language))
 				throw new Error(`independent contract requires ${language} coverage`);
 	}
 }
-import { createHash } from "node:crypto";

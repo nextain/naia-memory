@@ -4,6 +4,7 @@ import {
 	LocalAdapter,
 	type LocalAdapterOptions,
 } from "../../memory/adapters/local.js";
+import type { ContradictionFilterProvider } from "../../memory/contradiction-filter.js";
 import type { FactExtractor } from "../../memory/memory-system-api.js";
 import { NaiaMemoryProvider } from "../../memory/provider.js";
 import type { Fact, MemoryAdapter } from "../../memory/types.js";
@@ -18,6 +19,7 @@ const ISOLATED_PROJECT = "semantic-memory-evaluation";
 export type NaiaSemanticFactoryOptions = LocalAdapterOptions & {
 	storePath: string;
 	factExtractor: FactExtractor;
+	contradictionFilter: ContradictionFilterProvider;
 };
 
 export type NaiaSemanticProvider = {
@@ -44,6 +46,7 @@ export async function createNaiaSemanticBridge(
 	const provider = new NaiaMemoryProvider({
 		adapter,
 		factExtractor: options.factExtractor,
+		contradictionFilter: options.contradictionFilter,
 	});
 	return new NaiaSemanticBridge(provider, adapter, isolatedStorePath);
 }

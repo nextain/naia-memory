@@ -17,14 +17,14 @@ import crypto, { randomUUID } from "node:crypto";
 import { LocalAdapter } from "./adapters/local.js";
 import { QdrantAdapter } from "./adapters/qdrant.js";
 import { SqliteAdapter } from "./adapters/sqlite.js";
-import type { EmbeddingProvider } from "./embeddings.js";
-import { scoreImportance } from "./importance.js";
 import { allocateBudget } from "./context-budget.js";
 import {
 	type ContradictionFilterProvider,
 	HeuristicContradictionFilter,
 	selectFilter,
 } from "./contradiction-filter.js";
+import type { EmbeddingProvider } from "./embeddings.js";
+import { scoreImportance } from "./importance.js";
 
 // Re-export contradiction filter surface so consumers (naia-agent / tests) can
 // import HeuristicContradictionFilter from the package main entry without
@@ -35,9 +35,15 @@ export {
 	selectFilter,
 	type ContradictionFilterProvider,
 } from "./contradiction-filter.js";
-import { findContradictions, findContradictionsWith } from "./reconsolidation.js";
 import { filterNegativeCapture } from "./negative-capture.js";
-import { findStructuredSupersessions, sameStructuredFact } from "./structured-facts.js";
+import {
+	findContradictions,
+	findContradictionsWith,
+} from "./reconsolidation.js";
+import {
+	findStructuredSupersessions,
+	sameStructuredFact,
+} from "./structured-facts.js";
 import type {
 	BackupCapable,
 	ConsolidationResult,
@@ -58,7 +64,14 @@ export function deterministicEpisodeId(
 ): string {
 	const hex = crypto
 		.createHash("sha256")
-		.update(JSON.stringify([context.project ?? "", context.sessionId ?? "", role, key]))
+		.update(
+			JSON.stringify([
+				context.project ?? "",
+				context.sessionId ?? "",
+				role,
+				key,
+			]),
+		)
 		.digest("hex")
 		.slice(0, 32);
 	return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
@@ -75,7 +88,10 @@ export {
 export { buildLLMFactExtractor } from "./llm-fact-extractor.js";
 export type { LLMFactExtractorOptions } from "./llm-fact-extractor.js";
 export { buildLLMQueryStructurer } from "./llm-query-structurer.js";
-export type { LLMQueryStructurerOptions, StructuredQuery } from "./llm-query-structurer.js";
+export type {
+	LLMQueryStructurerOptions,
+	StructuredQuery,
+} from "./llm-query-structurer.js";
 export { buildLLMSummarizer } from "./llm-summarizer.js";
 export type { LLMSummarizerOptions } from "./llm-summarizer.js";
 export {
@@ -135,7 +151,6 @@ import { AlgorithmVariantA } from "./algorithms/variantA.js";
 import { AlgorithmVariantB } from "./algorithms/variantB.js";
 import type { CompactionSummarizer } from "./compaction-helpers.js";
 
-
 /**
  * Callback for extracting facts from episodes.
  * In production, this would call an LLM. For testing, a simple heuristic.
@@ -144,16 +159,18 @@ export type FactExtractor = (episodes: Episode[]) => Promise<ExtractedFact[]>;
 
 /** A fact extracted from episodes (before insertion) */
 export interface ExtractedFact {
-        content: string;
-        entities: string[];
-        topics: string[];
-        importance: number;
-        /** Highest emotional valence among source episodes (0.0–1.0).
-         *  Optional — defaults to 0 when absent (matches stored `Fact.maxEmotion`). */
-        maxEmotion?: number;
-        sourceEpisodeIds: string[];
+	content: string;
+	entities: string[];
+	topics: string[];
+	importance: number;
+	/** Highest emotional valence among source episodes (0.0–1.0).
+	 *  Optional — defaults to 0 when absent (matches stored `Fact.maxEmotion`). */
+	maxEmotion?: number;
+	sourceEpisodeIds: string[];
 	/** Optional explicit structure for conservative write-time supersession. */
 	structured?: StructuredFact;
+	/** Explicit memory mutation. Delete is honored only with an exact structured target. */
+	operation?: "upsert" | "delete";
 }
 export interface MemorySystemOptions {
 	/** Pre-built adapter. If omitted and qdrantOptions is not set, defaults to LocalAdapter. */
@@ -239,10 +256,11 @@ export async function heuristicFactExtractor(
 		_heuristicWarnOnce = true;
 	}
 	return episodes.map((ep) => ({
-	        content: ep.content,
-	        entities: [],
-	        topics: ep.encodingContext.project ? [ep.encodingContext.project] : [],
-	        importance: ep.importance.utility,
-	        maxEmotion: ep.importance.emotion,
-	        sourceEpisodeIds: [ep.id],
-	}));}
+		content: ep.content,
+		entities: [],
+		topics: ep.encodingContext.project ? [ep.encodingContext.project] : [],
+		importance: ep.importance.utility,
+		maxEmotion: ep.importance.emotion,
+		sourceEpisodeIds: [ep.id],
+	}));
+}

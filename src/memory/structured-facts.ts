@@ -13,18 +13,30 @@ function opaqueId(value: string | undefined): string {
  * Complete opaque IDs take precedence; labels are the migration fallback.
  */
 export function sameStructuredIdentity(
-	left: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">,
-	right: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">,
+	left: Pick<
+		StructuredFact,
+		"subject" | "property" | "subjectId" | "propertyId"
+	>,
+	right: Pick<
+		StructuredFact,
+		"subject" | "property" | "subjectId" | "propertyId"
+	>,
 ): boolean {
 	const leftSubjectId = opaqueId(left.subjectId);
 	const leftPropertyId = opaqueId(left.propertyId);
 	const rightSubjectId = opaqueId(right.subjectId);
 	const rightPropertyId = opaqueId(right.propertyId);
-	const hasAnyId = Boolean(leftSubjectId || leftPropertyId || rightSubjectId || rightPropertyId);
+	const hasAnyId = Boolean(
+		leftSubjectId || leftPropertyId || rightSubjectId || rightPropertyId,
+	);
 	if (hasAnyId) {
 		return Boolean(
-			leftSubjectId && leftPropertyId && rightSubjectId && rightPropertyId &&
-			leftSubjectId === rightSubjectId && leftPropertyId === rightPropertyId,
+			leftSubjectId &&
+				leftPropertyId &&
+				rightSubjectId &&
+				rightPropertyId &&
+				leftSubjectId === rightSubjectId &&
+				leftPropertyId === rightPropertyId,
 		);
 	}
 	return (
@@ -47,6 +59,24 @@ export function sameStructuredFact(
 }
 
 /**
+ * Finds active facts matching an explicit structured deletion target exactly.
+ * No identity-only or natural-language fallback is allowed: false deletion is
+ * more damaging than retaining a stale fact.
+ */
+export function findStructuredDeletionTargets(
+	existingFacts: Fact[],
+	target: StructuredFact,
+): Fact[] {
+	if (target.polarity !== "affirmed") return [];
+	return existingFacts.filter(
+		(fact) =>
+			fact.status === "active" &&
+			!!fact.structured &&
+			sameStructuredFact(fact.structured, target),
+	);
+}
+
+/**
  * Returns active facts that an explicitly structured candidate may replace.
  *
  * This deliberately has no natural-language fallback: subject/property labels
@@ -58,9 +88,15 @@ export function findStructuredSupersessions(
 ): Fact[] {
 	// Negation is not a safe replacement signal. For example, "does not live
 	// in Seoul" may be temporary, scoped, or refer to a past state.
-	if (candidate.cardinality !== "single" || candidate.polarity !== "affirmed") return [];
+	if (candidate.cardinality !== "single" || candidate.polarity !== "affirmed")
+		return [];
 	const value = comparisonKey(candidate.value);
-	if (!comparisonKey(candidate.subject) || !comparisonKey(candidate.property) || !value) return [];
+	if (
+		!comparisonKey(candidate.subject) ||
+		!comparisonKey(candidate.property) ||
+		!value
+	)
+		return [];
 
 	return existingFacts.filter((fact) => {
 		const structured = fact.structured;

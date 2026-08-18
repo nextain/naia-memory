@@ -191,3 +191,72 @@ publication gate. The next meaningful experiment is a frozen Korean, English,
 and Japanese semantic update/delete/no-update corpus, followed by blinded
 scoring and at least two external engines under identical provider and budget
 conditions.
+
+## 2026-08-19 multilingual mutation diagnostic
+
+A generated diagnostic corpus now covers the full Korean/English/Japanese ×
+update/delete/no-update matrix (nine cases). Contract validation fails unless
+all nine cells are present. The corpus is labelled `generated-diagnostic`; it
+is not independent, native-reviewed, blind, or a publication test set.
+
+The Naia bridge now injects the exact frozen provider/model into both fact
+extraction and contradiction filtering. This fixed a real benchmark defect:
+the contradiction filter had read ambient credentials, failed with HTTP 400,
+and silently used a heuristic fallback while extraction continued through the
+configured provider. With the pinned path, one run retrieved only the latest
+residence in all three languages. The earlier update failure was therefore
+partly configuration drift, not an engine ceiling.
+
+The product now represents an explicit extractor mutation as `operation:
+delete`. Consolidation honors it only when a complete structured target exactly
+matches an active fact, then archives that fact and closes its validity range.
+Unstructured, negated, identity-only, and mismatched requests fail closed. This
+adds preservation-first natural-language deletion without a broad regex or
+destructive fuzzy match. Extraction temperature is zero because this is
+contract parsing rather than creative generation.
+
+Here, `delete` means retrieval suppression, not physical erasure: the matched
+fact remains in storage with `archived` status for lineage and auditability.
+It therefore must not be presented as GDPR-style right-to-erasure or secure
+deletion. The existing explicit store deletion API remains the physical-delete
+surface; deciding whether natural-language "forget" should invoke it requires
+a separate product and privacy contract.
+
+Two post-change Naia executions produced these qualitative retrieval
+observations. They are not scored passes: no frozen accepted-variant set or
+blind judge exists yet.
+
+| Cell | Naia run 1 | Naia run 2 | Mem0 baseline |
+|---|---|---|---|
+| ko update | latest only | latest only | latest only |
+| ko delete | no deleted fact retrieved | no deleted fact retrieved | deleted fact leaked |
+| ko no-update | duplicate variants | duplicate variants | one fact |
+| en update | latest + stale | latest + stale | latest only |
+| en delete | deleted fact leaked | deleted fact leaked | no deleted fact retrieved |
+| en no-update | duplicate variants | duplicate variants | one fact |
+| ja update | latest only | latest only | latest only |
+| ja delete | no deleted fact retrieved | no deleted fact retrieved | no deleted fact retrieved |
+| ja no-update | duplicate variants | one fact | one fact |
+
+This is meaningful diagnostic progress, not evidence that Naia is globally
+better. It isolates the next ceiling: extractor-generated subject/property
+identity drifts across paraphrases (for example `lives in` versus `residence`),
+and equivalent statements can be emitted with different keys. Korean and
+Japanese deletion succeeded twice while English deletion failed twice, so the
+new mechanism is real but not language-robust. Mem0 remains better on this
+small diagnostic for English deletion and no-update deduplication; Naia is
+better only on the generated Korean deletion cell.
+
+The next experiment should separate language realization from
+language-independent identity: a frozen ontology/ID resolver must normalize
+subject and property after extraction, with unknown concepts failing closed.
+It must be evaluated on held-out families rather than aliases added from these
+nine cases. Publication still requires repeated runs, confidence intervals,
+independent native review, blind scoring, and a second external engine such as
+Hindsight. Formal multi-agent adversarial review was not run because nested
+OpenCode/Claude execution remains prohibited by the workspace runtime; this
+section records a manual adversarial review only.
+
+Deterministic verification after this change: 47 test files / 547 tests
+passed, both TypeScript configurations passed, the package build passed, and
+`git diff --check` passed.
