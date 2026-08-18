@@ -38,7 +38,7 @@ const GEMINI_DIRECT_BASE_URL =
  *  high-demand periods; gateway routes through Vertex which is rate-managed. */
 const USE_GATEWAY = !!process.env.GATEWAY_URL;
 const DEFAULT_BASE_URL = USE_GATEWAY
-	? `${process.env.GATEWAY_URL!.replace(/\/+$/, "")}/v1/`
+	? `${process.env.GATEWAY_URL?.replace(/\/+$/, "")}/v1/`
 	: GEMINI_DIRECT_BASE_URL;
 // Gateway routes via Vertex AI which requires `vertexai:` model prefix.
 // Direct Gemini API uses bare model name.
@@ -68,7 +68,7 @@ export function buildLLMFactExtractor(
 	const callerOverrodeBaseURL = options.baseURL !== undefined;
 	const apiKey = callerOverrodeBaseURL
 		? options.apiKey
-		: (process.env.GATEWAY_MASTER_KEY || options.apiKey);
+		: process.env.GATEWAY_MASTER_KEY || options.apiKey;
 	const {
 		baseURL = DEFAULT_BASE_URL,
 		model = DEFAULT_MODEL,
@@ -119,9 +119,7 @@ async function extractBatch(
 			// Heuristic: timestamps below 1e12 are seconds, otherwise ms.
 			const ts = ep.timestamp;
 			const tsMs = ts && ts < 1e12 ? ts * 1000 : ts;
-			const dateStr = tsMs
-				? new Date(tsMs).toISOString().split("T")[0]
-				: "";
+			const dateStr = tsMs ? new Date(tsMs).toISOString().split("T")[0] : "";
 			const dateTag = dateStr ? ` [Date: ${dateStr}]` : "";
 			return `[${i + 1}]${dateTag} ${ep.content}`;
 		})
@@ -197,7 +195,9 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":
 			body: JSON.stringify({
 				model,
 				messages: [{ role: "user", content: prompt }],
-				max_tokens: Math.max(2048, episodes.length * 200),
+				// Gemini 2.5 may spend part of this budget on internal reasoning. A
+				// 2K ceiling can therefore truncate even a short JSON payload.
+				max_tokens: Math.max(8192, episodes.length * 400),
 				temperature: 0.1,
 				response_format: { type: "json_object" },
 			}),
@@ -213,7 +213,7 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":
 				`[LLMFactExtractor] API ${response.status}, retry ${attempt}/${retries} in ${delay}ms`,
 			);
 			await new Promise((r) => setTimeout(r, delay));
-		} catch (err: any) {
+		} catch (err: unknown) {
 			if (attempt === retries) {
 				if (failurePolicy === "throw") {
 					throw new Error(
@@ -253,7 +253,10 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":
 			);
 		} catch {}
 		let raw = data.choices?.[0]?.message?.content ?? "{}";
-		raw = raw.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+		raw = raw
+			.replace(/^```(?:json)?\s*\n?/i, "")
+			.replace(/\n?```\s*$/i, "")
+			.trim();
 		const parsed: Record<string, unknown> = JSON.parse(raw);
 
 		return episodes.flatMap((ep, i) => {
@@ -263,18 +266,24 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":
 					`[LLMFactExtractor] Unexpected value for key "${i + 1}": ${typeof rawFacts}. Keys: ${Object.keys(parsed).join(", ")}`,
 				);
 			}
-			const facts: Array<{ content: string; structured?: StructuredFact }> = Array.isArray(rawFacts)
-				? rawFacts.flatMap((fact) => {
-						if (typeof fact === "string") return [{ content: fact }];
-						if (!fact || typeof fact !== "object") return [];
-						const candidate = fact as { content?: unknown; structured?: unknown };
-						if (typeof candidate.content !== "string") return [];
-						return [{
-							content: candidate.content,
-							structured: parseStructuredFact(candidate.structured),
-						}];
-					})
-				: [];
+			const facts: Array<{ content: string; structured?: StructuredFact }> =
+				Array.isArray(rawFacts)
+					? rawFacts.flatMap((fact) => {
+							if (typeof fact === "string") return [{ content: fact }];
+							if (!fact || typeof fact !== "object") return [];
+							const candidate = fact as {
+								content?: unknown;
+								structured?: unknown;
+							};
+							if (typeof candidate.content !== "string") return [];
+							return [
+								{
+									content: candidate.content,
+									structured: parseStructuredFact(candidate.structured),
+								},
+							];
+						})
+					: [];
 			if (facts.length === 0) return [];
 			return facts.map((fact) => ({
 				content: fact.content,
@@ -292,7 +301,7 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","structured":
 				cause: err,
 			});
 		}
-		console.warn(`[LLMFactExtractor] Parse error, skipping batch:`, err);
+		console.warn("[LLMFactExtractor] Parse error, skipping batch:", err);
 		return [];
 	}
 }
@@ -306,7 +315,8 @@ function parseStructuredFact(value: unknown): StructuredFact | undefined {
 		typeof candidate.value !== "string" ||
 		(candidate.polarity !== "affirmed" && candidate.polarity !== "negated") ||
 		(candidate.cardinality !== "single" && candidate.cardinality !== "multi")
-	) return undefined;
+	)
+		return undefined;
 	return {
 		subject: candidate.subject,
 		property: candidate.property,

@@ -152,3 +152,42 @@ owned multilingual semantic cases, real Naia and at least two external-engine
 raw receipts, successful replay under the frozen scorer, and an independent
 adversarial review. Passing implementation tests prove harness integrity only;
 they do not satisfy those evidence requirements.
+
+## 2026-08-19 compatibility and receipt checkpoint
+
+A same-provider Korean smoke run invalidated the earlier interpretation that an
+empty Mem0 state demonstrated a Korean update failure. With
+`gemini-2.5-flash-lite`, Mem0's inference path returned no native operations;
+with `gemini-2.5-flash` and the same `gemini-embedding-001` embedding model,
+Mem0 emitted one native operation for each of the two turns, retained only the
+new Busan residence, and retrieved it. Naia also retrieved only the new Busan
+residence, while its captured native state still contained both the inactive
+Seoul predecessor and active Busan successor. This single generated smoke case
+is a provider-compatibility diagnostic, not comparative quality evidence.
+
+The raw artifact schema is now v2. Every turn records an ingestion receipt.
+Mem0 receipts expose the count in its native `add(..., infer:true)` response and
+fail closed when that response lacks a results array. Naia records the receipt
+as opaque because its public `encode`/`consolidate` boundary does not expose a
+comparable native-operation count. This asymmetry is intentional disclosure;
+the counts must not be compared as a quality metric. A zero Mem0 operation
+count remains ambiguous between a legitimate no-update decision and an
+extraction/model failure, so promotion still requires case labels and blind
+adjudication.
+
+The provider configuration can now freeze an OpenAI-compatible endpoint,
+model/revision IDs, embedding dimensions, and authentication mode without
+placing credentials in artifacts. The default Gemini semantic diagnostic uses
+`gemini-2.5-flash`; the fact extractor output budget was raised because Gemini
+2.5 reasoning can consume a 2K budget before emitting the short JSON result.
+This is a compatibility fix, not evidence of better memory quality.
+
+Deterministic verification on this checkpoint: 47 test files / 543 tests
+passed, both TypeScript configurations passed, and `git diff --check` passed.
+The requested nested OpenCode process was blocked by the workspace runtime
+policy before launch, so no independent-review verdict is claimed. A manual
+adversarial pass found no basis for a superiority claim and retained the closed
+publication gate. The next meaningful experiment is a frozen Korean, English,
+and Japanese semantic update/delete/no-update corpus, followed by blinded
+scoring and at least two external engines under identical provider and budget
+conditions.

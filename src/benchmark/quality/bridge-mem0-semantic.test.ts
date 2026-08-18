@@ -6,7 +6,9 @@ import {
 
 describe("Mem0 semantic bridge", () => {
 	it("uses native inference without leaking benchmark labels", async () => {
-		const add = vi.fn(async () => ({}));
+		const add = vi.fn(async () => ({
+			results: [{ metadata: { event: "ADD" } }],
+		}));
 		const client: Mem0SemanticClient = {
 			add,
 			search: vi.fn(async () => ({
@@ -19,9 +21,11 @@ describe("Mem0 semantic bridge", () => {
 		};
 		const bridge = new Mem0SemanticBridge(client, "isolated-user");
 
-		await bridge.ingestTurn({
-			content: "I moved to Busan.",
-		});
+		expect(
+			await bridge.ingestTurn({
+				content: "I moved to Busan.",
+			}),
+		).toEqual({ outcome: "native-operations", nativeOperationCount: 1 });
 
 		expect(add).toHaveBeenCalledWith(
 			[{ role: "user", content: "I moved to Busan." }],
@@ -36,7 +40,7 @@ describe("Mem0 semantic bridge", () => {
 	it("deletes only its isolated user state during cleanup", async () => {
 		const deleteAll = vi.fn(async () => ({}));
 		const client: Mem0SemanticClient = {
-			add: vi.fn(async () => ({})),
+			add: vi.fn(async () => ({ results: [] })),
 			search: vi.fn(async () => ({ results: [] })),
 			getAll: vi.fn(async () => ({ results: [] })),
 			deleteAll,

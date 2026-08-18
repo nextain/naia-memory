@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type {
 	SemanticEngineBridge,
+	SemanticIngestReceipt,
 	SemanticNativeMemory,
 } from "./memory-semantic-runner.js";
 
@@ -8,7 +9,7 @@ export type Mem0SemanticClient = {
 	add(
 		messages: Array<{ role: "user"; content: string }>,
 		options: { userId: string; infer: true },
-	): Promise<unknown>;
+	): Promise<{ results: unknown[] }>;
 	search(
 		query: string,
 		options: { userId: string; limit: number },
@@ -51,14 +52,24 @@ export class Mem0SemanticBridge implements SemanticEngineBridge {
 		private readonly client: Mem0SemanticClient,
 		private readonly userId: string,
 	) {
-		if (!userId.trim()) throw new Error("mem0 semantic benchmark user ID is invalid");
+		if (!userId.trim())
+			throw new Error("mem0 semantic benchmark user ID is invalid");
 	}
 
-	async ingestTurn(turn: { content: string }): Promise<void> {
-		await this.client.add([{ role: "user", content: turn.content }], {
-			userId: this.userId,
-			infer: true,
-		});
+	async ingestTurn(turn: { content: string }): Promise<SemanticIngestReceipt> {
+		const response = await this.client.add(
+			[{ role: "user", content: turn.content }],
+			{
+				userId: this.userId,
+				infer: true,
+			},
+		);
+		if (!response || !Array.isArray(response.results))
+			throw new Error("Mem0 add returned an invalid native receipt");
+		return {
+			outcome: "native-operations",
+			nativeOperationCount: response.results.length,
+		};
 	}
 
 	async search(query: string, topK: number): Promise<SemanticNativeMemory[]> {
@@ -79,6 +90,9 @@ export class Mem0SemanticBridge implements SemanticEngineBridge {
 	}
 }
 
-function toNativeMemory(item: { id: string; memory: string }): SemanticNativeMemory {
+function toNativeMemory(item: {
+	id: string;
+	memory: string;
+}): SemanticNativeMemory {
 	return { nativeId: item.id, content: item.memory };
 }

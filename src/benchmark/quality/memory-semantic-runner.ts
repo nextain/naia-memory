@@ -10,13 +10,18 @@ export type SemanticNativeMemory = {
 	content: string;
 };
 
+export type SemanticIngestReceipt = {
+	outcome: "opaque" | "native-operations";
+	nativeOperationCount?: number;
+};
+
 export type SemanticEngineBridge = {
 	readonly isolationPolicy: "fresh-case-state-v1";
 	readonly identityPolicy: "engine-native-memory-v1";
 	readonly ingestionPolicy: "sequential-turn-commit-v1";
 	readonly temporalInputPolicy: "engine-default-ingest-time-v1";
 	readonly retrievalSurface: "engine-native-semantic-memory-v1";
-	ingestTurn(turn: { content: string }): Promise<void>;
+	ingestTurn(turn: { content: string }): Promise<SemanticIngestReceipt>;
 	search(query: string, topK: number): Promise<SemanticNativeMemory[]>;
 	getNativeState(): Promise<SemanticNativeMemory[]>;
 	close(): Promise<void>;
@@ -34,6 +39,7 @@ export type SemanticRawReceipt = {
 	ingestionPolicy: SemanticEngineBridge["ingestionPolicy"];
 	temporalInputPolicy: SemanticEngineBridge["temporalInputPolicy"];
 	retrievalSurface: SemanticEngineBridge["retrievalSurface"];
+	ingestionReceipts: SemanticIngestReceipt[];
 	nativeState: SemanticNativeMemory[];
 	retrieved: SemanticNativeMemory[];
 	outputSha256: string;
@@ -70,7 +76,9 @@ export async function runSemanticRawContract(
 ): Promise<SemanticRawReceipt[]> {
 	validateMemoryUpdateContract(contract);
 	if (contract.tier !== "semantic-update-interpretation")
-		throw new Error("semantic runner requires semantic-update-interpretation tier");
+		throw new Error(
+			"semantic runner requires semantic-update-interpretation tier",
+		);
 	if (!Number.isInteger(topK) || topK < 1)
 		throw new Error("semantic runner topK must be a positive integer");
 
@@ -88,8 +96,11 @@ export async function runSemanticRawContract(
 				throw new Error("semantic bridge must not receive fixture timestamps");
 			if (bridge.retrievalSurface !== "engine-native-semantic-memory-v1")
 				throw new Error("semantic bridge must expose semantic memories only");
+			const ingestionReceipts = [];
 			for (const turn of benchmarkCase.turns)
-				await bridge.ingestTurn({ content: turn.content });
+				ingestionReceipts.push(
+					await bridge.ingestTurn({ content: turn.content }),
+				);
 			const retrieved = await bridge.search(benchmarkCase.query, topK);
 			const nativeState = await bridge.getNativeState();
 			assertNativeMemories(retrieved, "semantic retrieval output");
@@ -104,9 +115,11 @@ export async function runSemanticRawContract(
 				if (stateContent === undefined)
 					throw new Error("semantic retrieval ID is absent from native state");
 				if (stateContent !== item.content)
-					throw new Error("semantic retrieval content differs from native state");
+					throw new Error(
+						"semantic retrieval content differs from native state",
+					);
 			}
-			const rawOutput = { nativeState, retrieved };
+			const rawOutput = { ingestionReceipts, nativeState, retrieved };
 			const engineInput = {
 				language: benchmarkCase.language,
 				turns: benchmarkCase.turns.map((turn) => ({ content: turn.content })),
@@ -124,6 +137,7 @@ export async function runSemanticRawContract(
 				ingestionPolicy: bridge.ingestionPolicy,
 				temporalInputPolicy: bridge.temporalInputPolicy,
 				retrievalSurface: bridge.retrievalSurface,
+				ingestionReceipts,
 				nativeState,
 				retrieved,
 				outputSha256: sha256(rawOutput),

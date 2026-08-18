@@ -1,11 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { existsSync, rmSync } from "node:fs";
-import { LocalAdapter, type LocalAdapterOptions } from "../../memory/adapters/local.js";
+import {
+	LocalAdapter,
+	type LocalAdapterOptions,
+} from "../../memory/adapters/local.js";
 import type { FactExtractor } from "../../memory/memory-system-api.js";
 import { NaiaMemoryProvider } from "../../memory/provider.js";
 import type { Fact, MemoryAdapter } from "../../memory/types.js";
 import type {
 	SemanticEngineBridge,
+	SemanticIngestReceipt,
 	SemanticNativeMemory,
 } from "./memory-semantic-runner.js";
 
@@ -33,7 +37,10 @@ export async function createNaiaSemanticBridge(
 	const isolatedStorePath = `${options.storePath}-${randomUUID()}`;
 	if (existsSync(isolatedStorePath))
 		throw new Error("Naia semantic isolated store path already exists");
-	const adapter = new LocalAdapter({ ...options, storePath: isolatedStorePath });
+	const adapter = new LocalAdapter({
+		...options,
+		storePath: isolatedStorePath,
+	});
 	const provider = new NaiaMemoryProvider({
 		adapter,
 		factExtractor: options.factExtractor,
@@ -55,12 +62,13 @@ export class NaiaSemanticBridge implements SemanticEngineBridge {
 		private readonly ownedStorePath?: string,
 	) {}
 
-	async ingestTurn(turn: { content: string }): Promise<void> {
+	async ingestTurn(turn: { content: string }): Promise<SemanticIngestReceipt> {
 		await this.provider.encode(
 			{ content: turn.content, role: "user" },
 			{ project: ISOLATED_PROJECT },
 		);
 		await this.provider.consolidate();
+		return { outcome: "opaque" };
 	}
 
 	async search(query: string, topK: number): Promise<SemanticNativeMemory[]> {
@@ -74,9 +82,7 @@ export class NaiaSemanticBridge implements SemanticEngineBridge {
 	async getNativeState(): Promise<SemanticNativeMemory[]> {
 		const facts = await this.adapter.semantic.getAll();
 		return facts
-			.filter(
-				(fact) => fact.encodingContext?.project === ISOLATED_PROJECT,
-			)
+			.filter((fact) => fact.encodingContext?.project === ISOLATED_PROJECT)
 			.map(toNativeMemory);
 	}
 

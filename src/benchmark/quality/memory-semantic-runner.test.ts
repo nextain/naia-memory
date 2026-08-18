@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import type { MemoryUpdateContract } from "./memory-update-contract.js";
 import {
-	runSemanticRawContract,
 	type SemanticEngineBridge,
+	runSemanticRawContract,
 } from "./memory-semantic-runner.js";
+import type { MemoryUpdateContract } from "./memory-update-contract.js";
 
 function diagnosticContract(): MemoryUpdateContract {
 	return {
@@ -33,7 +33,7 @@ function diagnosticContract(): MemoryUpdateContract {
 
 describe("semantic raw runner", () => {
 	it("passes only natural-language inputs to a fresh engine and captures native output", async () => {
-		const ingestTurn = vi.fn(async () => undefined);
+		const ingestTurn = vi.fn(async () => ({ outcome: "opaque" as const }));
 		const search = vi.fn(async () => [
 			{ nativeId: "engine-2", content: "사용자는 부산에 산다." },
 		]);
@@ -66,6 +66,10 @@ describe("semantic raw runner", () => {
 		]);
 		expect(search).toHaveBeenCalledWith("지금 어디에 살아?", 3);
 		expect(receipt?.retrieved[0]?.nativeId).toBe("engine-2");
+		expect(receipt?.ingestionReceipts).toEqual([
+			{ outcome: "opaque" },
+			{ outcome: "opaque" },
+		]);
 		expect(receipt?.fixtureSha256).toMatch(/^[a-f0-9]{64}$/);
 		expect(receipt?.engineInputSha256).toMatch(/^[a-f0-9]{64}$/);
 		expect(receipt?.fixtureSha256).not.toBe(receipt?.engineInputSha256);
@@ -81,7 +85,7 @@ describe("semantic raw runner", () => {
 			ingestionPolicy: "sequential-turn-commit-v1",
 			temporalInputPolicy: "engine-default-ingest-time-v1",
 			retrievalSurface: "engine-native-semantic-memory-v1",
-			ingestTurn: vi.fn(async () => undefined),
+			ingestTurn: vi.fn(async () => ({ outcome: "opaque" as const })),
 			search: vi.fn(async () => [
 				{ nativeId: "same", content: "one" },
 				{ nativeId: "same", content: "two" },
@@ -102,7 +106,7 @@ describe("semantic raw runner", () => {
 			ingestionPolicy: "sequential-turn-commit-v1",
 			temporalInputPolicy: "engine-default-ingest-time-v1",
 			retrievalSurface: "engine-native-semantic-memory-v1",
-			ingestTurn: vi.fn(async () => undefined),
+			ingestTurn: vi.fn(async () => ({ outcome: "opaque" as const })),
 			search: vi.fn(async () => [
 				{ nativeId: "fabricated", content: "사용자는 부산에 산다." },
 			]),

@@ -14,8 +14,8 @@ import { buildLLMFactExtractor } from "../../memory/llm-fact-extractor.js";
 import { benchmarkReceipt } from "../provenance.js";
 import { createMem0SemanticBridge } from "./bridge-mem0-semantic.js";
 import { createNaiaSemanticBridge } from "./bridge-naia-semantic.js";
-import type { MemoryUpdateContract } from "./memory-update-contract.js";
 import { runSemanticRawContract } from "./memory-semantic-runner.js";
+import type { MemoryUpdateContract } from "./memory-update-contract.js";
 
 type Engine = "mem0" | "naia";
 export type SemanticRawCliArgs = {
@@ -53,12 +53,51 @@ export function parseSemanticRawCliArgs(args: string[]): SemanticRawCliArgs {
 
 function discloseEndpoint(baseURL: string): string {
 	const endpoint = new URL(baseURL);
-	if (endpoint.username || endpoint.password || endpoint.search || endpoint.hash)
-		throw new Error("provider endpoint must not contain credentials, query, or fragment");
+	if (
+		endpoint.username ||
+		endpoint.password ||
+		endpoint.search ||
+		endpoint.hash
+	)
+		throw new Error(
+			"provider endpoint must not contain credentials, query, or fragment",
+		);
 	return `${endpoint.origin}${endpoint.pathname}`;
 }
 
-function providerConfig() {
+export function providerConfig() {
+	const configuredBaseURL = process.env.BENCHMARK_OPENAI_BASE_URL;
+	const configuredApiKey = process.env.BENCHMARK_OPENAI_API_KEY;
+	if (configuredBaseURL || configuredApiKey) {
+		if (!configuredBaseURL || !configuredApiKey)
+			throw new Error(
+				"BENCHMARK_OPENAI_BASE_URL and BENCHMARK_OPENAI_API_KEY must be set together",
+			);
+		const dimensions = Number(
+			process.env.BENCHMARK_EMBEDDING_DIMENSIONS ?? "1536",
+		);
+		if (!Number.isInteger(dimensions) || dimensions < 1)
+			throw new Error(
+				"BENCHMARK_EMBEDDING_DIMENSIONS must be a positive integer",
+			);
+		const embeddingModel =
+			process.env.BENCHMARK_EMBEDDING_MODEL ?? "text-embedding-3-small";
+		const auth = process.env.BENCHMARK_AUTH ?? "bearer";
+		if (auth !== "bearer" && auth !== "x-anyllm")
+			throw new Error("BENCHMARK_AUTH must be bearer or x-anyllm");
+		return {
+			apiKey: configuredApiKey,
+			baseURL: configuredBaseURL.endsWith("/")
+				? configuredBaseURL
+				: `${configuredBaseURL}/`,
+			embeddingModel,
+			embeddingRevision:
+				process.env.BENCHMARK_EMBEDDING_REVISION ?? embeddingModel,
+			embeddingDimensions: dimensions,
+			llmModel: process.env.BENCHMARK_LLM_MODEL ?? "gpt-4.1-mini",
+			auth,
+		};
+	}
 	const gatewayUrl = process.env.GATEWAY_URL?.replace(/\/+$/, "");
 	const gatewayKey = process.env.GATEWAY_MASTER_KEY;
 	if (gatewayUrl && gatewayKey)
@@ -66,18 +105,21 @@ function providerConfig() {
 			apiKey: gatewayKey,
 			baseURL: `${gatewayUrl}/v1/`,
 			embeddingModel: "vertexai:gemini-embedding-001",
+			embeddingRevision: "gemini-embedding-001",
 			embeddingDimensions: 3072,
-			llmModel: "vertexai:gemini-2.5-flash-lite",
+			llmModel: process.env.BENCHMARK_LLM_MODEL ?? "vertexai:gemini-2.5-flash",
 			auth: "bearer" as const,
 		};
 	const apiKey = process.env.GEMINI_API_KEY;
-	if (!apiKey) throw new Error("GEMINI_API_KEY or gateway credentials are required");
+	if (!apiKey)
+		throw new Error("GEMINI_API_KEY or gateway credentials are required");
 	return {
 		apiKey,
 		baseURL: GEMINI_BASE,
 		embeddingModel: "gemini-embedding-001",
+		embeddingRevision: "gemini-embedding-001",
 		embeddingDimensions: 3072,
-		llmModel: "gemini-2.5-flash-lite",
+		llmModel: process.env.BENCHMARK_LLM_MODEL ?? "gemini-2.5-flash",
 		auth: "bearer" as const,
 	};
 }
@@ -103,6 +145,7 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 							provider.apiKey,
 							provider.embeddingModel,
 							provider.embeddingDimensions,
+							provider.embeddingRevision,
 						),
 						factExtractor: buildLLMFactExtractor({
 							apiKey: provider.apiKey,
@@ -156,18 +199,14 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 		endpoint: discloseEndpoint(provider.baseURL),
 	};
 	const output = {
-		schemaVersion: "naia-memory-semantic-raw-artifact-v1",
+		schemaVersion: "naia-memory-semantic-raw-artifact-v2",
 		interpretation:
 			"Unscored engine-native semantic memories and retrievals; not quality evidence by itself.",
-		receipt: benchmarkReceipt(
-			[contractPath],
-			disclosure,
-			[
-				"src/benchmark/quality/semantic-raw-cli.ts",
-				"src/benchmark/quality/memory-semantic-runner.ts",
-				`src/benchmark/quality/bridge-${parsed.engine}-semantic.ts`,
-			],
-		),
+		receipt: benchmarkReceipt([contractPath], disclosure, [
+			"src/benchmark/quality/semantic-raw-cli.ts",
+			"src/benchmark/quality/memory-semantic-runner.ts",
+			`src/benchmark/quality/bridge-${parsed.engine}-semantic.ts`,
+		]),
 		disclosure,
 		cases: receipts,
 	};
@@ -186,6 +225,12 @@ const invokedPath = process.argv[1]
 	: undefined;
 if (invokedPath === import.meta.url)
 	runSemanticRawCli(process.argv.slice(2)).catch((error) => {
-		process.stderr.write(`${error instanceof Error ? error.message : "semantic raw run failed"}\n`);
+		const message =
+			error instanceof Error ? error.message : "semantic raw run failed";
+		const cause =
+			error instanceof Error && error.cause instanceof Error
+				? `: ${error.cause.message}`
+				: "";
+		process.stderr.write(`${message}${cause}\n`);
 		process.exitCode = 1;
 	});

@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { parseSemanticRawCliArgs } from "./semantic-raw-cli.js";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { parseSemanticRawCliArgs, providerConfig } from "./semantic-raw-cli.js";
+
+afterEach(() => vi.unstubAllEnvs());
 
 describe("semantic raw CLI", () => {
 	it("parses an explicit reproducible execution request", () => {
@@ -20,11 +22,7 @@ describe("semantic raw CLI", () => {
 
 	it("rejects unknown engines, malformed arguments, and invalid top-k", () => {
 		expect(() =>
-			parseSemanticRawCliArgs([
-				"--engine=other",
-				"--contract=x",
-				"--output=y",
-			]),
+			parseSemanticRawCliArgs(["--engine=other", "--contract=x", "--output=y"]),
 		).toThrow("--engine");
 		expect(() => parseSemanticRawCliArgs(["engine=naia"])).toThrow(
 			"invalid argument",
@@ -53,5 +51,36 @@ describe("semantic raw CLI", () => {
 				"--provider=hidden-default",
 			]),
 		).toThrow("unknown argument: --provider");
+	});
+
+	it("accepts an explicit shared OpenAI-compatible provider configuration", () => {
+		vi.stubEnv("BENCHMARK_OPENAI_BASE_URL", "https://provider.example/v1");
+		vi.stubEnv("BENCHMARK_OPENAI_API_KEY", "test-secret");
+		vi.stubEnv("BENCHMARK_EMBEDDING_MODEL", "embed-model");
+		vi.stubEnv("BENCHMARK_EMBEDDING_REVISION", "embed-revision");
+		vi.stubEnv("BENCHMARK_EMBEDDING_DIMENSIONS", "768");
+		vi.stubEnv("BENCHMARK_LLM_MODEL", "llm-model");
+		vi.stubEnv("BENCHMARK_AUTH", "x-anyllm");
+
+		expect(providerConfig()).toEqual({
+			apiKey: "test-secret",
+			baseURL: "https://provider.example/v1/",
+			embeddingModel: "embed-model",
+			embeddingRevision: "embed-revision",
+			embeddingDimensions: 768,
+			llmModel: "llm-model",
+			auth: "x-anyllm",
+		});
+	});
+
+	it("rejects incomplete or invalid shared provider configuration", () => {
+		vi.stubEnv("BENCHMARK_OPENAI_BASE_URL", "https://provider.example/v1");
+		expect(() => providerConfig()).toThrow("must be set together");
+		vi.stubEnv("BENCHMARK_OPENAI_API_KEY", "test-secret");
+		vi.stubEnv("BENCHMARK_EMBEDDING_DIMENSIONS", "0");
+		expect(() => providerConfig()).toThrow("positive integer");
+		vi.stubEnv("BENCHMARK_EMBEDDING_DIMENSIONS", "768");
+		vi.stubEnv("BENCHMARK_AUTH", "unsupported");
+		expect(() => providerConfig()).toThrow("must be bearer or x-anyllm");
 	});
 });

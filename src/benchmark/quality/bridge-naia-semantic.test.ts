@@ -1,7 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
 import { existsSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, expect, it, vi } from "vitest";
 import type { Fact, MemoryAdapter } from "../../memory/types.js";
 import {
 	NaiaSemanticBridge,
