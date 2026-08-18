@@ -4,7 +4,7 @@
   "contract_digest": "7761784226076edd4e686cf37e3f4d60fceeba5a7f24a54c7ed59e1d1dced14d",
   "issue": "https://github.com/nextain/naia-memory/issues/12#issuecomment-5301734882",
   "current_phase": "in-progress",
-  "current_task": "The bounded file-based public evidence intake rejects self-trust, path/symlink escapes, oversized files, malformed Ed25519 keys, and unsafe errors; fixed-tree OpenCode re-review is CLEAN. Next obtain an independently governed ko/en/ja corpus and verifier-challenged same-input receipts from Naia and at least two global engines.",
+  "current_task": "Public evidence schema v6 now truthfully declares model-free deterministic retrieval scoring and rejects legacy, mislabeled, or model-mediated protocol shapes; fixed-tree OpenCode review is CLEAN. Next obtain an independently governed ko/en/ja corpus and verifier-challenged same-input receipts from Naia and at least two global engines.",
   "gates_cleared": ["P01", "P02", "P03", "P04", "P05"],
   "key_decisions": [
     "Use CPU only; GPU 1 belongs to another session.",
@@ -39,6 +39,7 @@
     ,"Keep public readiness blocked until externally owned corpus, challenge, runner, and real global-engine receipts exist; this gate improves evidence integrity, not benchmark performance."
     ,"Reject publisher self-attestation as proof of corpus independence: require trusted author signatures and language-scoped native-reviewer signatures bound to the exact dataset digest."
     ,"Accept the provenance gate after two unchanged-tree OpenCode/DeepSeek adversarial rounds returned CLEAN; record that Claude headless failed and an additional Azure-hosted GPT review was rate-limited, so this is not a multi-model consensus claim."
+    ,"Remove answerModel and judgeModel from public evidence schema v6: exact-current-hit-at-k-v1 is a deterministic model-free retrieval scorer, so retaining dead model identities would misrepresent comparison fairness. Reject legacy, mislabeled, and extra-field protocol shapes."
   ],
   "evidence": {
     "commit": "838e91b",
@@ -63,6 +64,7 @@
       ,"reports/quality/public-evidence-semantic-replay-2026-08-18.md"
       ,"reports/quality/public-execution-attestation-2026-08-18.md"
       ,"reports/quality/public-evidence-intake-cli-2026-08-18.md"
+      ,"reports/quality/public-model-free-protocol-v6-2026-08-18.md"
     ],
     "verification": [
       "pnpm typecheck",
@@ -114,7 +116,10 @@
       ,"Initial valid OpenCode adversarial review found segment-insensitive containment, unbounded reads, and raw error disclosure; all were fixed, and malformed Ed25519 trust keys were rejected at intake"
       ,"Fixed-tree OpenCode re-review inspected intake, crypto, gate, and attack tests and returned VERDICT: CLEAN; rate-limited/non-terminating attempts were not counted"
       ,"Claim limitation: external verifier independence and pre-run seal/freeze ordering remain out-of-band protocol facts, not cryptographic proofs"
+      ,"Public evidence schema v6 full suite: 37 files, 502 tests passed; Biome, strict typecheck, and production build passed"
+      ,"OpenCode challenge review rejected binding nonexistent answer/judge dependencies to engines; fixed-tree review found and verified repairs for schema-version confusion and missing compatibility controls; final verdict CLEAN"
+      ,"Claim limitation: schema v6 improves protocol truthfulness only; no retrieval-performance or global-engine superiority claim is added"
     ]
   },
-  "updated_at": "2026-08-18T17:58:32+09:00"
+  "updated_at": "2026-08-18T18:10:51+09:00"
 }

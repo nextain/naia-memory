@@ -16,6 +16,7 @@ import {
 import {
 	type PublicEvidenceManifest,
 	evaluatePublicEvidenceFiles,
+	isPublicEvidenceManifest,
 	publicCaseJudgmentSha256,
 	publicCaseOutputSha256,
 	publicEvidenceScopeSha256,
@@ -34,6 +35,41 @@ describe("public evidence promotion gate manifest and provenance", () => {
 			promotable: true,
 			failures: [],
 		});
+	});
+
+	it("rejects legacy or model-mediated protocol claims for a model-free scorer", () => {
+		expect(isPublicEvidenceManifest(validManifest())).toBe(true);
+
+		const mislabeled = {
+			...validManifest(),
+			schemaVersion: "naia-memory-public-evidence-v5",
+		};
+		expect(isPublicEvidenceManifest(mislabeled)).toBe(false);
+		expect(
+			validatePublicEvidenceManifest(
+				mislabeled as unknown as PublicEvidenceManifest,
+			),
+		).toEqual({
+			promotable: false,
+			failures: ["manifest shape is invalid"],
+		});
+
+		const legacy = {
+			...validManifest(),
+			schemaVersion: "naia-memory-public-evidence-v5",
+			protocol: {
+				...validManifest().protocol,
+				answerModel: "answer/model@revision",
+				judgeModel: "judge/model@revision",
+			},
+		};
+		expect(isPublicEvidenceManifest(legacy)).toBe(false);
+
+		const misleading = validManifest() as PublicEvidenceManifest & {
+			protocol: PublicEvidenceManifest["protocol"] & { judgeModel: string };
+		};
+		misleading.protocol.judgeModel = "judge/model@revision";
+		expect(isPublicEvidenceManifest(misleading)).toBe(false);
 	});
 
 	it("rejects claims broader than tamper-evident artifact provenance", () => {

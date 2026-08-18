@@ -169,7 +169,7 @@ export function engine(engine: string, kind: "naia" | "external") {
 
 export function validManifest(): PublicEvidenceManifest {
 	const manifest: PublicEvidenceManifest = {
-		schemaVersion: "naia-memory-public-evidence-v5",
+		schemaVersion: "naia-memory-public-evidence-v6",
 		publisher: "nextain-release",
 		signatureBase64: "",
 		claim: PUBLIC_EVIDENCE_CLAIM,
@@ -195,8 +195,6 @@ export function validManifest(): PublicEvidenceManifest {
 			sameInputSha256: hash,
 			topK: 20,
 			repetitions: 2,
-			answerModel: "answer/model@revision",
-			judgeModel: "judge/model@revision",
 			primaryMetricName: publicRetrievalMetricName(20),
 			scoringPolicyId: PUBLIC_RETRIEVAL_SCORING_POLICY_ID,
 			scorerArtifactPath: "scorer.js",

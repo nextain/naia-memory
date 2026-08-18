@@ -53,11 +53,21 @@ function isStringArrayRecord(
 	);
 }
 
+function hasExactKeys(value: Record<string, unknown>, keys: string[]): boolean {
+	const actual = Object.keys(value).sort();
+	const expected = [...keys].sort();
+	return (
+		actual.length === expected.length &&
+		actual.every((key, index) => key === expected[index])
+	);
+}
+
 /** Narrows untrusted JSON before semantic validation touches nested fields. */
 export function isPublicEvidenceManifest(
 	value: unknown,
 ): value is PublicEvidenceManifest {
 	if (!isPublicEvidenceRecord(value)) return false;
+	if (value.schemaVersion !== "naia-memory-public-evidence-v6") return false;
 	const dataset = value.dataset;
 	const protocol = value.protocol;
 	const review = value.adversarialReview;
@@ -91,10 +101,18 @@ export function isPublicEvidenceManifest(
 		!isNumberRecord(dataset.languageCaseCounts) ||
 		!isStringArray(dataset.authorIds) ||
 		!isStringArrayRecord(dataset.reviewerIdsByLanguage) ||
+		!hasExactKeys(protocol, [
+			"sameInputSha256",
+			"topK",
+			"repetitions",
+			"primaryMetricName",
+			"scoringPolicyId",
+			"scorerArtifactPath",
+			"scorerArtifactSha256",
+			"frozenBeforeRun",
+		]) ||
 		!strings(protocol, [
 			"sameInputSha256",
-			"answerModel",
-			"judgeModel",
 			"primaryMetricName",
 			"scoringPolicyId",
 			"scorerArtifactPath",
@@ -161,7 +179,7 @@ function evaluateManifest(
 	const protocol = manifest.protocol;
 
 	reject(
-		manifest.schemaVersion !== "naia-memory-public-evidence-v5",
+		manifest.schemaVersion !== "naia-memory-public-evidence-v6",
 		"manifest schema version is unsupported",
 	);
 	reject(!manifest.publisher.trim(), "publisher identity is missing");
@@ -230,8 +248,6 @@ function evaluateManifest(
 	const validTopK = Number.isInteger(protocol.topK) && protocol.topK >= 1;
 	reject(!validTopK, "topK is invalid");
 	reject(protocol.repetitions < 2, "fewer than two benchmark repetitions");
-	reject(!protocol.answerModel.trim(), "answer model identity is missing");
-	reject(!protocol.judgeModel.trim(), "judge model identity is missing");
 	reject(
 		!protocol.primaryMetricName.trim(),
 		"frozen primary metric is missing",

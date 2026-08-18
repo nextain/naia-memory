@@ -32,7 +32,7 @@ export type PublicEvidenceEngine = {
 };
 
 export type PublicEvidenceManifest = {
-	schemaVersion: "naia-memory-public-evidence-v5";
+	schemaVersion: "naia-memory-public-evidence-v6";
 	publisher: string;
 	signatureBase64: string;
 	claim: string;
@@ -54,8 +54,6 @@ export type PublicEvidenceManifest = {
 		sameInputSha256: string;
 		topK: number;
 		repetitions: number;
-		answerModel: string;
-		judgeModel: string;
 		primaryMetricName: string;
 		scoringPolicyId: string;
 		scorerArtifactPath: string;
