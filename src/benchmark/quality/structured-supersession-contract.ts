@@ -1,9 +1,9 @@
 /**
  * Structured supersession mechanism contract.
  *
- * Runs the same fixed multilingual sequence twice: an unstructured control and
- * an explicit-structure candidate. It measures lifecycle correctness and
- * retrieval exposure; it does not claim general answer quality.
+ * Runs the same fixed multilingual sequence with write-structure and query-
+ * assistance ablations. It measures lifecycle correctness and retrieval
+ * exposure; it does not claim general answer quality.
  */
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -25,6 +25,7 @@ const MMR_MODE = process.env.NAIA_MMR === "off" ? "off" : "on";
 const RERANKER = process.env.BENCH_RERANKER ?? "none";
 const CATEGORY_FILTER = process.env.BENCH_CATEGORY;
 const NOW = 1_720_000_000_000;
+type VariantName = "unstructured-control" | "explicit-structure-natural-query" | "explicit-structure-oracle-query" | "explicit-structure-wrong-query";
 type CaseResult = ContractCase & { retrieved_statement_ids: string[]; history_statement_ids: string[]; acceptable_rank: number | null; acceptable_ranks: number[]; forbidden_ranks: number[]; stale_forbidden_ranks: number[]; active_distractor_ranks: number[]; active_statement_ids: string[]; inactive_statement_ids: string[] };
 type Score = { evaluated: number; hitAt1: number; hitAtK: number; mrr: number; acceptableRecallAtK: number; completeAcceptableAtK: number; forbiddenAt1: number; forbiddenAtK: number; staleForbiddenAtK: number; activeDistractorAtK: number; lifecyclePass: number; transitionCases: number; transitionLifecyclePass: number | null; historyCoverageAtK: number; cases: CaseResult[] };
 
@@ -63,14 +64,26 @@ function summarize(cases: CaseResult[]): Score {
 	};
 }
 
-async function runVariant(name: "unstructured-control" | "explicit-structure", contract: Contract, embedder: OfflineEmbeddingProvider, reranker: OfflineRerankerProvider | undefined) {
+function recallStructure(name: VariantName, contract: Contract, current: ContractCase) {
+	if (name === "explicit-structure-oracle-query") return current.recall_structured_query;
+	if (name !== "explicit-structure-wrong-query") return undefined;
+	const donor = contract.cases.find((candidate) =>
+		candidate.id !== current.id
+		&& candidate.recall_structured_query
+		&& candidate.recall_project === current.recall_project,
+	) ?? contract.cases.find((candidate) => candidate.id !== current.id && candidate.recall_structured_query);
+	if (!donor?.recall_structured_query) throw new Error(`${current.id}: no wrong-query donor available`);
+	return donor.recall_structured_query;
+}
+
+async function runVariant(name: VariantName, contract: Contract, embedder: OfflineEmbeddingProvider, reranker: OfflineRerankerProvider | undefined) {
 	const path = join(tmpdir(), `naia-structured-contract-${name}-${process.pid}.json`);
 	if (existsSync(path)) unlinkSync(path);
 	const byContent = new Map(contract.cases.flatMap((c) => c.statements).map((s) => [s.content, s]));
 	const extractor: FactExtractor = async (episodes) => episodes.map((episode) => {
 		const statement = byContent.get(episode.content);
 		if (!statement) throw new Error(`Unexpected benchmark episode: ${episode.content}`);
-		return { content: statement.content, entities: [], topics: [], importance: 0.8, sourceEpisodeIds: [episode.id], ...(name === "explicit-structure" ? { structured: statement.structured } : {}) };
+		return { content: statement.content, entities: [], topics: [], importance: 0.8, sourceEpisodeIds: [episode.id], ...(name === "unstructured-control" ? {} : { structured: statement.structured }) };
 	});
 	const adapter = new LocalAdapter({ storePath: path, embeddingProvider: embedder, reranker });
 	const memory = new MemorySystem({
@@ -95,10 +108,11 @@ async function runVariant(name: "unstructured-control" | "explicit-structure", c
 	const statementByContent = new Map(contract.cases.flatMap((c) => c.statements).map((s) => [s.content, s.id]));
 	const result: CaseResult[] = [];
 	for (const c of contract.cases) {
+		const structuredQuery = recallStructure(name, contract, c);
 		resetRecallState();
-		const facts = (await memory.recall(c.query, { topK: TOPK, project: c.recall_project ?? "profile", scopeMode: "strict", ...(name === "explicit-structure" ? { structuredQuery: c.recall_structured_query } : {}) })).facts;
+		const facts = (await memory.recall(c.query, { topK: TOPK, project: c.recall_project ?? "profile", scopeMode: "strict", ...(structuredQuery ? { structuredQuery } : {}) })).facts;
 		resetRecallState();
-		const historyFacts = (await memory.recall(c.query, { topK: TOPK, project: c.recall_project ?? "profile", scopeMode: "strict", mode: "history", ...(name === "explicit-structure" ? { structuredQuery: c.recall_structured_query } : {}) })).facts;
+		const historyFacts = (await memory.recall(c.query, { topK: TOPK, project: c.recall_project ?? "profile", scopeMode: "strict", mode: "history", ...(structuredQuery ? { structuredQuery } : {}) })).facts;
 		const retrieved = facts.map((fact) => statementByContent.get(fact.content)).filter((id): id is string => Boolean(id));
 		const history = historyFacts.map((fact) => statementByContent.get(fact.content)).filter((id): id is string => Boolean(id));
 		const active = stored.filter((fact) => c.statements.some((s) => s.content === fact.content) && fact.status === "active").map((fact) => statementByContent.get(fact.content)!).sort();
@@ -134,9 +148,13 @@ async function runBenchmark(generatedAt: string) {
 	else delete process.env.NAIA_SEARCH_MODE;
 	const embedder = new OfflineEmbeddingProvider(MODEL, "cpu", MODEL_REVISION);
 	const reranker = RERANKER === "bge-reranker-base" ? new OfflineRerankerProvider("bge-reranker-base") : undefined;
-	const control = await runVariant("unstructured-control", runContract, embedder, reranker);
-	const structured = await runVariant("explicit-structure", runContract, embedder, reranker);
-	const receipt = benchmarkReceipt([CONTRACT], { model: MODEL, modelRepository: `Xenova/${MODEL}`, modelRevision: MODEL_REVISION, device: "cpu", embeddingDtype: EMBEDDING_DTYPE, rerankerDtype: RERANKER === "none" ? null : "q8", contradictionFilter: "heuristic", topK: TOPK, categoryFilter: CATEGORY_FILTER ?? null, searchMode: SEARCH_MODE, mmr: MMR_MODE, reranker: RERANKER, benchmarkClock: new Date(NOW).toISOString(), variants: ["unstructured-control", "explicit-structure"] }, [
+	const variants = {
+		"unstructured-control": await runVariant("unstructured-control", runContract, embedder, reranker),
+		"explicit-structure-natural-query": await runVariant("explicit-structure-natural-query", runContract, embedder, reranker),
+		"explicit-structure-oracle-query": await runVariant("explicit-structure-oracle-query", runContract, embedder, reranker),
+		"explicit-structure-wrong-query": await runVariant("explicit-structure-wrong-query", runContract, embedder, reranker),
+	};
+	const receipt = benchmarkReceipt([CONTRACT], { model: MODEL, modelRepository: `Xenova/${MODEL}`, modelRevision: MODEL_REVISION, device: "cpu", embeddingDtype: EMBEDDING_DTYPE, rerankerDtype: RERANKER === "none" ? null : "q8", contradictionFilter: "heuristic", topK: TOPK, categoryFilter: CATEGORY_FILTER ?? null, searchMode: SEARCH_MODE, mmr: MMR_MODE, reranker: RERANKER, benchmarkClock: new Date(NOW).toISOString(), variants: Object.keys(variants) }, [
 		"src/benchmark/quality/structured-supersession-contract.ts",
 		"src/benchmark/quality/structured-supersession-schema.ts",
 		"src/benchmark/quality/generate-structured-supersession-v3.ts",
@@ -169,12 +187,23 @@ async function runBenchmark(generatedAt: string) {
 	], generatedAt);
 	const perLanguage = Object.fromEntries(["ko", "en", "ja"].map((language) => [
 		language,
-		{
-			"unstructured-control": summarize(control.cases.filter((c) => c.language === language)),
-			"explicit-structure": summarize(structured.cases.filter((c) => c.language === language)),
-		},
+		Object.fromEntries(Object.entries(variants).map(([name, score]) => [name, summarize(score.cases.filter((c) => c.language === language))])),
 	]));
-	const output = { benchmark, receipt, dimensions: embedder.dims, fixtureDisclosure: { benchmarkTier: contract.benchmark_tier ?? "legacy-reviewed-diagnostic", nativeReviewStatus: contract.native_review_status ?? "not-recorded", purpose: contract.purpose ?? null }, interpretation: "Mechanism evaluation only: explicit extractor metadata is the intervention; no language-specific rule or threshold is used.", variants: { "unstructured-control": control, "explicit-structure": structured }, perLanguage };
+	const output = {
+		benchmark,
+		receipt,
+		dimensions: embedder.dims,
+		fixtureDisclosure: { benchmarkTier: contract.benchmark_tier ?? "legacy-reviewed-diagnostic", nativeReviewStatus: contract.native_review_status ?? "not-recorded", purpose: contract.purpose ?? null },
+		interpretation: "Mechanism diagnostic only. Natural-query and wrong-query ablations separate write-time lifecycle value from query-side identity assistance; this fixture cannot support a general or native-language superiority claim.",
+		queryAssistanceDisclosure: {
+			"unstructured-control": "No structured write metadata and no query identity.",
+			"explicit-structure-natural-query": "Structured write metadata; natural-language query only.",
+			"explicit-structure-oracle-query": "Structured write metadata plus fixture-supplied correct subject/property identity.",
+			"explicit-structure-wrong-query": "Structured write metadata plus a different case's subject/property identity.",
+		},
+		variants,
+		perLanguage,
+	};
 	const directory = join(process.cwd(), "reports", "quality");
 	mkdirSync(directory, { recursive: true });
 	const modelSuffix = MODEL === "paraphrase-multilingual-MiniLM-L12-v2"

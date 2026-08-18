@@ -1,5 +1,7 @@
 # Structured Supersession v3 — Foreign Engine Comparison (2026-08-17)
 
+> Superseded for comparative claims by `structured-supersession-query-ablation-2026-08-18.md`. The 100% Naia row below receives fixture-supplied query identity and must not be compared as a native/end-to-end score against the Mem0 and Hindsight rows. Naia's structured-write + natural-query hit@1 on this fixture is 64.8%.
+
 ## Decision
 
 Naia Memory now demonstrates a meaningful but deliberately narrow advantage: when a caller supplies a language-neutral `(subject, property)` query identity, its explicit lifecycle path retrieves the complete current fact set at rank 1 and excludes superseded or same-property foreign-entity facts on this generated Korean/English/Japanese corpus. This is evidence for **update-safe current-memory retrieval**, not global memory-engine superiority.
