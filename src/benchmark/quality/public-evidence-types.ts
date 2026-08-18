@@ -1,3 +1,5 @@
+import { createPublicKey } from "node:crypto";
+
 export type PublicEvidenceEngine = {
 	engine: string;
 	kind: "naia" | "external";
@@ -87,6 +89,47 @@ export type PublicEvidenceTrustPolicy = {
 	runnerPublicKeys: Record<string, string>;
 	approvedScoringPolicies: Record<string, string>;
 };
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+	return (
+		isPublicEvidenceRecord(value) &&
+		Object.values(value).every((item) => typeof item === "string")
+	);
+}
+
+function isEd25519PublicKey(value: unknown): value is string {
+	if (typeof value !== "string") return false;
+	try {
+		return createPublicKey(value).asymmetricKeyType === "ed25519";
+	} catch {
+		return false;
+	}
+}
+
+function isPublicKeyRecord(value: unknown): value is Record<string, string> {
+	return (
+		isPublicEvidenceRecord(value) &&
+		Object.values(value).every(isEd25519PublicKey)
+	);
+}
+
+export function isPublicEvidenceTrustPolicy(
+	value: unknown,
+): value is PublicEvidenceTrustPolicy {
+	if (!isPublicEvidenceRecord(value)) return false;
+	const nativeReviewers = value.nativeReviewerPublicKeysByLanguage;
+	return (
+		isPublicKeyRecord(value.publisherPublicKeys) &&
+		isPublicKeyRecord(value.enginePublicKeys) &&
+		isPublicKeyRecord(value.reviewerPublicKeys) &&
+		isPublicKeyRecord(value.datasetAuthorPublicKeys) &&
+		isPublicEvidenceRecord(nativeReviewers) &&
+		Object.values(nativeReviewers).every(isPublicKeyRecord) &&
+		isPublicKeyRecord(value.challengeIssuerPublicKeys) &&
+		isPublicKeyRecord(value.runnerPublicKeys) &&
+		isStringRecord(value.approvedScoringPolicies)
+	);
+}
 
 export type PublicDatasetAuthorAttestation = {
 	schemaVersion: "naia-memory-public-dataset-author-attestation-v1";

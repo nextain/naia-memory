@@ -1,8 +1,12 @@
 import { createHash } from "node:crypto";
-import { readFile, realpath } from "node:fs/promises";
+import { realpath } from "node:fs/promises";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { hasValidEvidenceSignature } from "./public-evidence-crypto.js";
+import {
+	PublicEvidenceFileTooLargeError,
+	readBoundedEvidenceFile,
+} from "./public-evidence-file-io.js";
 import type {
 	PublicAdversarialReview,
 	PublicDatasetCase,
@@ -52,6 +56,8 @@ export type LoadedPublicEvidence = {
 	challenges: Map<string, unknown>;
 	attestations: Map<string, unknown>;
 };
+
+const MAX_EVIDENCE_FILE_BYTES = 16 * 1024 * 1024;
 
 function isDataset(value: unknown): value is PublicEvidenceDataset {
 	return (
@@ -367,8 +373,12 @@ export async function loadPublicEvidenceFiles(
 		}
 		let bytes: Buffer;
 		try {
-			bytes = await readFile(canonical);
-		} catch {
+			bytes = await readBoundedEvidenceFile(canonical, MAX_EVIDENCE_FILE_BYTES);
+		} catch (error) {
+			if (error instanceof PublicEvidenceFileTooLargeError) {
+				failures.push(`${item.label} exceeds the 16 MiB evidence-file limit`);
+				continue;
+			}
 			failures.push(`${item.label} file is unreadable`);
 			continue;
 		}

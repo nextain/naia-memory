@@ -4,7 +4,7 @@
   "contract_digest": "7761784226076edd4e686cf37e3f4d60fceeba5a7f24a54c7ed59e1d1dced14d",
   "issue": "https://github.com/nextain/naia-memory/issues/12#issuecomment-5301734882",
   "current_phase": "in-progress",
-  "current_task": "Signed dataset-author and language-scoped native-review provenance is implemented, deterministically verified, and adversarially reviewed CLEAN/CLEAN. Next produce an independently owned ko/en/ja corpus and collect verifier-challenged same-input receipts from Naia and at least two global engines.",
+  "current_task": "The bounded file-based public evidence intake rejects self-trust, path/symlink escapes, oversized files, malformed Ed25519 keys, and unsafe errors; fixed-tree OpenCode re-review is CLEAN. Next obtain an independently governed ko/en/ja corpus and verifier-challenged same-input receipts from Naia and at least two global engines.",
   "gates_cleared": ["P01", "P02", "P03", "P04", "P05"],
   "key_decisions": [
     "Use CPU only; GPU 1 belongs to another session.",
@@ -41,7 +41,7 @@
     ,"Accept the provenance gate after two unchanged-tree OpenCode/DeepSeek adversarial rounds returned CLEAN; record that Claude headless failed and an additional Azure-hosted GPT review was rate-limited, so this is not a multi-model consensus claim."
   ],
   "evidence": {
-    "commit": "1a9dcab",
+    "commit": "838e91b",
     "reports": [
       "reports/perf/latency-accuracy-count1000.json",
       "reports/quality/korean-retrieval-contract-v1-rrf.json",
@@ -62,6 +62,7 @@
       ,"reports/quality/public-evidence-authenticity-gate-2026-08-18.md"
       ,"reports/quality/public-evidence-semantic-replay-2026-08-18.md"
       ,"reports/quality/public-execution-attestation-2026-08-18.md"
+      ,"reports/quality/public-evidence-intake-cli-2026-08-18.md"
     ],
     "verification": [
       "pnpm typecheck",
@@ -109,7 +110,11 @@
       ,"Strict main/benchmark typecheck, production build, Biome checks, doc graph, and git diff --check passed"
       ,"Public dataset provenance unchanged-tree OpenCode/DeepSeek adversarial review: CLEAN/CLEAN; no actionable signature replay, role/language confusion, undeclared-language, key-reuse, or fail-open defect"
       ,"Review diversity limitation: Claude headless failed to complete and an additional Azure-hosted GPT review was rate-limited"
+      ,"Public evidence intake CLI: 37 files, 501 tests passed; strict typecheck and production build passed"
+      ,"Initial valid OpenCode adversarial review found segment-insensitive containment, unbounded reads, and raw error disclosure; all were fixed, and malformed Ed25519 trust keys were rejected at intake"
+      ,"Fixed-tree OpenCode re-review inspected intake, crypto, gate, and attack tests and returned VERDICT: CLEAN; rate-limited/non-terminating attempts were not counted"
+      ,"Claim limitation: external verifier independence and pre-run seal/freeze ordering remain out-of-band protocol facts, not cryptographic proofs"
     ]
   },
-  "updated_at": "2026-08-18T18:10:00+09:00"
+  "updated_at": "2026-08-18T17:58:32+09:00"
 }

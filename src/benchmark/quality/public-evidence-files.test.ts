@@ -315,4 +315,26 @@ describe("public evidence policy attacks", () => {
 			await rm(root, { recursive: true, force: true });
 		}
 	});
+
+	it("rejects oversized evidence before hashing or parsing it", async () => {
+		const root = await mkdtemp(
+			join(tmpdir(), "naia-public-evidence-oversized-"),
+		);
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			await writeFile(
+				join(root, manifest.dataset.provenancePath),
+				" ".repeat(16 * 1024 * 1024 + 1),
+			);
+			const failures = (
+				await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)
+			).failures;
+			expect(failures).toContain(
+				"dataset provenance exceeds the 16 MiB evidence-file limit",
+			);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
 });

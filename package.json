@@ -41,6 +41,7 @@
 		"test": "vitest run",
 		"test:sqlite": "node scripts/test-sqlite.mjs",
 		"benchmark": "tsx src/benchmark/comparison/run-comparison.ts",
+		"benchmark:public-evidence": "tsx src/benchmark/quality/public-evidence-cli.ts",
 		"check": "biome check --write ."
 	},
 	"peerDependencies": {
