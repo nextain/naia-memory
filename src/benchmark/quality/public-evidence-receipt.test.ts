@@ -131,6 +131,34 @@ describe("public evidence receipt attacks", () => {
 		}
 	});
 
+	it("recomputes each language metric from its own case records", async () => {
+		const root = await mkdtemp(
+			join(tmpdir(), "naia-public-evidence-language-recompute-"),
+		);
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const target = manifest.engines[0];
+			const receipt = JSON.parse(
+				await readFile(join(root, target.receiptPath), "utf8"),
+			);
+			target.languagePrimaryMetrics.ko = { value: 0, ci95Low: 0, ci95High: 0 };
+			receipt.languagePrimaryMetrics.ko = { value: 0, ci95Low: 0, ci95High: 0 };
+			const bytes = JSON.stringify(receipt);
+			await writeFile(join(root, target.receiptPath), bytes);
+			target.receiptSha256 = createHash("sha256").update(bytes).digest("hex");
+
+			const failures = (
+				await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)
+			).failures;
+			expect(failures).toContain(
+				"naia: receipt recomputed ko language metric mismatch",
+			);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
 	it("rejects case outputs copied from another engine arm", async () => {
 		const root = await mkdtemp(
 			join(tmpdir(), "naia-public-evidence-cross-arm-"),

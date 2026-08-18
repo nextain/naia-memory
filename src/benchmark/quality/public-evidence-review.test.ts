@@ -159,6 +159,61 @@ describe("public evidence review attacks", () => {
 		}
 	});
 
+	it("rejects duplicated benchmark inputs and answer IDs", async () => {
+		const root = await mkdtemp(
+			join(tmpdir(), "naia-public-evidence-duplicate-cases-"),
+		);
+		try {
+			const manifest = validManifest();
+			const cases = datasetCases();
+			cases[1].input = `  ${cases[0].input.normalize("NFKC")}  `;
+			cases[1].inputSha256 = createHash("sha256")
+				.update(cases[1].input)
+				.digest("hex");
+			cases[2].expected.push(cases[2].expected[0]);
+			cases[3].forbidden?.push(cases[3].forbidden[0]);
+			await writeValidEvidence(root, manifest, cases);
+			const failures = (
+				await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)
+			).failures;
+			expect(failures).toEqual(
+				expect.arrayContaining([
+					"dataset case inputs are duplicated",
+					"dataset expected IDs are duplicated",
+					"dataset forbidden IDs are duplicated",
+				]),
+			);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects answer ID reuse and contradictory labels across cases", async () => {
+		const root = await mkdtemp(
+			join(tmpdir(), "naia-public-evidence-reused-answer-ids-"),
+		);
+		try {
+			const manifest = validManifest();
+			const cases = datasetCases();
+			cases[1].expected = [cases[0].expected[0]];
+			cases[3].forbidden = [cases[2].forbidden[0]];
+			cases[4].expected = [cases[5].forbidden[0]];
+			await writeValidEvidence(root, manifest, cases);
+			const failures = (
+				await evaluatePublicEvidenceFiles(manifest, root, trustPolicy)
+			).failures;
+			expect(failures).toEqual(
+				expect.arrayContaining([
+					"dataset expected IDs are reused across cases",
+					"dataset forbidden IDs are reused across cases",
+					"dataset IDs have contradictory labels across cases",
+				]),
+			);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
 	it("rejects a review artifact whose signed verdict was altered", async () => {
 		const root = await mkdtemp(join(tmpdir(), "naia-public-evidence-review-"));
 		try {

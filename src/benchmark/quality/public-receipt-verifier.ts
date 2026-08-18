@@ -93,7 +93,7 @@ export function compareReceipt(
 		if (condition) failures.push(`${prefix} ${field} mismatch`);
 	};
 	mismatch(
-		receipt.schemaVersion !== "naia-memory-public-engine-receipt-v3",
+		receipt.schemaVersion !== "naia-memory-public-engine-receipt-v4",
 		"schema version",
 	);
 	mismatch(receipt.engine !== engine.engine, "engine identity");
@@ -135,6 +135,13 @@ export function compareReceipt(
 	mismatch(
 		!isDeepStrictEqual(receipt.primaryMetric, engine.primaryMetric),
 		"primary metric",
+	);
+	mismatch(
+		!isDeepStrictEqual(
+			receipt.languagePrimaryMetrics,
+			engine.languagePrimaryMetrics,
+		),
+		"language metrics",
 	);
 	if (!Array.isArray(receipt.caseRecords))
 		return [...failures, `${prefix} case records are missing`];
@@ -229,6 +236,27 @@ export function compareReceipt(
 				summary.ci95High !== engine.primaryMetric.ci95High,
 			"recomputed confidence interval",
 		);
+		const recordsByLanguage = new Map<string, PublicCaseRecord[]>();
+		for (const record of receipt.caseRecords) {
+			const datasetCase = datasetCases.get(record.caseId);
+			if (!datasetCase) continue;
+			const languageRecords = recordsByLanguage.get(datasetCase.language) ?? [];
+			languageRecords.push(record);
+			recordsByLanguage.set(datasetCase.language, languageRecords);
+		}
+		for (const [language, languageRecords] of recordsByLanguage) {
+			if (!languageRecords.every((record) => Number.isFinite(record.score)))
+				continue;
+			const languageSummary = summarizePublicCaseRecords(languageRecords);
+			const claimed = engine.languagePrimaryMetrics[language];
+			mismatch(
+				!claimed ||
+					languageSummary.value !== claimed.value ||
+					languageSummary.ci95Low !== claimed.ci95Low ||
+					languageSummary.ci95High !== claimed.ci95High,
+				`recomputed ${language} language metric`,
+			);
+		}
 	}
 	return failures;
 }

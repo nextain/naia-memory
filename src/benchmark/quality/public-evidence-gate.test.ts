@@ -42,7 +42,7 @@ describe("public evidence promotion gate manifest and provenance", () => {
 
 		const mislabeled = {
 			...validManifest(),
-			schemaVersion: "naia-memory-public-evidence-v5",
+			schemaVersion: "naia-memory-public-evidence-v6",
 		};
 		expect(isPublicEvidenceManifest(mislabeled)).toBe(false);
 		expect(
@@ -70,6 +70,35 @@ describe("public evidence promotion gate manifest and provenance", () => {
 		};
 		misleading.protocol.judgeModel = "judge/model@revision";
 		expect(isPublicEvidenceManifest(misleading)).toBe(false);
+	});
+
+	it("requires one well-formed primary metric for every dataset language", () => {
+		const missing = validManifest();
+		const { ko: _omitted, ...withoutKorean } =
+			missing.engines[0].languagePrimaryMetrics;
+		missing.engines[0].languagePrimaryMetrics = withoutKorean;
+		expect(validatePublicEvidenceManifest(missing).failures).toContain(
+			"naia: language metrics do not match the dataset",
+		);
+
+		const extra = validManifest();
+		extra.engines[0].languagePrimaryMetrics.fr = {
+			value: 0.8,
+			ci95Low: 0.7,
+			ci95High: 0.9,
+		};
+		expect(validatePublicEvidenceManifest(extra).failures).toContain(
+			"naia: language metrics do not match the dataset",
+		);
+
+		const malformed = validManifest() as unknown as Record<string, unknown>;
+		const engines = malformed.engines as Array<Record<string, unknown>>;
+		const metrics = engines[0].languagePrimaryMetrics as Record<
+			string,
+			Record<string, number>
+		>;
+		metrics.ko.hiddenWeight = 1;
+		expect(isPublicEvidenceManifest(malformed)).toBe(false);
 	});
 
 	it("rejects claims broader than tamper-evident artifact provenance", () => {

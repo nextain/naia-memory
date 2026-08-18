@@ -4,7 +4,7 @@
   "contract_digest": "7761784226076edd4e686cf37e3f4d60fceeba5a7f24a54c7ed59e1d1dced14d",
   "issue": "https://github.com/nextain/naia-memory/issues/12#issuecomment-5301734882",
   "current_phase": "in-progress",
-  "current_task": "Public evidence schema v6 now truthfully declares model-free deterministic retrieval scoring and rejects legacy, mislabeled, or model-mediated protocol shapes; fixed-tree OpenCode review is CLEAN. Next obtain an independently governed ko/en/ja corpus and verifier-challenged same-input receipts from Naia and at least two global engines.",
+  "current_task": "Public evidence v7 now rejects duplicated or contradictory cases and requires receipt-recomputed language-stratified metrics without a Naia-specific admission rule. Next obtain an independently governed ko/en/ja corpus and verifier-challenged same-input receipts from Naia and at least two global engines.",
   "gates_cleared": ["P01", "P02", "P03", "P04", "P05"],
   "key_decisions": [
     "Use CPU only; GPU 1 belongs to another session.",
@@ -40,6 +40,10 @@
     ,"Reject publisher self-attestation as proof of corpus independence: require trusted author signatures and language-scoped native-reviewer signatures bound to the exact dataset digest."
     ,"Accept the provenance gate after two unchanged-tree OpenCode/DeepSeek adversarial rounds returned CLEAN; record that Claude headless failed and an additional Azure-hosted GPT review was rate-limited, so this is not a multi-model consensus claim."
     ,"Remove answerModel and judgeModel from public evidence schema v6: exact-current-hit-at-k-v1 is a deterministic model-free retrieval scorer, so retaining dead model identities would misrepresent comparison fairness. Reject legacy, mislabeled, and extra-field protocol shapes."
+    ,"Reject an engine-vocabulary-intersection admission gate after OpenCode identified that it could exclude a valid zero-performing competitor and appear Naia-biased. Score only against each frozen case's expected and forbidden labels."
+    ,"Treat public benchmark cases as independent evidence units: reject normalized duplicate inputs, answer-ID reuse across cases, and expected/forbidden label contradictions that could inflate effective sample size or make the contract incoherent."
+    ,"Narrow scoring-policy wording after adversarial review: compare outputs only against each frozen case's labels; do not claim or enforce a complete shared-ID registry that could exclude a valid zero-scoring competitor."
+    ,"Require language-stratified primary metrics in manifest v7 and receipt v4, with exact dataset-language coverage and recomputation from per-case records."
   ],
   "evidence": {
     "commit": "838e91b",
@@ -65,6 +69,7 @@
       ,"reports/quality/public-execution-attestation-2026-08-18.md"
       ,"reports/quality/public-evidence-intake-cli-2026-08-18.md"
       ,"reports/quality/public-model-free-protocol-v6-2026-08-18.md"
+      ,"reports/quality/public-case-independence-policy-v2-2026-08-18.md"
     ],
     "verification": [
       "pnpm typecheck",
@@ -119,7 +124,15 @@
       ,"Public evidence schema v6 full suite: 37 files, 502 tests passed; Biome, strict typecheck, and production build passed"
       ,"OpenCode challenge review rejected binding nonexistent answer/judge dependencies to engines; fixed-tree review found and verified repairs for schema-version confusion and missing compatibility controls; final verdict CLEAN"
       ,"Claim limitation: schema v6 improves protocol truthfulness only; no retrieval-performance or global-engine superiority claim is added"
+      ,"Public scoring policy v2 full suite: 37 files, 504 tests passed; public quality subset 8 files, 69 tests passed; Biome, strict typecheck, and production build passed"
+      ,"OpenCode review round 1 found and caused removal of a Naia-biased vocabulary-intersection gate; round 2 confirmed engine neutrality and exposed cross-case answer-ID reuse, which was then closed"
+      ,"Claim limitation: case-independence validation improves statistical integrity only; independent multilingual corpus and real global-engine receipts remain absent"
+      ,"Public evidence v7 quality subset: 8 files, 71 tests passed; missing, extra, malformed, and receipt-tampered language metrics are rejected"
+      ,"OpenCode later review BLOCKed unenforced shared-namespace wording; remediation narrowed the contract to frozen per-case labels without a competitor admission gate"
+      ,"Claim limitation: language-stratified evidence prevents aggregate masking but does not establish multilingual quality or performance uplift"
+      ,"Public evidence v7 final regression: 37 files, 506 tests passed; Biome, strict main/benchmark typecheck, production build, and git diff check passed"
+      ,"Post-remediation OpenCode analysis found no new concrete publication-integrity bypass in policy v2 or language metrics v7; retain PASS-WITH-LIMITATIONS because independent corpus and real engine receipts are still absent"
     ]
   },
-  "updated_at": "2026-08-18T18:10:51+09:00"
+  "updated_at": "2026-08-18T18:43:00+09:00"
 }

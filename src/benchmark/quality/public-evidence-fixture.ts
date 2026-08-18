@@ -164,12 +164,21 @@ export function engine(engine: string, kind: "naia" | "external") {
 			ci95Low: 0.7,
 			ci95High: 0.9,
 		},
+		languagePrimaryMetrics: {
+			ko: { value: 1, ci95Low: 1, ci95High: 1 },
+			en: { value: 1, ci95Low: 1, ci95High: 1 },
+			ja: {
+				value: 0.4,
+				ci95Low: 0.24624495005166375,
+				ci95High: 0.5537550499483364,
+			},
+		},
 	};
 }
 
 export function validManifest(): PublicEvidenceManifest {
 	const manifest: PublicEvidenceManifest = {
-		schemaVersion: "naia-memory-public-evidence-v6",
+		schemaVersion: "naia-memory-public-evidence-v7",
 		publisher: "nextain-release",
 		signatureBase64: "",
 		claim: PUBLIC_EVIDENCE_CLAIM,
@@ -291,10 +300,37 @@ export function receiptBytes(
 		ci95Low: summary.ci95Low,
 		ci95High: summary.ci95High,
 	};
+	const recordsByLanguage = new Map<string, typeof caseRecords>();
+	for (const [index, item] of cases.entries()) {
+		for (
+			let repetition = 1;
+			repetition <= manifest.protocol.repetitions;
+			repetition++
+		) {
+			const record =
+				caseRecords[index * manifest.protocol.repetitions + (repetition - 1)];
+			const bucket = recordsByLanguage.get(item.language) ?? [];
+			bucket.push(record);
+			recordsByLanguage.set(item.language, bucket);
+		}
+	}
+	engine.languagePrimaryMetrics = Object.fromEntries(
+		[...recordsByLanguage].map(([language, records]) => {
+			const languageSummary = summarizePublicCaseRecords(records);
+			return [
+				language,
+				{
+					value: languageSummary.value,
+					ci95Low: languageSummary.ci95Low,
+					ci95High: languageSummary.ci95High,
+				},
+			];
+		}),
+	);
 	return JSON.stringify(
 		signed(
 			{
-				schemaVersion: "naia-memory-public-engine-receipt-v3",
+				schemaVersion: "naia-memory-public-engine-receipt-v4",
 				engine: engine.engine,
 				kind: engine.kind,
 				implementationFamily: engine.implementationFamily,
@@ -310,6 +346,7 @@ export function receiptBytes(
 				estimatedCostUsd: engine.estimatedCostUsd,
 				failureCount: engine.failureCount,
 				primaryMetric: engine.primaryMetric,
+				languagePrimaryMetrics: engine.languagePrimaryMetrics,
 				caseRecords,
 			},
 			engine.engine as "naia" | "competitor-a" | "competitor-b",

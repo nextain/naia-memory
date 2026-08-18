@@ -205,6 +205,9 @@ function compareDataset(
 			cases: new Map(),
 		};
 	const ids = new Set<string>();
+	const normalizedInputs = new Set<string>();
+	const expectedIds = new Set<string>();
+	const forbiddenIds = new Set<string>();
 	const cases = new Map<string, PublicDatasetCase>();
 	const languageCounts = new Map<string, number>();
 	for (const item of dataset.cases) {
@@ -236,10 +239,38 @@ function compareDataset(
 			)
 		)
 			failures.push("dataset expected and forbidden IDs overlap");
+		if (new Set(item.expected).size !== item.expected.length)
+			failures.push("dataset expected IDs are duplicated");
+		if (
+			item.forbidden !== undefined &&
+			new Set(item.forbidden).size !== item.forbidden.length
+		)
+			failures.push("dataset forbidden IDs are duplicated");
+		for (const expected of item.expected) {
+			if (expectedIds.has(expected))
+				failures.push("dataset expected IDs are reused across cases");
+			if (forbiddenIds.has(expected))
+				failures.push("dataset IDs have contradictory labels across cases");
+			expectedIds.add(expected);
+		}
+		for (const forbidden of item.forbidden ?? []) {
+			if (forbiddenIds.has(forbidden))
+				failures.push("dataset forbidden IDs are reused across cases");
+			if (expectedIds.has(forbidden))
+				failures.push("dataset IDs have contradictory labels across cases");
+			forbiddenIds.add(forbidden);
+		}
 		if (
 			item.inputSha256 !== createHash("sha256").update(item.input).digest("hex")
 		)
 			failures.push("dataset case input hash mismatch");
+		const normalizedInput = item.input
+			.normalize("NFKC")
+			.trim()
+			.replace(/\s+/gu, " ");
+		if (normalizedInputs.has(normalizedInput))
+			failures.push("dataset case inputs are duplicated");
+		normalizedInputs.add(normalizedInput);
 		if (ids.has(item.id))
 			failures.push("dataset case identities are duplicated");
 		ids.add(item.id);

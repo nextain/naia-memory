@@ -29,10 +29,14 @@ export type PublicEvidenceEngine = {
 		ci95Low: number;
 		ci95High: number;
 	};
+	languagePrimaryMetrics: Record<
+		string,
+		{ value: number; ci95Low: number; ci95High: number }
+	>;
 };
 
 export type PublicEvidenceManifest = {
-	schemaVersion: "naia-memory-public-evidence-v6";
+	schemaVersion: "naia-memory-public-evidence-v7";
 	publisher: string;
 	signatureBase64: string;
 	claim: string;
@@ -173,7 +177,7 @@ export type PublicEvidenceReceipt = Omit<
 	| "executionEvidencePath"
 	| "executionEvidenceSha256"
 > & {
-	schemaVersion: "naia-memory-public-engine-receipt-v3";
+	schemaVersion: "naia-memory-public-engine-receipt-v4";
 	protocol: PublicEvidenceManifest["protocol"];
 	caseRecords: PublicCaseRecord[];
 	signatureBase64: string;

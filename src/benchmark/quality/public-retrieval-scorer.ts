@@ -1,4 +1,4 @@
-export const PUBLIC_RETRIEVAL_SCORING_POLICY_ID = "exact-current-hit-at-k-v1";
+export const PUBLIC_RETRIEVAL_SCORING_POLICY_ID = "exact-current-hit-at-k-v2";
 
 export function publicRetrievalMetricName(topK: number): string {
 	if (!Number.isInteger(topK) || topK < 1)
@@ -7,9 +7,9 @@ export function publicRetrievalMetricName(topK: number): string {
 }
 
 export const PUBLIC_RETRIEVAL_SCORING_POLICY = {
-	schemaVersion: "naia-memory-public-scoring-policy-v1",
+	schemaVersion: "naia-memory-public-scoring-policy-v2",
 	policyId: PUBLIC_RETRIEVAL_SCORING_POLICY_ID,
-	outputSchema: "json-array-of-opaque-retrieval-ids",
+	outputSchema: "json-array-of-retrieval-ids-compared-to-frozen-case-labels",
 	window: "first-top-k-ids",
 	passCondition: "expected-id-present-and-no-forbidden-id-present",
 	invalidOutputScore: 0,
@@ -27,8 +27,10 @@ export type PublicRetrievalJudgment = {
 
 /**
  * Engine-neutral scorer for public evidence. Engine output is a JSON array of
- * opaque retrieval IDs. A case passes only when an expected current ID is in
- * the frozen top-k window and no forbidden/stale ID is present there.
+ * retrieval IDs. Only IDs declared in each frozen case's expected and forbidden
+ * labels affect the judgment; unrelated IDs remain valid distractors. A case
+ * passes only when an expected current ID is in the frozen top-k window and no
+ * forbidden/stale ID is present there.
  */
 export function scorePublicRetrieval(
 	output: string,

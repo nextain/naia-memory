@@ -53,6 +53,25 @@ function isStringArrayRecord(
 	);
 }
 
+function isLanguageMetricsRecord(
+	value: unknown,
+): value is Record<
+	string,
+	{ value: number; ci95Low: number; ci95High: number }
+> {
+	return (
+		isPublicEvidenceRecord(value) &&
+		Object.values(value).every(
+			(metric) =>
+				isPublicEvidenceRecord(metric) &&
+				hasExactKeys(metric, ["value", "ci95Low", "ci95High"]) &&
+				["value", "ci95Low", "ci95High"].every(
+					(field) => typeof metric[field] === "number",
+				),
+		)
+	);
+}
+
 function hasExactKeys(value: Record<string, unknown>, keys: string[]): boolean {
 	const actual = Object.keys(value).sort();
 	const expected = [...keys].sort();
@@ -67,7 +86,7 @@ export function isPublicEvidenceManifest(
 	value: unknown,
 ): value is PublicEvidenceManifest {
 	if (!isPublicEvidenceRecord(value)) return false;
-	if (value.schemaVersion !== "naia-memory-public-evidence-v6") return false;
+	if (value.schemaVersion !== "naia-memory-public-evidence-v7") return false;
 	const dataset = value.dataset;
 	const protocol = value.protocol;
 	const review = value.adversarialReview;
@@ -163,7 +182,8 @@ export function isPublicEvidenceManifest(
 			strings(metric, ["name"]) &&
 			["value", "ci95Low", "ci95High"].every(
 				(field) => typeof metric[field] === "number",
-			)
+			) &&
+			isLanguageMetricsRecord(engine.languagePrimaryMetrics)
 		);
 	});
 }
@@ -179,7 +199,7 @@ function evaluateManifest(
 	const protocol = manifest.protocol;
 
 	reject(
-		manifest.schemaVersion !== "naia-memory-public-evidence-v6",
+		manifest.schemaVersion !== "naia-memory-public-evidence-v7",
 		"manifest schema version is unsupported",
 	);
 	reject(!manifest.publisher.trim(), "publisher identity is missing");
@@ -284,7 +304,11 @@ function evaluateManifest(
 				engine.failureCount !== 0 ||
 				metric.value !== 0 ||
 				metric.ci95Low !== 0 ||
-				metric.ci95High !== 0,
+				metric.ci95High !== 0 ||
+				Object.values(engine.languagePrimaryMetrics).some(
+					(item) =>
+						item.value !== 0 || item.ci95Low !== 0 || item.ci95High !== 0,
+				),
 			`${engine.engine}: unexecuted engine carries result claims`,
 		);
 	}
@@ -421,6 +445,35 @@ function evaluateManifest(
 			metric.ci95Low > metric.value || metric.value > metric.ci95High,
 			`${prefix} confidence interval does not contain the score`,
 		);
+		const languageMetrics = engine.languagePrimaryMetrics;
+		const metricLanguages = Object.keys(languageMetrics);
+		reject(
+			metricLanguages.some(
+				(language) => !(language in dataset.languageCaseCounts),
+			) ||
+				Object.keys(dataset.languageCaseCounts).some(
+					(language) => !(language in languageMetrics),
+				),
+			`${prefix} language metrics do not match the dataset`,
+		);
+		for (const language of metricLanguages) {
+			const languageMetric = languageMetrics[language];
+			reject(
+				![
+					languageMetric.value,
+					languageMetric.ci95Low,
+					languageMetric.ci95High,
+				].every(Number.isFinite) ||
+					[
+						languageMetric.value,
+						languageMetric.ci95Low,
+						languageMetric.ci95High,
+					].some((value) => value < 0 || value > 1) ||
+					languageMetric.ci95Low > languageMetric.value ||
+					languageMetric.value > languageMetric.ci95High,
+				`${prefix} ${language} language metric is missing or invalid`,
+			);
+		}
 	}
 
 	const review = manifest.adversarialReview;
