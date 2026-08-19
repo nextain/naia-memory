@@ -129,10 +129,18 @@ seed, records that seed in the artifact disclosure, and records every case's
 actual execution position. Omitting `--seed` generates a per-run UUID; a frozen
 comparison can pass the same precommitted seed to every engine. The lower-level
 runner requires an explicit seed so programmatic callers cannot silently fall
-back to a reusable default schedule. Engine-order
-randomization still requires a multi-engine orchestrator and remains an open
-publication-gate item, so the current single-engine CLI is not fully
-order-balanced.
+back to a reusable default schedule.
+
+The multi-engine semantic campaign runner now closes the engine-order half of
+this harness requirement for Naia and Mem0. It requires an explicit campaign
+seed and an even repetition count, alternates the seed-selected first engine,
+and records a manifest proving that each engine occupied each execution
+position equally often. Within a repetition, both engines receive the same
+derived case-order seed; different repetitions receive different derived case
+seeds. The completed manifest binds every raw artifact by SHA-256 so later file
+replacement is detectable. This removes a known execution-order confound but
+does not turn generated diagnostics or unscored native output into comparative
+quality evidence.
 
 ## Adversarial failure hypotheses
 

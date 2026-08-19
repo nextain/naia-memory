@@ -42,6 +42,7 @@
 		"test:sqlite": "node scripts/test-sqlite.mjs",
 		"benchmark": "tsx src/benchmark/comparison/run-comparison.ts",
 		"benchmark:semantic-raw": "tsx src/benchmark/quality/semantic-raw-cli.ts",
+		"benchmark:semantic-campaign": "tsx src/benchmark/quality/semantic-campaign-cli.ts",
 		"benchmark:public-evidence": "tsx src/benchmark/quality/public-evidence-cli.ts",
 		"check": "biome check --write ."
 	},
