@@ -21,15 +21,31 @@ const LABELS = [
 ] as const;
 type JudgmentLabel = (typeof LABELS)[number];
 
+type HumanAdjudicator = {
+	id: string;
+	kind?: "human";
+	nativeLanguages: string[];
+	completedAt: string;
+	independentFromEngineImplementers: boolean;
+};
+
+type ModelAdjudicator = {
+	id: string;
+	kind: "model";
+	languageCoverage: string[];
+	completedAt: string;
+	independentFromEngineImplementers: boolean;
+	provider: string;
+	model: string;
+	promptSha256: string;
+};
+
 type JudgmentFile = {
-	schemaVersion: "naia-memory-semantic-judgments-v1";
+	schemaVersion:
+		| "naia-memory-semantic-judgments-v1"
+		| "naia-memory-semantic-judgments-v2";
 	packetContentSha256: string;
-	adjudicators: Array<{
-		id: string;
-		nativeLanguages: string[];
-		completedAt: string;
-		independentFromEngineImplementers: boolean;
-	}>;
+	adjudicators: Array<HumanAdjudicator | ModelAdjudicator>;
 	samples: Array<{
 		sampleId: string;
 		adjudicatorId: string;
@@ -64,7 +80,10 @@ function assertObject(
 
 function validateJudgments(value: unknown, packet: BlindPacket): JudgmentFile {
 	assertObject(value, "judgments");
-	if (value.schemaVersion !== "naia-memory-semantic-judgments-v1")
+	if (
+		value.schemaVersion !== "naia-memory-semantic-judgments-v1" &&
+		value.schemaVersion !== "naia-memory-semantic-judgments-v2"
+	)
 		throw new Error("unsupported semantic judgments schema");
 	if (value.packetContentSha256 !== packet.packetContentSha256)
 		throw new Error("judgments packet hash mismatch");
@@ -73,18 +92,28 @@ function validateJudgments(value: unknown, packet: BlindPacket): JudgmentFile {
 	const adjudicators = new Map<string, Record<string, unknown>>();
 	for (const adjudicator of value.adjudicators) {
 		assertObject(adjudicator, "adjudicator");
-		if (
+		const commonInvalid =
 			typeof adjudicator.id !== "string" ||
 			!adjudicator.id.trim() ||
 			adjudicators.has(adjudicator.id) ||
-			!Array.isArray(adjudicator.nativeLanguages) ||
-			adjudicator.nativeLanguages.length === 0 ||
-			adjudicator.nativeLanguages.some(
-				(item) => typeof item !== "string" || !item.trim(),
-			) ||
 			!Number.isFinite(Date.parse(String(adjudicator.completedAt))) ||
-			adjudicator.independentFromEngineImplementers !== true
-		)
+			adjudicator.independentFromEngineImplementers !== true;
+		const isModel = adjudicator.kind === "model";
+		const invalidCoverage = (field: unknown) =>
+			!Array.isArray(field) ||
+			field.length === 0 ||
+			field.some((item) => typeof item !== "string" || !item.trim());
+		const provenanceInvalid = isModel
+			? value.schemaVersion !== "naia-memory-semantic-judgments-v2" ||
+				invalidCoverage(adjudicator.languageCoverage) ||
+				typeof adjudicator.provider !== "string" ||
+				!adjudicator.provider.trim() ||
+				typeof adjudicator.model !== "string" ||
+				!adjudicator.model.trim() ||
+				typeof adjudicator.promptSha256 !== "string" ||
+				!/^[0-9a-f]{64}$/.test(adjudicator.promptSha256)
+			: invalidCoverage(adjudicator.nativeLanguages);
+		if (commonInvalid || provenanceInvalid)
 			throw new Error("invalid or non-independent adjudicator provenance");
 		adjudicators.set(adjudicator.id, adjudicator);
 	}
@@ -106,17 +135,21 @@ function validateJudgments(value: unknown, packet: BlindPacket): JudgmentFile {
 		const adjudicator = sample
 			? adjudicators.get(String(sample.adjudicatorId))
 			: undefined;
+		const languageCoverage =
+			adjudicator?.kind === "model"
+				? adjudicator.languageCoverage
+				: adjudicator?.nativeLanguages;
 		if (
 			!sample ||
 			!adjudicator ||
-			!(adjudicator.nativeLanguages as string[]).includes(
+			!(languageCoverage as string[] | undefined)?.includes(
 				packetSample.language,
 			) ||
 			!Array.isArray(sample.judgments) ||
 			sample.judgments.length !== packetSample.retrieved.length
 		)
 			throw new Error(
-				`incomplete or non-native judgments for ${packetSample.sampleId}`,
+				`incomplete or uncovered judgments for ${packetSample.sampleId}`,
 			);
 		usedAdjudicators.add(String(sample.adjudicatorId));
 		const expectedIds = packetSample.retrieved.map((item) => item.memoryId);

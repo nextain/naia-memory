@@ -45,6 +45,7 @@
 		"benchmark:semantic-campaign": "tsx src/benchmark/quality/semantic-campaign-cli.ts",
 		"benchmark:semantic-blind-packet": "tsx src/benchmark/quality/semantic-blind-packet-cli.ts",
 		"benchmark:semantic-adjudication": "tsx src/benchmark/quality/semantic-adjudication-cli.ts",
+		"benchmark:semantic-model-adjudicator": "tsx src/benchmark/quality/semantic-model-adjudicator-cli.ts",
 		"benchmark:public-evidence": "tsx src/benchmark/quality/public-evidence-cli.ts",
 		"check": "biome check --write ."
 	},

@@ -162,7 +162,50 @@ describe("semantic adjudication scorer", () => {
 					seal: value.artifacts.seal,
 					judgmentsBytes: JSON.stringify(value.judgments),
 				}),
-			).toThrow("non-native judgments");
+			).toThrow("uncovered judgments");
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
+
+	it("accepts explicitly disclosed model adjudication without a native-language claim", () => {
+		const directory = mkdtempSync(resolve(tmpdir(), "semantic-score-"));
+		try {
+			const value = setup(directory);
+			const modelJudgments = {
+				...value.judgments,
+				schemaVersion: "naia-memory-semantic-judgments-v2",
+				adjudicators: [
+					{
+						id: "model-1",
+						kind: "model",
+						languageCoverage: ["ko"],
+						completedAt: "2026-08-19T08:00:00Z",
+						independentFromEngineImplementers: true,
+						provider: "test",
+						model: "judge-1",
+						promptSha256: "a".repeat(64),
+					},
+				],
+				samples: value.judgments.samples.map((sample) => ({
+					...sample,
+					adjudicatorId: "model-1",
+				})),
+			};
+			const score = scoreSemanticAdjudication({
+				contract: value.current.contract,
+				campaign: value.current.campaign,
+				campaignDirectory: directory,
+				blindingSeed: value.blindingSeed,
+				...value.hashes,
+				packet: value.artifacts.packet,
+				seal: value.artifacts.seal,
+				judgmentsBytes: JSON.stringify(modelJudgments),
+			});
+			expect(score.disclosure.adjudicators[0]).toMatchObject({
+				kind: "model",
+				model: "judge-1",
+			});
 		} finally {
 			rmSync(directory, { recursive: true, force: true });
 		}
