@@ -13,14 +13,18 @@ import { GeminiFlashLiteContradictionFilter } from "../../memory/contradiction-f
 import { OpenAICompatEmbeddingProvider } from "../../memory/embeddings.js";
 import { buildLLMFactExtractor } from "../../memory/llm-fact-extractor.js";
 import { benchmarkReceipt } from "../provenance.js";
+import { createHindsightSemanticBridge } from "./bridge-hindsight-semantic.js";
 import { createMem0SemanticBridge } from "./bridge-mem0-semantic.js";
 import { createNaiaSemanticBridge } from "./bridge-naia-semantic.js";
 import { runSemanticRawContract } from "./memory-semantic-runner.js";
-import type { MemoryUpdateContract } from "./memory-update-contract.js";
+import {
+	type MemoryUpdateContract,
+	validateMemoryUpdateContract,
+} from "./memory-update-contract.js";
 
-type Engine = "mem0" | "naia";
+export type SemanticEngine = "hindsight" | "mem0" | "naia";
 export type SemanticRawCliArgs = {
-	engine: Engine;
+	engine: SemanticEngine;
 	contractPath: string;
 	outputPath: string;
 	topK: number;
@@ -41,8 +45,8 @@ export function parseSemanticRawCliArgs(args: string[]): SemanticRawCliArgs {
 		values.set(match[1], match[2]);
 	}
 	const engine = values.get("engine");
-	if (engine !== "mem0" && engine !== "naia")
-		throw new Error("--engine must be mem0 or naia");
+	if (engine !== "hindsight" && engine !== "mem0" && engine !== "naia")
+		throw new Error("--engine must be hindsight, mem0, or naia");
 	const contractPath = values.get("contract");
 	const outputPath = values.get("output");
 	if (!contractPath || !outputPath)
@@ -137,79 +141,124 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 	const contract = JSON.parse(
 		readFileSync(contractPath, "utf8"),
 	) as MemoryUpdateContract;
-	const provider = providerConfig();
+	validateMemoryUpdateContract(contract);
+	const provider = parsed.engine === "hindsight" ? undefined : providerConfig();
+	const requireProvider = () => {
+		if (!provider)
+			throw new Error("semantic provider configuration is unavailable");
+		return provider;
+	};
 	const runId = randomUUID();
 	const executionSeed = parsed.executionSeed ?? runId;
 	const workPrefix = resolve(".agents/work/semantic-raw", runId);
 	const createBridge =
 		parsed.engine === "naia"
-			? async () =>
-					createNaiaSemanticBridge({
+			? async () => {
+					const configuredProvider = requireProvider();
+					return createNaiaSemanticBridge({
 						storePath: `${workPrefix}-naia.json`,
 						embeddingProvider: new OpenAICompatEmbeddingProvider(
-							provider.baseURL,
-							provider.apiKey,
-							provider.embeddingModel,
-							provider.embeddingDimensions,
-							provider.embeddingRevision,
+							configuredProvider.baseURL,
+							configuredProvider.apiKey,
+							configuredProvider.embeddingModel,
+							configuredProvider.embeddingDimensions,
+							configuredProvider.embeddingRevision,
 						),
 						factExtractor: buildLLMFactExtractor({
-							apiKey: provider.apiKey,
-							baseURL: provider.baseURL,
-							model: provider.llmModel,
-							auth: provider.auth,
+							apiKey: configuredProvider.apiKey,
+							baseURL: configuredProvider.baseURL,
+							model: configuredProvider.llmModel,
+							auth: configuredProvider.auth,
 							failurePolicy: "throw",
 						}),
 						contradictionFilter: new GeminiFlashLiteContradictionFilter({
-							apiKey: provider.apiKey,
-							baseURL: provider.baseURL,
-							model: provider.llmModel,
+							apiKey: configuredProvider.apiKey,
+							baseURL: configuredProvider.baseURL,
+							model: configuredProvider.llmModel,
 						}),
-					})
-			: async () =>
-					createMem0SemanticBridge({
-						userIdPrefix: `semantic-${runId}`,
-						mem0Config: {
-							embedder: {
-								provider: "openai",
-								config: {
-									apiKey: provider.apiKey,
-									baseURL: provider.baseURL,
-									model: provider.embeddingModel,
-								},
-							},
-							vectorStore: {
-								provider: "memory",
-								config: {
-									collectionName: `semantic-${runId}`,
-									dimension: provider.embeddingDimensions,
-									dbPath: `${workPrefix}-mem0-vector.db`,
-								},
-							},
-							llm: {
-								provider: "openai",
-								config: {
-									apiKey: provider.apiKey,
-									baseURL: provider.baseURL,
-									model: provider.llmModel,
-								},
-							},
-							historyDbPath: `${workPrefix}-mem0-history.db`,
-						},
 					});
+				}
+			: parsed.engine === "mem0"
+				? async () => {
+						const configuredProvider = requireProvider();
+						return createMem0SemanticBridge({
+							userIdPrefix: `semantic-${runId}`,
+							mem0Config: {
+								embedder: {
+									provider: "openai",
+									config: {
+										apiKey: configuredProvider.apiKey,
+										baseURL: configuredProvider.baseURL,
+										model: configuredProvider.embeddingModel,
+									},
+								},
+								vectorStore: {
+									provider: "memory",
+									config: {
+										collectionName: `semantic-${runId}`,
+										dimension: configuredProvider.embeddingDimensions,
+										dbPath: `${workPrefix}-mem0-vector.db`,
+									},
+								},
+								llm: {
+									provider: "openai",
+									config: {
+										apiKey: configuredProvider.apiKey,
+										baseURL: configuredProvider.baseURL,
+										model: configuredProvider.llmModel,
+									},
+								},
+								historyDbPath: `${workPrefix}-mem0-history.db`,
+							},
+						});
+					}
+				: async () =>
+						createHindsightSemanticBridge({
+							baseUrl: process.env.HINDSIGHT_URL ?? "http://127.0.0.1:18888",
+							bankIdPrefix: `semantic-${runId}`,
+							apiKey: process.env.HINDSIGHT_API_KEY,
+						});
 	const receipts = await runSemanticRawContract(
 		contract,
 		createBridge,
 		parsed.topK,
 		executionSeed,
 	);
+	const hindsightEndpoint =
+		process.env.HINDSIGHT_URL ?? "http://127.0.0.1:18888";
+	const hindsightRuntime = () => {
+		const version = process.env.HINDSIGHT_ENGINE_VERSION?.trim();
+		const imageDigest = process.env.HINDSIGHT_IMAGE_DIGEST?.trim();
+		const llmProvider = process.env.HINDSIGHT_LLM_PROVIDER?.trim();
+		const llmModel = process.env.HINDSIGHT_LLM_MODEL?.trim();
+		if (!version || !imageDigest || !llmProvider || !llmModel)
+			throw new Error(
+				"Hindsight runs require HINDSIGHT_ENGINE_VERSION, HINDSIGHT_IMAGE_DIGEST, HINDSIGHT_LLM_PROVIDER, and HINDSIGHT_LLM_MODEL",
+			);
+		if (!/^sha256:[a-f0-9]{64}$/.test(imageDigest))
+			throw new Error(
+				"HINDSIGHT_IMAGE_DIGEST must be an immutable sha256 digest",
+			);
+		return { version, imageDigest, llmProvider, llmModel };
+	};
 	const disclosure = {
 		engine: parsed.engine,
 		topK: parsed.topK,
 		executionSeed,
-		embeddingModel: provider.embeddingModel,
-		llmModel: provider.llmModel,
-		endpoint: discloseEndpoint(provider.baseURL),
+		...(provider
+			? {
+					embeddingModel: provider.embeddingModel,
+					embeddingRevision: provider.embeddingRevision,
+					embeddingDimensions: provider.embeddingDimensions,
+					llmModel: provider.llmModel,
+					authScheme: provider.auth,
+					endpoint: discloseEndpoint(provider.baseURL),
+				}
+			: {
+					providerPolicy: "engine-server-native-configuration-v1",
+					endpoint: discloseEndpoint(hindsightEndpoint),
+					hindsightRuntime: hindsightRuntime(),
+				}),
 	};
 	const output = {
 		schemaVersion: "naia-memory-semantic-raw-artifact-v2",

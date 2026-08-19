@@ -20,7 +20,7 @@ import {
 } from "./semantic-campaign-cli.js";
 
 type CampaignManifest = {
-	schemaVersion: "naia-memory-semantic-campaign-v1";
+	schemaVersion: "naia-memory-semantic-campaign-v2";
 	disclosure: {
 		executionSeed: string;
 		repetitions: number;
@@ -52,7 +52,7 @@ function sha256Json(value: unknown): string {
 }
 
 function assertSafeArtifactName(value: string): void {
-	if (!/^repetition-\d{2,}-(mem0|naia)\.json$/.test(value))
+	if (!/^repetition-\d{2,}-(hindsight|mem0|naia)\.json$/.test(value))
 		throw new Error(`campaign contains an unsafe artifact path: ${value}`);
 }
 
@@ -92,15 +92,15 @@ export function buildSemanticBlindArtifacts(input: {
 	if (input.contract.tier !== "semantic-update-interpretation")
 		throw new Error("blind packet requires a semantic-update contract");
 	if (
-		input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v1" ||
+		input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v2" ||
 		!input.campaign.disclosure.executionSeed?.trim() ||
 		!Number.isInteger(input.campaign.disclosure.repetitions) ||
-		input.campaign.disclosure.repetitions < 2 ||
-		input.campaign.disclosure.repetitions % 2 !== 0 ||
+		input.campaign.disclosure.repetitions < 3 ||
+		input.campaign.disclosure.repetitions % 3 !== 0 ||
 		!Number.isInteger(input.campaign.disclosure.topK) ||
 		input.campaign.disclosure.topK < 1 ||
 		!Array.isArray(input.campaign.runs) ||
-		input.campaign.runs.length !== input.campaign.disclosure.repetitions * 2
+		input.campaign.runs.length !== input.campaign.disclosure.repetitions * 3
 	)
 		throw new Error("invalid semantic campaign manifest");
 	if (!input.blindingSeed.trim()) throw new Error("blinding seed is required");
@@ -176,6 +176,10 @@ export function buildSemanticBlindArtifacts(input: {
 		schemaVersion: "naia-memory-semantic-blind-packet-v1" as const,
 		instructions: {
 			engineIdentity: "withheld",
+			recurrenceDisclosure:
+				"Each conversation recurs once per engine in each repetition. Judge every sample independently; do not compare or group recurring conversations.",
+			sealHandling:
+				"The campaign manifest and adjudication seal must remain unavailable to adjudicators until judgments are frozen.",
 			labelEachRetrievedMemory:
 				"Label every retrieved memory as current, stale, deleted, irrelevant, or uncertain using only the turns and query.",
 			qualityClaim:

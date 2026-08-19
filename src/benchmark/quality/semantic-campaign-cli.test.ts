@@ -16,7 +16,7 @@ function sha256(value: unknown): string {
 }
 
 describe("semantic campaign CLI", () => {
-	it("requires an explicit seed and an even repetition count", () => {
+	it("requires an explicit seed and a three-engine-balanced repetition count", () => {
 		expect(() =>
 			parseSemanticCampaignCliArgs([
 				"--contract=contract.json",
@@ -28,9 +28,9 @@ describe("semantic campaign CLI", () => {
 				"--contract=contract.json",
 				"--output-dir=out",
 				"--seed=frozen",
-				"--repetitions=3",
+				"--repetitions=2",
 			]),
-		).toThrow("positive even integer");
+		).toThrow("positive multiple of 3");
 	});
 
 	it("rejects duplicate and unknown campaign arguments", () => {
@@ -52,11 +52,11 @@ describe("semantic campaign CLI", () => {
 		).toThrow("unknown argument: --engine");
 	});
 
-	it("builds a reproducible pair-balanced engine schedule", () => {
-		const first = buildSemanticCampaignPlan("frozen-campaign", 4);
-		expect(first).toEqual(buildSemanticCampaignPlan("frozen-campaign", 4));
-		expect(first).toHaveLength(8);
-		for (const engine of ["mem0", "naia"] as const) {
+	it("builds a reproducible three-engine position-balanced schedule", () => {
+		const first = buildSemanticCampaignPlan("frozen-campaign", 6);
+		expect(first).toEqual(buildSemanticCampaignPlan("frozen-campaign", 6));
+		expect(first).toHaveLength(18);
+		for (const engine of ["hindsight", "mem0", "naia"] as const) {
 			expect(
 				first.filter(
 					(run) => run.engine === engine && run.enginePosition === 1,
@@ -67,11 +67,16 @@ describe("semantic campaign CLI", () => {
 					(run) => run.engine === engine && run.enginePosition === 2,
 				),
 			).toHaveLength(2);
+			expect(
+				first.filter(
+					(run) => run.engine === engine && run.enginePosition === 3,
+				),
+			).toHaveLength(2);
 		}
 	});
 
 	it("shares one case seed between engines and changes it per repetition", () => {
-		const plan = buildSemanticCampaignPlan("frozen-campaign", 2);
+		const plan = buildSemanticCampaignPlan("frozen-campaign", 3);
 		const first = plan.filter((run) => run.repetition === 1);
 		const second = plan.filter((run) => run.repetition === 2);
 		expect(new Set(first.map((run) => run.caseExecutionSeed))).toHaveLength(1);
@@ -114,7 +119,7 @@ describe("semantic campaign CLI", () => {
 		};
 		const artifact = {
 			schemaVersion: "naia-memory-semantic-raw-artifact-v2",
-			disclosure: { engine: "naia", executionSeed: "case-seed" },
+			disclosure: { engine: "naia", executionSeed: "case-seed", topK: 1 },
 			cases: [
 				{
 					caseId: benchmarkCase.id,
@@ -157,6 +162,23 @@ describe("semantic campaign CLI", () => {
 				},
 				(current: typeof artifact) => {
 					current.cases[0].retrieved[0].content = "변조됨";
+				},
+				(current: typeof artifact) => {
+					current.cases[0].retrieved[0].nativeId = "ghost";
+				},
+				(current: typeof artifact) => {
+					current.cases[0].retrieved.push({
+						nativeId: "1",
+						content: "기억",
+					});
+					current.cases[0].outputSha256 = sha256({
+						ingestionReceipts: current.cases[0].ingestionReceipts,
+						nativeState: current.cases[0].nativeState,
+						retrieved: current.cases[0].retrieved,
+					});
+				},
+				(current: typeof artifact) => {
+					current.disclosure.topK = 0;
 				},
 			]) {
 				const tampered = structuredClone(artifact);

@@ -39,7 +39,7 @@ export function semanticBlindFixture(directory: string) {
 	const contractPath = resolve(directory, "contract.json");
 	writeFileSync(contractPath, JSON.stringify(contract));
 	const executionSeed = "frozen-campaign";
-	const runs = buildSemanticCampaignPlan(executionSeed, 2).map((run) => {
+	const runs = buildSemanticCampaignPlan(executionSeed, 3).map((run) => {
 		const output = {
 			ingestionReceipts: [{ outcome: "opaque" }],
 			nativeState: [{ nativeId: `${run.engine}-native`, content: "서울 거주" }],
@@ -48,7 +48,11 @@ export function semanticBlindFixture(directory: string) {
 		const benchmarkCase = contract.cases[0];
 		const artifact = {
 			schemaVersion: "naia-memory-semantic-raw-artifact-v2",
-			disclosure: { engine: run.engine, executionSeed: run.caseExecutionSeed },
+			disclosure: {
+				engine: run.engine,
+				executionSeed: run.caseExecutionSeed,
+				topK: 5,
+			},
 			cases: [
 				{
 					caseId: benchmarkCase.id,
@@ -77,8 +81,8 @@ export function semanticBlindFixture(directory: string) {
 		return { ...run, artifactSha256: sha256(bytes) };
 	});
 	const campaign = {
-		schemaVersion: "naia-memory-semantic-campaign-v1" as const,
-		disclosure: { executionSeed, repetitions: 2, topK: 5 },
+		schemaVersion: "naia-memory-semantic-campaign-v2" as const,
+		disclosure: { executionSeed, repetitions: 3, topK: 5 },
 		runs,
 	};
 	const campaignPath = resolve(directory, "campaign.json");

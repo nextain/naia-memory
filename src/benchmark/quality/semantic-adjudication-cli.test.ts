@@ -60,14 +60,18 @@ describe("semantic adjudication scorer", () => {
 				judgmentsBytes: JSON.stringify(value.judgments),
 			});
 			expect(score.cells["naia/ko"]).toMatchObject({
-				samples: 2,
-				currentAt1: 2,
+				samples: 3,
+				currentAt1: 3,
 			});
 			expect(score.cells["mem0/ko"]).toMatchObject({
-				samples: 2,
-				currentAt1: 2,
+				samples: 3,
+				currentAt1: 3,
 			});
-			expect(score.samples).toHaveLength(4);
+			expect(score.cells["hindsight/ko"]).toMatchObject({
+				samples: 3,
+				currentAt1: 3,
+			});
+			expect(score.samples).toHaveLength(9);
 			expect(score.disclosure.judgmentsFileSha256).toMatch(/^[0-9a-f]{64}$/);
 		} finally {
 			rmSync(directory, { recursive: true, force: true });

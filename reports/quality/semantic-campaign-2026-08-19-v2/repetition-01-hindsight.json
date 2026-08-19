@@ -1,0 +1,467 @@
+{
+  "schemaVersion": "naia-memory-semantic-raw-artifact-v2",
+  "interpretation": "Unscored engine-native semantic memories and retrievals; not quality evidence by itself.",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-19T11:35:42.123Z",
+    "git": {
+      "revision": "544adf2d727f4fd4d3de527e60e001a55942a5e3",
+      "dirty": true
+    },
+    "datasets": {
+      "/var/home/luke/alpha-adk/projects/naia-memory/src/benchmark/quality/memory-update-semantic-diagnostic-v1.json": "48e46e10fe736415a209d33af8f19468f5f3ff47821e7de6d1ab549839148a90"
+    },
+    "implementations": {
+      "src/benchmark/quality/semantic-raw-cli.ts": "664bce17aadea127a5af23d22c64431b4c9cfa6e90f80f4fcb16d57f75bf7b6c",
+      "src/benchmark/quality/memory-semantic-runner.ts": "8f1e1456e4ab1195e9c5b397abd36c9d31d5f02482385ba3cab9bd3453dd5ad1",
+      "src/benchmark/quality/bridge-hindsight-semantic.ts": "b2d6502387e222d7c85267074df6fc2128b30dc3caace5bd427885c21c2a7e98"
+    },
+    "config": {
+      "engine": "hindsight",
+      "topK": 5,
+      "executionSeed": "36cf6c0a3a28bf7765358dcabfee24032f63a24dcf7cb39c71868374f5718e8d",
+      "providerPolicy": "engine-server-native-configuration-v1",
+      "endpoint": "http://127.0.0.1:18888/",
+      "hindsightRuntime": {
+        "version": "0.9.1",
+        "imageDigest": "sha256:a0e937366261b8a8f20ebcaf13758c689c381dcbbf01684e4375c2787c8c666d",
+        "llmProvider": "gemini",
+        "llmModel": "gemini-2.5-flash"
+      }
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "disclosure": {
+    "engine": "hindsight",
+    "topK": 5,
+    "executionSeed": "36cf6c0a3a28bf7765358dcabfee24032f63a24dcf7cb39c71868374f5718e8d",
+    "providerPolicy": "engine-server-native-configuration-v1",
+    "endpoint": "http://127.0.0.1:18888/",
+    "hindsightRuntime": {
+      "version": "0.9.1",
+      "imageDigest": "sha256:a0e937366261b8a8f20ebcaf13758c689c381dcbbf01684e4375c2787c8c666d",
+      "llmProvider": "gemini",
+      "llmModel": "gemini-2.5-flash"
+    }
+  },
+  "cases": [
+    {
+      "caseId": "ko-allergy-delete",
+      "executionPosition": 1,
+      "language": "ko",
+      "fixtureSha256": "abb82e7ccd3b1490ac5658970b0997d30eb1768bf85959103e23387ee38e38a2",
+      "engineInputSha256": "815ab02072a6da7a93132cf7a916506fba89341cc87d2f4e907f14181f489f14",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "f957c833-4abf-4993-9b91-22f36f107bc4",
+          "content": "사용자가 어시스턴트에게 이전에 땅콩 알레르기가 있다는 정보를 기억하지 말라고 지시했습니다. | Involving: 사용자, 어시스턴트 | 이전 정보가 잘못되었기 때문입니다."
+        },
+        {
+          "nativeId": "49b1b7c2-21ea-4c69-ac0a-2700429310e9",
+          "content": "사용자가 재검사를 받았고 땅콩 알레르기가 없음을 확인했습니다. | When: 2026년 8월 19일 | Involving: 사용자 | 이전에 잘못 알려진 땅콩 알레르기 정보를 수정하기 위함입니다."
+        },
+        {
+          "nativeId": "ab4bf19f-95d9-4c40-a062-0689464e66ea",
+          "content": "사용자는 땅콩 알레르기가 있다."
+        },
+        {
+          "nativeId": "96566023-a0c3-4ee5-962e-5cd9a2b0a1d4",
+          "content": "사용자는 땅콩 알레르기가 있다. | Involving: 사용자"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "f957c833-4abf-4993-9b91-22f36f107bc4",
+          "content": "사용자가 어시스턴트에게 이전에 땅콩 알레르기가 있다는 정보를 기억하지 말라고 지시했습니다. | Involving: 사용자, 어시스턴트 | 이전 정보가 잘못되었기 때문입니다."
+        },
+        {
+          "nativeId": "49b1b7c2-21ea-4c69-ac0a-2700429310e9",
+          "content": "사용자가 재검사를 받았고 땅콩 알레르기가 없음을 확인했습니다. | When: 2026년 8월 19일 | Involving: 사용자 | 이전에 잘못 알려진 땅콩 알레르기 정보를 수정하기 위함입니다."
+        },
+        {
+          "nativeId": "ab4bf19f-95d9-4c40-a062-0689464e66ea",
+          "content": "사용자는 땅콩 알레르기가 있다."
+        }
+      ],
+      "outputSha256": "d08f5686ecfa660e356084a91d2b639b3b1b76427359864e4c971574ff98b62f"
+    },
+    {
+      "caseId": "ja-coffee-no-update",
+      "executionPosition": 2,
+      "language": "ja",
+      "fixtureSha256": "f29fe92228b6b0b1293e662fa75eaddb648b99abe401d92b3d0928f1b3d1b543",
+      "engineInputSha256": "e5d95d6361dd612ff2da7c2f114dcdd07755b4a910d8b0c310ca7d467f9042a5",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "9a5e56d9-2d02-4638-9f76-00378f29a0d8",
+          "content": "ユーザーはコーヒーを飲みません。 | Involving: ユーザー"
+        },
+        {
+          "nativeId": "4b01fcaa-8bdc-4623-8e4f-7b5420096657",
+          "content": "ユーザーはコーヒーを飲みません。"
+        },
+        {
+          "nativeId": "ba4f1e9c-006a-447e-a4a5-ff44df4946ef",
+          "content": "ユーザーはコーヒーを飲みません。 | Involving: user"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "9a5e56d9-2d02-4638-9f76-00378f29a0d8",
+          "content": "ユーザーはコーヒーを飲みません。 | Involving: ユーザー"
+        },
+        {
+          "nativeId": "4b01fcaa-8bdc-4623-8e4f-7b5420096657",
+          "content": "ユーザーはコーヒーを飲みません。"
+        }
+      ],
+      "outputSha256": "4883e13246bd7f052ef68dad166b348e12b70afb05b2313adc7fd14c2db5bc99"
+    },
+    {
+      "caseId": "ja-allergy-delete",
+      "executionPosition": 3,
+      "language": "ja",
+      "fixtureSha256": "cb3e6d0325ce40b86b63b00e57d0e73d6cb8b2009435e78a3cba27b03e582d2a",
+      "engineInputSha256": "8bacbace559a6aa8b949167dacfd021ea0e7e506afd19ef85652d31690943f07",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "dfe43838-7aa2-4dbe-a7ea-6a9df8633fd3",
+          "content": "ユーザーは再検査の結果、ピーナッツアレルギーではないことが判明しました。 | When: 2026年8月19日水曜日 | Involving: user | 以前のピーナッツアレルギーに関する情報を訂正するため。"
+        },
+        {
+          "nativeId": "80b75ed3-e955-4b8e-be3a-d672feb3d280",
+          "content": "ユーザーはピーナッツアレルギーを持っています。"
+        },
+        {
+          "nativeId": "2e67e3f5-cfb1-4869-be23-78562fd36991",
+          "content": "ユーザーはピーナッツアレルギーを持っています。 | Involving: user"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "dfe43838-7aa2-4dbe-a7ea-6a9df8633fd3",
+          "content": "ユーザーは再検査の結果、ピーナッツアレルギーではないことが判明しました。 | When: 2026年8月19日水曜日 | Involving: user | 以前のピーナッツアレルギーに関する情報を訂正するため。"
+        },
+        {
+          "nativeId": "80b75ed3-e955-4b8e-be3a-d672feb3d280",
+          "content": "ユーザーはピーナッツアレルギーを持っています。"
+        }
+      ],
+      "outputSha256": "1aa82b2c48b0ecec8fa398cb6de913227fbdb7e8d13f4ba1fe034beb2b920662"
+    },
+    {
+      "caseId": "ja-residence-update",
+      "executionPosition": 4,
+      "language": "ja",
+      "fixtureSha256": "195c0ae20cb70b84d6604f4711c55d3a2eefd20c85555c54bd135920bfe76944",
+      "engineInputSha256": "8df41bd8b35bae5c0fc6d850e8193b16c8314430f64c5d48f0fb8f274841032f",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "9ff5bbb6-953f-4268-81ef-4063caa7b132",
+          "content": "ユーザーは大阪に引っ越したため、現在大阪に住んでいます。 | When: 現在 | Involving: user"
+        },
+        {
+          "nativeId": "5437b81b-45cd-4295-8063-61bbba068546",
+          "content": "ユーザーは東京に住んでいます。"
+        },
+        {
+          "nativeId": "a1f0c609-e59f-4d6a-814c-d219a77fdba9",
+          "content": "ユーザーは東京に住んでいます。 | Involving: ユーザー"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "9ff5bbb6-953f-4268-81ef-4063caa7b132",
+          "content": "ユーザーは大阪に引っ越したため、現在大阪に住んでいます。 | When: 現在 | Involving: user"
+        },
+        {
+          "nativeId": "5437b81b-45cd-4295-8063-61bbba068546",
+          "content": "ユーザーは東京に住んでいます。"
+        }
+      ],
+      "outputSha256": "3a7b9c7514475e165083d12c88e914c48c9b99d43e34f16aaf94dd938f3c7c01"
+    },
+    {
+      "caseId": "en-coffee-no-update",
+      "executionPosition": 5,
+      "language": "en",
+      "fixtureSha256": "8a1ae5e2af30c393af2eb4e3a08a87800a79f43bc5a4052803cd78148ba0d69b",
+      "engineInputSha256": "e98468ec4e4449748b01e4834cca451a1c2e90dd4b91e2d8900717239fc9466a",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "db53197b-f645-4a9c-bd66-3d70677a6647",
+          "content": "User does not drink coffee. | Involving: user"
+        },
+        {
+          "nativeId": "101a307a-a012-4ec0-8204-b72d1955f60a",
+          "content": "User does not drink coffee | Involving: user"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "db53197b-f645-4a9c-bd66-3d70677a6647",
+          "content": "User does not drink coffee. | Involving: user"
+        },
+        {
+          "nativeId": "101a307a-a012-4ec0-8204-b72d1955f60a",
+          "content": "User does not drink coffee | Involving: user"
+        }
+      ],
+      "outputSha256": "c145287cef99c2985a7968bcca2d4ee34bb5dcc24e29a46bb8014d57469cb326"
+    },
+    {
+      "caseId": "ko-coffee-no-update",
+      "executionPosition": 6,
+      "language": "ko",
+      "fixtureSha256": "96d7d15736708b1064c3edc3ce8291a9272d81e4bda1304e4fc22d8d654d5143",
+      "engineInputSha256": "9acedf2980973cc0c47d9c4d0cb981ce16185215d7b3e943b5d69c6517dcf3ac",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "b18d89a7-0309-4c83-8635-a7d726dcc69e",
+          "content": "사용자는 커피를 마시지 않습니다. | Involving: user"
+        },
+        {
+          "nativeId": "635efc20-1073-4d49-b5df-7c7312d629ad",
+          "content": "사용자는 커피를 마시지 않습니다. | Involving: user"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "b18d89a7-0309-4c83-8635-a7d726dcc69e",
+          "content": "사용자는 커피를 마시지 않습니다. | Involving: user"
+        },
+        {
+          "nativeId": "635efc20-1073-4d49-b5df-7c7312d629ad",
+          "content": "사용자는 커피를 마시지 않습니다. | Involving: user"
+        }
+      ],
+      "outputSha256": "04477122831bf0d7d90a358b057e6c1f0ee8bdd3263700bc3ea3465ec45f8b9d"
+    },
+    {
+      "caseId": "ko-residence-update",
+      "executionPosition": 7,
+      "language": "ko",
+      "fixtureSha256": "46234ef4c29d897e530ca1009a6e05ad3c5a1cedc575ce395e4581740d153e6b",
+      "engineInputSha256": "e37ca48f328ba6f7fbd3be833e03ed4eb5a99994c8ae6548819a69f910dcb940",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "985ed1be-abfa-4b99-8c1d-6c8999b5ebac",
+          "content": "사용자는 현재 부산에 거주한다. | Involving: user"
+        },
+        {
+          "nativeId": "d388a3d6-ed99-4049-841a-0fa50d2af3be",
+          "content": "사용자가 부산으로 이사했다. | Involving: user"
+        },
+        {
+          "nativeId": "aaff07e4-0193-4a68-a6c5-ef717f4f37ba",
+          "content": "사용자는 서울에 살고 있습니다."
+        },
+        {
+          "nativeId": "b89812f5-18d8-4522-b660-3c17b7fa1fa9",
+          "content": "사용자는 서울에 살고 있습니다. | Involving: 사용자"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "985ed1be-abfa-4b99-8c1d-6c8999b5ebac",
+          "content": "사용자는 현재 부산에 거주한다. | Involving: user"
+        },
+        {
+          "nativeId": "aaff07e4-0193-4a68-a6c5-ef717f4f37ba",
+          "content": "사용자는 서울에 살고 있습니다."
+        },
+        {
+          "nativeId": "d388a3d6-ed99-4049-841a-0fa50d2af3be",
+          "content": "사용자가 부산으로 이사했다. | Involving: user"
+        }
+      ],
+      "outputSha256": "4cdf86328fe56716d18ec5e5c2e98c419891c78663f5b5a57d38d857cbcf03a5"
+    },
+    {
+      "caseId": "en-residence-update",
+      "executionPosition": 8,
+      "language": "en",
+      "fixtureSha256": "751ab6c8da87e0f89aa3331816c6c13f555f535d52272481dcf6c7d628e769cd",
+      "engineInputSha256": "e15210f3a5185b14ee03ada26361535dc6d5d057d8547bd597a6409981f012d5",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "4b4ad95c-45e5-4bac-ae1f-32c95eca2faf",
+          "content": "User moved to Bristol and currently lives there. | Involving: user"
+        },
+        {
+          "nativeId": "3eb65287-b521-4587-8fae-4400136a649e",
+          "content": "User lives in London."
+        },
+        {
+          "nativeId": "4ba647e6-de52-4647-973b-7f9eb348ce30",
+          "content": "User lives in London. | Involving: user"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "3eb65287-b521-4587-8fae-4400136a649e",
+          "content": "User lives in London."
+        },
+        {
+          "nativeId": "4b4ad95c-45e5-4bac-ae1f-32c95eca2faf",
+          "content": "User moved to Bristol and currently lives there. | Involving: user"
+        }
+      ],
+      "outputSha256": "f5bc1c954e19de2b2ffa357cbe084db3856069b0e04a6fd26a9f1d4b6980c440"
+    },
+    {
+      "caseId": "en-allergy-delete",
+      "executionPosition": 9,
+      "language": "en",
+      "fixtureSha256": "fbbe6e807d0055129c463e31d1113f19bfceff95ff77adcfc05ecf0ed27ec836",
+      "engineInputSha256": "0f12526d7417b3132ba0fffdb30245b8abbdbb1a516750e373ce45a03a973d12",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "2b037089-90a1-4cea-90f0-db4fe2e72361",
+          "content": "User was retested and is not allergic to peanuts, contradicting previous allergy information. | Involving: user"
+        },
+        {
+          "nativeId": "49e575be-76b5-46aa-9448-5e464359af09",
+          "content": "User has a peanut allergy."
+        },
+        {
+          "nativeId": "083b5c28-1ebb-4200-ba8f-6918ba11e9ec",
+          "content": "User has a peanut allergy. | Involving: user"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "2b037089-90a1-4cea-90f0-db4fe2e72361",
+          "content": "User was retested and is not allergic to peanuts, contradicting previous allergy information. | Involving: user"
+        },
+        {
+          "nativeId": "49e575be-76b5-46aa-9448-5e464359af09",
+          "content": "User has a peanut allergy."
+        }
+      ],
+      "outputSha256": "83b852e3b1b0598e6073bfcb67b14041866b2e7b6f7e8ad809cd9f18963df6a1"
+    }
+  ]
+}

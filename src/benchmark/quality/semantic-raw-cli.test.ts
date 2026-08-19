@@ -32,6 +32,16 @@ describe("semantic raw CLI", () => {
 		).toMatchObject({ executionSeed: "held-out-run-1" });
 	});
 
+	it("accepts Hindsight as an equivalent natural-language engine", () => {
+		expect(
+			parseSemanticRawCliArgs([
+				"--engine=hindsight",
+				"--contract=contract.json",
+				"--output=receipt.json",
+			]),
+		).toMatchObject({ engine: "hindsight" });
+	});
+
 	it("rejects a blank execution seed", () => {
 		expect(() =>
 			parseSemanticRawCliArgs([

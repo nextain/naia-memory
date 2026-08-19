@@ -40,15 +40,26 @@ describe("semantic blind packet CLI", () => {
 			const blindedPayload = JSON.stringify(identityBlindPacket);
 			expect(blindedPayload).not.toContain("mem0");
 			expect(blindedPayload).not.toContain("naia");
+			expect(blindedPayload).not.toContain("hindsight");
 			expect(blindedPayload).not.toContain("native");
 			expect(blindedPayload).not.toContain("repetition-");
-			expect(artifacts.packet.samples).toHaveLength(4);
+			expect(artifacts.packet.samples).toHaveLength(9);
 			expect(artifacts.packet.samples[0]?.judgments).toEqual([
 				{ memoryId: "memory-01", label: null, notes: "" },
 			]);
 			expect(
 				artifacts.seal.samples.map((sample) => sample.engine).sort(),
-			).toEqual(["mem0", "mem0", "naia", "naia"]);
+			).toEqual([
+				"hindsight",
+				"hindsight",
+				"hindsight",
+				"mem0",
+				"mem0",
+				"mem0",
+				"naia",
+				"naia",
+				"naia",
+			]);
 			expect(artifacts.seal.packetContentSha256).toBe(
 				artifacts.packet.packetContentSha256,
 			);

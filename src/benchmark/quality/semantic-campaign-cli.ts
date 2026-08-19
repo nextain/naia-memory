@@ -9,8 +9,9 @@ import {
 	validateMemoryUpdateContract,
 } from "./memory-update-contract.js";
 import { runSemanticRawCli } from "./semantic-raw-cli.js";
+import type { SemanticEngine } from "./semantic-raw-cli.js";
 
-type Engine = "mem0" | "naia";
+const ENGINES = ["hindsight", "mem0", "naia"] as const;
 
 export type SemanticCampaignCliArgs = {
 	contractPath: string;
@@ -23,7 +24,7 @@ export type SemanticCampaignCliArgs = {
 export type SemanticCampaignRun = {
 	repetition: number;
 	enginePosition: number;
-	engine: Engine;
+	engine: SemanticEngine;
 	caseExecutionSeed: string;
 	outputFile: string;
 };
@@ -43,7 +44,7 @@ export function validateRawArtifact(
 ): void {
 	const artifact = JSON.parse(readFileSync(path, "utf8")) as {
 		schemaVersion?: unknown;
-		disclosure?: { engine?: unknown; executionSeed?: unknown };
+		disclosure?: { engine?: unknown; executionSeed?: unknown; topK?: unknown };
 		cases?: Array<{
 			caseId?: unknown;
 			executionPosition?: unknown;
@@ -73,6 +74,13 @@ export function validateRawArtifact(
 				typeof item.caseId === "string"
 					? expectedById.get(item.caseId)
 					: undefined;
+			const nativeState = Array.isArray(item.nativeState)
+				? (item.nativeState as Array<{ nativeId?: unknown }>)
+				: [];
+			const retrieved = Array.isArray(item.retrieved)
+				? (item.retrieved as Array<{ nativeId?: unknown }>)
+				: [];
+			const nativeIds = new Set(nativeState.map((memory) => memory.nativeId));
 			return (
 				benchmarkCase === undefined ||
 				item.executionPosition !== index + 1 ||
@@ -97,6 +105,14 @@ export function validateRawArtifact(
 				!Array.isArray(item.ingestionReceipts) ||
 				!Array.isArray(item.nativeState) ||
 				!Array.isArray(item.retrieved) ||
+				!Number.isInteger(artifact.disclosure?.topK) ||
+				Number(artifact.disclosure?.topK) < 1 ||
+				retrieved.length > Number(artifact.disclosure?.topK) ||
+				retrieved.some(
+					(memory) =>
+						typeof memory.nativeId !== "string" ||
+						!nativeIds.has(memory.nativeId),
+				) ||
 				item.outputSha256 !==
 					sha256({
 						ingestionReceipts: item.ingestionReceipts,
@@ -136,14 +152,14 @@ export function parseSemanticCampaignCliArgs(
 	const topK = Number(values.get("top-k") ?? "5");
 	if (!Number.isInteger(topK) || topK < 1)
 		throw new Error("--top-k must be a positive integer");
-	const repetitions = Number(values.get("repetitions") ?? "2");
+	const repetitions = Number(values.get("repetitions") ?? "3");
 	if (
 		!Number.isInteger(repetitions) ||
-		repetitions < 2 ||
-		repetitions % 2 !== 0
+		repetitions < ENGINES.length ||
+		repetitions % ENGINES.length !== 0
 	)
 		throw new Error(
-			"--repetitions must be a positive even integer of at least 2",
+			"--repetitions must be a positive multiple of 3 of at least 3",
 		);
 	return { contractPath, outputDir, topK, executionSeed, repetitions };
 }
@@ -156,19 +172,26 @@ export function buildSemanticCampaignPlan(
 		throw new Error("campaign execution seed is required");
 	if (
 		!Number.isInteger(repetitions) ||
-		repetitions < 2 ||
-		repetitions % 2 !== 0
+		repetitions < ENGINES.length ||
+		repetitions % ENGINES.length !== 0
 	)
 		throw new Error(
-			"campaign repetitions must be a positive even integer of at least 2",
+			"campaign repetitions must be a positive multiple of 3 of at least 3",
 		);
-	const firstOrder: Engine[] =
-		sha256({ executionSeed, scope: "engine-order" }).charCodeAt(0) % 2 === 0
-			? ["naia", "mem0"]
-			: ["mem0", "naia"];
+	const offset =
+		Number.parseInt(
+			sha256({ executionSeed, scope: "engine-order" }).slice(0, 8),
+			16,
+		) % ENGINES.length;
+	const firstOrder = ENGINES.map(
+		(_engine, index) => ENGINES[(index + offset) % ENGINES.length],
+	);
 	const plan: SemanticCampaignRun[] = [];
 	for (let repetition = 1; repetition <= repetitions; repetition += 1) {
-		const order = repetition % 2 === 1 ? firstOrder : [...firstOrder].reverse();
+		const rotation = (repetition - 1) % ENGINES.length;
+		const order = firstOrder.map(
+			(_engine, index) => firstOrder[(index + rotation) % ENGINES.length],
+		);
 		const caseExecutionSeed = sha256({
 			executionSeed,
 			scope: "case-order",
@@ -217,7 +240,7 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 		);
 	}
 	const enginePositionCounts = Object.fromEntries(
-		(["mem0", "naia"] as const).map((engine) => [
+		ENGINES.map((engine) => [
 			engine,
 			{
 				first: plan.filter(
@@ -226,6 +249,9 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 				second: plan.filter(
 					(run) => run.engine === engine && run.enginePosition === 2,
 				).length,
+				third: plan.filter(
+					(run) => run.engine === engine && run.enginePosition === 3,
+				).length,
 			},
 		]),
 	);
@@ -233,18 +259,31 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 		executionSeed: parsed.executionSeed,
 		repetitions: parsed.repetitions,
 		topK: parsed.topK,
-		engineOrderPolicy: "seeded-pair-balanced-alternation-v1",
+		engineOrderPolicy: "seeded-three-engine-latin-rotation-v1",
 		caseOrderPolicy: "shared-seeded-per-repetition-v1",
 		enginePositionCounts,
+		languageCaseCounts: Object.fromEntries(
+			["ko", "en", "ja"].map((language) => [
+				language,
+				contract.cases.filter((item) => item.language === language).length,
+			]),
+		),
+		generalizationBoundary:
+			"Generated diagnostic cases only; repetitions measure execution stability, not held-out generalization.",
+		configurationPolicy:
+			"Engine-native semantic surfaces are compared with their disclosed native configurations; component-level parity is not claimed.",
 	};
 	const manifest = {
-		schemaVersion: "naia-memory-semantic-campaign-v1",
+		schemaVersion: "naia-memory-semantic-campaign-v2",
 		interpretation:
 			"Balanced execution manifest over unscored raw artifacts; not quality evidence by itself.",
 		receipt: benchmarkReceipt([contractPath], disclosure, [
 			"src/benchmark/quality/semantic-campaign-cli.ts",
 			"src/benchmark/quality/semantic-raw-cli.ts",
 			"src/benchmark/quality/memory-semantic-runner.ts",
+			"src/benchmark/quality/bridge-hindsight-semantic.ts",
+			"src/benchmark/quality/bridge-mem0-semantic.ts",
+			"src/benchmark/quality/bridge-naia-semantic.ts",
 		]),
 		disclosure,
 		runs: plan.map((run) => ({
