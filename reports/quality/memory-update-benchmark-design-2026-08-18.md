@@ -327,3 +327,54 @@ section records a manual adversarial review only.
 Deterministic verification after this change: 47 test files / 547 tests
 passed, both TypeScript configurations passed, the package build passed, and
 `git diff --check` passed.
+
+## 2026-08-19 blind adjudication packet checkpoint
+
+The semantic campaign can now be converted into a reviewer-facing blind packet
+and a separate confidential seal. The generator first reconstructs the exact
+seeded campaign schedule, verifies every raw artifact SHA-256, and reuses the
+raw-artifact validator. It then deterministically shuffles samples under a
+private blinding seed, replaces native memory IDs with packet-local opaque IDs,
+and withholds engine, repetition, engine position, artifact filename, native
+ID, and blinding seed from the adjudicator. The seal binds those mappings to a
+SHA-256 of the public packet content. Output is written into a private staging
+directory and atomically published; an existing output directory is never
+overwritten.
+
+Run it only after a completed semantic campaign:
+
+```sh
+pnpm benchmark:semantic-blind-packet \
+  --contract=<frozen-contract.json> \
+  --campaign=<campaign.json> \
+  --output-dir=<new-private-output-directory> \
+  --seed=<private-precommitted-blinding-seed>
+```
+
+Only `adjudication-packet.json` may be sent to adjudicators.
+`adjudication-seal.json` must remain confidential until judgments are frozen.
+The packet schema name contains the Naia Memory protocol brand, but no compared
+engine identity; the test explicitly separates that protocol identifier before
+checking the entire remaining public envelope for engine/run/native-identity
+leakage. Contract construction provenance is intentionally disclosed so a
+reviewer can distinguish generated diagnostics from independently reviewed
+evidence.
+
+This mechanism removes explicit metadata leakage; it cannot prevent an engine's
+wording or characteristic output style from statistically revealing its
+identity. It also does not supply independent adjudicators, frozen labels,
+independently authored held-out cases, or a third engine. It therefore closes a
+harness-integrity gap but does not open the publication gate or establish a
+quality advantage.
+
+An OpenCode headless adversarial review read the new generator and tests plus
+the campaign, raw runner, and contract boundaries. It reported a CLEAN verdict
+and identified dead code, an unnecessarily complex filename expression, and an
+under-scoped identity-leakage assertion. All three were corrected; provenance
+disclosure and two-engine extensibility remain explicit design limitations.
+This is an independent implementation review, not a completed multi-adjudicator
+quality judgment and not a claim of full governed Review Pass convergence.
+
+Deterministic verification at this checkpoint: 49 test files / 562 tests
+passed, both TypeScript configurations passed, the package build passed,
+Biome passed for the changed source and test, and `git diff --check` passed.
