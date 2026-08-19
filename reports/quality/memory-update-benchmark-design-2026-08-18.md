@@ -375,6 +375,52 @@ disclosure and two-engine extensibility remain explicit design limitations.
 This is an independent implementation review, not a completed multi-adjudicator
 quality judgment and not a claim of full governed Review Pass convergence.
 
-Deterministic verification at this checkpoint: 49 test files / 562 tests
+## 2026-08-19 adjudication intake and unsealing checkpoint
+
+The blinded packet now has a separate, fail-closed judgment intake and
+unsealing command:
+
+```bash
+pnpm benchmark:semantic-adjudication \
+  --contract=<frozen-contract.json> \
+  --campaign=<campaign.json> \
+  --packet=<adjudication-packet.json> \
+  --seal=<confidential-adjudication-seal.json> \
+  --judgments=<completed-independent-judgments.json> \
+  --seed=<private-precommitted-blinding-seed> \
+  --output=<new-score.json>
+```
+
+Before unsealing, the scorer reconstructs the packet and confidential seal from
+the frozen contract, campaign, raw artifacts, and private seed. Any changed raw
+artifact, engine mapping, sample order, native ID mapping, packet content, or
+seed fails validation. Judgment files must bind the packet hash, cover every
+sample and retrieved memory exactly once, bind every sample to an independent
+adjudicator who declares that sample's language as native, carry completion
+timestamps, and use only the frozen labels. An
+`uncertain` label requires notes and is reported separately; it is never
+silently converted into success or failure.
+
+The score disclosure binds both the exact judgment-file bytes and the
+canonical parsed judgment payload. Unused adjudicator declarations are rejected,
+and the scoring join fails explicitly if any validated memory label cannot be
+resolved.
+
+The output reports count numerators by engine and language for current@1,
+current@k, stale exposure@k, deletion leakage@k, and uncertain memories. It
+also retains case/repetition-level rows for later paired analysis. Ratios,
+confidence intervals, and superiority claims are intentionally not emitted at
+this boundary: those require the independently authored/native-reviewed held-
+out corpus, enough repetitions, and the additional production-engine receipts
+already required by the publication gate.
+
+This closes artifact/judgment joining and seal-tampering gaps. It does not
+create an adjudicator, certify that a provenance declaration is truthful, or
+turn the generated diagnostic corpus into held-out evidence. Hindsight remains
+a structured feature-effect control only; promoting it to the semantic tier
+requires a real natural-language-turn bridge plus a three-engine position-
+balanced campaign contract.
+
+Deterministic verification at this checkpoint: 50 test files / 566 tests
 passed, both TypeScript configurations passed, the package build passed,
 Biome passed for the changed source and test, and `git diff --check` passed.
