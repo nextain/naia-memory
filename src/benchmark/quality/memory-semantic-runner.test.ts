@@ -32,6 +32,76 @@ function diagnosticContract(): MemoryUpdateContract {
 }
 
 describe("semantic raw runner", () => {
+	it("uses a deterministic seed-dependent case schedule", async () => {
+		const [base] = diagnosticContract().cases;
+		if (!base) throw new Error("diagnostic fixture is empty");
+		const threeCases: MemoryUpdateContract = {
+			...diagnosticContract(),
+			cases: [
+				base,
+				{
+					...base,
+					id: "semantic-en-2",
+					familyId: "family-en-2",
+					language: "en",
+					query: "Where does the user live now?",
+					expectedCurrentIds: ["current-home-en"],
+					forbiddenStaleIds: ["stale-home-en"],
+				},
+				{
+					...base,
+					id: "semantic-ja-3",
+					familyId: "family-ja-3",
+					language: "ja",
+					query: "ユーザーは今どこに住んでいますか？",
+					expectedCurrentIds: ["current-home-ja"],
+					forbiddenStaleIds: ["stale-home-ja"],
+				},
+			],
+		};
+		const makeBridge = async (): Promise<SemanticEngineBridge> => ({
+			isolationPolicy: "fresh-case-state-v1",
+			identityPolicy: "engine-native-memory-v1",
+			ingestionPolicy: "sequential-turn-commit-v1",
+			temporalInputPolicy: "engine-default-ingest-time-v1",
+			retrievalSurface: "engine-native-semantic-memory-v1",
+			ingestTurn: async () => ({ outcome: "opaque" }),
+			search: async () => [],
+			getNativeState: async () => [],
+			close: async () => undefined,
+		});
+		const first = await runSemanticRawContract(
+			threeCases,
+			makeBridge,
+			5,
+			"seed-a",
+		);
+		const replay = await runSemanticRawContract(
+			threeCases,
+			makeBridge,
+			5,
+			"seed-a",
+		);
+		const alternate = await runSemanticRawContract(
+			threeCases,
+			makeBridge,
+			5,
+			"seed-b",
+		);
+		expect(first.map(({ caseId }) => caseId)).toEqual(
+			replay.map(({ caseId }) => caseId),
+		);
+		expect(first.map(({ caseId }) => caseId)).not.toEqual(
+			threeCases.cases.map(({ id }) => id),
+		);
+		expect(first.map(({ executionPosition }) => executionPosition)).toEqual([
+			1, 2, 3,
+		]);
+		expect(first.map(({ caseId }) => caseId)).not.toEqual(
+			alternate.map(({ caseId }) => caseId),
+		);
+	});
+
 	it("passes only natural-language inputs to a fresh engine and captures native output", async () => {
 		const ingestTurn = vi.fn(async () => ({ outcome: "opaque" as const }));
 		const search = vi.fn(async () => [
@@ -59,6 +129,7 @@ describe("semantic raw runner", () => {
 			diagnosticContract(),
 			factory,
 			3,
+			"test-seed",
 		);
 		expect(ingestTurn.mock.calls).toEqual([
 			[{ content: "나는 서울에 살아." }],
@@ -94,7 +165,12 @@ describe("semantic raw runner", () => {
 			close,
 		};
 		await expect(
-			runSemanticRawContract(diagnosticContract(), async () => bridge, 3),
+			runSemanticRawContract(
+				diagnosticContract(),
+				async () => bridge,
+				3,
+				"test-seed",
+			),
 		).rejects.toThrow("duplicate native IDs");
 		expect(close).toHaveBeenCalledOnce();
 	});
@@ -116,7 +192,12 @@ describe("semantic raw runner", () => {
 			close: vi.fn(async () => undefined),
 		};
 		await expect(
-			runSemanticRawContract(diagnosticContract(), async () => bridge, 3),
+			runSemanticRawContract(
+				diagnosticContract(),
+				async () => bridge,
+				3,
+				"test-seed",
+			),
 		).rejects.toThrow("absent from native state");
 	});
 });

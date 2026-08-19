@@ -33,6 +33,7 @@ export type SemanticEngineBridgeFactory = (
 
 export type SemanticRawReceipt = {
 	caseId: string;
+	executionPosition: number;
 	language: MemoryUpdateCase["language"];
 	fixtureSha256: string;
 	engineInputSha256: string;
@@ -47,6 +48,16 @@ export type SemanticRawReceipt = {
 
 function sha256(value: unknown): string {
 	return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+}
+
+function scheduledCases(contract: MemoryUpdateContract, executionSeed: string) {
+	if (!executionSeed.trim())
+		throw new Error("semantic runner execution seed is required");
+	return [...contract.cases].sort((left, right) => {
+		const leftKey = sha256({ executionSeed, caseId: left.id });
+		const rightKey = sha256({ executionSeed, caseId: right.id });
+		return leftKey.localeCompare(rightKey) || left.id.localeCompare(right.id);
+	});
 }
 
 function assertNativeMemories(
@@ -73,6 +84,7 @@ export async function runSemanticRawContract(
 	contract: MemoryUpdateContract,
 	createBridge: SemanticEngineBridgeFactory,
 	topK: number,
+	executionSeed: string,
 ): Promise<SemanticRawReceipt[]> {
 	validateMemoryUpdateContract(contract);
 	if (contract.tier !== "semantic-update-interpretation")
@@ -83,7 +95,8 @@ export async function runSemanticRawContract(
 		throw new Error("semantic runner topK must be a positive integer");
 
 	const receipts: SemanticRawReceipt[] = [];
-	for (const benchmarkCase of contract.cases) {
+	const schedule = scheduledCases(contract, executionSeed);
+	for (const [executionIndex, benchmarkCase] of schedule.entries()) {
 		const bridge = await createBridge(benchmarkCase.language);
 		try {
 			if (bridge.isolationPolicy !== "fresh-case-state-v1")
@@ -127,6 +140,7 @@ export async function runSemanticRawContract(
 			};
 			receipts.push({
 				caseId: benchmarkCase.id,
+				executionPosition: executionIndex + 1,
 				language: benchmarkCase.language,
 				fixtureSha256: sha256({
 					language: benchmarkCase.language,

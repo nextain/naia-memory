@@ -17,7 +17,30 @@ describe("semantic raw CLI", () => {
 			contractPath: "contract.json",
 			outputPath: "receipt.json",
 			topK: 7,
+			executionSeed: undefined,
 		});
+	});
+
+	it("accepts an explicit reproducible execution seed", () => {
+		expect(
+			parseSemanticRawCliArgs([
+				"--engine=naia",
+				"--contract=contract.json",
+				"--output=receipt.json",
+				"--seed=held-out-run-1",
+			]),
+		).toMatchObject({ executionSeed: "held-out-run-1" });
+	});
+
+	it("rejects a blank execution seed", () => {
+		expect(() =>
+			parseSemanticRawCliArgs([
+				"--engine=naia",
+				"--contract=contract.json",
+				"--output=receipt.json",
+				"--seed=  ",
+			]),
+		).toThrow("--seed must not be blank");
 	});
 
 	it("rejects unknown engines, malformed arguments, and invalid top-k", () => {

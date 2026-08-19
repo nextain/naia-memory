@@ -123,6 +123,17 @@ no verdict. These attempts are recorded as unavailable, not as passes.
 - Report per-language confidence intervals and paired case-level deltas. No
   global claim is allowed from aggregate-only or self-authored diagnostic data.
 
+The raw semantic runner now implements the case-order half of the ordering
+requirement. It derives a deterministic shuffled schedule from an execution
+seed, records that seed in the artifact disclosure, and records every case's
+actual execution position. Omitting `--seed` generates a per-run UUID; a frozen
+comparison can pass the same precommitted seed to every engine. The lower-level
+runner requires an explicit seed so programmatic callers cannot silently fall
+back to a reusable default schedule. Engine-order
+randomization still requires a multi-engine orchestrator and remains an open
+publication-gate item, so the current single-engine CLI is not fully
+order-balanced.
+
 ## Adversarial failure hypotheses
 
 1. Naia may appear better only because fixture-owned structured identity is

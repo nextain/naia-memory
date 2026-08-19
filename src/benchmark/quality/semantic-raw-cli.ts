@@ -24,6 +24,7 @@ export type SemanticRawCliArgs = {
 	contractPath: string;
 	outputPath: string;
 	topK: number;
+	executionSeed?: string;
 };
 
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai/";
@@ -33,7 +34,7 @@ export function parseSemanticRawCliArgs(args: string[]): SemanticRawCliArgs {
 	for (const arg of args) {
 		const match = /^--([^=]+)=(.+)$/.exec(arg);
 		if (!match) throw new Error(`invalid argument: ${arg}`);
-		if (!["engine", "contract", "output", "top-k"].includes(match[1]))
+		if (!["engine", "contract", "output", "top-k", "seed"].includes(match[1]))
 			throw new Error(`unknown argument: --${match[1]}`);
 		if (values.has(match[1]))
 			throw new Error(`duplicate argument: --${match[1]}`);
@@ -49,7 +50,10 @@ export function parseSemanticRawCliArgs(args: string[]): SemanticRawCliArgs {
 	const topK = Number(values.get("top-k") ?? "5");
 	if (!Number.isInteger(topK) || topK < 1)
 		throw new Error("--top-k must be a positive integer");
-	return { engine, contractPath, outputPath, topK };
+	const executionSeed = values.get("seed");
+	if (executionSeed !== undefined && !executionSeed.trim())
+		throw new Error("--seed must not be blank");
+	return { engine, contractPath, outputPath, topK, executionSeed };
 }
 
 function discloseEndpoint(baseURL: string): string {
@@ -135,6 +139,7 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 	) as MemoryUpdateContract;
 	const provider = providerConfig();
 	const runId = randomUUID();
+	const executionSeed = parsed.executionSeed ?? runId;
 	const workPrefix = resolve(".agents/work/semantic-raw", runId);
 	const createBridge =
 		parsed.engine === "naia"
@@ -196,10 +201,12 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 		contract,
 		createBridge,
 		parsed.topK,
+		executionSeed,
 	);
 	const disclosure = {
 		engine: parsed.engine,
 		topK: parsed.topK,
+		executionSeed,
 		embeddingModel: provider.embeddingModel,
 		llmModel: provider.llmModel,
 		endpoint: discloseEndpoint(provider.baseURL),
