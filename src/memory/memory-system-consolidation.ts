@@ -7,11 +7,16 @@ import {
 import type { MemorySystemOptions } from "./memory-system-api.js";
 import { MemorySystemBackup } from "./memory-system-backup.js";
 import { filterNegativeCapture } from "./negative-capture.js";
-import { findContradictionsWith } from "./reconsolidation.js";
+import {
+	findContradictionsWith,
+	type ReconsolidationResult,
+} from "./reconsolidation.js";
 import {
 	findStructuredDeletionTargets,
+	findStructuredNegationRetirements,
 	findStructuredSupersessions,
 	sameStructuredFact,
+	sameStructuredSubject,
 } from "./structured-facts.js";
 import type { ConsolidationResult, Fact } from "./types.js";
 
@@ -209,21 +214,56 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					}
 
 					const structuredSupersessions = ef.structured
-						? findStructuredSupersessions(existingFacts, ef.structured)
+						? [
+								...findStructuredSupersessions(existingFacts, ef.structured),
+								...findStructuredNegationRetirements(
+									existingFacts,
+									ef.structured,
+								),
+							]
 						: [];
-					const contradictions = ef.structured
-						? structuredSupersessions.map((fact) => ({
-								fact,
-								result: {
-									action: "update" as const,
-									updatedContent: ef.content,
-								},
-							}))
-						: await findContradictionsWith(
-								existingFacts,
-								ef.content,
-								this.contradictionFilter,
-							);
+					const structured = ef.structured;
+					const structuredFallbackFacts = structured
+						? existingFacts.filter(
+								(fact) =>
+									fact.status === "active" &&
+									!!fact.structured &&
+									fact.structured.cardinality === "single" &&
+									structured.cardinality === "single" &&
+									sameStructuredSubject(fact.structured, structured),
+							)
+						: [];
+					let contradictions: Array<{
+						fact: Fact;
+						result: ReconsolidationResult;
+					}>;
+					if (!structured) {
+						contradictions = await findContradictionsWith(
+							existingFacts,
+							ef.content,
+							this.contradictionFilter,
+						);
+					} else if (structuredSupersessions.length > 0) {
+						contradictions = structuredSupersessions.map((fact) => ({
+							fact,
+							result: {
+								action: "update" as const,
+								updatedContent: ef.content,
+								reason: "structured lifecycle replacement",
+							},
+						}));
+					} else {
+						const verdicts = await this.contradictionFilter.filter(
+							structuredFallbackFacts.map((existing) => ({
+								existing,
+								newInfo: ef.content,
+							})),
+						);
+						contradictions = verdicts.flatMap((verdict) => {
+							const fact = structuredFallbackFacts[verdict.index];
+							return fact ? [{ fact, result: verdict.result }] : [];
+						});
+					}
 
 					if (contradictions.length > 0) {
 						// Update ALL contradicted facts to prevent stale contradictory data

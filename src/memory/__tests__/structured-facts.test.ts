@@ -5,11 +5,16 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { LocalAdapter } from "../adapters/local.js";
 import { MemorySystem } from "../index.js";
-import { sameStructuredFact } from "../structured-facts.js";
+import {
+	findStructuredNegationRetirements,
+	sameStructuredFact,
+} from "../structured-facts.js";
 import type {
+	ContradictionFilterProvider,
 	EncodingContext,
 	Episode,
 	ExtractedFact,
+	Fact,
 	FactExtractor,
 	MemoryInput,
 	RecallContext,
@@ -24,7 +29,12 @@ afterEach(async () => {
 	await rm(rootDir, { recursive: true, force: true }).catch(() => {});
 });
 
-function makeSystem(opts: { factExtractor?: FactExtractor } = {}): {
+function makeSystem(
+	opts: {
+		factExtractor?: FactExtractor;
+		contradictionFilter?: ContradictionFilterProvider;
+	} = {},
+): {
 	system: MemorySystem;
 	adapter: LocalAdapter;
 } {
@@ -33,6 +43,9 @@ function makeSystem(opts: { factExtractor?: FactExtractor } = {}): {
 		adapter,
 		consolidationIntervalMs: 0,
 		...(opts.factExtractor ? { factExtractor: opts.factExtractor } : {}),
+		...(opts.contradictionFilter
+			? { contradictionFilter: opts.contradictionFilter }
+			: {}),
 	});
 	return { system, adapter };
 }
@@ -61,12 +74,30 @@ describe("structured value comparison safety", () => {
 				{ ...base, cardinality: "single", value: "states" },
 			),
 		).toBe(false);
-		expect(
-			sameStructuredFact(base, { ...base, value: "tree nuts" }),
-		).toBe(false);
-		expect(sameStructuredFact(base, { ...base, value: "땅콩들" })).toBe(
+		expect(sameStructuredFact(base, { ...base, value: "tree nuts" })).toBe(
 			false,
 		);
+		expect(sameStructuredFact(base, { ...base, value: "땅콩들" })).toBe(false);
+	});
+
+	it("retires only the exact affirmed member negated by a multi-valued fact", () => {
+		const peanut = {
+			id: "peanut",
+			content: "User likes peanuts",
+			status: "active" as const,
+			structured: base,
+		} as unknown as Fact;
+		const almonds = {
+			...peanut,
+			id: "almonds",
+			structured: { ...base, value: "almonds" },
+		};
+		expect(
+			findStructuredNegationRetirements([peanut, almonds], {
+				...base,
+				polarity: "negated",
+			}),
+		).toEqual([peanut]);
 	});
 });
 
@@ -101,7 +132,10 @@ describe("structured consolidation idempotency", () => {
 		const timestamp = Date.now() - 10 * 60 * 1000;
 		await system.encode(input({ content, timestamp }), DEFAULT_CTX);
 		await system.consolidateNow(true);
-		await system.encode(input({ content, timestamp: timestamp + 1 }), DEFAULT_CTX);
+		await system.encode(
+			input({ content, timestamp: timestamp + 1 }),
+			DEFAULT_CTX,
+		);
 		await system.consolidateNow(true);
 
 		const active = (await adapter.semantic.getAll()).filter(
@@ -220,6 +254,67 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		expect(successor.structured?.value).toBe("부산");
 		const latest = await system.recall("거주지", { topK: 10 });
 		expect(latest.facts.map((fact) => fact.content)).toEqual([newContent]);
+		await system.close();
+	});
+
+	it("falls back to semantic contradiction review when structured property IDs drift", async () => {
+		const oldContent = "ユーザーの朝の習慣: 読書";
+		const newContent = "朝は読書ではなく瞑想に切り替えました";
+		const extractor = structuredExtractor({
+			[oldContent]: {
+				subject: "ユーザー",
+				subjectId: "person:self",
+				property: "朝の習慣",
+				propertyId: "routine:morning",
+				value: "読書",
+				polarity: "affirmed",
+				cardinality: "single",
+			},
+			[newContent]: {
+				subject: "ユーザー",
+				subjectId: "person:self",
+				property: "趣味",
+				propertyId: "profile:hobby",
+				value: "瞑想",
+				polarity: "affirmed",
+				cardinality: "single",
+			},
+		});
+		const contradictionFilter: ContradictionFilterProvider = {
+			name: "test-contextual-fallback",
+			filter: async (candidates) =>
+				candidates.length === 1
+					? [
+							{
+								index: 0,
+								result: {
+									action: "update",
+									updatedContent: newContent,
+									reason: "explicit morning-routine replacement",
+								},
+							},
+						]
+					: [],
+		};
+		const { system, adapter } = makeSystem({
+			factExtractor: extractor,
+			contradictionFilter,
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		for (const [offset, content] of [oldContent, newContent].entries()) {
+			await system.encode(
+				input({ content, timestamp: timestamp + offset }),
+				DEFAULT_CTX,
+			);
+			await system.consolidateNow(true);
+		}
+		const stored = await adapter.semantic.getAll();
+		expect(stored.find((fact) => fact.content === oldContent)?.status).toBe(
+			"superseded",
+		);
+		expect(stored.find((fact) => fact.content === newContent)?.status).toBe(
+			"active",
+		);
 		await system.close();
 	});
 
@@ -443,7 +538,7 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		await system.close();
 	});
 
-	it("does not replace multi-valued, negated, or different-property facts", async () => {
+	it("keeps multi/different-property facts while exact negation retires its affirmative", async () => {
 		const skills = "사용자 기술: TypeScript";
 		const moreSkills = "사용자 기술: Rust";
 		const residence = "사용자 거주지: 서울";
@@ -493,11 +588,22 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 			await system.encode(input({ content, timestamp }), DEFAULT_CTX);
 			await system.consolidateNow(true);
 		}
-		expect(
-			(await adapter.semantic.getAll()).every(
-				(fact) => fact.status === "active",
-			),
-		).toBe(true);
+		const stored = await adapter.semantic.getAll();
+		expect(stored.find((fact) => fact.content === skills)?.status).toBe(
+			"active",
+		);
+		expect(stored.find((fact) => fact.content === moreSkills)?.status).toBe(
+			"active",
+		);
+		expect(stored.find((fact) => fact.content === residence)?.status).toBe(
+			"superseded",
+		);
+		expect(stored.find((fact) => fact.content === office)?.status).toBe(
+			"active",
+		);
+		expect(stored.find((fact) => fact.content === notSeoul)?.status).toBe(
+			"active",
+		);
 		await system.close();
 	});
 
@@ -596,7 +702,10 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 				})),
 		});
 		const timestamp = Date.now() - 10 * 60 * 1000;
-		await system.encode(input({ content: storedContent, timestamp }), DEFAULT_CTX);
+		await system.encode(
+			input({ content: storedContent, timestamp }),
+			DEFAULT_CTX,
+		);
 		await system.consolidateNow(true);
 		await system.encode(
 			input({ content: deleteContent, timestamp: timestamp + 1 }),
