@@ -60,8 +60,17 @@ const EXTRACTOR_PROPERTY_IDS = new Set([
 	"profile:diet",
 	"profile:medication",
 	"profile:beverage-consumption",
+	"profile:hobby",
+	"plan:activity",
+	"routine:morning",
+	"preference:animal",
+	"preference:book-genre",
+	"preference:color",
 	"preference:editor",
+	"preference:food",
+	"preference:music-genre",
 	"preference:tool",
+	"preference:travel-destination",
 	"preference:communication",
 ]);
 
@@ -179,14 +188,18 @@ Anti-pattern (do NOT do):
 - Padding with relationship verbs ("switched", "changed") in the value;
   the value should be the new state alone.
 
-CRITICAL — EXPLICIT DELETE / FORGET statements:
-When the speaker explicitly asks to remove a previously stored fact (for
-example "forget my peanut allergy", "땅콩 알레르기 기억은 지워줘",
-or "ピーナッツアレルギーの記憶を削除して"), return an object with
+CRITICAL — DELETE / DURABLE CESSATION statements:
+When the speaker explicitly asks to remove a previously stored fact, or
+unambiguously says a durable state has permanently ended (for example
+"forget my peanut allergy", "I no longer collect stamps", "더 이상 우표
+수집을 하지 않아요", or "もう辛い食べ物は好きではありません"), return an object with
 "operation":"delete" and the exact affirmative structured fact to remove.
 Do not turn the request into a new negated fact. Delete requires complete
 subject, property, value, polarity="affirmed", and cardinality. Never infer a
-delete from uncertainty, correction, temporary exceptions, or ordinary negation.
+delete from uncertainty, correction, inability, future intent, temporary
+exceptions, or ambiguous/ordinary negation. If a durable new negative preference
+is itself useful, emit it as a separate upsert in addition to deleting the old
+affirmative fact.
 
 Language-preservation rules (apply independently to every episode):
 - Never translate the fact, structured labels, or value into another language.
@@ -213,7 +226,11 @@ an unknown concept into the nearest category. Omit both IDs when uncertain.
   "profile:occupation", "profile:organization", "profile:timezone",
   "profile:language", "profile:allergy", "profile:diet",
   "profile:medication", "profile:beverage-consumption",
-  "preference:editor", "preference:tool", or "preference:communication"
+  "profile:hobby", "plan:activity", "routine:morning",
+  "preference:animal", "preference:book-genre", "preference:color",
+  "preference:editor", "preference:food", "preference:music-genre",
+  "preference:tool", "preference:travel-destination", or
+  "preference:communication"
 
 Respond with ONLY a JSON object mapping episode number to fact array. No other text.
 Backward-compatible format: {"1": ["fact", ...], "2": ["fact", ...], ...}

@@ -94,11 +94,11 @@ describe("OpenAI-compatible LLM auth", () => {
 											"1": [
 												{
 													content: "사용자 거주지: 서울",
-											structured: {
-												subject: "사용자",
-												subjectId: "person:self",
-												property: "거주지",
-												propertyId: "profile:residence",
+													structured: {
+														subject: "사용자",
+														subjectId: "person:self",
+														property: "거주지",
+														propertyId: "profile:residence",
 														value: "서울",
 														polarity: "affirmed",
 														cardinality: "single",
@@ -111,11 +111,11 @@ describe("OpenAI-compatible LLM auth", () => {
 												{
 													content: "사용자 알레르기: 땅콩",
 													operation: "delete",
-											structured: {
-												subject: "사용자",
-												subjectId: "person:self",
-												property: "알레르기",
-												propertyId: "invented:allergy",
+													structured: {
+														subject: "사용자",
+														subjectId: "person:self",
+														property: "알레르기",
+														propertyId: "invented:allergy",
 														value: "땅콩",
 														polarity: "affirmed",
 														cardinality: "multi",
@@ -155,6 +155,77 @@ describe("OpenAI-compatible LLM auth", () => {
 		expect(facts[2].structured?.value).toBe("땅콩");
 		expect(facts[2].structured?.subjectId).toBeUndefined();
 		expect(facts[2].structured?.propertyId).toBeUndefined();
+	});
+
+	it("fact extractor accepts general multilingual memory identity IDs", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						JSON.stringify({
+							choices: [
+								{
+									message: {
+										content: JSON.stringify({
+											"1": [
+												{
+													content: "사용자 선호 색상: 초록색",
+													structured: {
+														subject: "사용자",
+														subjectId: "person:self",
+														property: "선호 색상",
+														propertyId: "preference:color",
+														value: "초록색",
+														polarity: "affirmed",
+														cardinality: "single",
+													},
+												},
+											],
+										}),
+									},
+								},
+							],
+						}),
+						{ status: 200, headers: { "content-type": "application/json" } },
+					),
+			),
+		);
+
+		const [fact] = await buildLLMFactExtractor({
+			apiKey: "test-secret",
+			baseURL: "https://provider.test/v1/",
+			model: "test-model",
+		})([episode]);
+
+		expect(fact.structured?.propertyId).toBe("preference:color");
+	});
+
+	it("fact extractor prompt distinguishes durable cessation from temporary negation", async () => {
+		let prompt = "";
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+				const body = JSON.parse(String(init?.body)) as {
+					messages: Array<{ content: string }>;
+				};
+				prompt = body.messages[0]?.content ?? "";
+				return new Response(
+					JSON.stringify({ choices: [{ message: { content: '{"1":[]}' } }] }),
+					{ status: 200, headers: { "content-type": "application/json" } },
+				);
+			}),
+		);
+
+		await buildLLMFactExtractor({
+			apiKey: "test-secret",
+			baseURL: "https://provider.test/v1/",
+			model: "test-model",
+		})([episode]);
+
+		expect(prompt).toContain("durable state has permanently ended");
+		expect(prompt).toMatch(/temporary\s+exceptions/);
+		expect(prompt).toContain('"preference:music-genre"');
 	});
 
 	it("fact extractor benchmark policy throws on provider and parse failures", async () => {
