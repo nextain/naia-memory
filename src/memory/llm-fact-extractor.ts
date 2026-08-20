@@ -187,6 +187,12 @@ Anti-pattern (do NOT do):
   the residence/location key, not a one-off "이사 사실:" key).
 - Padding with relationship verbs ("switched", "changed") in the value;
   the value should be the new state alone.
+- Treat contrastive replacements equivalently across languages. Preserve the
+  replaced attribute even when the new activity could also fit a broader
+  category. For example, "In the evenings I now stretch instead of running",
+  "저녁에는 달리기 대신 스트레칭을 해요", and "夜は走る代わりにストレッチをしています"
+  all describe a replacement of the evening routine; do not relabel the new
+  value as a generic hobby.
 
 CRITICAL — DELETE / DURABLE CESSATION statements:
 When the speaker explicitly asks to remove a previously stored fact, or
@@ -200,6 +206,11 @@ delete from uncertainty, correction, inability, future intent, temporary
 exceptions, or ambiguous/ordinary negation. If a durable new negative preference
 is itself useful, emit it as a separate upsert in addition to deleting the old
 affirmative fact.
+
+Durable cessation is language-independent. Phrases equivalent to "no longer",
+"더 이상 ... 않다", and "もう ... ではない" must delete the exact prior
+affirmative value when the statement is explicit and durable, even if the same
+turn also states a new negative preference.
 
 Language-preservation rules (apply independently to every episode):
 - Never translate the fact, structured labels, or value into another language.

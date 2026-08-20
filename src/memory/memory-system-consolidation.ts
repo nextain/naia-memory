@@ -226,6 +226,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					const structuredFallbackFacts = structured
 						? existingFacts.filter(
 								(fact) =>
+									this.contradictionFilter.name !== "heuristic" &&
 									fact.status === "active" &&
 									!!fact.structured &&
 									fact.structured.cardinality === "single" &&
@@ -243,8 +244,8 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 							ef.content,
 							this.contradictionFilter,
 						);
-					} else if (structuredSupersessions.length > 0) {
-						contradictions = structuredSupersessions.map((fact) => ({
+					} else {
+						const deterministic = structuredSupersessions.map((fact) => ({
 							fact,
 							result: {
 								action: "update" as const,
@@ -252,17 +253,23 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								reason: "structured lifecycle replacement",
 							},
 						}));
-					} else {
+						const deterministicIds = new Set(
+							structuredSupersessions.map((fact) => fact.id),
+						);
+						const contextualFacts = structuredFallbackFacts.filter(
+							(fact) => !deterministicIds.has(fact.id),
+						);
 						const verdicts = await this.contradictionFilter.filter(
-							structuredFallbackFacts.map((existing) => ({
+							contextualFacts.map((existing) => ({
 								existing,
 								newInfo: ef.content,
 							})),
 						);
-						contradictions = verdicts.flatMap((verdict) => {
-							const fact = structuredFallbackFacts[verdict.index];
+						const contextual = verdicts.flatMap((verdict) => {
+							const fact = contextualFacts[verdict.index];
 							return fact ? [{ fact, result: verdict.result }] : [];
 						});
+						contradictions = [...deterministic, ...contextual];
 					}
 
 					if (contradictions.length > 0) {
