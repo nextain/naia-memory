@@ -4,6 +4,7 @@ import {
 	contentTokens,
 	jaccardSimilarity,
 } from "./consolidation-primitives.js";
+import { distillInsights } from "./insight-distillation.js";
 import type { MemorySystemOptions } from "./memory-system-api.js";
 import { MemorySystemBackup } from "./memory-system-backup.js";
 import { filterNegativeCapture } from "./negative-capture.js";
@@ -18,6 +19,7 @@ import {
 	sameStructuredFact,
 	sameStructuredSubject,
 } from "./structured-facts.js";
+import { reconcileStructuredDuplicate } from "./structured-duplicate-reconciliation.js";
 import type { ConsolidationResult, Fact } from "./types.js";
 
 function normalizedContent(value: string): string {
@@ -185,6 +187,17 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 							});
 
 					if (duplicate) {
+						if (ef.structured) {
+							factsUpdated += await reconcileStructuredDuplicate({
+								adapter: this.adapter,
+								contradictionFilter: this.contradictionFilter,
+								existingFacts,
+								duplicate,
+								structured: ef.structured,
+								content: ef.content,
+								now,
+							});
+						}
 						// Near-duplicate found — update metadata but don't create new entry
 						const newImportance = Math.max(
 							duplicate.importance,
@@ -418,7 +431,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 
 			// 6. R4 #220 Step 3 — Semantic Consolidation (Insight Distillation)
 			//    Distill clusters of facts into high-level insights.
-			const insightsCreated = await this.distillInsights(now);
+			const insightsCreated = await distillInsights(this.adapter, now);
 
 			// R4 Step 5a/5c — Background-brain 시간 스파이크(시간 anchor + 기념일).
 			//    detectTemporalAnchors/detectEmotionAnniversaries 는 구현돼 있었으나
@@ -478,101 +491,4 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 		}
 	}
 
-	/**
-	 * R4 #220 Step 3 — Semantic Consolidation (The Power of Forgetting).
-	 *
-	 * Distills clusters of related facts into high-level semantic insights.
-	 * Prunes/archives the raw facts that have been fully consolidated to mirror
-	 * human memory abstraction.
-	 */
-	private async distillInsights(now: number): Promise<number> {
-		let insightsCreated = 0;
-		try {
-			// Get all active facts that are not already insights
-			const allFacts = await this.adapter.semantic.getAll();
-			const activeFacts = allFacts.filter(
-				(f) =>
-					f.status === "active" &&
-					!(f.topics?.includes("system:insight") ?? false),
-			);
-
-			// Use KnowledgeGraph hubs to identify candidates for distillation
-			// This mirrors how the brain prioritizes highly-connected concepts for abstraction.
-			const hubs =
-				"getHubs" in this.adapter
-					? await (this.adapter as any).getHubs()
-					: "getStore" in this.adapter
-						? ((this.adapter as any).getStore().knowledgeGraph?.nodes ?? {})
-						: {};
-			const hubNames = Object.keys(hubs).sort(
-				(a, b) => (hubs[b].frequency ?? 0) - (hubs[a].frequency ?? 0),
-			);
-
-			for (const hubName of hubNames.slice(0, 10)) {
-				const related = activeFacts.filter((f) =>
-					f.entities.some((e) => e.toLowerCase() === hubName.toLowerCase()),
-				);
-
-				// Threshold for distillation: 3+ related facts about a hub entity
-				if (related.length >= 3) {
-					// R4 #220 — Genuine insight distillation.
-					// Summarize the core themes of the related facts.
-					const themes = [
-						...new Set(related.flatMap((f) => f.topics ?? [])),
-					].join(", ");
-					const distilledContent = `Consolidated Insight on '${hubName}': Observed consistent patterns regarding ${themes}. Key observations include: ${related.map((f) => f.content).join("; ")}`;
-
-					const hashHex = crypto
-						.createHash("sha256")
-						.update(
-							"insight:" +
-								hubName +
-								related
-									.map((f) => f.id)
-									.sort()
-									.join(","),
-						)
-						.digest("hex")
-						.slice(0, 32);
-					const deterministicId = `insight-${hashHex.slice(0, 8)}-${hashHex.slice(8, 12)}-${hashHex.slice(12, 16)}-${hashHex.slice(16, 20)}-${hashHex.slice(20, 32)}`;
-
-					const insightFact: Fact = {
-						id: deterministicId,
-						content: distilledContent,
-						entities: [hubName],
-						topics: [
-							"system:insight",
-							...new Set(related.flatMap((f) => f.topics ?? [])),
-						],
-						createdAt: now,
-						updatedAt: now,
-						importance: 0.95, // Insights are highly important
-						maxEmotion: Math.max(...related.map((f) => f.maxEmotion ?? 0), 0.5),
-						recallCount: 0,
-						lastAccessed: now,
-						strength: 1.0, // Fresh insights start at full strength
-						status: "active",
-						sourceEpisodes: [
-							...new Set(related.flatMap((f) => f.sourceEpisodes)),
-						],
-						encodingContext: { category: "insight" },
-					};
-
-					await this.adapter.semantic.upsert(insightFact);
-					insightsCreated++;
-
-					// "The Power of Forgetting": Archive source facts to prioritize the insight.
-					// This reduces noise in standard retrieval.
-					for (const f of related) {
-						f.status = "archived";
-						f.strength *= 0.5; // Weaken for Ebbinghaus decay sweep
-						await this.adapter.semantic.upsert(f);
-					}
-				}
-			}
-		} catch (e: any) {
-			console.warn(`[MemorySystem] insight distillation failed: ${e?.message}`);
-		}
-		return insightsCreated;
-	}
 }
