@@ -1,6 +1,7 @@
 /** Public package entry for Naia Memory. */
 export { MemorySystem } from "./memory-system.js";
 export * from "./memory-system-api.js";
+export { buildLLMDeleteVerifier } from "./llm-delete-verifier.js";
 export * from "./consolidation-primitives.js";
 export * from "./compaction-helpers.js";
 export { LiteMemoryProvider } from "./lite-provider.js";

@@ -1,41 +1,35 @@
-import crypto from "node:crypto";
 import {
-	MAX_EPISODES_PER_CYCLE,
-	contentTokens,
-	jaccardSimilarity,
-} from "./consolidation-primitives.js";
+	buildNewFact,
+	findDuplicateFact,
+	resolveFactContradictions,
+} from "./consolidation-fact-resolution.js";
+import { MAX_EPISODES_PER_CYCLE } from "./consolidation-primitives.js";
+import {
+	hasGroundedDeleteAuthority,
+	resolveDeleteTarget,
+} from "./delete-authorization.js";
 import { distillInsights } from "./insight-distillation.js";
-import type { MemorySystemOptions } from "./memory-system-api.js";
+import type {
+	ExtractedFact,
+	MemorySystemOptions,
+} from "./memory-system-api.js";
 import { MemorySystemBackup } from "./memory-system-backup.js";
 import { filterNegativeCapture } from "./negative-capture.js";
-import {
-	findContradictionsWith,
-	type ReconsolidationResult,
-} from "./reconsolidation.js";
-import {
-	findStructuredDeletionTargets,
-	findStructuredNegationRetirements,
-	findStructuredSupersessions,
-	sameStructuredFact,
-	sameStructuredSubject,
-} from "./structured-facts.js";
 import { reconcileStructuredDuplicate } from "./structured-duplicate-reconciliation.js";
+import {
+	hasTrustedUserMutationSources,
+	resolveStructuredMutationPolicy,
+} from "./structured-mutation-policy.js";
 import type { ConsolidationResult, Fact } from "./types.js";
-
-function normalizedContent(value: string): string {
-	return value
-		.normalize("NFC")
-		.trim()
-		.replace(/[.。!?！？]+$/u, "")
-		.trimEnd()
-		.replace(/\s+/g, " ")
-		.toLocaleLowerCase();
-}
+import { recordDeleteOutcome } from "./usage-tracker.js";
 
 /** Sleep-cycle consolidation and adapter backup operations. */
 export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 	private consolidationTimer: ReturnType<typeof setInterval> | null = null;
 	private readonly consolidationIntervalMs: number;
+	private warnedMissingDeleteVerifier = false;
+	private warnedOversizedDelete = false;
+	private warnedDeleteVerifierFailure = false;
 
 	constructor(options: MemorySystemOptions) {
 		super(options);
@@ -123,8 +117,15 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 
 				// 3. For each extracted fact, check contradictions and upsert
 				for (const ef of extracted) {
-					const srcEp = readyEpisodes.find((e) =>
-						ef.sourceEpisodeIds.includes(e.id),
+					const sourceEpisodes = ef.sourceEpisodeIds.map((id) =>
+						readyEpisodes.find((episode) => episode.id === id),
+					);
+					const srcEp =
+						sourceEpisodes.find((episode) => episode?.role === "user") ??
+						sourceEpisodes[0];
+					const trustedUserMutation = hasTrustedUserMutationSources(
+						ef.sourceEpisodeIds,
+						readyEpisodes,
 					);
 					const efProject = srcEp?.encodingContext?.project;
 					// Search for semantically similar facts instead of getAll() — O(topK) not O(N).
@@ -153,40 +154,75 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					}
 
 					if (ef.operation === "delete") {
-						const targets = ef.structured
-							? findStructuredDeletionTargets(existingFacts, ef.structured)
-							: [];
-						for (const target of targets) {
-							await this.adapter.semantic.upsert({
-								...target,
-								status: "archived",
-								updatedAt: now,
-								validTo: now,
-							});
-							factsUpdated++;
+						if (!hasGroundedDeleteAuthority(ef, srcEp)) {
+							recordDeleteOutcome("denied");
+							continue;
 						}
+						if (!srcEp) continue;
+						if (!this.deleteVerifier) {
+							recordDeleteOutcome("verifier_failed");
+							if (!this.warnedMissingDeleteVerifier) {
+								console.warn(
+									"[naia-memory] grounded delete ignored because no delete verifier is configured",
+								);
+								this.warnedMissingDeleteVerifier = true;
+							}
+							continue;
+						}
+						const resolution = await resolveDeleteTarget({
+							episode: srcEp,
+							fact: ef,
+							existingFacts,
+							verifier: this.deleteVerifier,
+						});
+						if (resolution.status === "oversized") {
+							recordDeleteOutcome("oversized");
+							if (!this.warnedOversizedDelete) {
+								console.warn(
+									"[naia-memory] grounded delete ignored because candidate limit was exceeded",
+								);
+								this.warnedOversizedDelete = true;
+							}
+							continue;
+						}
+						if (resolution.status === "verifier_failed") {
+							recordDeleteOutcome("verifier_failed");
+							if (!this.warnedDeleteVerifierFailure) {
+								console.warn(
+									"[naia-memory] delete verifier failed; deletion denied",
+								);
+								this.warnedDeleteVerifierFailure = true;
+							}
+							continue;
+						}
+						if (resolution.status !== "authorized") {
+							recordDeleteOutcome("denied");
+							continue;
+						}
+						recordDeleteOutcome("authorized");
+						const target = resolution.target;
+						await this.adapter.semantic.upsert({
+							...target,
+							status: "archived",
+							updatedAt: now,
+							validTo: now,
+						});
+						factsUpdated++;
 						continue;
 					}
 
 					// Check for exact/near identity to prevent semantic redundancy (#4)
-					const duplicate = ef.structured
-						? existingFacts.find(
-								(fact) =>
-									fact.status === "active" &&
-									(normalizedContent(fact.content) ===
-										normalizedContent(ef.content) ||
-										(!!fact.structured &&
-											sameStructuredFact(fact.structured, ef.structured!))),
-							)
-						: existingFacts.find((f) => {
-								const sim = jaccardSimilarity(
-									contentTokens(f.content),
-									contentTokens(ef.content),
-								);
-								return sim > 0.85; // High similarity threshold for identity
-							});
+					const duplicate = findDuplicateFact(ef, existingFacts);
+
+					const mutationPolicy = resolveStructuredMutationPolicy({
+						trustedUserMutation,
+						structured: ef.structured,
+						existingFacts,
+						contradictionFilter: this.contradictionFilter,
+					});
 
 					if (duplicate) {
+						if (!mutationPolicy.trustedUserMutation) continue;
 						if (ef.structured) {
 							factsUpdated += await reconcileStructuredDuplicate({
 								adapter: this.adapter,
@@ -226,64 +262,16 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						continue;
 					}
 
-					const structuredSupersessions = ef.structured
-						? [
-								...findStructuredSupersessions(existingFacts, ef.structured),
-								...findStructuredNegationRetirements(
-									existingFacts,
-									ef.structured,
-								),
-							]
-						: [];
 					const structured = ef.structured;
-					const structuredFallbackFacts = structured
-						? existingFacts.filter(
-								(fact) =>
-									this.contradictionFilter.name !== "heuristic" &&
-									fact.status === "active" &&
-									!!fact.structured &&
-									fact.structured.cardinality === "single" &&
-									structured.cardinality === "single" &&
-									sameStructuredSubject(fact.structured, structured),
-							)
-						: [];
-					let contradictions: Array<{
-						fact: Fact;
-						result: ReconsolidationResult;
-					}>;
-					if (!structured) {
-						contradictions = await findContradictionsWith(
-							existingFacts,
-							ef.content,
-							this.contradictionFilter,
-						);
-					} else {
-						const deterministic = structuredSupersessions.map((fact) => ({
-							fact,
-							result: {
-								action: "update" as const,
-								updatedContent: ef.content,
-								reason: "structured lifecycle replacement",
-							},
-						}));
-						const deterministicIds = new Set(
-							structuredSupersessions.map((fact) => fact.id),
-						);
-						const contextualFacts = structuredFallbackFacts.filter(
-							(fact) => !deterministicIds.has(fact.id),
-						);
-						const verdicts = await this.contradictionFilter.filter(
-							contextualFacts.map((existing) => ({
-								existing,
-								newInfo: ef.content,
-							})),
-						);
-						const contextual = verdicts.flatMap((verdict) => {
-							const fact = contextualFacts[verdict.index];
-							return fact ? [{ fact, result: verdict.result }] : [];
-						});
-						contradictions = [...deterministic, ...contextual];
-					}
+					if (mutationPolicy.blockedUntrustedConflict) continue;
+					const contradictions = await resolveFactContradictions({
+						extracted: ef,
+						existingFacts,
+						trustedUserMutation: mutationPolicy.trustedUserMutation,
+						supersessions: mutationPolicy.supersessions,
+						fallbackFacts: mutationPolicy.fallbackFacts,
+						contradictionFilter: this.contradictionFilter,
+					});
 
 					if (contradictions.length > 0) {
 						// Update ALL contradicted facts to prevent stale contradictory data
@@ -350,35 +338,18 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 							}
 						}
 					} else {
+						if (structured && !mutationPolicy.trustedUserMutation) continue;
 						// New fact — create with deterministic UUID for idempotency
 						// Prevents duplicates if consolidation is interrupted and re-run.
 						// Format: 32 SHA-256 hex chars arranged as UUID (8-4-4-4-12) — accepted by both
 						// LocalAdapter (string key) and QdrantAdapter (requires UUID format).
-						const hashHex = crypto
-							.createHash("sha256")
-							.update(ef.content + ef.sourceEpisodeIds.sort().join(","))
-							.digest("hex")
-							.slice(0, 32);
-						const deterministicId = `${hashHex.slice(0, 8)}-${hashHex.slice(8, 12)}-${hashHex.slice(12, 16)}-${hashHex.slice(16, 20)}-${hashHex.slice(20, 32)}`;
-
-						const newImportance = Math.max(ef.importance, 0.7);
-						const newFact: Fact = {
-							id: deterministicId,
-							content: ef.content,
-							entities: ef.entities,
-							topics: ef.topics,
-							createdAt: now,
-							updatedAt: now,
-							importance: newImportance,
-							maxEmotion: ef.maxEmotion,
-							recallCount: 0,
-							lastAccessed: now,
-							strength: newImportance,
-							status: "active",
-							sourceEpisodes: ef.sourceEpisodeIds,
+						const newFact = buildNewFact({
+							extracted: ef,
+							now,
 							encodingContext: srcEp?.encodingContext,
-							structured: ef.structured,
-						};
+						});
+						const deterministicId = newFact.id;
+						const newImportance = newFact.importance;
 						await this.adapter.semantic.upsert(newFact);
 						factsCreated++;
 						// R4 #26 Step 3b — high-importance + active context relevant
@@ -490,5 +461,4 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 			this._isConsolidating = false;
 		}
 	}
-
 }

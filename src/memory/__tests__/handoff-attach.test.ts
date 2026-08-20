@@ -84,17 +84,23 @@ describe("MemorySystem.attachHandoff (Slice 3-XR-Handoff #50 P3)", () => {
 		// invariant we assert is "encoded into the store" — accessed via the
 		// rolling-summary snapshot which records every encode in this session.
 		const snapshots = sys.snapshotRollingSummaries();
-		const session = snapshots.find((s) =>
-			s.sessionId === `handoff:${blob.sessionId}`,
+		const session = snapshots.find(
+			(s) => s.sessionId === `handoff:${blob.sessionId}`,
 		);
 		expect(session).toBeDefined();
 		const allContent =
-			(session?.recent ?? [])
-				.map((m) => m.content)
-				.join("\n") + (session?.compressed ?? "");
+			(session?.recent ?? []).map((m) => m.content).join("\n") +
+			(session?.compressed ?? "");
 		for (const anchor of blob.anchors) {
 			expect(allContent).toContain(anchor);
 		}
+		const anchorMessages = session?.recent.filter((message) =>
+			message.content.startsWith("[Handoff anchor]"),
+		);
+		expect(anchorMessages).toHaveLength(blob.anchors.length);
+		expect(anchorMessages?.every((message) => message.role === "tool")).toBe(
+			true,
+		);
 		await sys.close();
 	});
 

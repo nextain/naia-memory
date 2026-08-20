@@ -15,6 +15,7 @@
 
 import type { ExtractedFact } from "./index.js";
 import type { Episode, StructuredFact } from "./types.js";
+import { hasGroundedDeleteEvidence } from "./delete-grounding.js";
 
 export interface LLMFactExtractorOptions {
 	/** Gemini (or OpenAI-compatible) API key */
@@ -48,6 +49,10 @@ const DEFAULT_MODEL = USE_GATEWAY
 const DEFAULT_BATCH_SIZE = 10;
 
 const EXTRACTOR_SUBJECT_IDS = new Set(["person:self"]);
+function normalizedDeleteQuote(value: string): string {
+	return value.normalize("NFC").trim();
+}
+
 const EXTRACTOR_PROPERTY_IDS = new Set([
 	"profile:name",
 	"profile:pronouns",
@@ -207,6 +212,23 @@ exceptions, or ambiguous/ordinary negation. If a durable new negative preference
 is itself useful, emit it as a separate upsert in addition to deleting the old
 affirmative fact.
 
+Every delete object MUST include "deleteEvidenceKind" with exactly one of:
+- "explicit_removal_request": the speaker directly asks this memory to be
+  forgotten, removed, or deleted.
+- "durable_cessation": the speaker unambiguously says their own durable state
+  has ended, with no temporary or historical scope.
+Do NOT emit delete for quoted speech, another person's state, a past-only
+narrative, a temporary exception, a hypothetical, uncertainty, or a correction
+that does not itself establish cessation. Those contexts are upserts or no fact.
+Every delete object MUST also include "deleteEvidenceQuote" as machine-checkable
+grounding: the exact full text of the current episode, including punctuation. The
+full episode must directly demonstrate the selected evidence kind. It MUST also include
+"deleteTargetQuote": an exact, non-empty verbatim substring from the current
+episode that names the target being removed. The evidence quote
+grounds current authority; the target quote grounds a current target mention.
+The model remains responsible for mapping that mention to the structured value.
+Do not emit a delete if either quote is unavailable.
+
 Durable cessation is language-independent. Phrases equivalent to "no longer",
 "더 이상 ... 않다", and "もう ... ではない" must delete the exact prior
 affirmative value when the statement is explicit and durable, even if the same
@@ -246,7 +268,7 @@ an unknown concept into the nearest category. Omit both IDs when uncertain.
 Respond with ONLY a JSON object mapping episode number to fact array. No other text.
 Backward-compatible format: {"1": ["fact", ...], "2": ["fact", ...], ...}
 Structured format: {"1": [{"content":"사용자 거주지: 서울","operation":"upsert","structured":{"subject":"사용자","subjectId":"person:self","property":"거주지","propertyId":"profile:residence","value":"서울","polarity":"affirmed","cardinality":"single"}}], ...}
-Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"delete","structured":{"subject":"사용자","subjectId":"person:self","property":"알레르기","propertyId":"profile:allergy","value":"땅콩","polarity":"affirmed","cardinality":"multi"}}]}`;
+Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"delete","deleteEvidenceKind":"explicit_removal_request","deleteEvidenceQuote":"땅콩 알레르기 기억을 삭제해 줘.","deleteTargetQuote":"땅콩 알레르기","structured":{"subject":"사용자","subjectId":"person:self","property":"알레르기","propertyId":"profile:allergy","value":"땅콩","polarity":"affirmed","cardinality":"multi"}}]}`;
 
 	const call = () =>
 		fetch(`${baseURL}chat/completions`, {
@@ -339,6 +361,11 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
 				content: string;
 				structured?: StructuredFact;
 				operation?: "upsert" | "delete";
+				deleteEvidence?: {
+					kind: "explicit_removal_request" | "durable_cessation";
+					evidenceQuote: string;
+					targetQuote: string;
+				};
 			}> = Array.isArray(rawFacts)
 				? rawFacts.flatMap((fact) => {
 						if (typeof fact === "string") return [{ content: fact }];
@@ -347,14 +374,57 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
 							content?: unknown;
 							structured?: unknown;
 							operation?: unknown;
+							deleteEvidenceKind?: unknown;
+							deleteEvidenceQuote?: unknown;
+							deleteTargetQuote?: unknown;
 						};
 						if (typeof candidate.content !== "string") return [];
+						const structured = parseStructuredFact(candidate.structured);
+						const normalizedEpisode = normalizedDeleteQuote(ep.content);
+						const normalizedEvidence =
+							typeof candidate.deleteEvidenceQuote === "string"
+								? normalizedDeleteQuote(candidate.deleteEvidenceQuote)
+								: "";
+						const normalizedTarget =
+							typeof candidate.deleteTargetQuote === "string"
+								? normalizedDeleteQuote(candidate.deleteTargetQuote)
+								: "";
+						const hasDeleteEvidence = hasGroundedDeleteEvidence({
+							episodeContent: normalizedEpisode,
+							episodeRole: ep.role,
+							evidenceKind: candidate.deleteEvidenceKind,
+							evidenceQuote: normalizedEvidence,
+							targetQuote: normalizedTarget,
+							subject: structured?.subject,
+							property: structured?.property,
+							value: structured?.value,
+							subjectId: structured?.subjectId,
+							propertyId: structured?.propertyId,
+							polarity: structured?.polarity,
+						});
+						if (
+							candidate.operation === "delete" &&
+							(structured?.polarity !== "affirmed" || !hasDeleteEvidence)
+						) {
+							return [];
+						}
 						return [
 							{
 								content: candidate.content,
-								structured: parseStructuredFact(candidate.structured),
+								structured,
 								operation:
 									candidate.operation === "delete" ? "delete" : "upsert",
+								...(candidate.operation === "delete"
+									? {
+											deleteEvidence: {
+												kind: candidate.deleteEvidenceKind as
+													| "explicit_removal_request"
+													| "durable_cessation",
+												evidenceQuote: normalizedEvidence,
+												targetQuote: normalizedTarget,
+											},
+										}
+									: {}),
 							},
 						];
 					})
@@ -369,6 +439,7 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
 				sourceEpisodeIds: [ep.id],
 				structured: fact.structured,
 				operation: fact.operation,
+				...(fact.deleteEvidence ? { deleteEvidence: fact.deleteEvidence } : {}),
 			}));
 		});
 	} catch (err) {

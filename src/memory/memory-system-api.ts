@@ -157,6 +157,27 @@ import type { CompactionSummarizer } from "./compaction-helpers.js";
  */
 export type FactExtractor = (episodes: Episode[]) => Promise<ExtractedFact[]>;
 
+/** An eligible active candidate which the secondary verifier may select. */
+export interface DeleteCandidate {
+	id: string;
+	/** Minimal bounded disclosure sent to the configured verifier endpoint. */
+	structured: Pick<
+		StructuredFact,
+		"subjectId" | "propertyId" | "value" | "polarity" | "cardinality"
+	>;
+}
+
+export type DeleteVerificationResult =
+	| { authorized: false }
+	| { authorized: true; targetFactId: string };
+
+/** Secondary semantic authorization and exact target selection for a delete. */
+export type DeleteVerifier = (
+	episode: Episode,
+	fact: ExtractedFact,
+	candidates: DeleteCandidate[],
+) => Promise<DeleteVerificationResult>;
+
 /** A fact extracted from episodes (before insertion) */
 export interface ExtractedFact {
 	content: string;
@@ -171,6 +192,12 @@ export interface ExtractedFact {
 	structured?: StructuredFact;
 	/** Explicit memory mutation. Delete is honored only with an exact structured target. */
 	operation?: "upsert" | "delete";
+	/** Grounding retained so the mutation sink can independently revalidate deletes. */
+	deleteEvidence?: {
+		kind: "explicit_removal_request" | "durable_cessation";
+		evidenceQuote: string;
+		targetQuote: string;
+	};
 }
 export interface MemorySystemOptions {
 	/** Pre-built adapter. If omitted and qdrantOptions is not set, defaults to LocalAdapter. */
@@ -186,6 +213,8 @@ export interface MemorySystemOptions {
 	consolidationIntervalMs?: number;
 	/** Custom fact extractor (default: heuristic). Inject LLM-based extractor in production. */
 	factExtractor?: FactExtractor;
+	/** Required second decision for deletes. Omission fails every delete closed. */
+	deleteVerifier?: DeleteVerifier;
 	/** Optional LLM summarizer for `compact()`. When omitted, compact()
 	 *  uses a deterministic recap. When provided, the summarizer polishes
 	 *  the recap (fallback to deterministic on failure). */

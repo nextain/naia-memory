@@ -16,7 +16,17 @@ export interface UsageStats {
 	spikeEmits?: Record<string, number>;
 	/** R4 #26 — replay boost count (Step 4). */
 	replayBoosted?: number;
+	deleteOutcomes?: Record<DeleteOutcome, number>;
+	mutationOutcomes?: Record<MutationOutcome, number>;
 }
+
+export type DeleteOutcome =
+	| "authorized"
+	| "denied"
+	| "verifier_failed"
+	| "oversized";
+
+export type MutationOutcome = "untrusted_contradiction_denied";
 
 const _stats: UsageStats = {
 	llmCalls: 0,
@@ -26,6 +36,13 @@ const _stats: UsageStats = {
 	embedTokens: 0,
 	spikeEmits: {},
 	replayBoosted: 0,
+	deleteOutcomes: {
+		authorized: 0,
+		denied: 0,
+		verifier_failed: 0,
+		oversized: 0,
+	},
+	mutationOutcomes: { untrusted_contradiction_denied: 0 },
 };
 
 export function resetUsage(): void {
@@ -36,6 +53,32 @@ export function resetUsage(): void {
 	_stats.embedTokens = 0;
 	_stats.spikeEmits = {};
 	_stats.replayBoosted = 0;
+	_stats.deleteOutcomes = {
+		authorized: 0,
+		denied: 0,
+		verifier_failed: 0,
+		oversized: 0,
+	};
+	_stats.mutationOutcomes = { untrusted_contradiction_denied: 0 };
+}
+
+export function recordMutationOutcome(outcome: MutationOutcome): void {
+	if (!_stats.mutationOutcomes) {
+		_stats.mutationOutcomes = { untrusted_contradiction_denied: 0 };
+	}
+	_stats.mutationOutcomes[outcome]++;
+}
+
+export function recordDeleteOutcome(outcome: DeleteOutcome): void {
+	if (!_stats.deleteOutcomes) {
+		_stats.deleteOutcomes = {
+			authorized: 0,
+			denied: 0,
+			verifier_failed: 0,
+			oversized: 0,
+		};
+	}
+	_stats.deleteOutcomes[outcome]++;
 }
 
 /** R4 #26 — record spike emit for measurement framework. */
@@ -49,7 +92,10 @@ export function recordReplayBoost(count: number): void {
 	_stats.replayBoosted = (_stats.replayBoosted ?? 0) + count;
 }
 
-export function recordLLM(promptTokens: number, completionTokens: number): void {
+export function recordLLM(
+	promptTokens: number,
+	completionTokens: number,
+): void {
 	_stats.llmCalls++;
 	_stats.llmPromptTokens += promptTokens || 0;
 	_stats.llmCompletionTokens += completionTokens || 0;
@@ -86,7 +132,10 @@ export function getPricingFromEnv(): PricingRates {
 	};
 }
 
-export function estimateCostUSD(stats: UsageStats, rates: PricingRates): number {
+export function estimateCostUSD(
+	stats: UsageStats,
+	rates: PricingRates,
+): number {
 	const llmIn = (stats.llmPromptTokens / 1_000_000) * rates.llmInputPerM;
 	const llmOut = (stats.llmCompletionTokens / 1_000_000) * rates.llmOutputPerM;
 	const emb = (stats.embedTokens / 1_000_000) * rates.embedPerM;

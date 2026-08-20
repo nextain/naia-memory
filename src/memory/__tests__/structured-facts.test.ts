@@ -2,13 +2,9 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LocalAdapter } from "../adapters/local.js";
 import { MemorySystem } from "../index.js";
-import {
-	findStructuredNegationRetirements,
-	sameStructuredFact,
-} from "../structured-facts.js";
 import type {
 	ContradictionFilterProvider,
 	EncodingContext,
@@ -17,6 +13,7 @@ import type {
 	Fact,
 	FactExtractor,
 	MemoryInput,
+	MemorySystemOptions,
 	RecallContext,
 	StructuredFact,
 } from "../index.js";
@@ -33,6 +30,7 @@ function makeSystem(
 	opts: {
 		factExtractor?: FactExtractor;
 		contradictionFilter?: ContradictionFilterProvider;
+		deleteVerifier?: MemorySystemOptions["deleteVerifier"];
 	} = {},
 ): {
 	system: MemorySystem;
@@ -43,6 +41,7 @@ function makeSystem(
 		adapter,
 		consolidationIntervalMs: 0,
 		...(opts.factExtractor ? { factExtractor: opts.factExtractor } : {}),
+		...(opts.deleteVerifier ? { deleteVerifier: opts.deleteVerifier } : {}),
 		...(opts.contradictionFilter
 			? { contradictionFilter: opts.contradictionFilter }
 			: {}),
@@ -54,52 +53,6 @@ const RECALL_CTX: RecallContext = { topK: 20 };
 function input(overrides: Partial<MemoryInput> = {}): MemoryInput {
 	return { content: "", role: "user", ...overrides };
 }
-
-describe("structured value comparison safety", () => {
-	const base: StructuredFact = {
-		subject: "user",
-		subjectId: "person:self",
-		property: "allergy",
-		propertyId: "profile:allergy",
-		value: "peanut",
-		polarity: "affirmed",
-		cardinality: "multi",
-	};
-
-	it("accepts a terminal-s variant only for a one-token multi value", () => {
-		expect(sameStructuredFact(base, { ...base, value: "peanuts" })).toBe(true);
-		expect(
-			sameStructuredFact(
-				{ ...base, cardinality: "single", value: "state" },
-				{ ...base, cardinality: "single", value: "states" },
-			),
-		).toBe(false);
-		expect(sameStructuredFact(base, { ...base, value: "tree nuts" })).toBe(
-			false,
-		);
-		expect(sameStructuredFact(base, { ...base, value: "땅콩들" })).toBe(false);
-	});
-
-	it("retires only the exact affirmed member negated by a multi-valued fact", () => {
-		const peanut = {
-			id: "peanut",
-			content: "User likes peanuts",
-			status: "active" as const,
-			structured: base,
-		} as unknown as Fact;
-		const almonds = {
-			...peanut,
-			id: "almonds",
-			structured: { ...base, value: "almonds" },
-		};
-		expect(
-			findStructuredNegationRetirements([peanut, almonds], {
-				...base,
-				polarity: "negated",
-			}),
-		).toEqual([peanut]);
-	});
-});
 
 describe("structured consolidation idempotency", () => {
 	it("deduplicates exact active content when extractor structure drifts", async () => {
@@ -538,7 +491,7 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		await system.close();
 	});
 
-	it("keeps multi/different-property facts while exact negation retires its affirmative", async () => {
+	it("retires only the exact affirmative fact negated by a user upsert", async () => {
 		const skills = "사용자 기술: TypeScript";
 		const moreSkills = "사용자 기술: Rust";
 		const residence = "사용자 거주지: 서울";
@@ -610,6 +563,7 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 	it("archives only an exact explicit structured deletion target", async () => {
 		const storedContent = "사용자 알레르기: 땅콩";
 		const deleteContent = "땅콩 알레르기 기억은 지워줘";
+		const assistantDeleteContent = "땅콩 알레르기 기억은 지워줘.";
 		const target: StructuredFact = {
 			subject: "사용자",
 			property: "알레르기",
@@ -617,16 +571,34 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 			polarity: "affirmed",
 			cardinality: "multi",
 		};
+		let authorizeDelete = false;
+		let verifierCalls = 0;
 		const { system, adapter } = makeSystem({
+			deleteVerifier: async (_episode, _fact, candidates) => {
+				verifierCalls++;
+				const candidate = candidates[0];
+				return authorizeDelete && candidate
+					? { authorized: true, targetFactId: candidate.id }
+					: { authorized: false };
+			},
 			factExtractor: async (episodes) =>
 				episodes.map((ep) => ({
-					content: ep.content === deleteContent ? storedContent : ep.content,
+					content: ep.content.includes("지워줘") ? storedContent : ep.content,
 					entities: [],
 					topics: [],
 					importance: 0.8,
 					sourceEpisodeIds: [ep.id],
 					structured: target,
-					operation: ep.content === deleteContent ? "delete" : "upsert",
+					operation: ep.content.includes("지워줘") ? "delete" : "upsert",
+					...(ep.content.includes("지워줘")
+						? {
+								deleteEvidence: {
+									kind: "explicit_removal_request" as const,
+									evidenceQuote: ep.content,
+									targetQuote: "땅콩 알레르기",
+								},
+							}
+						: {}),
 				})),
 		});
 		const timestamp = Date.now() - 10 * 60 * 1000;
@@ -636,7 +608,25 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		);
 		await system.consolidateNow(true);
 		await system.encode(
-			input({ content: deleteContent, timestamp: timestamp + 1 }),
+			input({
+				content: assistantDeleteContent,
+				role: "assistant",
+				timestamp: timestamp + 1,
+			}),
+			DEFAULT_CTX,
+		);
+		expect((await system.consolidateNow(true)).factsUpdated).toBe(0);
+		expect((await adapter.semantic.getAll())[0].status).toBe("active");
+		await system.encode(
+			input({ content: deleteContent, timestamp: timestamp + 2 }),
+			DEFAULT_CTX,
+		);
+		expect((await system.consolidateNow(true)).factsUpdated).toBe(0);
+		expect((await adapter.semantic.getAll())[0].status).toBe("active");
+		expect(verifierCalls).toBe(1);
+		authorizeDelete = true;
+		await system.encode(
+			input({ content: `${deleteContent}.`, timestamp: timestamp + 3 }),
 			DEFAULT_CTX,
 		);
 		const result = await system.consolidateNow(true);
@@ -647,7 +637,51 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		await system.close();
 	});
 
-	it("fails closed for an unstructured delete operation", async () => {
+	it("does not let a negated upsert retire an active affirmative fact", async () => {
+		const storedContent = "User likes jazz";
+		const assistantContent = "User does not like jazz";
+		const { system, adapter } = makeSystem({
+			factExtractor: async (episodes) =>
+				episodes.map((ep) => ({
+					content: ep.content,
+					entities: [],
+					topics: [],
+					importance: 0.8,
+					sourceEpisodeIds: [ep.id],
+					structured: {
+						subject: "User",
+						property: "music preference",
+						value: "jazz",
+						polarity: ep.content === assistantContent ? "negated" : "affirmed",
+						cardinality: "multi",
+					},
+				})),
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		await system.encode(
+			input({ content: storedContent, timestamp }),
+			DEFAULT_CTX,
+		);
+		await system.consolidateNow(true);
+		await system.encode(
+			input({
+				content: assistantContent,
+				role: "assistant",
+				timestamp: timestamp + 1,
+			}),
+			DEFAULT_CTX,
+		);
+		await system.consolidateNow(true);
+
+		const stored = await adapter.semantic.getAll();
+		expect(stored.find((fact) => fact.content === storedContent)?.status).toBe(
+			"active",
+		);
+		await system.close();
+	});
+
+	it("fails closed for a grounded structured delete without a verifier", async () => {
+		const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
 		const storedContent = "User allergy: peanut";
 		const deleteContent = "Forget my peanut allergy";
 		const { system, adapter } = makeSystem({
@@ -658,7 +692,23 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 					topics: [],
 					importance: 0.8,
 					sourceEpisodeIds: [ep.id],
+					structured: {
+						subject: "User",
+						property: "allergy",
+						value: "peanut",
+						polarity: "affirmed" as const,
+						cardinality: "multi" as const,
+					},
 					operation: ep.content === deleteContent ? "delete" : "upsert",
+					...(ep.content === deleteContent
+						? {
+								deleteEvidence: {
+									kind: "explicit_removal_request" as const,
+									evidenceQuote: deleteContent,
+									targetQuote: "peanut allergy",
+								},
+							}
+						: {}),
 				})),
 		});
 		const timestamp = Date.now() - 10 * 60 * 1000;
@@ -675,13 +725,21 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 
 		expect(result.factsUpdated).toBe(0);
 		expect((await adapter.semantic.getAll())[0].status).toBe("active");
+		expect(warning).toHaveBeenCalledWith(
+			"[naia-memory] grounded delete ignored because no delete verifier is configured",
+		);
 		await system.close();
+		warning.mockRestore();
 	});
 
-	it("uses complete ontology IDs across language label drift for exact deletion", async () => {
+	it("fails closed when multilingual target text cannot ground the canonical value", async () => {
 		const storedContent = "User allergy: peanut";
 		const deleteContent = "땅콩 알레르기 기억은 지워줘";
 		const { system, adapter } = makeSystem({
+			deleteVerifier: async () => ({
+				authorized: true,
+				targetFactId: "must-not-be-reached",
+			}),
 			factExtractor: async (episodes) =>
 				episodes.map((ep) => ({
 					content: ep.content,
@@ -691,14 +749,24 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 					sourceEpisodeIds: [ep.id],
 					structured: {
 						subject: ep.content === deleteContent ? "사용자" : "user",
-						subjectId: "person:self",
+						...(ep.content === deleteContent
+							? {}
+							: { subjectId: "person:self", propertyId: "profile:allergy" }),
 						property: ep.content === deleteContent ? "알레르기" : "allergy",
-						propertyId: "profile:allergy",
 						value: ep.content === deleteContent ? "peanuts" : "peanut",
 						polarity: "affirmed" as const,
 						cardinality: "multi" as const,
 					},
 					operation: ep.content === deleteContent ? "delete" : "upsert",
+					...(ep.content === deleteContent
+						? {
+								deleteEvidence: {
+									kind: "explicit_removal_request" as const,
+									evidenceQuote: deleteContent,
+									targetQuote: "땅콩 알레르기",
+								},
+							}
+						: {}),
 				})),
 		});
 		const timestamp = Date.now() - 10 * 60 * 1000;
@@ -713,8 +781,8 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		);
 		const result = await system.consolidateNow(true);
 
-		expect(result.factsUpdated).toBe(1);
-		expect((await adapter.semantic.getAll())[0].status).toBe("archived");
+		expect(result.factsUpdated).toBe(0);
+		expect((await adapter.semantic.getAll())[0].status).toBe("active");
 		await system.close();
 	});
 });

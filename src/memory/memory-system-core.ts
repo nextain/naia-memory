@@ -2,21 +2,56 @@ import crypto, { randomUUID } from "node:crypto";
 import { LocalAdapter } from "./adapters/local.js";
 import { QdrantAdapter } from "./adapters/qdrant.js";
 import { scoreImportance } from "./importance.js";
-import { selectFilter, HeuristicContradictionFilter } from "./contradiction-filter.js";
+import {
+	selectFilter,
+	HeuristicContradictionFilter,
+} from "./contradiction-filter.js";
 import { filterNegativeCapture } from "./negative-capture.js";
-import { findContradictions, findContradictionsWith } from "./reconsolidation.js";
+import {
+	findContradictions,
+	findContradictionsWith,
+} from "./reconsolidation.js";
 import { allocateBudget } from "./context-budget.js";
-import { findStructuredSupersessions, sameStructuredFact } from "./structured-facts.js";
-import type { BackupCapable, ConsolidationResult, EncodingContext, Episode, Fact, MemoryAdapter, MemoryInput, RecallContext, Reflection } from "./types.js";
+import {
+	findStructuredSupersessions,
+	sameStructuredFact,
+} from "./structured-facts.js";
+import type {
+	BackupCapable,
+	ConsolidationResult,
+	EncodingContext,
+	Episode,
+	Fact,
+	MemoryAdapter,
+	MemoryInput,
+	RecallContext,
+	Reflection,
+} from "./types.js";
 import type { ContradictionFilterProvider } from "./contradiction-filter.js";
-import { deterministicEpisodeId, heuristicFactExtractor, type ExtractedFact, type FactExtractor, type MemorySystemOptions } from "./memory-system-api.js";
-import { contentTokens, getMemoryAlgorithm, jaccardSimilarity, MAX_EPISODES_PER_CYCLE } from "./consolidation-primitives.js";
-import { type CompactionSummarizer, type RollingSummary } from "./compaction-helpers.js";
+import {
+	deterministicEpisodeId,
+	heuristicFactExtractor,
+	type DeleteVerifier,
+	type ExtractedFact,
+	type FactExtractor,
+	type MemorySystemOptions,
+} from "./memory-system-api.js";
+import {
+	contentTokens,
+	getMemoryAlgorithm,
+	jaccardSimilarity,
+	MAX_EPISODES_PER_CYCLE,
+} from "./consolidation-primitives.js";
+import {
+	type CompactionSummarizer,
+	type RollingSummary,
+} from "./compaction-helpers.js";
 
 export abstract class MemorySystemCore {
 	protected readonly adapter: MemoryAdapter;
 	private readonly _initPromise: Promise<void>;
 	protected readonly factExtractor: FactExtractor;
+	protected readonly deleteVerifier?: DeleteVerifier;
 	protected readonly contradictionFilter: ContradictionFilterProvider;
 	/** Phase B-γ A/B toggle. When true, encode() bypasses scoreImportance()
 	 *  and uses a neutral max-utility score so importance gating has no
@@ -26,9 +61,9 @@ export abstract class MemorySystemCore {
 	/** R4 #26 — Background brain spike subscribers. naia-agent 가 on('spike')
 	 *  으로 등록. emit 시점은 consolidate / decay / fact upsert 등 (R4 Step 3+). */
 	protected spikeHandlers: Array<
-		(event: import("./spike.js").SpikeEvent) => Promise<
-			import("./spike.js").SpikeAction | void
-		>
+		(
+			event: import("./spike.js").SpikeEvent,
+		) => Promise<import("./spike.js").SpikeAction | void>
 	> = [];
 	/** R4 #26 — Active context (naia-agent → naia-memory).
 	 *  spike rule 평가 시 사용. cross-project leak 방지 (anchor §A10). */
@@ -37,7 +72,11 @@ export abstract class MemorySystemCore {
 	 *  *0 result* query 가 *recall failure*. 새 fact 추출 시 history 매칭 시
 	 *  emit reason='recall-failure-resolved'. naia-agent 통합 후 daily 사용
 	 *  시 사용자가 자주 묻던 fact 가 새로 알려진 시점 신호. */
-	protected recallHistory: Array<{ query: string; resultCount: number; ts: number }> = [];
+	protected recallHistory: Array<{
+		query: string;
+		resultCount: number;
+		ts: number;
+	}> = [];
 	private static readonly RECALL_HISTORY_MAX = 100;
 
 	/**
@@ -58,8 +97,13 @@ export abstract class MemorySystemCore {
 	protected readonly rollingTopicCap: number;
 	protected readonly summarizer?: CompactionSummarizer;
 
-	protected abstract updateRollingSummary(input: MemoryInput, context: EncodingContext): void;
-	protected abstract emitSpike(event: import("./spike.js").SpikeEvent): Promise<void>;
+	protected abstract updateRollingSummary(
+		input: MemoryInput,
+		context: EncodingContext,
+	): void;
+	protected abstract emitSpike(
+		event: import("./spike.js").SpikeEvent,
+	): Promise<void>;
 	protected abstract detectEmotionAnniversaries(now: number): Promise<void>;
 	protected abstract detectTemporalAnchors(now: number): Promise<void>;
 	protected abstract matchesActiveContextFact(fact: Fact): boolean;
@@ -67,6 +111,7 @@ export abstract class MemorySystemCore {
 
 	constructor(options: MemorySystemOptions) {
 		this.factExtractor = options.factExtractor ?? heuristicFactExtractor;
+		this.deleteVerifier = options.deleteVerifier;
 		// R2.5 — pluggable filter; falls back to env-based selection when caller
 		// doesn't pin one. Tests pass HeuristicContradictionFilter explicitly to
 		// avoid env coupling.
@@ -78,7 +123,8 @@ export abstract class MemorySystemCore {
 		this.disableImportanceGating = options.disableImportanceGating ?? false;
 		if (options.summarizer) this.summarizer = options.summarizer;
 		this.rollingHeadroom = options.rollingSummaryOptions?.headroom ?? 24;
-		this.rollingCompressedMax = options.rollingSummaryOptions?.compressedMax ?? 4000;
+		this.rollingCompressedMax =
+			options.rollingSummaryOptions?.compressedMax ?? 4000;
 		this.rollingTopicCap = options.rollingSummaryOptions?.topicCap ?? 24;
 
 		if (options.qdrantOptions) {
@@ -126,10 +172,7 @@ export abstract class MemorySystemCore {
 	 *
 	 * @returns The episode if stored, null if gated out
 	 */
-	async encode(
-		input: MemoryInput,
-		context: EncodingContext,
-	): Promise<Episode> {
+	async encode(input: MemoryInput, context: EncodingContext): Promise<Episode> {
 		// Phase B-γ A/B measurement toggle. When importance gating is
 		// disabled we neutralize the 3-axis score (utility=1.0) so all
 		// episodes carry equal weight through ranking, decay, and fact
@@ -147,8 +190,12 @@ export abstract class MemorySystemCore {
 		// null/NaN (trivial from JSON) is treated as NO signal, not max-arousal.
 		if (Number.isFinite(input.emotion) || Number.isFinite(input.importance)) {
 			const clamp = (n: number) => Math.max(0, Math.min(1, n));
-			const emotion = Number.isFinite(input.emotion) ? clamp(input.emotion as number) : score.emotion;
-			const importance = Number.isFinite(input.importance) ? clamp(input.importance as number) : score.importance;
+			const emotion = Number.isFinite(input.emotion)
+				? clamp(input.emotion as number)
+				: score.emotion;
+			const importance = Number.isFinite(input.importance)
+				? clamp(input.importance as number)
+				: score.importance;
 			const arousal = Math.abs(emotion - 0.5) * 2;
 			// Preserve the disableImportanceGating equal-weight invariant (utility=1.0);
 			// otherwise recompute utility with the importance.ts formula.
@@ -216,7 +263,10 @@ export abstract class MemorySystemCore {
 		// Search for semantically similar facts instead of loading all
 		// Reconsolidation 용 search — 모든 후보 검토해야 (#27 minConfidence
 		// 적용 X). 명시적 0 으로 future default 변경 시 안전.
-		const candidates = await this.adapter.semantic.search(newInfo, 10, false, { project, minConfidence: 0 });
+		const candidates = await this.adapter.semantic.search(newInfo, 10, false, {
+			project,
+			minConfidence: 0,
+		});
 		const contradictions = findContradictions(candidates, newInfo);
 
 		// Update ALL contradicted facts to prevent stale contradictory data
@@ -292,16 +342,17 @@ export abstract class MemorySystemCore {
 		const [episodes, facts, reflections] = await Promise.all([
 			this.adapter.episode.recall(query, { ...context, topK }),
 			this.adapter.semantic.search(query, topK, context.deepRecall, {
-			        project: context.project,
-			        atTimestamp: context.atTimestamp,
-			        mode: context.mode,
-			        minConfidence: context.minConfidence,
-			        queryHint: context.queryHint,
-			        structuredQuery: context.structuredQuery,
-			        scopeMode: context.scopeMode,
-			        crossProject: context.crossProject,
-			        epochAnchor: context.epochAnchor,
-			}),			this.adapter.procedural.getReflections(query, topK),
+				project: context.project,
+				atTimestamp: context.atTimestamp,
+				mode: context.mode,
+				minConfidence: context.minConfidence,
+				queryHint: context.queryHint,
+				structuredQuery: context.structuredQuery,
+				scopeMode: context.scopeMode,
+				crossProject: context.crossProject,
+				epochAnchor: context.epochAnchor,
+			}),
+			this.adapter.procedural.getReflections(query, topK),
 		]);
 
 		// R4 Step 3c — recall history ring buffer.
@@ -487,5 +538,4 @@ export abstract class MemorySystemCore {
 		};
 		await this.adapter.procedural.learnFromFailure(reflection);
 	}
-
 }

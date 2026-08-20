@@ -15,6 +15,7 @@ const episode: Episode = {
 	recallCount: 0,
 	lastAccessed: Date.now(),
 	strength: 1,
+	role: "user",
 };
 
 afterEach(() => {
@@ -81,6 +82,10 @@ describe("OpenAI-compatible LLM auth", () => {
 	});
 
 	it("fact extractor preserves only valid explicit structured facts", async () => {
+		const deletionEpisode = {
+			...episode,
+			content: "땅콩 알레르기 기억을 삭제해 줘.",
+		};
 		vi.stubGlobal(
 			"fetch",
 			vi.fn(
@@ -111,6 +116,10 @@ describe("OpenAI-compatible LLM auth", () => {
 												{
 													content: "사용자 알레르기: 땅콩",
 													operation: "delete",
+													deleteEvidenceKind: "explicit_removal_request",
+													deleteEvidenceQuote:
+														"땅콩 알레르기 기억을 삭제해 줘.",
+													deleteTargetQuote: "땅콩 알레르기",
 													structured: {
 														subject: "사용자",
 														subjectId: "person:self",
@@ -136,7 +145,7 @@ describe("OpenAI-compatible LLM auth", () => {
 			apiKey: "test-secret",
 			baseURL: "https://provider.test/v1/",
 			model: "test-model",
-		})([episode]);
+		})([deletionEpisode]);
 
 		expect(facts).toHaveLength(3);
 		expect(facts[0].structured).toEqual({
@@ -225,6 +234,10 @@ describe("OpenAI-compatible LLM auth", () => {
 
 		expect(prompt).toContain("durable state has permanently ended");
 		expect(prompt).toMatch(/temporary\s+exceptions/);
+		expect(prompt).toContain("quoted speech");
+		expect(prompt).toContain("another person's state");
+		expect(prompt).toContain('"durable_cessation"');
+		expect(prompt).toContain('"deleteEvidenceQuote"');
 		expect(prompt).toContain('"preference:music-genre"');
 	});
 
