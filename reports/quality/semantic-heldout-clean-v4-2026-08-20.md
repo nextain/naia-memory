@@ -1,6 +1,6 @@
 # Naia Memory clean v4 multilingual lifecycle evidence
 
-Date: 2026-08-20  
+Date: 2026-08-20
 Status: **diagnostic evidence only; not cleared for a public superiority or SOTA claim**
 
 ## Outcome
@@ -87,4 +87,3 @@ model. This campaign shows the mechanism works, not that Naia is globally best.
    and publish p50/p95 latency, token/API cost, and storage growth.
 5. Repeat from a clean release commit with immutable receipts and run an
    external adversarial review before promoting any comparative claim.
-
