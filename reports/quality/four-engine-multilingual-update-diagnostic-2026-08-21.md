@@ -935,3 +935,27 @@ obtain an RFC 3161 timestamp before any authored result. The evidence-producing
 step remains a real preregistered multilingual campaign with independently
 controlled participant keys; synthetic fixtures cannot establish competitive
 performance.
+
+## Canonical delivery-acknowledgement bundle
+
+The complete acknowledgement set now has a deterministic `bundleSha256` over
+the plan hash, launch-receipt hash, and every signed acknowledgement. The
+builder sorts participant slots with locale-independent ordinal comparison and
+copies each acknowledgement before hashing. The validator rejects a changed
+hash, non-canonical order, missing or duplicate slots, and any mutation already
+covered by the participant-signature checks. Tests also cover post-build input
+mutation so a caller cannot silently alter the returned bundle through a shared
+object reference.
+
+Claude and OpenCode headless reviews were attempted but neither returned a
+final verdict; their processes were stopped rather than misreported as clean.
+An ordinary adversarial inspection identified locale-dependent sorting and
+shallow object aliasing as avoidable reproducibility risks, and both were fixed.
+Targeted validation passes 2 files and 22 tests, both TypeScript checks, scoped
+Biome, and `git diff --check`.
+
+This stage creates the single digest needed for an external timestamp, but the
+digest alone is still operator-mintable after the fact. It changes no engine
+score and public competitiveness remains **NO-GO**. The next gate must verify an
+RFC 3161 token whose message imprint is exactly `bundleSha256` and whose trusted
+time precedes every authored or reviewed result.

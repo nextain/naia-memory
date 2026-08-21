@@ -16,9 +16,10 @@ import {
 	type SemanticPilotCollectionPlan,
 	buildSemanticPilotParticipantPacket,
 } from "./semantic-pilot-collection-packet.js";
-import type {
-	SemanticPilotDeliveryAcknowledgement,
-	SemanticPilotDeliveryAcknowledgementBundle,
+import {
+	type SemanticPilotDeliveryAcknowledgement,
+	type SemanticPilotDeliveryAcknowledgementBundle,
+	buildSemanticPilotDeliveryAcknowledgementBundle,
 } from "./semantic-pilot-delivery-acknowledgement.js";
 import { buildSemanticPilotLaunch } from "./semantic-pilot-launch.js";
 import { validateSemanticPilotResultBinding } from "./semantic-pilot-result-binding.js";
@@ -247,13 +248,11 @@ function participantDeliveryEvidence(
 		}
 	}
 	return {
-		deliveryAcknowledgements: {
-			schemaVersion:
-				"naia-memory-semantic-pilot-delivery-acknowledgement-bundle-v1",
+		deliveryAcknowledgements: buildSemanticPilotDeliveryAcknowledgementBundle({
 			planSha256,
 			launchReceiptSha256,
 			acknowledgements,
-		},
+		}),
 		participantTrustPolicy: {
 			authorPublicKeysByLanguage,
 			nativeReviewerPublicKeysByLanguage,

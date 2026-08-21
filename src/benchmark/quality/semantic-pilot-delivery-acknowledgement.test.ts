@@ -11,6 +11,7 @@ import {
 } from "./semantic-pilot-collection-packet.js";
 import {
 	type SemanticPilotDeliveryAcknowledgement,
+	buildSemanticPilotDeliveryAcknowledgementBundle,
 	validateSemanticPilotDeliveryAcknowledgements,
 } from "./semantic-pilot-delivery-acknowledgement.js";
 import type { SemanticPilotLaunchReceipt } from "./semantic-pilot-launch.js";
@@ -105,13 +106,11 @@ function fixture() {
 			authorPublicKeysByLanguage,
 			nativeReviewerPublicKeysByLanguage,
 		},
-		bundle: {
-			schemaVersion:
-				"naia-memory-semantic-pilot-delivery-acknowledgement-bundle-v1" as const,
+		bundle: buildSemanticPilotDeliveryAcknowledgementBundle({
 			planSha256: packet.planSha256,
 			launchReceiptSha256: launchReceipt.receiptSha256,
 			acknowledgements,
-		},
+		}),
 	};
 }
 
@@ -191,5 +190,30 @@ describe("semantic pilot delivery acknowledgements", () => {
 		expect(() =>
 			validateSemanticPilotDeliveryAcknowledgements(wrongKey),
 		).toThrow("signature is untrusted or invalid");
+	});
+
+	it("binds the complete bundle hash and requires canonical participant order", () => {
+		const wrongHash = fixture();
+		wrongHash.bundle.bundleSha256 = "c".repeat(64);
+		expect(() =>
+			validateSemanticPilotDeliveryAcknowledgements(wrongHash),
+		).toThrow("bundle hash or canonical order is invalid");
+		const reordered = fixture();
+		reordered.bundle.acknowledgements.reverse();
+		expect(() =>
+			validateSemanticPilotDeliveryAcknowledgements(reordered),
+		).toThrow("bundle hash or canonical order is invalid");
+	});
+
+	it("does not alias acknowledgement objects supplied to the bundle builder", () => {
+		const current = fixture();
+		const originalSigner = current.bundle.acknowledgements[0].signer;
+		const rebuilt = buildSemanticPilotDeliveryAcknowledgementBundle({
+			planSha256: current.bundle.planSha256,
+			launchReceiptSha256: current.bundle.launchReceiptSha256,
+			acknowledgements: current.bundle.acknowledgements,
+		});
+		current.bundle.acknowledgements[0].signer = "mutated-after-build";
+		expect(rebuilt.acknowledgements[0].signer).toBe(originalSigner);
 	});
 });

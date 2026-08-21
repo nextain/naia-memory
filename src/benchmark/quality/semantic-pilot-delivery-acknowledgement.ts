@@ -1,4 +1,7 @@
-import { hasValidEvidenceSignature } from "./public-evidence-crypto.js";
+import {
+	evidenceObjectSha256,
+	hasValidEvidenceSignature,
+} from "./public-evidence-crypto.js";
 import type { Rfc3161TimestampEvidence } from "./rfc3161-timestamp.js";
 import type { SemanticPilotCollectionPlan } from "./semantic-pilot-collection-packet.js";
 import {
@@ -28,6 +31,7 @@ export type SemanticPilotDeliveryAcknowledgementBundle = {
 	planSha256: string;
 	launchReceiptSha256: string;
 	acknowledgements: SemanticPilotDeliveryAcknowledgement[];
+	bundleSha256: string;
 };
 
 function participantKey(
@@ -36,6 +40,37 @@ function participantKey(
 	signer: string,
 ): string {
 	return JSON.stringify([role, language, signer]);
+}
+
+function acknowledgementSortKey(
+	acknowledgement: SemanticPilotDeliveryAcknowledgement,
+): string {
+	return participantKey(
+		acknowledgement.role,
+		acknowledgement.language,
+		acknowledgement.signer,
+	);
+}
+
+export function buildSemanticPilotDeliveryAcknowledgementBundle(input: {
+	planSha256: string;
+	launchReceiptSha256: string;
+	acknowledgements: SemanticPilotDeliveryAcknowledgement[];
+}): SemanticPilotDeliveryAcknowledgementBundle {
+	const core = {
+		schemaVersion:
+			"naia-memory-semantic-pilot-delivery-acknowledgement-bundle-v1" as const,
+		planSha256: input.planSha256,
+		launchReceiptSha256: input.launchReceiptSha256,
+		acknowledgements: input.acknowledgements
+			.map((acknowledgement) => ({ ...acknowledgement }))
+			.sort((left, right) => {
+				const leftKey = acknowledgementSortKey(left);
+				const rightKey = acknowledgementSortKey(right);
+				return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+			}),
+	};
+	return { ...core, bundleSha256: evidenceObjectSha256(core) };
 }
 
 const UTC_RFC3339_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
@@ -87,6 +122,7 @@ export function validateSemanticPilotDeliveryAcknowledgements(input: {
 			"planSha256",
 			"launchReceiptSha256",
 			"acknowledgements",
+			"bundleSha256",
 		]) ||
 		input.bundle.planSha256 !== packet.planSha256 ||
 		input.bundle.launchReceiptSha256 !== receiptSha256 ||
@@ -180,6 +216,19 @@ export function validateSemanticPilotDeliveryAcknowledgements(input: {
 	)
 		throw new Error(
 			"semantic pilot delivery acknowledgements do not cover all participants",
+		);
+	const canonicalBundle = buildSemanticPilotDeliveryAcknowledgementBundle({
+		planSha256: input.bundle.planSha256,
+		launchReceiptSha256: input.bundle.launchReceiptSha256,
+		acknowledgements: input.bundle.acknowledgements,
+	});
+	if (
+		JSON.stringify(input.bundle.acknowledgements) !==
+			JSON.stringify(canonicalBundle.acknowledgements) ||
+		input.bundle.bundleSha256 !== canonicalBundle.bundleSha256
+	)
+		throw new Error(
+			"semantic pilot delivery acknowledgement bundle hash or canonical order is invalid",
 		);
 	return {
 		participantDeliveryAcknowledgementSignaturesVerified: true,
