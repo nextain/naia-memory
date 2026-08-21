@@ -108,7 +108,7 @@ function assignmentKey(
 	language: string,
 	signer: string,
 ): string {
-	return `${role}\0${language}\0${signer}`;
+	return JSON.stringify([role, language, signer]);
 }
 
 export function validateSemanticPublicAttestations(

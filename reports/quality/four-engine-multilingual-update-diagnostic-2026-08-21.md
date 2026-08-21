@@ -113,7 +113,7 @@ does not establish out-of-distribution generalization.
 
 ## Verification
 
-- Project tests: 63 files, 672 tests passed
+- Project tests: 64 files, 677 tests passed
 - Typecheck: passed
 - Build: passed
 - `git diff --check`: passed
@@ -143,6 +143,17 @@ one identity mapped to multiple keys all fail closed. A reusable external trust
 store may contain unrelated identities, but only the exact case assignments
 satisfy coverage.
 
+The external signing handoff is now deterministic. Given the frozen contract
+and an explicit post-freeze signing timestamp, the signing-packet CLI emits one
+canonical payload for every unique role/language/identity assignment, together
+with the complete-contract hash and a packet hash. It never reads or emits a
+private key. The payload is byte-for-byte the same canonical value later
+verified by the publication gate, so external custodians can sign outside this
+repository without trusting an ad hoc serialization step. Contract mutation
+changes both the contract and packet hashes. Assignment keys use structured
+JSON tuples so control characters in externally supplied identity strings
+cannot create delimiter ambiguity.
+
 The current nine-case generated diagnostic is correctly rejected. Therefore
 this change improves evidence integrity, not measured engine performance, and
 the external competitiveness report remains blocked. Promotion still requires
@@ -165,3 +176,11 @@ format/lint, and diff checks pass. Public status remains NO-GO because generated
 fixture keys only test the mechanism: no qualifying external corpus, real
 external signatures, or comparable execution receipts have been supplied.
 Implementation status is commit GO.
+
+The signing-packet stage added 5 focused tests and raised the project total to
+677. Its first OpenCode/Azure DeepSeek adversarial pass reported a potential
+control-character delimiter ambiguity. Although the signer occupied the final
+tuple field, the implementation was hardened to structured keys and a
+regression test was added. The mandatory re-review returned `VERDICT: CLEAN`.
+This closes the tooling gap only; public status remains NO-GO until independent
+people actually author, review, sign, and execute the qualifying corpus.
