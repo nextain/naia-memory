@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { MemoryUpdateContract } from "./memory-update-contract.js";
 import { buildSemanticBlindArtifacts } from "./semantic-blind-packet-cli.js";
+import { calculateSemanticClusterBootstrap } from "./semantic-cluster-bootstrap.js";
 import {
 	type RatedSemanticMemory,
 	type SemanticJudgmentLabel,
@@ -341,6 +342,24 @@ export function scoreSemanticAdjudication(input: {
 		judgments.schemaVersion === "naia-memory-semantic-judgments-v3"
 			? calculateSemanticInterRaterAgreement(agreementSubjects)
 			: null;
+	const caseById = new Map(input.contract.cases.map((item) => [item.id, item]));
+	const uncertainty = calculateSemanticClusterBootstrap(
+		sampleResults.map((sample) => {
+			const benchmarkCase = caseById.get(sample.caseId);
+			if (!benchmarkCase)
+				throw new Error(`scored sample has unknown case: ${sample.caseId}`);
+			return {
+				engine: sample.engine,
+				language: sample.language,
+				familyId: benchmarkCase.familyId,
+				currentAt1: sample.labels[0] === "current" ? 1 : 0,
+				currentAtK: sample.labels.includes("current") ? 1 : 0,
+				staleExposureAtK: sample.labels.includes("stale") ? 1 : 0,
+				deletionLeakageAtK: sample.labels.includes("deleted") ? 1 : 0,
+			};
+		}),
+		`${input.packet.packetContentSha256}\0${sha256(input.judgmentsBytes)}`,
+	);
 	return {
 		schemaVersion: "naia-memory-semantic-adjudication-score-v1" as const,
 		disclosure: {
@@ -351,10 +370,13 @@ export function scoreSemanticAdjudication(input: {
 			judgmentsCanonicalSha256: sha256(JSON.stringify(judgments)),
 			adjudicators: judgments.adjudicators,
 			interRaterAgreementEvaluated: agreement !== null,
+			uncertaintyInterpretation:
+				"95% percentile intervals resample independent, equal-sized familyId clusters; repetitions stay inside their family and paired engine differences reuse identical draws. Fewer than 10 clusters raises a sparse-cluster warning. Pairwise intervals are unadjusted exploratory comparisons, not simultaneous family-wise inference. Intervals are descriptive unless the separate public-evidence coverage gate passes.",
 		},
 		cells,
 		samples: sampleResults,
 		agreement,
+		uncertainty,
 	};
 }
 

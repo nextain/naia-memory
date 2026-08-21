@@ -351,3 +351,38 @@ released commit with comparable signed latency and cost receipts. Only that
 campaign can show whether the current ranking survives independent human
 interpretation and whether Naia Memory has a defensible global or Korean-first
 advantage.
+
+## Family-cluster uncertainty stage
+
+The adjudication score now emits deterministic 95% percentile intervals and
+paired engine differences. The resampling unit is `familyId`, not execution
+repetition: all repetitions belonging to a family move together, and every
+engine receives the same sampled family sequence in each of 10,000 iterations.
+This follows the clustered-data bootstrap principle described by
+[Field and Welsh (2007)](https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9868.2007.00593.x)
+and the paired bootstrap comparison pattern used for system evaluation by
+[Koehn (2004)](https://aclanthology.org/W04-3250/).
+
+The implementation fails closed if an engine is missing a family, if engines
+have different repetition counts for a family, or if family sizes differ
+within a language. This balanced-design requirement avoids silently centering
+sample-level intervals on a different family-weighted estimand. Fewer than ten
+independent families raises an explicit sparse-cluster warning. Pairwise
+intervals declare `multiplicityAdjustment: none`; they are exploratory and are
+not simultaneous family-wise evidence.
+
+The first valid OpenCode adversarial review returned `DIRTY` after finding that
+unequal family sizes could bias the bootstrap distribution while the reported
+estimate remained sample-weighted. Primary inspection confirmed the defect.
+Balanced family sizes are now enforced and regression-tested. Two subsequent
+independent MiMo executions returned `CLEAN` with the same current complexity
+digest. HY-3 attempts that ended without a verdict and a tool-blocked Muse run
+are recorded as `NOT_RUN`, not approval.
+
+The project now passes 68 files and 705 tests, build, typecheck, Biome, diff
+checks, deterministic complexity preflight, and all workspace benchmark
+contract, entrypoint, and context-translation gates. This stage improves the
+honesty and reproducibility of uncertainty claims; it does not alter an engine
+score. The existing three-family-per-language diagnostic would correctly raise
+the sparse-cluster warning, so the public competitiveness decision remains
+**NO-GO** pending the external native-human campaign described above.
