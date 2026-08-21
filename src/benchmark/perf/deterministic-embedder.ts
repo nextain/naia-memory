@@ -25,9 +25,15 @@ import type { EmbeddingProvider } from "../../memory/embeddings.js";
 export class DeterministicEmbeddingProvider implements EmbeddingProvider {
 	readonly name = "deterministic-bag-of-tokens";
 	readonly dims: number;
+	readonly embeddingSpaceId: string;
 
 	constructor(dims = 384) {
 		this.dims = dims;
+		// This benchmark provider is persisted by SqliteAdapter, so it needs the
+		// same immutable vector-space identity required from production providers.
+		// Bump the algorithm version if tokenization, hashing, PRNG, pooling, or
+		// normalization changes; dimensions alone do not identify those semantics.
+		this.embeddingSpaceId = `benchmark:deterministic-bag-of-tokens@1:dims=${dims}:fnv1a-mulberry32:l2`;
 	}
 
 	/** FNV-1a 32-bit hash of a string → stable seed. */

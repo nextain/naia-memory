@@ -28,6 +28,7 @@ import type {
 
 const pbkdf2Async = promisify(pbkdf2);
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const MAX_FACT_UPSERT_BATCH = 1000;
 
 export interface SqliteAdapterOptions {
     dbPath: string;
@@ -46,6 +47,12 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
     private readonly initialization: Promise<void>;
     private readonly reindexEmbeddingsOnMismatch: boolean;
     private closed = false;
+    private pendingFactUpserts: Array<{
+        payload: any;
+        resolve: () => void;
+        reject: (error: unknown) => void;
+    }> = [];
+    private factUpsertFlushScheduled = false;
 
     constructor(options: SqliteAdapterOptions) {
         const dir = dirname(options.dbPath);
@@ -101,6 +108,34 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
     private async callWorker(type: string, payload: any): Promise<any> {
         await this.initialization;
         return this.rawCallWorker(type, payload);
+    }
+
+    private enqueueFactUpsert(payload: any): Promise<void> {
+        if (this.closed) return Promise.reject(new Error("SQLite adapter is closed"));
+        const queued = new Promise<void>((resolve, reject) => {
+            this.pendingFactUpserts.push({ payload, resolve, reject });
+        });
+        if (!this.factUpsertFlushScheduled) {
+            this.factUpsertFlushScheduled = true;
+            queueMicrotask(() => void this.flushFactUpserts());
+        }
+        return queued;
+    }
+
+    private async flushFactUpserts(): Promise<void> {
+        this.factUpsertFlushScheduled = false;
+        const batch = this.pendingFactUpserts.splice(0, MAX_FACT_UPSERT_BATCH);
+        if (batch.length === 0) return;
+        try {
+            await this.callWorker("upsert-facts", { facts: batch.map(({ payload }) => payload) });
+            for (const item of batch) item.resolve();
+        } catch (error) {
+            for (const item of batch) item.reject(error);
+        }
+        if (this.pendingFactUpserts.length > 0 && !this.factUpsertFlushScheduled) {
+            this.factUpsertFlushScheduled = true;
+            queueMicrotask(() => void this.flushFactUpserts());
+        }
     }
 
     private async initSchema() {
@@ -228,7 +263,7 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
             const baseId = fact.id.replace(/(-v\d+)+$/, "");
             const vector = this.embedder ? (await this.embedder.embedBatch([fact.content]))[0] : undefined;
             if (this.embedder && (!vector || vector.length !== this.embedder.dims || vector.some((value) => !Number.isFinite(value)))) throw new Error("SQLite fact embedding returned an invalid vector");
-            await this.callWorker("upsert-fact", {
+            await this.enqueueFactUpsert({
                 factId: fact.id, minTs: fact.validFrom ?? fact.createdAt, maxTs: fact.validTo ?? 253402300799000,
                 content: fact.content, entities: fact.entities.join(" "), topics: fact.topics.join(" "),
 				hot: fact.strength > 0.6 && fact.status === "active",

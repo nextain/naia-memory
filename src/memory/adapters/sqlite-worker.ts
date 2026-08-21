@@ -41,24 +41,36 @@ parentPort?.on("message", async (msg) => {
                 });
                 result = tx(payload.ops);
                 break;
-            case "upsert-fact": {
-                const tx = db.transaction((p: any) => {
-                    const previous = db.prepare("SELECT fid FROM id_map WHERE fact_id = ?").get(p.factId) as { fid?: number } | undefined;
-                    const fid = previous?.fid ?? Number((db.prepare("SELECT COALESCE(MAX(fid), 0) + 1 AS fid FROM id_map").get() as { fid: number }).fid);
+            case "upsert-facts": {
+                const tx = db.transaction((facts: any[]) => {
+                    const getMappedId = db.prepare("SELECT fid FROM id_map WHERE fact_id = ?");
+                    const getNextId = db.prepare("SELECT COALESCE(MAX(fid), 0) + 1 AS fid FROM id_map");
+                    const upsertId = db.prepare("INSERT OR REPLACE INTO id_map (fid, fact_id) VALUES (?, ?)");
+                    const upsertTime = db.prepare("INSERT OR REPLACE INTO facts_time_idx (id, min_ts, max_ts) VALUES (?, ?, ?)");
+                    const deleteFts = ["facts_fts", "facts_fts_hot"].map((table) => db.prepare(`DELETE FROM ${table} WHERE rowid = ?`));
+                    const deleteVectors = ["vec_facts", "vec_facts_hot"].map((table) => db.prepare(`DELETE FROM ${table} WHERE fact_id = ?`));
+                    const insertFts = db.prepare("INSERT INTO facts_fts (rowid, content, entities, topics) VALUES (?, ?, ?, ?)");
+                    const insertHotFts = db.prepare("INSERT INTO facts_fts_hot (rowid, content, entities, topics) VALUES (?, ?, ?, ?)");
+                    const insertVector = db.prepare("INSERT INTO vec_facts (fact_id, embedding) VALUES (?, ?)");
+                    const insertHotVector = db.prepare("INSERT INTO vec_facts_hot (fact_id, embedding) VALUES (?, ?)");
+                    for (const p of facts) {
+                    const previous = getMappedId.get(p.factId) as { fid?: number } | undefined;
+                    const fid = previous?.fid ?? Number((getNextId.get() as { fid: number }).fid);
                     db.prepare(p.factSql).run(...p.factParams);
-                    db.prepare("INSERT OR REPLACE INTO id_map (fid, fact_id) VALUES (?, ?)").run(fid, p.factId);
-                    db.prepare("INSERT OR REPLACE INTO facts_time_idx (id, min_ts, max_ts) VALUES (?, ?, ?)").run(fid, p.minTs, p.maxTs);
-                    for (const table of ["facts_fts", "facts_fts_hot"]) db.prepare(`DELETE FROM ${table} WHERE rowid = ?`).run(fid);
-                    for (const table of ["vec_facts", "vec_facts_hot"]) db.prepare(`DELETE FROM ${table} WHERE fact_id = ?`).run(p.factId);
-                    db.prepare("INSERT INTO facts_fts (rowid, content, entities, topics) VALUES (?, ?, ?, ?)").run(fid, p.content, p.entities, p.topics);
-                    if (p.hot) db.prepare("INSERT INTO facts_fts_hot (rowid, content, entities, topics) VALUES (?, ?, ?, ?)").run(fid, p.content, p.entities, p.topics);
+                    upsertId.run(fid, p.factId);
+                    upsertTime.run(fid, p.minTs, p.maxTs);
+                    for (const statement of deleteFts) statement.run(fid);
+                    for (const statement of deleteVectors) statement.run(p.factId);
+                    insertFts.run(fid, p.content, p.entities, p.topics);
+                    if (p.hot) insertHotFts.run(fid, p.content, p.entities, p.topics);
                     if (p.vector) {
-                        db.prepare("INSERT INTO vec_facts (fact_id, embedding) VALUES (?, ?)").run(p.factId, p.vector);
-                        if (p.hot) db.prepare("INSERT INTO vec_facts_hot (fact_id, embedding) VALUES (?, ?)").run(p.factId, p.vector);
+                        insertVector.run(p.factId, p.vector);
+                        if (p.hot) insertHotVector.run(p.factId, p.vector);
                     }
                     bumpFactGeneration();
+                    }
                 });
-                result = tx(payload);
+                result = tx(payload.facts);
                 break;
             }
             case "archive-fact": {

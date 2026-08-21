@@ -49,6 +49,59 @@ describe("SqliteAdapter Smoke Test", () => {
         expect(result.facts[0].content).toContain("SQLite");
     });
 
+    it("persists every concurrently submitted fact before each upsert resolves", async () => {
+        const now = Date.now();
+        const facts = Array.from({ length: 128 }, (_, index) => ({
+            id: `concurrent-${index}`,
+            content: `Concurrent SQLite fact ${index}`,
+            entities: ["concurrent"],
+            topics: ["batch"],
+            createdAt: now + index,
+            updatedAt: now + index,
+            importance: 0.5,
+            recallCount: 0,
+            lastAccessed: now + index,
+            strength: 0.8,
+            status: "active" as const,
+            sourceEpisodes: [],
+        }));
+
+        await Promise.all(facts.map((fact) => adapter.semantic.upsert(fact)));
+
+        const persisted = await adapter.semantic.getAll();
+        expect(persisted).toHaveLength(facts.length);
+        expect(new Set(persisted.map((fact) => fact.id))).toEqual(
+            new Set(facts.map((fact) => fact.id)),
+        );
+    });
+
+    it("rolls back every fact in a failed concurrent batch", async () => {
+        const now = Date.now();
+        const valid = {
+            id: "atomic-valid",
+            content: "This row must roll back with its batch.",
+            entities: ["atomic"],
+            topics: ["batch"],
+            createdAt: now,
+            updatedAt: now,
+            importance: 0.5,
+            recallCount: 0,
+            lastAccessed: now,
+            strength: 0.8,
+            status: "active" as const,
+            sourceEpisodes: [],
+        };
+        const invalid = { ...valid, id: "atomic-invalid", content: null };
+
+        const results = await Promise.allSettled([
+            adapter.semantic.upsert(valid),
+            adapter.semantic.upsert(invalid as unknown as typeof valid),
+        ]);
+
+        expect(results.map(({ status }) => status)).toEqual(["rejected", "rejected"]);
+        expect(await adapter.semantic.getAll()).toEqual([]);
+    });
+
     it("should support epoch-based filtering in SQLite", async () => {
         const now = Date.now();
         await adapter.upsertEpoch({
