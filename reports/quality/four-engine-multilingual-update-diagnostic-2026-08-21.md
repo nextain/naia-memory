@@ -259,6 +259,47 @@ until the already blinded packet is completed by independent adjudicators,
 unsealed into reproducible per-language competitive metrics with disagreement
 and uncertainty, and bound to equally auditable latency/cost evidence.
 
+The twelve-input public-gate path now adds signed semantic-adjudication
+evidence. Every adjudicator receipt binds the complete contract, exact campaign
+bytes, blinded packet, seal, exact judgment bytes, declared profile, timing,
+and engine-independence statement. The verifier requires exact judge coverage,
+valid Ed25519 signatures, and role separation from corpus authors, native
+reviewers, and engine executors by both identity and canonical public key. It
+then rebuilds the blinded packet and seal from the frozen inputs and seed before
+recomputing the score. Mutation, missing receipts, forged or reused keys,
+profile drift, invalid timing, and corpus-author identity reuse through the
+top-level gate all fail closed.
+
+This stage establishes signed-artifact integrity, trusted-key coverage, and
+cross-role separation only. It explicitly reports
+`blindnessVerified: false`, `organizationalIndependenceVerified: false`, and
+`interRaterAgreementEvaluated: false`; signatures cannot prove that a judge did
+not see the seal, that organizations are genuinely independent, or that
+multiple raters agree. The public gate therefore remains hard-coded
+`promotable: false`. No new engine run was made and no performance increase is
+claimed.
+
+Two consecutive post-fix OpenCode headless adversarial reviews returned
+`CLEAN`. An earlier review found that cross-role separation needed gate-level
+regression coverage; the test now proves that reusing a corpus-author identity
+as an adjudicator is rejected by the complete public path. The final reviews
+reproduced 17 focused tests and checked signature binding, receipt coverage,
+score recomputation, false-green assertions, bounded input, and claim wording.
+A Claude headless attempt failed to produce a verdict and is recorded as
+`NOT_RUN`, not as approval. Deterministic review preflight remains
+`REVIEW_REQUIRED` only because the cohesive public-gate integration test is 640
+lines; decomposition is advisable if another attack surface is added, but is
+below the 800-line mandatory-refactor threshold. The current full project
+passes 66 files and 696 tests, typecheck, build, formatting, and diff checks.
+
+The next publication-critical step is not another internal fixture. It is a
+real, externally administered multi-rater campaign: independently held signing
+keys, auditable blind-packet delivery, at least two native-language judges per
+language, disagreement and inter-rater-agreement reporting, uncertainty bounds,
+and reruns from a released commit with comparable latency and cost receipts.
+Until those artifacts exist, this report supports a strong evidence-integrity
+claim but not a global engine-superiority claim.
+
 OpenCode adversarial review first found a manifest symlink escape and the lack
 of full six-input gate coverage. Both were fixed and regression-tested. Two
 subsequent focused reviews found no remaining blocker for this narrow execution

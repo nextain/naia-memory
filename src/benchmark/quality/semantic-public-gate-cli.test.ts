@@ -1,5 +1,5 @@
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -11,6 +11,8 @@ import {
 	evidenceObjectSha256,
 	evidenceSignaturePayload,
 } from "./public-evidence-crypto.js";
+import type { SemanticAdjudicationEvidenceBundle } from "./semantic-adjudication-evidence.js";
+import { buildSemanticBlindArtifacts } from "./semantic-blind-packet-cli.js";
 import { buildSemanticCampaignPlan } from "./semantic-campaign-cli.js";
 import {
 	type SemanticExecutionEvidenceBundle,
@@ -268,6 +270,106 @@ async function writeExecutionFixture(
 	return paths;
 }
 
+async function writeAdjudicationFixture(
+	directory: string,
+	contract: MemoryUpdateContract,
+	campaignPath: string,
+	conflictingAdjudicatorLanguage?: "ko" | "en" | "ja",
+) {
+	const campaignBytes = await readFile(campaignPath);
+	const campaign = JSON.parse(campaignBytes.toString("utf8"));
+	const blindingSeed = "public-gate-blinding-seed";
+	const contractSha256 = evidenceObjectSha256(contract);
+	const campaignSha256 = hash(campaignBytes);
+	const artifacts = buildSemanticBlindArtifacts({
+		contract,
+		campaign,
+		campaignDirectory: directory,
+		blindingSeed,
+		contractSha256,
+		campaignSha256,
+	});
+	const completedAt = "2026-01-06T00:00:00Z";
+	const languages = ["ko", "en", "ja"] as const;
+	const adjudicatorId = (language: (typeof languages)[number]) =>
+		language === conflictingAdjudicatorLanguage
+			? `author-${language}`
+			: `judge-${language}`;
+	const judgments = {
+		schemaVersion: "naia-memory-semantic-judgments-v1",
+		packetContentSha256: artifacts.packet.packetContentSha256,
+		adjudicators: languages.map((language) => ({
+			id: adjudicatorId(language),
+			nativeLanguages: [language],
+			completedAt,
+			independentFromEngineImplementers: true,
+		})),
+		samples: artifacts.packet.samples.map((sample) => ({
+			sampleId: sample.sampleId,
+			adjudicatorId: adjudicatorId(sample.language),
+			judgments: sample.retrieved.map((memory) => ({
+				memoryId: memory.memoryId,
+				label: "current",
+				notes: "",
+			})),
+		})),
+	};
+	const judgmentsBytes = Buffer.from(JSON.stringify(judgments));
+	const binding = {
+		contractSha256,
+		campaignSha256,
+		packetContentSha256: artifacts.packet.packetContentSha256,
+		sealSha256: evidenceObjectSha256(artifacts.seal),
+		judgmentsFileSha256: hash(judgmentsBytes),
+	};
+	const adjudicators: Record<string, unknown> = {};
+	const receipts = languages.map((language) => {
+		const receiptAdjudicatorId = adjudicatorId(language);
+		const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+		adjudicators[receiptAdjudicatorId] = {
+			publicKey: publicKey.export({ type: "spki", format: "pem" }).toString(),
+			independentOfEngines: ["hindsight", "mem0", "naia"],
+			profile: { kind: "human", nativeLanguages: [language] },
+		};
+		const unsigned = {
+			schemaVersion: "naia-memory-semantic-adjudication-receipt-v1" as const,
+			adjudicatorId: receiptAdjudicatorId,
+			...binding,
+			completedAt,
+			signedAt: "2026-01-06T00:01:00Z",
+			statement: "BLINDED_JUDGMENTS_CONFIRMED" as const,
+		};
+		return {
+			...unsigned,
+			signatureBase64: sign(
+				null,
+				evidenceSignaturePayload(unsigned),
+				privateKey,
+			).toString("base64"),
+		};
+	});
+	const bundle: SemanticAdjudicationEvidenceBundle = {
+		schemaVersion: "naia-memory-semantic-adjudication-evidence-bundle-v1",
+		...binding,
+		receipts,
+	};
+	const paths = [
+		join(directory, "packet.json"),
+		join(directory, "seal.json"),
+		join(directory, "judgments.json"),
+		join(directory, "adjudication-evidence.json"),
+		join(directory, "adjudication-trust-policy.json"),
+	];
+	await Promise.all([
+		writeFile(paths[0], JSON.stringify(artifacts.packet)),
+		writeFile(paths[1], JSON.stringify(artifacts.seal)),
+		writeFile(paths[2], judgmentsBytes),
+		writeFile(paths[3], JSON.stringify(bundle)),
+		writeFile(paths[4], JSON.stringify({ adjudicators })),
+	]);
+	return [...paths, blindingSeed];
+}
+
 function captureStdout(output: string[]): void {
 	vi.spyOn(process.stdout, "write").mockImplementation((value) => {
 		output.push(String(value));
@@ -289,6 +391,70 @@ afterEach(async () => {
 });
 
 describe("semantic public gate CLI", () => {
+	it("recomputes signed multilingual adjudication but keeps promotion closed", async () => {
+		const output: string[] = [];
+		captureStdout(output);
+		const directory = await root();
+		const fixture = await writeFixture(directory);
+		const executionPaths = await writeExecutionFixture(
+			directory,
+			fixture.contract,
+		);
+		const adjudicationPaths = await writeAdjudicationFixture(
+			directory,
+			fixture.contract,
+			executionPaths[0],
+		);
+		expect(
+			await runSemanticPublicGateCli([
+				...fixture.paths,
+				...executionPaths,
+				...adjudicationPaths,
+			]),
+		).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}")).toMatchObject({
+			corpusQualified: true,
+			executionEvidenceQualified: true,
+			adjudicationEvidenceQualified: true,
+			adjudicatorCount: 3,
+			humanJudgedLanguages: ["en", "ja", "ko"],
+			modelOnlyLanguages: [],
+			evidenceScope: "signed-artifact-integrity-and-coverage",
+			blindnessVerified: false,
+			organizationalIndependenceVerified: false,
+			interRaterAgreementEvaluated: false,
+			promotable: false,
+		});
+	});
+
+	it("rejects corpus author identity reuse by an adjudicator through the public gate", async () => {
+		const output: string[] = [];
+		captureStdout(output);
+		const directory = await root();
+		const fixture = await writeFixture(directory);
+		const executionPaths = await writeExecutionFixture(
+			directory,
+			fixture.contract,
+		);
+		const adjudicationPaths = await writeAdjudicationFixture(
+			directory,
+			fixture.contract,
+			executionPaths[0],
+			"ko",
+		);
+		expect(
+			await runSemanticPublicGateCli([
+				...fixture.paths,
+				...executionPaths,
+				...adjudicationPaths,
+			]),
+		).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}")).toEqual({
+			promotable: false,
+			failure: "semantic adjudication trust overlaps another evidence role",
+		});
+	});
+
 	it("qualifies signed execution evidence but still refuses quality promotion", async () => {
 		const output: string[] = [];
 		captureStdout(output);

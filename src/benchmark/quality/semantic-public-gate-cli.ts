@@ -9,6 +9,11 @@ import {
 	readBoundedEvidenceFile,
 } from "./public-evidence-file-io.js";
 import {
+	isSemanticAdjudicationEvidenceBundle,
+	isSemanticAdjudicationTrustPolicy,
+	validateSemanticAdjudicationEvidence,
+} from "./semantic-adjudication-evidence.js";
+import {
 	isSemanticExecutionEvidenceBundle,
 	isSemanticExecutionTrustPolicy,
 	validateSemanticExecutionEvidence,
@@ -27,12 +32,15 @@ async function runSemanticEvidenceGateCli(
 ): Promise<number> {
 	if (
 		(mode === "corpus" && args.length !== 3) ||
-		(mode === "public" && args.length !== 3 && args.length !== 6)
+		(mode === "public" &&
+			args.length !== 3 &&
+			args.length !== 6 &&
+			args.length !== 12)
 	) {
 		process.stderr.write(
 			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>${
 				mode === "public"
-					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json>]"
+					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed>]]"
 					: ""
 			}\n`,
 		);
@@ -84,7 +92,7 @@ async function runSemanticEvidenceGateCli(
 			process.stdout.write(`${JSON.stringify(corpusResult)}\n`);
 			return 0;
 		}
-		if (args.length === 6) {
+		if (args.length >= 6) {
 			const campaignPath = resolve(args[3]);
 			let campaignBytes: Buffer;
 			try {
@@ -123,6 +131,92 @@ async function runSemanticEvidenceGateCli(
 				bundle: executionBundle,
 				trustPolicy: executionTrustPolicy,
 			});
+			if (args.length === 12) {
+				const packet = await readJson(args[6], "blind packet");
+				const seal = await readJson(args[7], "blind seal");
+				let judgmentsBytes: Buffer;
+				try {
+					judgmentsBytes = await readBoundedEvidenceFile(
+						resolve(args[8]),
+						MAX_CONTRACT_BYTES,
+					);
+				} catch (error) {
+					if (error instanceof PublicEvidenceFileTooLargeError)
+						throw new Error("judgments exceed the 16 MiB intake limit");
+					throw new Error("judgments are unreadable");
+				}
+				const adjudicationBundle = await readJson(
+					args[9],
+					"adjudication evidence bundle",
+				);
+				if (!isSemanticAdjudicationEvidenceBundle(adjudicationBundle))
+					throw new Error(
+						"semantic adjudication evidence bundle shape is invalid",
+					);
+				const adjudicationTrust = await readJson(
+					args[10],
+					"adjudication trust policy",
+				);
+				if (!isSemanticAdjudicationTrustPolicy(adjudicationTrust))
+					throw new Error(
+						"semantic adjudication trust policy shape is invalid",
+					);
+				if (
+					packet === null ||
+					typeof packet !== "object" ||
+					Array.isArray(packet)
+				)
+					throw new Error("blind packet shape is invalid");
+				if (seal === null || typeof seal !== "object" || Array.isArray(seal))
+					throw new Error("blind seal shape is invalid");
+				const adjudication = validateSemanticAdjudicationEvidence({
+					contract,
+					campaign: campaign as Record<string, unknown>,
+					campaignBytes,
+					campaignDirectory: dirname(campaignPath),
+					blindingSeed: args[11],
+					packet: packet as Parameters<
+						typeof validateSemanticAdjudicationEvidence
+					>[0]["packet"],
+					seal: seal as Parameters<
+						typeof validateSemanticAdjudicationEvidence
+					>[0]["seal"],
+					judgmentsBytes,
+					bundle: adjudicationBundle,
+					trustPolicy: adjudicationTrust,
+					forbiddenTrustIdentities: [
+						...Object.values(trustPolicy.authorPublicKeysByLanguage).flatMap(
+							(keys) => Object.keys(keys),
+						),
+						...Object.values(
+							trustPolicy.nativeReviewerPublicKeysByLanguage,
+						).flatMap((keys) => Object.keys(keys)),
+						...Object.keys(executionTrustPolicy.executorPublicKeys),
+					],
+					forbiddenTrustPublicKeys: [
+						...Object.values(trustPolicy.authorPublicKeysByLanguage).flatMap(
+							(keys) => Object.values(keys),
+						),
+						...Object.values(
+							trustPolicy.nativeReviewerPublicKeysByLanguage,
+						).flatMap((keys) => Object.values(keys)),
+						...Object.values(executionTrustPolicy.executorPublicKeys),
+					],
+				});
+				process.stdout.write(
+					`${JSON.stringify({
+						...corpusResult,
+						executionEvidenceQualified: true,
+						...execution,
+						adjudicationEvidenceQualified: true,
+						...adjudication,
+						promotable: false,
+						failure:
+							"competitive thresholds, uncertainty, latency, and released-commit evidence are not evaluated by this gate",
+					})}\n`,
+				);
+				return 1;
+			}
 			process.stdout.write(
 				`${JSON.stringify({
 					...corpusResult,
