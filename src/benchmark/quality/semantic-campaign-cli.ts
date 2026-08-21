@@ -11,7 +11,11 @@ import {
 import { runSemanticRawCli } from "./semantic-raw-cli.js";
 import type { SemanticEngine } from "./semantic-raw-cli.js";
 
-const ENGINES = ["hindsight", "mem0", "naia"] as const;
+export const SUPPORTED_SEMANTIC_ENGINES = [
+	"hindsight",
+	"mem0",
+	"naia",
+] as const;
 
 export type SemanticCampaignCliArgs = {
 	contractPath: string;
@@ -19,12 +23,13 @@ export type SemanticCampaignCliArgs = {
 	topK: number;
 	executionSeed: string;
 	repetitions: number;
+	engines: SemanticEngine[];
 };
 
 export type SemanticCampaignRun = {
 	repetition: number;
 	enginePosition: number;
-	engine: SemanticEngine;
+	engine: string;
 	caseExecutionSeed: string;
 	outputFile: string;
 };
@@ -41,6 +46,7 @@ export function validateRawArtifact(
 	path: string,
 	expected: SemanticCampaignRun,
 	expectedCases: MemoryUpdateCase[],
+	expectedTopK: number,
 ): void {
 	const artifact = JSON.parse(readFileSync(path, "utf8")) as {
 		schemaVersion?: unknown;
@@ -65,6 +71,7 @@ export function validateRawArtifact(
 		artifact.schemaVersion !== "naia-memory-semantic-raw-artifact-v2" ||
 		artifact.disclosure?.engine !== expected.engine ||
 		artifact.disclosure.executionSeed !== expected.caseExecutionSeed ||
+		artifact.disclosure.topK !== expectedTopK ||
 		!Array.isArray(artifact.cases) ||
 		artifact.cases.length !== expectedCases.length ||
 		new Set(artifact.cases.map((item) => item.caseId)).size !==
@@ -75,10 +82,16 @@ export function validateRawArtifact(
 					? expectedById.get(item.caseId)
 					: undefined;
 			const nativeState = Array.isArray(item.nativeState)
-				? (item.nativeState as Array<{ nativeId?: unknown }>)
+				? (item.nativeState as Array<{
+						nativeId?: unknown;
+						content?: unknown;
+					}>)
 				: [];
 			const retrieved = Array.isArray(item.retrieved)
-				? (item.retrieved as Array<{ nativeId?: unknown }>)
+				? (item.retrieved as Array<{
+						nativeId?: unknown;
+						content?: unknown;
+					}>)
 				: [];
 			const nativeIds = new Set(nativeState.map((memory) => memory.nativeId));
 			return (
@@ -108,9 +121,15 @@ export function validateRawArtifact(
 				!Number.isInteger(artifact.disclosure?.topK) ||
 				Number(artifact.disclosure?.topK) < 1 ||
 				retrieved.length > Number(artifact.disclosure?.topK) ||
+				nativeState.some(
+					(memory) =>
+						typeof memory.nativeId !== "string" ||
+						typeof memory.content !== "string",
+				) ||
 				retrieved.some(
 					(memory) =>
 						typeof memory.nativeId !== "string" ||
+						typeof memory.content !== "string" ||
 						!nativeIds.has(memory.nativeId),
 				) ||
 				item.outputSha256 !==
@@ -133,9 +152,14 @@ export function parseSemanticCampaignCliArgs(
 		const match = /^--([^=]+)=(.+)$/.exec(arg);
 		if (!match) throw new Error(`invalid argument: ${arg}`);
 		if (
-			!["contract", "output-dir", "top-k", "seed", "repetitions"].includes(
-				match[1],
-			)
+			![
+				"contract",
+				"output-dir",
+				"top-k",
+				"seed",
+				"repetitions",
+				"engines",
+			].includes(match[1])
 		)
 			throw new Error(`unknown argument: --${match[1]}`);
 		if (values.has(match[1]))
@@ -152,45 +176,80 @@ export function parseSemanticCampaignCliArgs(
 	const topK = Number(values.get("top-k") ?? "5");
 	if (!Number.isInteger(topK) || topK < 1)
 		throw new Error("--top-k must be a positive integer");
-	const repetitions = Number(values.get("repetitions") ?? "3");
+	const requestedEngines = (
+		values.get("engines") ?? SUPPORTED_SEMANTIC_ENGINES.join(",")
+	)
+		.split(",")
+		.map((engine) => engine.trim());
 	if (
-		!Number.isInteger(repetitions) ||
-		repetitions < ENGINES.length ||
-		repetitions % ENGINES.length !== 0
+		requestedEngines.length < 2 ||
+		requestedEngines.some(
+			(engine) =>
+				!SUPPORTED_SEMANTIC_ENGINES.includes(
+					engine as (typeof SUPPORTED_SEMANTIC_ENGINES)[number],
+				),
+		) ||
+		new Set(requestedEngines).size !== requestedEngines.length
 	)
 		throw new Error(
-			"--repetitions must be a positive multiple of 3 of at least 3",
+			`--engines must select at least two unique engines from ${SUPPORTED_SEMANTIC_ENGINES.join(", ")}`,
 		);
-	return { contractPath, outputDir, topK, executionSeed, repetitions };
+	const engines = requestedEngines as SemanticEngine[];
+	const repetitions = Number(
+		values.get("repetitions") ?? String(engines.length),
+	);
+	if (
+		!Number.isInteger(repetitions) ||
+		repetitions < engines.length ||
+		repetitions % engines.length !== 0
+	)
+		throw new Error(
+			`--repetitions must be a positive multiple of the ${engines.length}-engine matrix of at least ${engines.length}`,
+		);
+	return {
+		contractPath,
+		outputDir,
+		topK,
+		executionSeed,
+		repetitions,
+		engines,
+	};
 }
 
 export function buildSemanticCampaignPlan(
 	executionSeed: string,
 	repetitions: number,
+	engines: readonly string[] = SUPPORTED_SEMANTIC_ENGINES,
 ): SemanticCampaignRun[] {
 	if (!executionSeed.trim())
 		throw new Error("campaign execution seed is required");
 	if (
+		engines.length < 2 ||
+		engines.some((engine) => typeof engine !== "string" || !engine.trim()) ||
+		new Set(engines).size !== engines.length
+	)
+		throw new Error("campaign engines must contain at least two unique names");
+	if (
 		!Number.isInteger(repetitions) ||
-		repetitions < ENGINES.length ||
-		repetitions % ENGINES.length !== 0
+		repetitions < engines.length ||
+		repetitions % engines.length !== 0
 	)
 		throw new Error(
-			"campaign repetitions must be a positive multiple of 3 of at least 3",
+			`campaign repetitions must be a positive multiple of the ${engines.length}-engine matrix of at least ${engines.length}`,
 		);
 	const offset =
 		Number.parseInt(
 			sha256({ executionSeed, scope: "engine-order" }).slice(0, 8),
 			16,
-		) % ENGINES.length;
-	const firstOrder = ENGINES.map(
-		(_engine, index) => ENGINES[(index + offset) % ENGINES.length],
+		) % engines.length;
+	const firstOrder = engines.map(
+		(_engine, index) => engines[(index + offset) % engines.length],
 	);
 	const plan: SemanticCampaignRun[] = [];
 	for (let repetition = 1; repetition <= repetitions; repetition += 1) {
-		const rotation = (repetition - 1) % ENGINES.length;
+		const rotation = (repetition - 1) % engines.length;
 		const order = firstOrder.map(
-			(_engine, index) => firstOrder[(index + rotation) % ENGINES.length],
+			(_engine, index) => firstOrder[(index + rotation) % engines.length],
 		);
 		const caseExecutionSeed = sha256({
 			executionSeed,
@@ -222,6 +281,7 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 	const plan = buildSemanticCampaignPlan(
 		parsed.executionSeed,
 		parsed.repetitions,
+		parsed.engines,
 	);
 	mkdirSync(dirname(outputDir), { recursive: true });
 	mkdirSync(outputDir, { mode: 0o700 });
@@ -237,29 +297,28 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 			resolve(outputDir, run.outputFile),
 			run,
 			contract.cases,
+			parsed.topK,
 		);
 	}
 	const enginePositionCounts = Object.fromEntries(
-		ENGINES.map((engine) => [
+		parsed.engines.map((engine) => [
 			engine,
-			{
-				first: plan.filter(
-					(run) => run.engine === engine && run.enginePosition === 1,
-				).length,
-				second: plan.filter(
-					(run) => run.engine === engine && run.enginePosition === 2,
-				).length,
-				third: plan.filter(
-					(run) => run.engine === engine && run.enginePosition === 3,
-				).length,
-			},
+			Object.fromEntries(
+				Array.from({ length: parsed.engines.length }, (_unused, index) => [
+					String(index + 1),
+					plan.filter(
+						(run) => run.engine === engine && run.enginePosition === index + 1,
+					).length,
+				]),
+			),
 		]),
 	);
 	const disclosure = {
 		executionSeed: parsed.executionSeed,
 		repetitions: parsed.repetitions,
 		topK: parsed.topK,
-		engineOrderPolicy: "seeded-three-engine-latin-rotation-v1",
+		engines: parsed.engines,
+		engineOrderPolicy: "seeded-n-engine-latin-rotation-v2",
 		caseOrderPolicy: "shared-seeded-per-repetition-v1",
 		enginePositionCounts,
 		languageCaseCounts: Object.fromEntries(
@@ -274,7 +333,7 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 			"Engine-native semantic surfaces are compared with their disclosed native configurations; component-level parity is not claimed.",
 	};
 	const manifest = {
-		schemaVersion: "naia-memory-semantic-campaign-v2",
+		schemaVersion: "naia-memory-semantic-campaign-v3",
 		interpretation:
 			"Balanced execution manifest over unscored raw artifacts; not quality evidence by itself.",
 		receipt: benchmarkReceipt([contractPath], disclosure, [

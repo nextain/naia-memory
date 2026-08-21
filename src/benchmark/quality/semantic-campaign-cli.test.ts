@@ -16,7 +16,7 @@ function sha256(value: unknown): string {
 }
 
 describe("semantic campaign CLI", () => {
-	it("requires an explicit seed and a three-engine-balanced repetition count", () => {
+	it("requires an explicit seed and an engine-matrix-balanced repetition count", () => {
 		expect(() =>
 			parseSemanticCampaignCliArgs([
 				"--contract=contract.json",
@@ -30,7 +30,15 @@ describe("semantic campaign CLI", () => {
 				"--seed=frozen",
 				"--repetitions=2",
 			]),
-		).toThrow("positive multiple of 3");
+		).toThrow("3-engine matrix");
+		expect(() =>
+			parseSemanticCampaignCliArgs([
+				"--contract=contract.json",
+				"--output-dir=out",
+				"--seed=frozen",
+				"--top-k=0",
+			]),
+		).toThrow("--top-k must be a positive integer");
 	});
 
 	it("rejects duplicate and unknown campaign arguments", () => {
@@ -47,9 +55,30 @@ describe("semantic campaign CLI", () => {
 				"--contract=contract.json",
 				"--output-dir=out",
 				"--seed=frozen",
-				"--engine=naia",
+				"--unknown=naia",
 			]),
-		).toThrow("unknown argument: --engine");
+		).toThrow("unknown argument: --unknown");
+	});
+
+	it("accepts only unique executable engine subsets", () => {
+		const parsed = parseSemanticCampaignCliArgs([
+			"--contract=contract.json",
+			"--output-dir=out",
+			"--seed=frozen",
+			"--engines=naia,mem0",
+		]);
+		expect(parsed.engines).toEqual(["naia", "mem0"]);
+		expect(parsed.repetitions).toBe(2);
+		for (const engines of ["naia", "naia,naia", "naia,graphiti", ",naia"]) {
+			expect(() =>
+				parseSemanticCampaignCliArgs([
+					"--contract=contract.json",
+					"--output-dir=out",
+					"--seed=frozen",
+					`--engines=${engines}`,
+				]),
+			).toThrow("at least two unique engines");
+		}
 	});
 
 	it("builds a reproducible three-engine position-balanced schedule", () => {
@@ -73,6 +102,47 @@ describe("semantic campaign CLI", () => {
 				),
 			).toHaveLength(2);
 		}
+	});
+
+	it("balances arbitrary engine matrices without treating missing arms as scores", () => {
+		for (const engines of [
+			["a", "b"],
+			["a", "b", "c"],
+			["a", "b", "c", "d"],
+		]) {
+			const plan = buildSemanticCampaignPlan(
+				"matrix-seed",
+				engines.length,
+				engines,
+			);
+			expect(plan).toHaveLength(engines.length ** 2);
+			for (const engine of engines)
+				expect(
+					Array.from(
+						{ length: engines.length },
+						(_unused, index) =>
+							plan.filter(
+								(run) =>
+									run.engine === engine && run.enginePosition === index + 1,
+							).length,
+					),
+				).toEqual(Array.from({ length: engines.length }, () => 1));
+		}
+		expect(() => buildSemanticCampaignPlan("seed", 2, ["a", "a"])).toThrow(
+			"at least two unique names",
+		);
+	});
+
+	it("balances every position across repeated Latin cycles", () => {
+		const engines = ["a", "b", "c", "d"];
+		const plan = buildSemanticCampaignPlan("multi-cycle", 8, engines);
+		for (const engine of engines)
+			for (let position = 1; position <= engines.length; position += 1)
+				expect(
+					plan.filter(
+						(run) => run.engine === engine && run.enginePosition === position,
+					),
+				).toHaveLength(2);
 	});
 
 	it("shares one case seed between engines and changes it per repetition", () => {
@@ -142,7 +212,7 @@ describe("semantic campaign CLI", () => {
 		try {
 			writeFileSync(path, JSON.stringify(artifact));
 			expect(() =>
-				validateRawArtifact(path, expected, [benchmarkCase]),
+				validateRawArtifact(path, expected, [benchmarkCase], 1),
 			).not.toThrow();
 			for (const mutate of [
 				(current: typeof artifact) => {
@@ -155,6 +225,9 @@ describe("semantic campaign CLI", () => {
 					current.disclosure.executionSeed = "wrong";
 				},
 				(current: typeof artifact) => {
+					current.disclosure.topK = 50;
+				},
+				(current: typeof artifact) => {
 					current.cases[0].caseId = "wrong";
 				},
 				(current: typeof artifact) => {
@@ -162,6 +235,22 @@ describe("semantic campaign CLI", () => {
 				},
 				(current: typeof artifact) => {
 					current.cases[0].retrieved[0].content = "변조됨";
+				},
+				(current: typeof artifact) => {
+					current.cases[0].retrieved[0].content = 123 as unknown as string;
+					current.cases[0].outputSha256 = sha256({
+						ingestionReceipts: current.cases[0].ingestionReceipts,
+						nativeState: current.cases[0].nativeState,
+						retrieved: current.cases[0].retrieved,
+					});
+				},
+				(current: typeof artifact) => {
+					current.cases[0].nativeState[0].content = 123 as unknown as string;
+					current.cases[0].outputSha256 = sha256({
+						ingestionReceipts: current.cases[0].ingestionReceipts,
+						nativeState: current.cases[0].nativeState,
+						retrieved: current.cases[0].retrieved,
+					});
 				},
 				(current: typeof artifact) => {
 					current.cases[0].retrieved[0].nativeId = "ghost";
@@ -185,7 +274,7 @@ describe("semantic campaign CLI", () => {
 				mutate(tampered);
 				writeFileSync(path, JSON.stringify(tampered));
 				expect(() =>
-					validateRawArtifact(path, expected, [benchmarkCase]),
+					validateRawArtifact(path, expected, [benchmarkCase], 1),
 				).toThrow("invalid semantic raw artifact");
 			}
 		} finally {

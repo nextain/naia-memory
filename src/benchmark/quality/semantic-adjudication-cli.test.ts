@@ -6,8 +6,11 @@ import { scoreSemanticAdjudication } from "./semantic-adjudication-cli.js";
 import { buildSemanticBlindArtifacts } from "./semantic-blind-packet-cli.js";
 import { semanticBlindFixture } from "./semantic-blind-packet-fixture.js";
 
-function setup(directory: string) {
-	const current = semanticBlindFixture(directory);
+function setup(
+	directory: string,
+	options?: Parameters<typeof semanticBlindFixture>[1],
+) {
+	const current = semanticBlindFixture(directory, options);
 	const hashes = {
 		contractSha256: "contract-hash",
 		campaignSha256: "campaign-hash",
@@ -73,6 +76,30 @@ describe("semantic adjudication scorer", () => {
 			});
 			expect(score.samples).toHaveLength(9);
 			expect(score.disclosure.judgmentsFileSha256).toMatch(/^[0-9a-f]{64}$/);
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
+
+	it("scores a v3 engine subset without creating an absent engine cell", () => {
+		const directory = mkdtempSync(resolve(tmpdir(), "semantic-score-subset-"));
+		try {
+			const value = setup(directory, {
+				engines: ["naia", "mem0"],
+				schemaVersion: "naia-memory-semantic-campaign-v3",
+			});
+			const score = scoreSemanticAdjudication({
+				contract: value.current.contract,
+				campaign: value.current.campaign,
+				campaignDirectory: directory,
+				blindingSeed: value.blindingSeed,
+				...value.hashes,
+				packet: value.artifacts.packet,
+				seal: value.artifacts.seal,
+				judgmentsBytes: JSON.stringify(value.judgments),
+			});
+			expect(Object.keys(score.cells).sort()).toEqual(["mem0/ko", "naia/ko"]);
+			expect(score.samples).toHaveLength(4);
 		} finally {
 			rmSync(directory, { recursive: true, force: true });
 		}

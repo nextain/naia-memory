@@ -14,17 +14,21 @@ import {
 	validateMemoryUpdateContract,
 } from "./memory-update-contract.js";
 import {
+	SUPPORTED_SEMANTIC_ENGINES,
 	type SemanticCampaignRun,
 	buildSemanticCampaignPlan,
 	validateRawArtifact,
 } from "./semantic-campaign-cli.js";
 
 type CampaignManifest = {
-	schemaVersion: "naia-memory-semantic-campaign-v2";
+	schemaVersion:
+		| "naia-memory-semantic-campaign-v2"
+		| "naia-memory-semantic-campaign-v3";
 	disclosure: {
 		executionSeed: string;
 		repetitions: number;
 		topK: number;
+		engines?: string[];
 	};
 	runs: Array<SemanticCampaignRun & { artifactSha256: string }>;
 };
@@ -51,8 +55,15 @@ function sha256Json(value: unknown): string {
 	return sha256Bytes(JSON.stringify(value));
 }
 
-function assertSafeArtifactName(value: string): void {
-	if (!/^repetition-\d{2,}-(hindsight|mem0|naia)\.json$/.test(value))
+function assertSafeArtifactName(
+	value: string,
+	engines: readonly string[],
+): void {
+	if (
+		!engines.some((engine) =>
+			new RegExp(`^repetition-\\d{2,}-${engine}\\.json$`).test(value),
+		)
+	)
 		throw new Error(`campaign contains an unsafe artifact path: ${value}`);
 }
 
@@ -91,22 +102,46 @@ export function buildSemanticBlindArtifacts(input: {
 	validateMemoryUpdateContract(input.contract);
 	if (input.contract.tier !== "semantic-update-interpretation")
 		throw new Error("blind packet requires a semantic-update contract");
+	const disclosure = input.campaign.disclosure;
+	const engines =
+		input.campaign.schemaVersion === "naia-memory-semantic-campaign-v2"
+			? [...SUPPORTED_SEMANTIC_ENGINES]
+			: disclosure?.engines;
 	if (
-		input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v2" ||
-		!input.campaign.disclosure.executionSeed?.trim() ||
-		!Number.isInteger(input.campaign.disclosure.repetitions) ||
-		input.campaign.disclosure.repetitions < 3 ||
-		input.campaign.disclosure.repetitions % 3 !== 0 ||
-		!Number.isInteger(input.campaign.disclosure.topK) ||
-		input.campaign.disclosure.topK < 1 ||
+		(input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v2" &&
+			input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v3") ||
+		(input.campaign.schemaVersion === "naia-memory-semantic-campaign-v2" &&
+			disclosure?.engines !== undefined &&
+			(!Array.isArray(disclosure.engines) ||
+				disclosure.engines.length !== SUPPORTED_SEMANTIC_ENGINES.length ||
+				disclosure.engines.some(
+					(engine, index) => engine !== SUPPORTED_SEMANTIC_ENGINES[index],
+				))) ||
+		!Array.isArray(engines) ||
+		engines.length < 2 ||
+		new Set(engines).size !== engines.length ||
+		engines.some(
+			(engine) =>
+				typeof engine !== "string" ||
+				!SUPPORTED_SEMANTIC_ENGINES.includes(
+					engine as (typeof SUPPORTED_SEMANTIC_ENGINES)[number],
+				),
+		) ||
+		!disclosure?.executionSeed?.trim() ||
+		!Number.isInteger(disclosure.repetitions) ||
+		disclosure.repetitions < engines.length ||
+		disclosure.repetitions % engines.length !== 0 ||
+		!Number.isInteger(disclosure.topK) ||
+		disclosure.topK < 1 ||
 		!Array.isArray(input.campaign.runs) ||
-		input.campaign.runs.length !== input.campaign.disclosure.repetitions * 3
+		input.campaign.runs.length !== disclosure.repetitions * engines.length
 	)
 		throw new Error("invalid semantic campaign manifest");
 	if (!input.blindingSeed.trim()) throw new Error("blinding seed is required");
 	const expectedPlan = buildSemanticCampaignPlan(
-		input.campaign.disclosure.executionSeed,
-		input.campaign.disclosure.repetitions,
+		disclosure.executionSeed,
+		disclosure.repetitions,
+		engines,
 	);
 	if (
 		input.campaign.runs.some((run, index) => {
@@ -126,12 +161,17 @@ export function buildSemanticBlindArtifacts(input: {
 
 	const caseById = new Map(input.contract.cases.map((item) => [item.id, item]));
 	const sourceSamples = input.campaign.runs.flatMap((run) => {
-		assertSafeArtifactName(run.outputFile);
+		assertSafeArtifactName(run.outputFile, engines);
 		const artifactPath = resolve(input.campaignDirectory, run.outputFile);
 		const bytes = readFileSync(artifactPath);
 		if (sha256Bytes(bytes) !== run.artifactSha256)
 			throw new Error(`campaign artifact hash mismatch: ${run.outputFile}`);
-		validateRawArtifact(artifactPath, run, input.contract.cases);
+		validateRawArtifact(
+			artifactPath,
+			run,
+			input.contract.cases,
+			disclosure.topK,
+		);
 		const artifact = JSON.parse(bytes.toString("utf8")) as RawArtifact;
 		return artifact.cases.map((result) => {
 			const benchmarkCase = caseById.get(result.caseId);

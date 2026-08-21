@@ -68,6 +68,130 @@ describe("semantic blind packet CLI", () => {
 		}
 	});
 
+	it("consumes a disclosed subset without inventing an absent engine arm", () => {
+		const directory = mkdtempSync(resolve(tmpdir(), "semantic-blind-subset-"));
+		try {
+			const current = semanticBlindFixture(directory, {
+				engines: ["naia", "mem0"],
+				schemaVersion: "naia-memory-semantic-campaign-v3",
+			});
+			const artifacts = buildSemanticBlindArtifacts({
+				contract: current.contract,
+				campaign: current.campaign,
+				campaignDirectory: directory,
+				blindingSeed: "private-blinding-seed",
+				contractSha256: "contract-hash",
+				campaignSha256: "campaign-hash",
+			});
+			expect(artifacts.packet.samples).toHaveLength(4);
+			expect(
+				new Set(artifacts.seal.samples.map((sample) => sample.engine)),
+			).toEqual(new Set(["naia", "mem0"]));
+			expect(JSON.stringify(artifacts.seal)).not.toContain("hindsight");
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects malformed v3 engine disclosures before consuming artifacts", () => {
+		const directory = mkdtempSync(resolve(tmpdir(), "semantic-blind-invalid-"));
+		try {
+			const current = semanticBlindFixture(directory, {
+				engines: ["naia", "mem0"],
+				schemaVersion: "naia-memory-semantic-campaign-v3",
+			});
+			const invalidCampaigns = [
+				{ ...current.campaign, disclosure: undefined },
+				{
+					...current.campaign,
+					disclosure: {
+						...current.campaign.disclosure,
+						engines: ["naia"],
+					},
+				},
+				{
+					...current.campaign,
+					disclosure: {
+						...current.campaign.disclosure,
+						engines: ["naia", "naia"],
+					},
+				},
+				{
+					...current.campaign,
+					disclosure: {
+						...current.campaign.disclosure,
+						engines: ["naia", "graphiti"],
+					},
+				},
+				{
+					...current.campaign,
+					disclosure: {
+						...current.campaign.disclosure,
+						engines: [1, 2],
+					},
+				},
+				{
+					...current.campaign,
+					disclosure: { ...current.campaign.disclosure, repetitions: 3 },
+				},
+			];
+			for (const campaign of invalidCampaigns)
+				expect(() =>
+					buildSemanticBlindArtifacts({
+						contract: current.contract,
+						campaign: campaign as typeof current.campaign,
+						campaignDirectory: directory,
+						blindingSeed: "seed",
+						contractSha256: "contract",
+						campaignSha256: "campaign",
+					}),
+				).toThrow("invalid semantic campaign manifest");
+			const legacy = semanticBlindFixture(directory);
+			expect(() =>
+				buildSemanticBlindArtifacts({
+					contract: legacy.contract,
+					campaign: {
+						...legacy.campaign,
+						disclosure: {
+							...legacy.campaign.disclosure,
+							engines: ["naia", "mem0"],
+						},
+					},
+					campaignDirectory: directory,
+					blindingSeed: "seed",
+					contractSha256: "contract",
+					campaignSha256: "campaign",
+				}),
+			).toThrow("invalid semantic campaign manifest");
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
+
+	it("accepts a legacy v2 manifest that explicitly declares the canonical engines", () => {
+		const directory = mkdtempSync(resolve(tmpdir(), "semantic-blind-v2-"));
+		try {
+			const current = semanticBlindFixture(directory);
+			const artifacts = buildSemanticBlindArtifacts({
+				contract: current.contract,
+				campaign: {
+					...current.campaign,
+					disclosure: {
+						...current.campaign.disclosure,
+						engines: ["hindsight", "mem0", "naia"],
+					},
+				},
+				campaignDirectory: directory,
+				blindingSeed: "seed",
+				contractSha256: "contract",
+				campaignSha256: "campaign",
+			});
+			expect(artifacts.packet.samples).toHaveLength(9);
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
+
 	it("fails closed on a forged campaign schedule or artifact hash", () => {
 		const directory = mkdtempSync(resolve(tmpdir(), "semantic-blind-"));
 		try {

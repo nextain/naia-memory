@@ -12,7 +12,13 @@ function sha256Json(value: unknown): string {
 	return sha256(JSON.stringify(value));
 }
 
-export function semanticBlindFixture(directory: string) {
+export function semanticBlindFixture(
+	directory: string,
+	options?: {
+		engines: Array<"hindsight" | "mem0" | "naia">;
+		schemaVersion: "naia-memory-semantic-campaign-v3";
+	},
+) {
 	const contract: MemoryUpdateContract = {
 		schemaVersion: "naia-memory-update-contract-v1",
 		tier: "semantic-update-interpretation",
@@ -39,7 +45,13 @@ export function semanticBlindFixture(directory: string) {
 	const contractPath = resolve(directory, "contract.json");
 	writeFileSync(contractPath, JSON.stringify(contract));
 	const executionSeed = "frozen-campaign";
-	const runs = buildSemanticCampaignPlan(executionSeed, 3).map((run) => {
+	const engines = options?.engines ?? ["hindsight", "mem0", "naia"];
+	const repetitions = engines.length;
+	const runs = buildSemanticCampaignPlan(
+		executionSeed,
+		repetitions,
+		engines,
+	).map((run) => {
 		const output = {
 			ingestionReceipts: [{ outcome: "opaque" }],
 			nativeState: [{ nativeId: `${run.engine}-native`, content: "서울 거주" }],
@@ -81,8 +93,14 @@ export function semanticBlindFixture(directory: string) {
 		return { ...run, artifactSha256: sha256(bytes) };
 	});
 	const campaign = {
-		schemaVersion: "naia-memory-semantic-campaign-v2" as const,
-		disclosure: { executionSeed, repetitions: 3, topK: 5 },
+		schemaVersion:
+			options?.schemaVersion ?? ("naia-memory-semantic-campaign-v2" as const),
+		disclosure: {
+			executionSeed,
+			repetitions,
+			topK: 5,
+			...(options ? { engines } : {}),
+		},
 		runs,
 	};
 	const campaignPath = resolve(directory, "campaign.json");
