@@ -40,13 +40,14 @@ export const SEMANTIC_PUBLIC_GATE_ARTIFACT_NAMES = [
 
 export const SEMANTIC_PUBLIC_GATE_BLINDING_SEED_INDEX = 11;
 
-type ArtifactName = (typeof SEMANTIC_PUBLIC_GATE_ARTIFACT_NAMES)[number];
+export type SemanticPublicGateArtifactName =
+	(typeof SEMANTIC_PUBLIC_GATE_ARTIFACT_NAMES)[number];
 type ArtifactReference = { path: string; sha256: string };
 
 export type SemanticPublicGateManifest = {
 	schemaVersion: "naia-memory-semantic-public-gate-manifest-v1";
 	blindingSeed: string;
-	artifacts: Record<ArtifactName, ArtifactReference>;
+	artifacts: Record<SemanticPublicGateArtifactName, ArtifactReference>;
 };
 
 function exactKeys(
@@ -147,7 +148,7 @@ export async function loadSemanticPublicGateManifest(
 		"semantic public gate manifest artifacts",
 	);
 	const directory = dirname(absoluteManifestPath);
-	const paths = new Map<ArtifactName, string>();
+	const paths = new Map<SemanticPublicGateArtifactName, string>();
 	for (const name of SEMANTIC_PUBLIC_GATE_ARTIFACT_NAMES) {
 		const reference = artifacts[name];
 		if (!reference || typeof reference !== "object" || Array.isArray(reference))

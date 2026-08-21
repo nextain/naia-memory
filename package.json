@@ -48,6 +48,7 @@
 		"benchmark:semantic-model-adjudicator": "tsx src/benchmark/quality/semantic-model-adjudicator-cli.ts",
 		"benchmark:semantic-public-gate": "tsx src/benchmark/quality/semantic-public-gate-cli.ts",
 		"benchmark:semantic-public-gate-manifest": "tsx src/benchmark/quality/semantic-public-gate-manifest-cli.ts",
+		"benchmark:semantic-public-gate-manifest-generate": "tsx src/benchmark/quality/semantic-public-gate-manifest-generator-cli.ts",
 		"benchmark:semantic-sample-size": "tsx src/benchmark/quality/semantic-sample-size-cli.ts",
 		"benchmark:semantic-corpus-gate": "tsx src/benchmark/quality/semantic-corpus-gate-cli.ts",
 		"benchmark:semantic-signing-packet": "tsx src/benchmark/quality/semantic-attestation-packet-cli.ts",

@@ -1081,3 +1081,45 @@ competitiveness remains **NO-GO**. The next operational hardening step is a
 deterministic manifest generator and signed/timestamped manifest receipt; the
 next evidentiary step remains the real independently operated multilingual
 campaign.
+
+## Deterministic campaign-manifest generation
+
+The operator no longer has to calculate and paste 25 artifact hashes into the
+public-gate manifest. A strict
+`naia-memory-semantic-public-gate-manifest-draft-v1` file names each artifact
+path once; the generator performs bounded no-follow reads, rejects lexical and
+symbolic-link escapes, hashes the exact bytes, and emits a stable, ordered
+manifest. Output creation uses an exclusive temporary file and an atomic hard
+link, so an existing destination is never replaced. The generated file is mode
+`0600`, and the existing manifest loader immediately rereads every source and
+verifies every generated hash before the command reports success.
+
+The complete Ed25519/RFC 3161 integration proof now creates its public-gate
+manifest through this generator rather than synthesizing hashes in test code.
+Regression coverage proves deterministic bytes, source-mutation sensitivity,
+exact schema and artifact names, lexical and intermediate/final symbolic-link
+rejection, bounded intake, output-directory confinement, and preservation of an
+occupied destination. The repository passes 82 test files and 797 tests, both
+TypeScript checks, the production build, scoped Biome, and `git diff --check`.
+The workspace-specific `packages/benchmark-contract` verifier is not present in
+this repository, so its unrelated package commands are not claimed; the
+semantic public-gate contract is covered by the focused and full-path tests.
+
+Both requested external adversarial reviewers inspected the repository until
+their process limits, but neither returned a usable verdict: Claude timed out
+after 180 seconds during tool use, while the earlier Claude/OpenCode design pass
+also reached its limits without a verdict. They are `NOT_RUN`, not approval,
+and recovery mode does not support a formal review-pass `CLEAN` claim. The
+implementation therefore retains conservative boundaries identified during
+threat modeling: no overwrite, no path escape, exact bytes, and immediate
+independent loader verification.
+
+This is an operational integrity improvement, not a score improvement. The
+generator does not authenticate who selected the draft paths, eliminate every
+filesystem race after successful verification, sign or timestamp the manifest,
+or prove participant identity, independence, native-language competence, or
+benchmark generalization. It adds no engine observation and public
+competitiveness remains **NO-GO**. The next hardening stage is a detached
+Ed25519 signature and RFC 3161 receipt over the exact generated manifest digest;
+the decisive evidence stage remains execution of the frozen campaign by
+independently controlled multilingual participants and engines.

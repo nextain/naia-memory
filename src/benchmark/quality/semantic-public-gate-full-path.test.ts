@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -19,6 +18,7 @@ import {
 	writePowerReviewFixture,
 } from "./semantic-public-gate-full-path-pilot.test-support.js";
 import { runSemanticPublicGateManifestCli } from "./semantic-public-gate-manifest-cli.js";
+import { runSemanticPublicGateManifestGeneratorCli } from "./semantic-public-gate-manifest-generator-cli.js";
 import { SEMANTIC_PUBLIC_GATE_ARTIFACT_NAMES } from "./semantic-public-gate-manifest.js";
 
 const roots: string[] = [];
@@ -136,30 +136,28 @@ describe("semantic public gate CLI", () => {
 		];
 		const filePaths = gateArgs.filter((_, index) => index !== 11);
 		const artifacts = Object.fromEntries(
-			await Promise.all(
-				SEMANTIC_PUBLIC_GATE_ARTIFACT_NAMES.map(async (name, index) => {
-					const path = filePaths[index] as string;
-					return [
-						name,
-						{
-							path: basename(path),
-							sha256: createHash("sha256")
-								.update(await readFile(path))
-								.digest("hex"),
-						},
-					];
-				}),
-			),
+			SEMANTIC_PUBLIC_GATE_ARTIFACT_NAMES.map((name, index) => [
+				name,
+				basename(filePaths[index] as string),
+			]),
 		);
-		const manifestPath = join(directory, "public-gate-manifest.json");
+		const draftPath = join(directory, "public-gate-manifest-draft.json");
 		await writeFile(
-			manifestPath,
+			draftPath,
 			JSON.stringify({
-				schemaVersion: "naia-memory-semantic-public-gate-manifest-v1",
+				schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v1",
 				blindingSeed: gateArgs[11],
 				artifacts,
 			}),
 		);
+		const manifestPath = join(directory, "public-gate-manifest.json");
+		expect(
+			await runSemanticPublicGateManifestGeneratorCli([
+				draftPath,
+				manifestPath,
+			]),
+		).toBe(0);
+		output.pop();
 
 		expect(await runSemanticPublicGateManifestCli([manifestPath])).toBe(1);
 		const result = JSON.parse(output.pop() ?? "{}");
