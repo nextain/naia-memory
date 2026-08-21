@@ -3,10 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import type { Fact, MemoryAdapter } from "../../memory/types.js";
-import {
-	recordDeleteOutcome,
-	resetUsage,
-} from "../../memory/usage-tracker.js";
+import { recordDeleteOutcome, resetUsage } from "../../memory/usage-tracker.js";
 import {
 	NaiaSemanticBridge,
 	type NaiaSemanticProvider,
@@ -73,6 +70,14 @@ describe("Naia semantic bridge", () => {
 				denied: 0,
 				verifier_failed: 0,
 				oversized: 0,
+			},
+			mutationOutcomeDelta: {
+				untrusted_contradiction_denied: 0,
+				structured_conflict_denied: 0,
+				structured_duplicate_noop: 0,
+				structured_duplicate_reconciled: 0,
+				structured_supersession_applied: 0,
+				structured_fact_created: 0,
 			},
 		});
 	});

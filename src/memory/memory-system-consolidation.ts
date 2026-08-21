@@ -21,7 +21,7 @@ import {
 	resolveStructuredMutationPolicy,
 } from "./structured-mutation-policy.js";
 import type { ConsolidationResult, Fact } from "./types.js";
-import { recordDeleteOutcome } from "./usage-tracker.js";
+import { recordDeleteOutcome, recordMutationOutcome } from "./usage-tracker.js";
 
 /** Sleep-cycle consolidation and adapter backup operations. */
 export abstract class MemorySystemConsolidation extends MemorySystemBackup {
@@ -223,9 +223,13 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					});
 
 					if (duplicate) {
-						if (!mutationPolicy.trustedUserMutation) continue;
+						if (!mutationPolicy.trustedUserMutation) {
+							if (ef.structured)
+								recordMutationOutcome("structured_conflict_denied");
+							continue;
+						}
 						if (ef.structured) {
-							factsUpdated += await reconcileStructuredDuplicate({
+							const reconciled = await reconcileStructuredDuplicate({
 								adapter: this.adapter,
 								contradictionFilter: this.contradictionFilter,
 								existingFacts,
@@ -234,6 +238,12 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								content: ef.content,
 								now,
 							});
+							factsUpdated += reconciled;
+							recordMutationOutcome(
+								reconciled > 0
+									? "structured_duplicate_reconciled"
+									: "structured_duplicate_noop",
+							);
 						}
 						// Near-duplicate found — update metadata but don't create new entry
 						const newImportance = Math.max(
@@ -264,7 +274,10 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					}
 
 					const structured = ef.structured;
-					if (mutationPolicy.blockedUntrustedConflict) continue;
+					if (mutationPolicy.blockedUntrustedConflict) {
+						if (structured) recordMutationOutcome("structured_conflict_denied");
+						continue;
+					}
 					const contradictions = await resolveFactContradictions({
 						extracted: ef,
 						existingFacts,
@@ -329,6 +342,8 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 									validFrom: now,
 									validTo: null,
 								}); // R4 #26 Step 3a — supersede 시점 spike emit
+								if (structured)
+									recordMutationOutcome("structured_supersession_applied");
 								// (consolidate path).
 								await this.emitSpike({
 									factId: successorId,
@@ -358,6 +373,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						const deterministicId = newFact.id;
 						const newImportance = newFact.importance;
 						await this.adapter.semantic.upsert(newFact);
+						if (structured) recordMutationOutcome("structured_fact_created");
 						factsCreated++;
 						// R4 #26 Step 3b — high-importance + active context relevant
 						// 시점 spike emit. naia-agent 가 active context push 했고,

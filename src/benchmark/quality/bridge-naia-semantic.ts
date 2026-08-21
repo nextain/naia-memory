@@ -73,12 +73,14 @@ export class NaiaSemanticBridge implements SemanticEngineBridge {
 
 	async ingestTurn(turn: { content: string }): Promise<SemanticIngestReceipt> {
 		const before = deleteOutcomeCounters();
+		const mutationBefore = mutationOutcomeCounters();
 		await this.provider.encode(
 			{ content: turn.content, role: "user" },
 			{ project: ISOLATED_PROJECT },
 		);
 		await this.provider.consolidate();
 		const after = deleteOutcomeCounters();
+		const mutationAfter = mutationOutcomeCounters();
 		return {
 			outcome: "opaque",
 			deleteOutcomeDelta: {
@@ -87,6 +89,13 @@ export class NaiaSemanticBridge implements SemanticEngineBridge {
 				verifier_failed: after.verifier_failed - before.verifier_failed,
 				oversized: after.oversized - before.oversized,
 			},
+			mutationOutcomeDelta: Object.fromEntries(
+				Object.keys(mutationAfter).map((key) => [
+					key,
+					mutationAfter[key as keyof typeof mutationAfter] -
+						mutationBefore[key as keyof typeof mutationBefore],
+				]),
+			) as SemanticIngestReceipt["mutationOutcomeDelta"],
 		};
 	}
 
@@ -115,6 +124,21 @@ export class NaiaSemanticBridge implements SemanticEngineBridge {
 			}
 		}
 	}
+}
+
+function mutationOutcomeCounters() {
+	const outcomes = getUsage().mutationOutcomes;
+	return {
+		untrusted_contradiction_denied:
+			outcomes?.untrusted_contradiction_denied ?? 0,
+		structured_conflict_denied: outcomes?.structured_conflict_denied ?? 0,
+		structured_duplicate_noop: outcomes?.structured_duplicate_noop ?? 0,
+		structured_duplicate_reconciled:
+			outcomes?.structured_duplicate_reconciled ?? 0,
+		structured_supersession_applied:
+			outcomes?.structured_supersession_applied ?? 0,
+		structured_fact_created: outcomes?.structured_fact_created ?? 0,
+	};
 }
 
 function deleteOutcomeCounters() {

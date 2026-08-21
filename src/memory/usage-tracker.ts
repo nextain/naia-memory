@@ -26,7 +26,24 @@ export type DeleteOutcome =
 	| "verifier_failed"
 	| "oversized";
 
-export type MutationOutcome = "untrusted_contradiction_denied";
+export type MutationOutcome =
+	| "untrusted_contradiction_denied"
+	| "structured_conflict_denied"
+	| "structured_duplicate_noop"
+	| "structured_duplicate_reconciled"
+	| "structured_supersession_applied"
+	| "structured_fact_created";
+
+function emptyMutationOutcomes(): Record<MutationOutcome, number> {
+	return {
+		untrusted_contradiction_denied: 0,
+		structured_conflict_denied: 0,
+		structured_duplicate_noop: 0,
+		structured_duplicate_reconciled: 0,
+		structured_supersession_applied: 0,
+		structured_fact_created: 0,
+	};
+}
 
 const _stats: UsageStats = {
 	llmCalls: 0,
@@ -42,7 +59,7 @@ const _stats: UsageStats = {
 		verifier_failed: 0,
 		oversized: 0,
 	},
-	mutationOutcomes: { untrusted_contradiction_denied: 0 },
+	mutationOutcomes: emptyMutationOutcomes(),
 };
 
 export function resetUsage(): void {
@@ -59,12 +76,12 @@ export function resetUsage(): void {
 		verifier_failed: 0,
 		oversized: 0,
 	};
-	_stats.mutationOutcomes = { untrusted_contradiction_denied: 0 };
+	_stats.mutationOutcomes = emptyMutationOutcomes();
 }
 
 export function recordMutationOutcome(outcome: MutationOutcome): void {
 	if (!_stats.mutationOutcomes) {
-		_stats.mutationOutcomes = { untrusted_contradiction_denied: 0 };
+		_stats.mutationOutcomes = emptyMutationOutcomes();
 	}
 	_stats.mutationOutcomes[outcome]++;
 }

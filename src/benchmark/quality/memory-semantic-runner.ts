@@ -1,5 +1,8 @@
 import { createHash } from "node:crypto";
-import type { DeleteOutcome } from "../../memory/usage-tracker.js";
+import type {
+	DeleteOutcome,
+	MutationOutcome,
+} from "../../memory/usage-tracker.js";
 import {
 	type MemoryUpdateCase,
 	type MemoryUpdateContract,
@@ -16,6 +19,8 @@ export type SemanticIngestReceipt = {
 	nativeOperationCount?: number;
 	/** Privacy-safe lifecycle counters; no memory content or benchmark labels. */
 	deleteOutcomeDelta?: Record<DeleteOutcome, number>;
+	/** Privacy-safe structured mutation branch counters; no fixture labels. */
+	mutationOutcomeDelta?: Record<MutationOutcome, number>;
 };
 
 export type SemanticEngineBridge = {

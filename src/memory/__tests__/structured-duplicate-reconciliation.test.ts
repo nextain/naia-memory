@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { LocalAdapter } from "../adapters/local.js";
 import { MemorySystem } from "../index.js";
 import type { Fact, FactExtractor, StructuredFact } from "../index.js";
+import { getUsage, resetUsage } from "../usage-tracker.js";
 
 const residence = (value: string): StructuredFact => ({
 	subject: "user",
@@ -41,6 +42,7 @@ describe("structured duplicate reconciliation", () => {
 	});
 
 	it("retires an older active value even when the new value is already stored", async () => {
+		resetUsage();
 		rootDir = await mkdtemp(join(tmpdir(), "duplicate-reconciliation-"));
 		const adapter = new LocalAdapter(join(rootDir, "store.json"));
 		await adapter.semantic.upsert(storedFact("old", "Seoul"));
@@ -75,6 +77,12 @@ describe("structured duplicate reconciliation", () => {
 			successorId: "canonical",
 		});
 		expect(facts.filter((fact) => fact.status === "active")).toHaveLength(1);
+		expect(getUsage().mutationOutcomes).toMatchObject({
+			structured_duplicate_reconciled: 1,
+			structured_duplicate_noop: 0,
+			structured_supersession_applied: 0,
+			structured_fact_created: 0,
+		});
 		await system.close();
 	});
 });

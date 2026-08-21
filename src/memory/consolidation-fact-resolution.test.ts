@@ -104,6 +104,11 @@ describe("resolveFactContradictions trust boundary", () => {
 		expect(filter.filter).toHaveBeenCalledOnce();
 		expect(getUsage().mutationOutcomes).toEqual({
 			untrusted_contradiction_denied: 1,
+			structured_conflict_denied: 0,
+			structured_duplicate_noop: 0,
+			structured_duplicate_reconciled: 0,
+			structured_supersession_applied: 0,
+			structured_fact_created: 0,
 		});
 	});
 

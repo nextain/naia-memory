@@ -466,6 +466,38 @@ globally superior. Public status remains **NO-GO** until the native-human,
 released-commit campaign supplies enough independent families and its full
 decision rule receives independent statistical validation.
 
+## Structured mutation localization stage (2026-08-22)
+
+The Naia bridge now emits privacy-safe per-turn structured-mutation counters.
+They disclose branch outcomes, not memory text or benchmark labels: structured
+fact creation, duplicate no-op/reconciliation, supersession, and denied
+conflicts. This instrumentation does not change retrieval or scoring behavior.
+
+Four fresh executions of the frozen nine-case EN/KO/JA contract produced 12/12
+structured update turns with exactly one `structured_supersession_applied` and
+zero conflict denials. All 12 deletion cases returned zero memories. Ten of the
+12 update queries returned one memory; two English update queries returned two.
+The previous stale symptom therefore did not reproduce as a failed mutation:
+the predecessor was superseded in every observed update. Any future stale
+judgment can now be separated into mutation failure versus retrieval-surface or
+adjudication effects instead of being attributed to the update engine as a
+whole.
+
+This is mechanistic localization evidence, not a new comparative score. The
+four executions reuse a development-visible generated contract, are not
+independent, and were not human-adjudicated. The counters are process-global;
+per-turn deltas are valid for the current sequential semantic runner but would
+need async-local or bridge-local accounting before concurrent ingestion in one
+process. OpenCode returned a server error and Claude produced no verdict within
+the review window, so this stage has no completed external adversarial-review
+approval. The public competitiveness status remains **NO-GO**.
+
+Raw artifact SHA-256 values, in execution order, were
+`a30504bd67cda3475203c0df204a02e671b50a547a8a139a23e2fc59f4c3ce35`,
+`49cfeebdb0c3d51c8c3f3ece48551a0fa74bda1f48b9c25f2369bf72b6719a3b`,
+`90a9667bbb1dc0bc292c1f98ce1390a17df4613db65a275c9902c8f9acd6a5dc`,
+and `85819fb46425ce23f5483c2d26c6b4174be9e18ba9155071ca9b1c2dbf2330ba`.
+
 ## Complete-rule sample-size simulation stage
 
 The repository now has a fail-closed schema and deterministic simulator for the
