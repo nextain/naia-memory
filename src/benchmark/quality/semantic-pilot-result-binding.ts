@@ -1,5 +1,10 @@
 import type { MemoryUpdateContract } from "./memory-update-contract.js";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
+import {
+	type Rfc3161TimestampEvidence,
+	type Rfc3161TimestampTrustPolicy,
+	validateRfc3161PriorExistence,
+} from "./rfc3161-timestamp.js";
 import type { SemanticAnalysisPlan } from "./semantic-analysis-plan.js";
 import {
 	type SemanticPilotCollectionPlan,
@@ -22,6 +27,8 @@ export type SemanticPilotResultBindingInput = {
 	trustPolicy: SemanticPowerReviewTrustPolicy;
 	forbiddenTrustIdentities?: Iterable<string>;
 	forbiddenTrustPublicKeys?: Iterable<string>;
+	timestampEvidence?: Rfc3161TimestampEvidence;
+	timestampTrustPolicy?: Rfc3161TimestampTrustPolicy;
 };
 
 function sameIdentifiers(left: string[], right: string[]): boolean {
@@ -41,7 +48,8 @@ export function validateSemanticPilotResultBinding(
 	boundAssignmentCount: number;
 	reviewedConstructionClusterCount: number;
 	constructionCauseIndependenceVerified: false;
-	priorAssignmentTimingVerified: false;
+	priorAssignmentTimingVerified: boolean;
+	timestampedAt?: string;
 } {
 	buildSemanticPilotCollectionPacket(input.collectionPlan);
 	if (
@@ -126,10 +134,28 @@ export function validateSemanticPilotResultBinding(
 				`semantic pilot planned construction causes mismatch: ${assignment.constructionClusterId}`,
 			);
 	}
+	if (Boolean(input.timestampEvidence) !== Boolean(input.timestampTrustPolicy))
+		throw new Error(
+			"RFC 3161 timestamp evidence and verifier trust policy must be supplied together",
+		);
+	const timestamp = input.timestampEvidence
+		? validateRfc3161PriorExistence({
+				collectionPlan: input.collectionPlan,
+				evidence: input.timestampEvidence,
+				trustPolicy: input.timestampTrustPolicy as Rfc3161TimestampTrustPolicy,
+				earliestAuthoredAt: new Date(
+					Math.min(
+						...input.pilotContract.cases.map((item) =>
+							Date.parse(item.provenance?.authoredAt ?? ""),
+						),
+					),
+				).toISOString(),
+			})
+		: { priorAssignmentTimingVerified: false as const };
 	return {
 		...power,
 		pilotCollectionBindingQualified: true,
 		boundAssignmentCount: assignments.size,
-		priorAssignmentTimingVerified: false,
+		...timestamp,
 	};
 }

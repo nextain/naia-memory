@@ -202,6 +202,21 @@ describe("semantic pilot result binding", () => {
 		);
 	});
 
+	it("requires timestamp evidence and verifier trust policy together", () => {
+		const current = {
+			...fixture(),
+			timestampEvidence: {
+				schemaVersion: "naia-memory-rfc3161-timestamp-evidence-v1" as const,
+				collectionPlanSha256: "0".repeat(64),
+				tokenSha256: "0".repeat(64),
+				tokenPath: "unused.tsr",
+			},
+		};
+		expect(() => validateSemanticPilotResultBinding(current)).toThrow(
+			"evidence and verifier trust policy must be supplied together",
+		);
+	});
+
 	it.each([
 		["language", "semantic pilot assignment language mismatch"],
 		["decision", "semantic pilot assignment decision mismatch"],

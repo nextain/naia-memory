@@ -728,3 +728,32 @@ and changed-file Biome. The remaining empirical work is to recruit independent
 native participants, execute this packet, bind completed cases back to their
 assignments and construction causes, and obtain the independent signed power
 review before preregistration.
+
+## Externally trusted pilot-plan timestamp gate
+
+The public gate can now verify that the exact pilot collection plan existed
+before the first pilot case was authored. It verifies an RFC 3161
+`TimeStampResp` against the canonical plan SHA-256, a separately supplied
+verifier-owned trust policy, a pinned CA-bundle SHA-256, an authorized TSA
+policy OID, the timestamp-signing certificate purpose, and a conservative
+chronology boundary. The token and CA bundle are read once, hashed, and copied
+to private immutable temporary files before OpenSSL sees them, closing
+hash-then-reopen substitution races.
+
+The first OpenCode adversarial review returned **BLOCKED** because the initial
+draft placed the trusted CA hash and authorized policy OID in the same
+prover-supplied evidence object. That proved internal consistency but allowed a
+submitter to mint a private TSA and did not establish independent prior
+existence. The implementation now separates timestamp evidence from the
+verifier-owned trust policy and requires both together. It also rejects the
+entire timestamp second unless it precedes authorship. The focused OpenCode
+re-review returned **CLEAN**; the remaining operational assumptions are that
+the verifier controls the trust-policy file and runs a trusted OpenSSL binary.
+
+This stage changes no benchmark score and does not retroactively timestamp the
+existing pilot plan. `priorAssignmentTimingVerified` becomes true only for a
+future campaign carrying a valid externally trusted token and policy. Public
+competitiveness therefore remains **NO-GO** pending real independent pilot
+collection, construction-cause independence evidence, the preregistered public
+campaign, same-protocol competitor runs, uncertainty, latency, and
+released-commit receipts.
