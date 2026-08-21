@@ -457,29 +457,36 @@ async function writePowerReviewFixture(
 	directory: string,
 	publicEvidenceContract: MemoryUpdateContract,
 ) {
-	const cases = (["ko", "en", "ja"] as const).map((language) => ({
-		id: `pilot-${language}`,
-		familyId: `pilot-family-${language}`,
-		split: "development" as const,
-		language,
-		turns: [{ content: `pilot-${language}`, at: "2026-01-01T00:00:00Z" }],
-		query: `pilot-query-${language}`,
-		expectedCurrentIds: ["current"],
-		forbiddenStaleIds: ["stale"],
-		expectedDeletedIds: [],
-		noUpdateIds: [],
-		expectedDecision: "update" as const,
-		provenance: {
-			authorId: `pilot-author-${language}`,
-			constructionClusterId: `pilot-construction-${language}`,
-			authorNativeLanguages: [language],
-			authoredAt: "2026-01-01T01:00:00Z",
-			reviewerId: `pilot-native-reviewer-${language}`,
-			reviewerNativeLanguages: [language],
-			reviewedAt: "2026-01-01T02:00:00Z",
-			reviewDecision: "accepted" as const,
-		},
-	}));
+	const cases = (["ko", "en", "ja"] as const).flatMap((language) =>
+		(["update", "delete", "no-update"] as const).map((decision) => ({
+			id: `pilot-${language}-${decision}`,
+			familyId: `pilot-family-${language}-${decision}`,
+			split: "development" as const,
+			language,
+			turns: [
+				{
+					content: `pilot-${language}-${decision}`,
+					at: "2026-01-01T00:00:00Z",
+				},
+			],
+			query: `pilot-query-${language}-${decision}`,
+			expectedCurrentIds: ["current"],
+			forbiddenStaleIds: ["stale"],
+			expectedDeletedIds: decision === "delete" ? ["deleted"] : [],
+			noUpdateIds: decision === "no-update" ? ["unchanged"] : [],
+			expectedDecision: decision,
+			provenance: {
+				authorId: `pilot-author-${language}`,
+				constructionClusterId: `pilot-construction-${language}-${decision}`,
+				authorNativeLanguages: [language],
+				authoredAt: "2026-01-01T01:00:00Z",
+				reviewerId: `pilot-native-reviewer-${language}`,
+				reviewerNativeLanguages: [language],
+				reviewedAt: "2026-01-01T02:00:00Z",
+				reviewDecision: "accepted" as const,
+			},
+		})),
+	);
 	const pilotContract: MemoryUpdateContract = {
 		schemaVersion: "naia-memory-update-contract-v1",
 		tier: "semantic-update-interpretation",
@@ -514,12 +521,28 @@ async function writePowerReviewFixture(
 		statement: "FROZEN_BEFORE_CAMPAIGN_EXECUTION",
 	} satisfies SemanticSampleSizeAssumptions;
 	const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+	const collectionPlan = {
+		schemaVersion: "naia-memory-semantic-pilot-collection-plan-v1" as const,
+		publicContractSha256: evidenceObjectSha256(publicEvidenceContract),
+		powerReviewerId: "external-power-reviewer",
+		createdAt: "2025-12-31T00:00:00Z",
+		assignments: cases.map((item) => ({
+			assignmentId: item.id,
+			language: item.language,
+			decision: item.expectedDecision,
+			authorId: item.provenance.authorId,
+			reviewerId: item.provenance.reviewerId,
+			constructionClusterId: item.provenance.constructionClusterId,
+			causeIds: [`source-${item.language}`, `editor-${item.language}`],
+		})),
+	};
 	const unsigned = {
 		schemaVersion: "naia-memory-semantic-power-review-v1" as const,
 		reviewer: "external-power-reviewer",
 		pilotContractSha256: evidenceObjectSha256(pilotContract),
 		publicContractSha256: evidenceObjectSha256(publicEvidenceContract),
 		assumptionsSha256: evidenceObjectSha256(assumptions),
+		collectionPlanSha256: evidenceObjectSha256(collectionPlan),
 		pilotCompletedAt: "2026-01-01T03:00:00Z",
 		reviewedAt: "2026-01-03T00:00:00Z",
 		purpose: "POWER_ASSUMPTION_ESTIMATION_ONLY" as const,
@@ -541,17 +564,19 @@ async function writePowerReviewFixture(
 		).toString("base64"),
 	};
 	const paths = [
+		join(directory, "power-pilot-collection-plan.json"),
 		join(directory, "power-pilot-contract.json"),
 		join(directory, "sample-size-assumptions.json"),
 		join(directory, "power-review.json"),
 		join(directory, "power-review-trust-policy.json"),
 	];
 	await Promise.all([
-		writeFile(paths[0], JSON.stringify(pilotContract)),
-		writeFile(paths[1], JSON.stringify(assumptions)),
-		writeFile(paths[2], JSON.stringify(review)),
+		writeFile(paths[0], JSON.stringify(collectionPlan)),
+		writeFile(paths[1], JSON.stringify(pilotContract)),
+		writeFile(paths[2], JSON.stringify(assumptions)),
+		writeFile(paths[3], JSON.stringify(review)),
 		writeFile(
-			paths[3],
+			paths[4],
 			JSON.stringify({
 				reviewerPublicKeys: {
 					"external-power-reviewer": publicKey
@@ -616,8 +641,11 @@ describe("semantic public gate CLI", () => {
 		).toBe(1);
 		expect(JSON.parse(output.pop() ?? "{}")).toMatchObject({
 			powerReviewQualified: true,
-			reviewedConstructionClusterCount: 3,
+			pilotCollectionBindingQualified: true,
+			boundAssignmentCount: 9,
+			reviewedConstructionClusterCount: 9,
 			constructionCauseIndependenceVerified: false,
+			priorAssignmentTimingVerified: false,
 			promotable: false,
 		});
 	});

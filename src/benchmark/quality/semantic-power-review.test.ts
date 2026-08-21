@@ -89,6 +89,7 @@ function fixture() {
 		pilotContractSha256: evidenceObjectSha256(pilotContract),
 		publicContractSha256: evidenceObjectSha256(publicContract),
 		assumptionsSha256: evidenceObjectSha256(assumptions),
+		collectionPlanSha256: "c".repeat(64),
 		pilotCompletedAt: "2026-01-01T03:00:00Z",
 		reviewedAt: "2026-01-01T05:00:00Z",
 		purpose: "POWER_ASSUMPTION_ESTIMATION_ONLY",

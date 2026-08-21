@@ -674,6 +674,38 @@ reviewed, the preregistered public corpus reaches its required construction
 cluster and case counts, all competitor executions have external receipts, and
 the frozen competitive and latency gates pass on a released commit.
 
+## Pilot result-to-assignment binding
+
+The public gate now requires the independent pilot collection plan in addition
+to the completed pilot contract and signed power review. Every completed case
+must use its assignment ID as the case ID and exactly match the predeclared
+language, update/delete/no-update decision, author, native reviewer, and unique
+construction cluster. The reviewed construction-cause IDs must also match the
+plan. The power review signature covers `collectionPlanSha256`, so replacing
+the plan after review invalidates the signature-bound evidence chain.
+
+This closes a concrete provenance bypass: a valid pilot contract can no longer
+qualify merely because its clusters happen to match a review; it must match all
+nine Korean, English, and Japanese assignment cells issued by the collection
+plan. The gate reports `pilotCollectionBindingQualified: true` only after the
+one-to-one check. It separately reports
+`constructionCauseIndependenceVerified: false` and
+`priorAssignmentTimingVerified: false`: a signed hash authenticates the
+reviewer's attestation, but does not provide an external trusted timestamp or
+empirical proof that construction causes are organizationally independent.
+
+An initial Claude headless adversarial review returned **BLOCKED** for malformed
+timestamp defense, duplicate-ID defense in depth, an optional plan-hash field,
+and language that could overstate what was verified. All were corrected and
+covered by regressions. A second focused headless review returned **CLEAN**.
+The integrated change passes 75 test files and 753 tests, production build,
+both TypeScript checks, changed-file Biome, and `git diff --check`.
+
+No benchmark score changes in this step. Public status remains **NO-GO**. The
+next empirical requirement is still independently collected native-reviewed
+pilot data, followed by an externally timestamped/frozen plan if prior timing
+is to become verified rather than attested.
+
 ## Independent pilot collection packet
 
 The next implementation step turns the pilot requirement into deterministic,

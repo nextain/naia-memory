@@ -24,10 +24,11 @@ import {
 	isSemanticExecutionTrustPolicy,
 	validateSemanticExecutionEvidence,
 } from "./semantic-execution-evidence.js";
+import type { SemanticPilotCollectionPlan } from "./semantic-pilot-collection-packet.js";
+import { validateSemanticPilotResultBinding } from "./semantic-pilot-result-binding.js";
 import {
 	isSemanticPowerReview,
 	isSemanticPowerReviewTrustPolicy,
-	validateSemanticPowerReview,
 } from "./semantic-power-review.js";
 import {
 	isSemanticPublicAttestationBundle,
@@ -49,12 +50,12 @@ async function runSemanticEvidenceGateCli(
 			args.length !== 6 &&
 			args.length !== 12 &&
 			args.length !== 14 &&
-			args.length !== 18)
+			args.length !== 19)
 	) {
 		process.stderr.write(
 			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>${
 				mode === "public"
-					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json>]]]]"
+					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-collection-plan.json> <pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json>]]]]"
 					: ""
 			}\n`,
 		);
@@ -265,9 +266,21 @@ async function runSemanticEvidenceGateCli(
 							),
 						],
 					});
-					if (args.length === 18) {
-						const pilotContract = await readJson(
+					if (args.length === 19) {
+						const collectionPlan = await readJson(
 							args[14],
+							"power pilot collection plan",
+						);
+						if (
+							collectionPlan === null ||
+							typeof collectionPlan !== "object" ||
+							Array.isArray(collectionPlan)
+						)
+							throw new Error(
+								"semantic power pilot collection plan shape is invalid",
+							);
+						const pilotContract = await readJson(
+							args[15],
 							"power pilot contract",
 						);
 						if (
@@ -277,16 +290,16 @@ async function runSemanticEvidenceGateCli(
 						)
 							throw new Error("semantic power pilot contract shape is invalid");
 						const assumptions = await readJson(
-							args[15],
+							args[16],
 							"sample-size assumptions",
 						);
 						if (!isSemanticSampleSizeAssumptions(assumptions))
 							throw new Error("semantic sample-size assumptions are invalid");
-						const powerReview = await readJson(args[16], "power review");
+						const powerReview = await readJson(args[17], "power review");
 						if (!isSemanticPowerReview(powerReview))
 							throw new Error("semantic power review shape is invalid");
 						const powerTrust = await readJson(
-							args[17],
+							args[18],
 							"power review trust policy",
 						);
 						if (!isSemanticPowerReviewTrustPolicy(powerTrust))
@@ -295,7 +308,8 @@ async function runSemanticEvidenceGateCli(
 							);
 						analysisPlan = {
 							...analysisPlan,
-							...validateSemanticPowerReview({
+							...validateSemanticPilotResultBinding({
+								collectionPlan: collectionPlan as SemanticPilotCollectionPlan,
 								pilotContract: pilotContract as MemoryUpdateContract,
 								publicContract: contract,
 								assumptions,
@@ -368,8 +382,8 @@ async function runSemanticEvidenceGateCli(
 						promotable: false,
 						failure:
 							args.length >= 14
-								? args.length === 18
-									? "competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+								? args.length === 19
+									? "pilot review is attested but construction-cause independence and prior-assignment timing are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 									: "an independent pilot power review, competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 								: "a preregistered analysis plan, competitive thresholds, uncertainty, latency, and released-commit evidence are not evaluated by this gate",
 					})}\n`,

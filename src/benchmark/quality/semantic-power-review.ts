@@ -19,6 +19,7 @@ export type SemanticPowerReview = {
 	pilotContractSha256: string;
 	publicContractSha256: string;
 	assumptionsSha256: string;
+	collectionPlanSha256: string;
 	pilotCompletedAt: string;
 	reviewedAt: string;
 	purpose: "POWER_ASSUMPTION_ESTIMATION_ONLY";
@@ -73,6 +74,8 @@ export function isSemanticPowerReview(
 		SHA256.test(value.publicContractSha256) &&
 		typeof value.assumptionsSha256 === "string" &&
 		SHA256.test(value.assumptionsSha256) &&
+		typeof value.collectionPlanSha256 === "string" &&
+		SHA256.test(value.collectionPlanSha256) &&
 		typeof value.pilotCompletedAt === "string" &&
 		typeof value.reviewedAt === "string" &&
 		value.purpose === "POWER_ASSUMPTION_ESTIMATION_ONLY" &&
