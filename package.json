@@ -51,6 +51,7 @@
 		"benchmark:semantic-public-gate-sealed-manifest": "tsx src/benchmark/quality/semantic-public-gate-sealed-manifest-cli.ts",
 		"benchmark:semantic-public-gate-manifest-generate": "tsx src/benchmark/quality/semantic-public-gate-manifest-generator-cli.ts",
 		"benchmark:semantic-public-gate-manifest-sign": "tsx src/benchmark/quality/semantic-public-gate-manifest-signing-cli.ts",
+		"benchmark:binary-quantization-gate": "tsx src/benchmark/quality/binary-quantization-gate-cli.ts",
 		"benchmark:semantic-sample-size": "tsx src/benchmark/quality/semantic-sample-size-cli.ts",
 		"benchmark:semantic-corpus-gate": "tsx src/benchmark/quality/semantic-corpus-gate-cli.ts",
 		"benchmark:semantic-signing-packet": "tsx src/benchmark/quality/semantic-attestation-packet-cli.ts",
