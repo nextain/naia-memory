@@ -155,6 +155,48 @@ describe("public evidence promotion gate manifest and provenance", () => {
 		}
 	});
 
+	it("normalizes equivalent key encodings before checking role overlap", async () => {
+		const root = await mkdtemp(
+			join(tmpdir(), "naia-public-key-normalization-"),
+		);
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const publisherKey = trustPolicy.publisherPublicKeys["nextain-release"];
+			if (!publisherKey) throw new Error("fixture publisher key is missing");
+			const policy = {
+				...trustPolicy,
+				runnerPublicKeys: {
+					...trustPolicy.runnerPublicKeys,
+					"runner-naia": publisherKey.replaceAll("\n", "\r\n"),
+				},
+			};
+			expect(
+				(await evaluatePublicEvidenceFiles(manifest, root, policy)).failures,
+			).toContain("trusted role keys overlap: nextain-release and runner-naia");
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects one trusted identity mapped to multiple keys", async () => {
+		const root = await mkdtemp(join(tmpdir(), "naia-public-identity-keys-"));
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const policy = structuredClone(trustPolicy);
+			policy.nativeReviewerPublicKeysByLanguage.en ??= {};
+			policy.nativeReviewerPublicKeysByLanguage.en["reviewer-ko"] =
+				trustPolicy.nativeReviewerPublicKeysByLanguage.en?.["reviewer-en"] ??
+				"";
+			expect(
+				(await evaluatePublicEvidenceFiles(manifest, root, policy)).failures,
+			).toContain("trusted identity has multiple keys: reviewer-ko");
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
 	it("rejects one identity assigned to multiple trusted roles with different keys", async () => {
 		const root = await mkdtemp(join(tmpdir(), "naia-public-role-identity-"));
 		try {

@@ -1,3 +1,4 @@
+import { createPublicKey } from "node:crypto";
 import {
 	evidenceObjectSha256,
 	hasValidEvidenceSignature,
@@ -74,12 +75,26 @@ function validateTrustPolicy(
 		),
 	);
 	const keyOwners = new Map<string, string>();
+	const identityKeys = new Map<string, string>();
 	const identityRoles = new Map<string, string>();
 	for (const { identity, key, role } of roleKeys) {
-		const owner = keyOwners.get(key.trim());
+		let normalizedKey: string;
+		try {
+			normalizedKey = createPublicKey(key)
+				.export({ type: "spki", format: "der" })
+				.toString("base64");
+		} catch {
+			failures.push(`trusted ${role} key is invalid: ${identity}`);
+			continue;
+		}
+		const owner = keyOwners.get(normalizedKey);
 		if (owner && owner !== identity)
 			failures.push(`trusted role keys overlap: ${owner} and ${identity}`);
-		else keyOwners.set(key.trim(), identity);
+		else keyOwners.set(normalizedKey, identity);
+		const priorKey = identityKeys.get(identity);
+		if (priorKey && priorKey !== normalizedKey)
+			failures.push(`trusted identity has multiple keys: ${identity}`);
+		else identityKeys.set(identity, normalizedKey);
 		const priorRole = identityRoles.get(identity);
 		if (priorRole && priorRole !== role)
 			failures.push(

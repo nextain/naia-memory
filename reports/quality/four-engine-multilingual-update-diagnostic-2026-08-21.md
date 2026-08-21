@@ -113,7 +113,7 @@ does not establish out-of-distribution generalization.
 
 ## Verification
 
-- Project tests: 64 files, 682 tests passed
+- Project tests: 64 files, 684 tests passed
 - Typecheck: passed
 - Build: passed
 - `git diff --check`: passed
@@ -202,3 +202,16 @@ was rate-limited before returning a verdict, so it is not counted as approval.
 The full project now passes 64 files and 682 tests, typecheck, build, formatting,
 and diff checks. Public status remains NO-GO because no independent corpus,
 externally held signatures, or comparable engine execution receipts exist yet.
+
+The broader public-evidence gate now canonicalizes every trusted public key to
+its SPKI DER representation before enforcing role independence. This prevents
+equivalent PEM encodings, such as LF and CRLF variants of the same Ed25519 key,
+from bypassing key-reuse detection. It also enforces one key per trusted
+identity across languages and roles, while malformed keys fail closed. Two
+regressions cover equivalent encodings and one identity mapped to different
+keys. Claude Code Sonnet headless adversarial review returned `VERDICT: CLEAN`,
+with only a non-blocking operational suggestion to reject accidentally supplied
+private-key PEM more explicitly. The full project now passes 64 files and 684
+tests, typecheck, build, formatting, and diff checks. This hardens publication
+evidence integrity; it does not improve or remeasure engine performance, so the
+public competitiveness status remains NO-GO.
