@@ -113,7 +113,7 @@ does not establish out-of-distribution generalization.
 
 ## Verification
 
-- Project tests: 64 files, 677 tests passed
+- Project tests: 64 files, 682 tests passed
 - Typecheck: passed
 - Build: passed
 - `git diff --check`: passed
@@ -184,3 +184,21 @@ tuple field, the implementation was hardened to structured keys and a
 regression test was added. The mandatory re-review returned `VERDICT: CLEAN`.
 This closes the tooling gap only; public status remains NO-GO until independent
 people actually author, review, sign, and execute the qualifying corpus.
+
+The detached-signature collector now completes the external handoff path. It
+accepts the deterministic packet, a packet-hash-bound detached Ed25519
+signature set, and the public trust policy; requires exact one-to-one assignment
+coverage; rejects malformed base64, duplicate, missing, forged, cross-packet,
+or identity/key-confused signatures; and emits the intermediate public
+attestation bundle. All three CLI inputs use bounded, no-symlink regular-file
+intake. An end-to-end test proves that the emitted bundle passes the separate
+final contract gate. The collector deliberately does not claim to establish
+live-contract or corpus coverage by itself: the final gate re-derives those
+properties from the frozen contract. Claude Code Sonnet headless adversarial
+review returned `VERDICT CLEAN`; its non-blocking residual was this same
+intentional intermediate-artifact boundary. A preceding OpenCode/Azure DeepSeek
+review inspected the implementation and reproduced the focused 10/10 result but
+was rate-limited before returning a verdict, so it is not counted as approval.
+The full project now passes 64 files and 682 tests, typecheck, build, formatting,
+and diff checks. Public status remains NO-GO because no independent corpus,
+externally held signatures, or comparable engine execution receipts exist yet.

@@ -103,6 +103,36 @@ export function isSemanticPublicAttestationBundle(
 	);
 }
 
+export function validateSemanticPublicTrustPolicy(
+	trustPolicy: SemanticPublicTrustPolicy,
+): void {
+	const keyOwners = new Map<string, string>();
+	const identityKeys = new Map<string, string>();
+	const identityRoles = new Map<string, string>();
+	for (const [role, languages] of [
+		["author", trustPolicy.authorPublicKeysByLanguage],
+		["native-reviewer", trustPolicy.nativeReviewerPublicKeysByLanguage],
+	] as const)
+		for (const identities of Object.values(languages))
+			for (const [identity, key] of Object.entries(identities)) {
+				const normalizedKey = createPublicKey(key)
+					.export({ type: "spki", format: "der" })
+					.toString("base64");
+				const owner = keyOwners.get(normalizedKey);
+				if (owner && owner !== identity)
+					throw new Error("semantic trust keys overlap across identities");
+				keyOwners.set(normalizedKey, identity);
+				const priorKey = identityKeys.get(identity);
+				if (priorKey && priorKey !== normalizedKey)
+					throw new Error("semantic trust identity has multiple keys");
+				identityKeys.set(identity, normalizedKey);
+				const priorRole = identityRoles.get(identity);
+				if (priorRole && priorRole !== role)
+					throw new Error("semantic trust identities overlap across roles");
+				identityRoles.set(identity, role);
+			}
+}
+
 function assignmentKey(
 	role: SemanticPublicAttestation["role"],
 	language: string,
@@ -137,31 +167,7 @@ export function validateSemanticPublicAttestations(
 		);
 	}
 	const seen = new Set<string>();
-	const keyOwners = new Map<string, string>();
-	const identityKeys = new Map<string, string>();
-	const identityRoles = new Map<string, string>();
-	for (const [role, languages] of [
-		["author", trustPolicy.authorPublicKeysByLanguage],
-		["native-reviewer", trustPolicy.nativeReviewerPublicKeysByLanguage],
-	] as const)
-		for (const [language, identities] of Object.entries(languages))
-			for (const [identity, key] of Object.entries(identities)) {
-				const normalizedKey = createPublicKey(key)
-					.export({ type: "spki", format: "der" })
-					.toString("base64");
-				const owner = keyOwners.get(normalizedKey);
-				if (owner && owner !== identity)
-					throw new Error("semantic trust keys overlap across identities");
-				keyOwners.set(normalizedKey, identity);
-				const priorKey = identityKeys.get(identity);
-				if (priorKey && priorKey !== normalizedKey)
-					throw new Error("semantic trust identity has multiple keys");
-				identityKeys.set(identity, normalizedKey);
-				const priorRole = identityRoles.get(identity);
-				if (priorRole && priorRole !== role)
-					throw new Error("semantic trust identities overlap across roles");
-				identityRoles.set(identity, role);
-			}
+	validateSemanticPublicTrustPolicy(trustPolicy);
 	const frozenAt = Date.parse(contract.familySplitFreeze?.frozenAt ?? "");
 	if (!Number.isFinite(frozenAt))
 		throw new Error("semantic contract freeze timestamp is invalid");
