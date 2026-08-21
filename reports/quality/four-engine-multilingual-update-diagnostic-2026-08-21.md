@@ -393,7 +393,7 @@ The 100-family public coverage floor is not a statistical power calculation.
 It prevents a very small or development-contaminated corpus from entering the
 public path, but by itself cannot establish that a campaign can detect a
 practically meaningful difference. The gate now keeps those two claims
-separate by accepting an optional signed v1 analysis plan only on the complete
+separate by accepting an optional signed v2 analysis plan only on the complete
 14-input evidence path.
 
 The plan freezes the exact engine order, Naia's primary metric, every primary
@@ -425,3 +425,48 @@ adversarial pass returned `CLEAN` at complexity digest
 `sha256:5af0049897633a17ff0c74de28f641510ee04717ba22b250172610b1ebc67004`.
 Final whole-tree validation and the required consecutive post-documentation
 reviews are recorded with the commit evidence below.
+
+## Shifted-null competitive inference stage
+
+The previous preregistration schema incorrectly left room to treat the minimum
+detectable difference (MDE), which is a power-design quantity, as if it were a
+minimum practically important difference. An adversarial Claude headless
+review identified that as a critical statistical error. Schema v2 now freezes
+a separate MPID and the complete decision rule. Existing v1 plans intentionally
+fail schema validation rather than being silently reinterpreted.
+
+On the 14-input public path, the gate now reconstructs paired binary outcomes
+from the signed blind adjudication score and the contract's `familyId` mapping.
+For every preregistered competitor × language cell it averages repetitions
+inside each family, normalizes metric direction, shifts each paired difference
+by the MPID, and computes an exact one-sided family sign test. Families exactly
+on the MPID boundary count as failures under the stated all-family null rather
+than being removed from the denominator. Exact case-ID composition and counts
+must match between engines within every family. Holm adjustment
+is then recomputed across the complete comparison family with deterministic
+hypothesis ordering. Missing engines, languages, families, paired repetitions,
+non-binary adjudicated outcomes, and family counts outside the exact
+calculator's supported numerical range fail closed. A test also reports
+`resolution-floor` when the number
+of non-tied families cannot possibly reach its realized Holm-rank threshold.
+
+This estimand is deliberately narrow: it tests whether a majority of paired
+families exceed the MPID, not whether the mean engine score is superior. The
+output therefore remains `internalIntegrityGateOnly: true`,
+`claimEligible: false`, `publicQuotable: false`,
+`methodAdequacyVerified: false`, and `sampleSizeAdequacyVerified: false` even
+when synthetic fixtures pass every numerical threshold. Requiring every
+language cell to pass prevents a pooled average from hiding a weak language,
+but combining that all-cells rule with Holm is conservative; the preregistered
+power simulation must model the complete rule before publication.
+
+No production engine score changed in this stage and no new human campaign was
+run. This is a stronger anti-overclaim gate, not evidence that Naia Memory is
+globally superior. Public status remains **NO-GO** until the native-human,
+released-commit campaign supplies enough independent families and its full
+decision rule receives independent statistical validation.
+
+The final changed tree passes 70 test files and 713 tests, TypeScript build and
+typecheck, Biome, and staged-diff checks. The synthetic positive case only
+proves that the decision calculator can reach its internal threshold; it is not
+an engine result and cannot be quoted as competitive evidence.

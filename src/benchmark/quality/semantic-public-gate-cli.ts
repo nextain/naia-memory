@@ -18,6 +18,7 @@ import {
 	isSemanticAnalysisPlanTrustPolicy,
 	validateSemanticAnalysisPlan,
 } from "./semantic-analysis-plan.js";
+import { calculateSemanticCompetitiveInference } from "./semantic-competitive-inference.js";
 import {
 	isSemanticExecutionEvidenceBundle,
 	isSemanticExecutionTrustPolicy,
@@ -210,6 +211,7 @@ async function runSemanticEvidenceGateCli(
 					],
 				});
 				let analysisPlan = {};
+				let competitiveInference = {};
 				if (args.length === 14) {
 					const parsedPlan = await readJson(args[12], "analysis plan");
 					if (!isSemanticAnalysisPlan(parsedPlan))
@@ -256,6 +258,29 @@ async function runSemanticEvidenceGateCli(
 							),
 						],
 					});
+					const caseById = new Map(
+						contract.cases.map((item) => [item.id, item]),
+					);
+					competitiveInference = calculateSemanticCompetitiveInference({
+						plan: parsedPlan,
+						samples: adjudication.score.samples.map((sample) => {
+							const benchmarkCase = caseById.get(sample.caseId);
+							if (!benchmarkCase)
+								throw new Error(
+									`competitive inference case is unknown: ${sample.caseId}`,
+								);
+							return {
+								engine: sample.engine,
+								language: sample.language,
+								familyId: benchmarkCase.familyId,
+								caseId: sample.caseId,
+								currentAt1: sample.labels[0] === "current" ? 1 : 0,
+								currentAtK: sample.labels.includes("current") ? 1 : 0,
+								staleExposureAtK: sample.labels.includes("stale") ? 1 : 0,
+								deletionLeakageAtK: sample.labels.includes("deleted") ? 1 : 0,
+							};
+						}),
+					});
 				}
 				process.stdout.write(
 					`${JSON.stringify({
@@ -265,6 +290,7 @@ async function runSemanticEvidenceGateCli(
 						adjudicationEvidenceQualified: true,
 						...adjudication,
 						...analysisPlan,
+						...competitiveInference,
 						promotable: false,
 						failure:
 							args.length === 14

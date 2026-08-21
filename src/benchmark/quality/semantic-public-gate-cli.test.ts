@@ -386,7 +386,7 @@ async function writeAnalysisPlanFixture(
 		]),
 	);
 	const unsigned = {
-		schemaVersion: "naia-memory-semantic-analysis-plan-v1" as const,
+		schemaVersion: "naia-memory-semantic-analysis-plan-v2" as const,
 		administrator: "external-statistician",
 		contractSha256: evidenceObjectSha256(contract),
 		engines: ["hindsight", "mem0", "naia"],
@@ -397,6 +397,8 @@ async function writeAnalysisPlanFixture(
 		multiplicityAdjustment: "holm" as const,
 		targetPower: 0.8,
 		minimumDetectableDifference: 0.1,
+		minimumPracticallyImportantDifference: 0.1,
+		decisionRule: "holm-all-language-competitor-superiority" as const,
 		requiredIndependentFamiliesByLanguage,
 		sampleSizeMethod: "paired-family simulation",
 		sampleSizeAssumptionsSha256: "d".repeat(64),

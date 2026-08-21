@@ -8,7 +8,7 @@ import {
 const SHA256 = /^[a-f0-9]{64}$/;
 
 export type SemanticAnalysisPlan = {
-	schemaVersion: "naia-memory-semantic-analysis-plan-v1";
+	schemaVersion: "naia-memory-semantic-analysis-plan-v2";
 	administrator: string;
 	contractSha256: string;
 	engines: string[];
@@ -19,6 +19,8 @@ export type SemanticAnalysisPlan = {
 	multiplicityAdjustment: "holm";
 	targetPower: number;
 	minimumDetectableDifference: number;
+	minimumPracticallyImportantDifference: number;
+	decisionRule: "holm-all-language-competitor-superiority";
 	requiredIndependentFamiliesByLanguage: Record<string, number>;
 	sampleSizeMethod: string;
 	sampleSizeAssumptionsSha256: string;
@@ -60,7 +62,7 @@ export function isSemanticAnalysisPlan(
 ): value is SemanticAnalysisPlan {
 	return (
 		isRecord(value) &&
-		value.schemaVersion === "naia-memory-semantic-analysis-plan-v1" &&
+		value.schemaVersion === "naia-memory-semantic-analysis-plan-v2" &&
 		typeof value.administrator === "string" &&
 		value.administrator.trim().length > 0 &&
 		typeof value.contractSha256 === "string" &&
@@ -84,6 +86,13 @@ export function isSemanticAnalysisPlan(
 		Number.isFinite(value.minimumDetectableDifference) &&
 		value.minimumDetectableDifference > 0 &&
 		value.minimumDetectableDifference <= 1 &&
+		typeof value.minimumPracticallyImportantDifference === "number" &&
+		Number.isFinite(value.minimumPracticallyImportantDifference) &&
+		value.minimumPracticallyImportantDifference > 0 &&
+		value.minimumPracticallyImportantDifference < 1 &&
+		value.minimumDetectableDifference <=
+			value.minimumPracticallyImportantDifference &&
+		value.decisionRule === "holm-all-language-competitor-superiority" &&
 		isRecord(value.requiredIndependentFamiliesByLanguage) &&
 		Object.values(value.requiredIndependentFamiliesByLanguage).every(
 			(count) => Number.isInteger(count) && Number(count) > 0,
