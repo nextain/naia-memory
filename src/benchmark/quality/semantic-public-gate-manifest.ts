@@ -102,7 +102,11 @@ async function rejectRealPathEscape(
 
 export async function loadSemanticPublicGateManifest(
 	manifestPath: string,
-): Promise<{ manifest: SemanticPublicGateManifest; args: string[] }> {
+): Promise<{
+	manifest: SemanticPublicGateManifest;
+	manifestSha256: string;
+	args: string[];
+}> {
 	const absoluteManifestPath = resolve(manifestPath);
 	let bytes: Buffer;
 	try {
@@ -201,5 +205,9 @@ export async function loadSemanticPublicGateManifest(
 		0,
 		root.blindingSeed,
 	);
-	return { manifest: parsed as SemanticPublicGateManifest, args: ordered };
+	return {
+		manifest: parsed as SemanticPublicGateManifest,
+		manifestSha256: createHash("sha256").update(bytes).digest("hex"),
+		args: ordered,
+	};
 }

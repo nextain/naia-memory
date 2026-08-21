@@ -1123,3 +1123,41 @@ competitiveness remains **NO-GO**. The next hardening stage is a detached
 Ed25519 signature and RFC 3161 receipt over the exact generated manifest digest;
 the decisive evidence stage remains execution of the frozen campaign by
 independently controlled multilingual participants and engines.
+
+## Signed and timestamped manifest receipt
+
+The generated campaign manifest can now enter a stricter sealed gate. An
+authorized Ed25519 signer signs a domain-separated payload containing the exact
+manifest byte digest, signer identity, and SHA-256 fingerprint of the signer's
+DER public key. The signed receipt is then hashed as exact file bytes and that
+digest is verified against an RFC 3161 token under the existing pinned-CA and
+required-policy trust contract. The trusted TSA time must also fall inside the
+configured signer-key validity window. Only after all of these checks succeed
+does the wrapper invoke the existing semantic public gate.
+
+The signature payload is an explicit byte protocol with a fixed prefix, NUL
+field boundaries, and a UTF-8 byte length for the signer identity; it does not
+depend on ambiguous JSON canonicalization. Receipt and trust-policy schemas
+reject extra fields, signatures require canonical padded standard Base64 and
+exactly 64 decoded bytes, and signer keys must be unique Ed25519 SPKI keys. The
+manifest loader returns the digest of the same bounded no-follow byte buffer it
+parsed, while receipt signature and timestamp checks share one receipt buffer.
+
+An initial OpenCode adversarial design review returned `BLOCK`, identifying
+canonicalization, domain-separation, key-binding, key-validity, and timestamp
+ordering weaknesses in the proposal. Those findings changed the design as
+described above. A second implementation review returned `CLEAN` and confirmed
+the enforced chain: exact manifest bytes → authorized Ed25519 receipt → trusted
+RFC 3161 timestamp of the exact receipt bytes → gate execution. The repository
+passes 83 test files and 801 tests, TypeScript, scoped Biome, and diff checks.
+This is an ordinary external review result, not a formal recovery-mode
+review-pass claim.
+
+This stage establishes publisher authorization and trusted prior existence for
+the frozen manifest and its signature. It still does not prove that the
+publisher is organizationally independent, that campaign participants are who
+they claim to be, that native-language review is competent, or that any engine
+achieves a competitive score. No engine observation was added, so public
+competitiveness remains **NO-GO**. The remaining decisive step is operational:
+obtain a real signer receipt and TSA token, then execute the independently
+controlled multilingual campaign through the sealed gate.
