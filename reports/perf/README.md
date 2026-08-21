@@ -22,24 +22,31 @@ deep recall은 아예 재지 않았다. 그래서 통계적으로 견고한 하�
 
 ## 현재 도달점 (10만 사실, 표본 300회, 384차원)
 
-Surface recall(자주 쓰는 hot 1만 개만 검색)은 중앙값 14.0ms, 95퍼센타일 15.9ms다.
-25ms 목표를 크게 밑돈다.
+Surface recall(자주 쓰는 hot 1만 개만 검색)은 중앙값 4.04ms, 95퍼센타일 5.57ms다.
+25ms 목표를 크게 밑돈다. 직전 측정의 14.04/15.89ms보다 각각 71%/65% 낮아졌다.
 
-Deep recall(전체 10만 개 스캔)은 중앙값 39.1ms, 95퍼센타일 50.0ms다. 100ms
+Deep recall(전체 10만 개 스캔)은 중앙값 38.53ms, 95퍼센타일 48.82ms다. 100ms
 목표를 통과한다.
 
-주입 처리량은 초당 16,798건, 상주 메모리 382.9MB, DB 파일 220.8MB다. 현재
+주입 처리량은 초당 16,848건, 상주 메모리 376.4MB, DB 파일 220.8MB다. 현재
 동시 upsert는 최대 1,000건을 한 SQLite 트랜잭션으로 묶는다. 같은 머신에서 변경
 직전 10,001건 1회 기준 6,563건/초였고, 변경 후 5회 범위는
 13,746–14,051건/초(2.10–2.14배)였다. 과거 커밋 보고서의 1,631건/초와 현재
-16,798건/초의 차이는 런타임·코드·환경 변화가 섞여 있어 이 개선의 배율로 주장하지
+16,848건/초의 차이는 런타임·코드·환경 변화가 섞여 있어 이 개선의 배율로 주장하지
 않는다.
 
-## deep recall 41ms는 어디서 나오나
+## 지연은 어디서 나오나
 
-과거 계측(`breakdown.ts`)에서는 deep 지연의 대부분이 sqlite-vec 브루트포스 벡터 스캔에
-나온다. 구체적으로 벡터 스캔 39.0ms, FTS 키워드 0.1ms, id 매핑 0.14ms, 최종
-SELECT 0.13ms, 워커 프로세스 간 통신 오버헤드는 약 1.3ms에 불과했다.
+현재 구현과 같은 SQL을 쓰도록 `breakdown.ts`를 갱신하고 동일 10만 건 DB에서
+측정했다. surface direct-SQL p50은 3.71ms이며 벡터 검색 3.18ms, FTS 0.29ms,
+최종 SELECT 0.15ms다. deep direct-SQL p50은 37.71ms이며 벡터 검색 35.93ms가
+대부분이다. 전체 엔진 p50과의 차이는 surface 0.33ms, deep 0.82ms다.
+
+갱신 전 surface 최종 SELECT는 8.6ms였다. `id IN (...) AND status='active'`에서
+SQLite가 PK가 아니라 status 인덱스로 active 10만 행을 스캔한 것이 원인이었다.
+hot FTS/vector 테이블은 active fact만 담으므로 중복 status 조건을 제거했고,
+surface 전체 p50은 14.04ms에서 4.04ms로 71% 개선됐다. deep 경로는 역사 fact를
+포함하므로 해당 조건이 원래 없고 성능도 유지됐다.
 
 이는 검색에서 워커 통신 왕복이 주 병목이라는 가설을 기각한다. 다만 주입에서는
 건별 트랜잭션 경계가 실제 병목이었고, 동시 요청을 배치해 이를 줄였다.
@@ -62,7 +69,7 @@ SELECT 0.13ms, 워커 프로세스 간 통신 오버헤드는 약 1.3ms에 불�
 
 ```bash
 npx tsx src/benchmark/perf/run-latency.ts        # 지연·정확도 벤치 → reports/perf/*.json
-npx tsx src/benchmark/perf/breakdown.ts          # deep recall 단계별 귀속
+BENCH_DB_PATH=/tmp/naia-memory-perf-123.db npx tsx src/benchmark/perf/breakdown.ts
 npx tsx src/benchmark/perf/probe-binary-quant.ts # 이진 양자화 최적화 프로브
 ```
 

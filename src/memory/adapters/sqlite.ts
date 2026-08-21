@@ -197,7 +197,7 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
             if (needsReindex) {
                 const generationRow = await this.rawCallWorker("prepare-get", { sql: "SELECT value FROM memory_metadata WHERE key = 'facts_generation'", params: [] });
                 const facts = await this.rawCallWorker("prepare-all", {
-                    sql: "SELECT id, content, strength FROM facts ORDER BY id", params: [],
+                    sql: "SELECT id, content, strength, status FROM facts ORDER BY id", params: [],
                 });
                 const vectors = await this.embedder.embedBatch(facts.map((fact: any) => fact.content));
                 if (vectors.length !== facts.length || vectors.some((vector) => vector.length !== this.embedder!.dims || vector.some((value) => !Number.isFinite(value)))) {
@@ -206,7 +206,7 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
                 await this.rawCallWorker("replace-vectors", {
                     expectedGeneration: Number(generationRow?.value ?? 0), dims: this.embedder.dims,
                     embeddingSpaceId: this.embedder.embeddingSpaceId,
-                    vectors: facts.map((fact: any, index: number) => ({ factId: fact.id, hot: fact.strength > 0.6, embedding: Buffer.from(new Float32Array(vectors[index]).buffer) })),
+                    vectors: facts.map((fact: any, index: number) => ({ factId: fact.id, hot: fact.strength > 0.6 && fact.status === "active", embedding: Buffer.from(new Float32Array(vectors[index]).buffer) })),
                 });
             }
             if (!stored && !needsReindex) {
@@ -355,7 +355,9 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
                 gate += " AND rowid IN (SELECT id FROM facts_time_idx WHERE min_ts <= ? AND max_ts >= ?)";
                 gateParams.push(t, t);
 			}
-			if (!includeHistorical) gate += " AND status = 'active'";
+			// Hot indexes only contain active facts. Re-applying this predicate makes
+			// SQLite scan idx_facts_status instead of fetching the small ID set by PK.
+			if (!includeHistorical && !useHot) gate += " AND status = 'active'";
             if (context?.scopeMode === "strict" && !context.crossProject) {
                 if (context.project) {
                     gate += " AND json_extract(encoding_context, '$.project') = ?";

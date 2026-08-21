@@ -16,14 +16,21 @@
 
 | 측정값 | 결과 |
 |---|---:|
-| 주입 처리량 | 16,798 facts/s |
-| surface p50 / p95 | 14.04 / 15.89 ms |
-| deep p50 / p95 | 39.14 / 49.95 ms |
-| RSS / DB 파일 | 382.9 / 220.8 MB |
+| 주입 처리량 | 16,848 facts/s |
+| surface p50 / p95 | 4.04 / 5.57 ms |
+| deep p50 / p95 | 38.53 / 48.82 ms |
+| RSS / DB 파일 | 376.4 / 220.8 MB |
 
 원시 영수증은 `latency-accuracy-count100000.json`에 있다. 과거 보고서의
-1,631 facts/s 대비 10.3배 차이는 코드 외 변화가 섞였으므로 이 패치의 인과 효과로
+1,631 facts/s 대비 차이는 코드 외 변화가 섞였으므로 이 패치의 인과 효과로
 사용하지 않는다.
+
+후속 지연 분해에서 surface 최종 후보 50건 조회가 p50 8.6ms를 차지하는 이상을
+발견했다. SQLite가 `id IN (...) AND status='active'`에서 PK 대신 status 인덱스를
+선택해 active 10만 건을 훑었기 때문이다. hot 인덱스는 active facts만 포함하므로
+중복 status 조건을 제거했다. 같은 10만 건 공식 실행에서 surface p50/p95는
+14.04/15.89ms에서 4.04/5.57ms로 낮아졌다. deep 경로는 이 조건을 사용하지 않아
+39.14/49.95ms에서 38.53/48.82ms로 사실상 유지됐다.
 
 ## 안전성 증거
 
@@ -32,8 +39,11 @@
 - 기본 회귀: 89 files / 829 tests 통과.
 - TypeScript typecheck 및 build 통과.
 - 배치 크기는 1,000건으로 제한해 한 틱의 무제한 트랜잭션 확대를 막는다.
-- OpenCode 적대 리뷰는 두 번 모두 최종 판정을 반환하지 않아 `NOT_RUN`이다. 외부
-  승인 또는 formal review-pass CLEAN으로 주장하지 않는다.
+- 첫 OpenCode 적대 리뷰는 제한시간 내 판정을 반환하지 않았지만 재색인 경로를 다시
+  추적하게 했고, archived 고강도 fact가 hot vector로 복귀할 수 있는 허점을 발견해
+  수정했다. 회귀 테스트 추가 후 focused 재검토는 upsert·archive·재색인 불변식과
+  벤치마크 과적합 가능성을 점검해 `VERDICT: CLEAN`을 반환했다. 복구 모드이므로 이를
+  formal review-pass CLEAN이나 외부 승인으로 확대 주장하지 않는다.
 
 ## 주장 한계
 

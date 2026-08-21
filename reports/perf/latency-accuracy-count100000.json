@@ -2,9 +2,9 @@
   "benchmark": "retrieval-latency-accuracy",
   "receipt": {
     "schemaVersion": "naia-memory-benchmark-receipt-v1",
-    "generatedAt": "2026-08-21T19:05:38.368Z",
+    "generatedAt": "2026-08-21T19:15:33.259Z",
     "git": {
-      "revision": "ec34824838441144666ca6ee3c58520ace89de6b",
+      "revision": "d38c87133a0f7995743581183dc2b2829350b974",
       "dirty": true
     },
     "datasets": {},
@@ -33,34 +33,34 @@
   },
   "embedder": "deterministic-bag-of-tokens",
   "methodologyNote": "Latency isolates retrieval (SqliteAdapter+FTS5+sqlite-vec+worker-IPC) from embedding-model cost via a deterministic bag-of-tokens embedder. sqlite-vec brute-force scan latency depends on (dims, corpus-size), not vector values, so latency is representative of the real embedder at the same dims. precision@k is a relative signal on the synthetic (shared-token) corpus, NOT a semantic-quality claim.",
-  "injectionMs": 5953.08727,
-  "injectionThroughputPerSec": 16798,
+  "injectionMs": 5935.378843,
+  "injectionThroughputPerSec": 16848,
   "footprint": {
-    "rssMB": 382.9,
+    "rssMB": 376.4,
     "dbFileMB": 220.8
   },
   "results": {
     "surface": {
       "label": "surface (hot)",
       "samples": 300,
-      "p50": 14.04137499999888,
-      "p95": 15.885505000000194,
-      "p99": 16.480004999999437,
-      "max": 17.053055000000313,
-      "mean": 14.202853166666694,
-      "min": 12.24225800000022,
+      "p50": 4.03659400000015,
+      "p95": 5.566214999999829,
+      "p99": 6.069238000000041,
+      "max": 6.7456529999999475,
+      "mean": 4.459674306666669,
+      "min": 3.5919149999999718,
       "hitRateAvg": 10,
       "precisionAtKAvg": 1
     },
     "deep": {
       "label": "deep (full corpus)",
       "samples": 300,
-      "p50": 39.137188999999125,
-      "p95": 49.9514339999987,
-      "p99": 50.81681000000026,
-      "max": 54.70651999999973,
-      "mean": 42.59190570666658,
-      "min": 36.436515999999756,
+      "p50": 38.52790900000036,
+      "p95": 48.81512500000099,
+      "p99": 49.47411500000089,
+      "max": 52.34414099999776,
+      "mean": 41.68010012000002,
+      "min": 35.887189999997645,
       "hitRateAvg": 10,
       "precisionAtKAvg": 1
     }

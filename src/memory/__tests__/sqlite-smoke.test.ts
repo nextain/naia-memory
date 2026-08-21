@@ -422,17 +422,26 @@ describe("SqliteAdapter Smoke Test", () => {
 			createdAt: now, updatedAt: now, importance: 1, recallCount: 0,
 			lastAccessed: now, strength: 1, status: "active", sourceEpisodes: [],
 		});
+		await adapter.semantic.upsert({
+			id: "archived-before-reindex", content: "archived reindex me", entities: [], topics: [],
+			createdAt: now, updatedAt: now, importance: 1, recallCount: 0,
+			lastAccessed: now, strength: 1, status: "active", sourceEpisodes: [],
+		});
+		await expect(adapter.semantic.delete("archived-before-reindex")).resolves.toBe(true);
 		await memory.close();
 		adapter = new SqliteAdapter({
 			dbPath, embeddingProvider: provider("space-new", [0, 1]),
 			reindexEmbeddingsOnMismatch: true,
 		});
 		memory = new MemorySystem({ adapter });
-		await expect(adapter.semantic.getAll()).resolves.toHaveLength(1);
+		await expect(adapter.semantic.getAll()).resolves.toHaveLength(2);
+		await expect(adapter.semantic.search("reindex", 10, false)).resolves.toEqual([
+			expect.objectContaining({ id: "reindexed", status: "active" }),
+		]);
 		await memory.close();
 		adapter = new SqliteAdapter({ dbPath, embeddingProvider: provider("space-new", [0, 1]) });
 		memory = new MemorySystem({ adapter });
-		await expect(adapter.semantic.getAll()).resolves.toHaveLength(1);
+		await expect(adapter.semantic.getAll()).resolves.toHaveLength(2);
 	});
 
     it("enforces strict project scope for episodes", async () => {
