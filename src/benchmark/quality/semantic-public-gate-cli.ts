@@ -25,10 +25,16 @@ import {
 	validateSemanticExecutionEvidence,
 } from "./semantic-execution-evidence.js";
 import {
+	isSemanticPowerReview,
+	isSemanticPowerReviewTrustPolicy,
+	validateSemanticPowerReview,
+} from "./semantic-power-review.js";
+import {
 	isSemanticPublicAttestationBundle,
 	isSemanticPublicTrustPolicy,
 	validateSemanticPublicAttestations,
 } from "./semantic-public-attestation.js";
+import { isSemanticSampleSizeAssumptions } from "./semantic-sample-size-simulation.js";
 
 const MAX_CONTRACT_BYTES = 16 * 1024 * 1024;
 
@@ -42,12 +48,13 @@ async function runSemanticEvidenceGateCli(
 			args.length !== 3 &&
 			args.length !== 6 &&
 			args.length !== 12 &&
-			args.length !== 14)
+			args.length !== 14 &&
+			args.length !== 18)
 	) {
 		process.stderr.write(
 			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>${
 				mode === "public"
-					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json>]]]"
+					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json>]]]]"
 					: ""
 			}\n`,
 		);
@@ -212,7 +219,7 @@ async function runSemanticEvidenceGateCli(
 				});
 				let analysisPlan = {};
 				let competitiveInference = {};
-				if (args.length === 14) {
+				if (args.length >= 14) {
 					const parsedPlan = await readJson(args[12], "analysis plan");
 					if (!isSemanticAnalysisPlan(parsedPlan))
 						throw new Error("semantic analysis plan shape is invalid");
@@ -258,6 +265,70 @@ async function runSemanticEvidenceGateCli(
 							),
 						],
 					});
+					if (args.length === 18) {
+						const pilotContract = await readJson(
+							args[14],
+							"power pilot contract",
+						);
+						if (
+							pilotContract === null ||
+							typeof pilotContract !== "object" ||
+							Array.isArray(pilotContract)
+						)
+							throw new Error("semantic power pilot contract shape is invalid");
+						const assumptions = await readJson(
+							args[15],
+							"sample-size assumptions",
+						);
+						if (!isSemanticSampleSizeAssumptions(assumptions))
+							throw new Error("semantic sample-size assumptions are invalid");
+						const powerReview = await readJson(args[16], "power review");
+						if (!isSemanticPowerReview(powerReview))
+							throw new Error("semantic power review shape is invalid");
+						const powerTrust = await readJson(
+							args[17],
+							"power review trust policy",
+						);
+						if (!isSemanticPowerReviewTrustPolicy(powerTrust))
+							throw new Error(
+								"semantic power review trust policy shape is invalid",
+							);
+						analysisPlan = {
+							...analysisPlan,
+							...validateSemanticPowerReview({
+								pilotContract: pilotContract as MemoryUpdateContract,
+								publicContract: contract,
+								assumptions,
+								plan: parsedPlan,
+								review: powerReview,
+								trustPolicy: powerTrust,
+								forbiddenTrustIdentities: [
+									...Object.values(
+										trustPolicy.authorPublicKeysByLanguage,
+									).flatMap((keys) => Object.keys(keys)),
+									...Object.values(
+										trustPolicy.nativeReviewerPublicKeysByLanguage,
+									).flatMap((keys) => Object.keys(keys)),
+									...Object.keys(executionTrustPolicy.executorPublicKeys),
+									...Object.keys(adjudicationTrust.adjudicators),
+									parsedPlan.administrator,
+								],
+								forbiddenTrustPublicKeys: [
+									...Object.values(
+										trustPolicy.authorPublicKeysByLanguage,
+									).flatMap((keys) => Object.values(keys)),
+									...Object.values(
+										trustPolicy.nativeReviewerPublicKeysByLanguage,
+									).flatMap((keys) => Object.values(keys)),
+									...Object.values(executionTrustPolicy.executorPublicKeys),
+									...Object.values(adjudicationTrust.adjudicators).map(
+										(policy) => policy.publicKey,
+									),
+									...Object.values(analysisTrust.administratorPublicKeys),
+								],
+							}),
+						};
+					}
 					const caseById = new Map(
 						contract.cases.map((item) => [item.id, item]),
 					);
@@ -296,8 +367,10 @@ async function runSemanticEvidenceGateCli(
 						...competitiveInference,
 						promotable: false,
 						failure:
-							args.length === 14
-								? "competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+							args.length >= 14
+								? args.length === 18
+									? "competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+									: "an independent pilot power review, competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 								: "a preregistered analysis plan, competitive thresholds, uncertainty, latency, and released-commit evidence are not evaluated by this gate",
 					})}\n`,
 				);

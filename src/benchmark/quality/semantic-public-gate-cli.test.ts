@@ -27,6 +27,7 @@ import {
 	runSemanticCorpusGateCli,
 	runSemanticPublicGateCli,
 } from "./semantic-public-gate-cli.js";
+import type { SemanticSampleSizeAssumptions } from "./semantic-sample-size-simulation.js";
 
 const roots: string[] = [];
 async function root(): Promise<string> {
@@ -374,6 +375,7 @@ async function writeAdjudicationFixture(
 async function writeAnalysisPlanFixture(
 	directory: string,
 	contract: MemoryUpdateContract,
+	sampleSizeAssumptionsSha256 = "d".repeat(64),
 ) {
 	const { privateKey, publicKey } = generateKeyPairSync("ed25519");
 	const requiredIndependentAuthorClustersByLanguage = Object.fromEntries(
@@ -416,7 +418,7 @@ async function writeAnalysisPlanFixture(
 		sensitivityAnalysis:
 			"author-equal-and-family-equal-directional-agreement" as const,
 		sampleSizeMethod: "paired-family simulation",
-		sampleSizeAssumptionsSha256: "d".repeat(64),
+		sampleSizeAssumptionsSha256,
 		stoppingRule:
 			"collect-all-frozen-test-families-no-outcome-peeking" as const,
 		createdAt: "2026-01-04T00:00:00Z",
@@ -451,6 +453,117 @@ async function writeAnalysisPlanFixture(
 	return paths;
 }
 
+async function writePowerReviewFixture(
+	directory: string,
+	publicEvidenceContract: MemoryUpdateContract,
+) {
+	const cases = (["ko", "en", "ja"] as const).map((language) => ({
+		id: `pilot-${language}`,
+		familyId: `pilot-family-${language}`,
+		split: "development" as const,
+		language,
+		turns: [{ content: `pilot-${language}`, at: "2026-01-01T00:00:00Z" }],
+		query: `pilot-query-${language}`,
+		expectedCurrentIds: ["current"],
+		forbiddenStaleIds: ["stale"],
+		expectedDeletedIds: [],
+		noUpdateIds: [],
+		expectedDecision: "update" as const,
+		provenance: {
+			authorId: `pilot-author-${language}`,
+			constructionClusterId: `pilot-construction-${language}`,
+			authorNativeLanguages: [language],
+			authoredAt: "2026-01-01T01:00:00Z",
+			reviewerId: `pilot-native-reviewer-${language}`,
+			reviewerNativeLanguages: [language],
+			reviewedAt: "2026-01-01T02:00:00Z",
+			reviewDecision: "accepted" as const,
+		},
+	}));
+	const pilotContract: MemoryUpdateContract = {
+		schemaVersion: "naia-memory-update-contract-v1",
+		tier: "semantic-update-interpretation",
+		construction: "independent-native-reviewed",
+		familySplitFreeze: {
+			frozenAt: "2026-01-01T02:30:00Z",
+			digest: computeFamilySplitDigest(cases) as `sha256:${string}`,
+		},
+		cases,
+	};
+	const assumptions = {
+		schemaVersion: "naia-memory-semantic-sample-size-assumptions-v4",
+		languages: ["ko", "en", "ja"],
+		competitors: ["hindsight", "mem0"],
+		nullConstructionClusterExceedanceProbability: 0.5,
+		alternativeConstructionClusterExceedanceProbability: {
+			ko: { hindsight: 0.7, mem0: 0.7 },
+			en: { hindsight: 0.7, mem0: 0.7 },
+			ja: { hindsight: 0.7, mem0: 0.7 },
+		},
+		dependencyModel:
+			"shared-uniform-within-cell-construction-cluster-shock-mixture",
+		dependencyScenarios: [
+			{ id: "independent", sharedCellShockProbability: 0 },
+			{ id: "shock", sharedCellShockProbability: 0.1 },
+		],
+		candidateIndependentConstructionClustersByLanguage: [
+			{ ko: 34, en: 34, ja: 34 },
+		],
+		simulationIterations: 1000,
+		seed: 1,
+		statement: "FROZEN_BEFORE_CAMPAIGN_EXECUTION",
+	} satisfies SemanticSampleSizeAssumptions;
+	const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+	const unsigned = {
+		schemaVersion: "naia-memory-semantic-power-review-v1" as const,
+		reviewer: "external-power-reviewer",
+		pilotContractSha256: evidenceObjectSha256(pilotContract),
+		publicContractSha256: evidenceObjectSha256(publicEvidenceContract),
+		assumptionsSha256: evidenceObjectSha256(assumptions),
+		pilotCompletedAt: "2026-01-01T03:00:00Z",
+		reviewedAt: "2026-01-03T00:00:00Z",
+		purpose: "POWER_ASSUMPTION_ESTIMATION_ONLY" as const,
+		verdict: "APPROVED_FOR_PREREGISTRATION_ONLY" as const,
+		independenceClaim: "ATTESTED_NOT_EMPIRICALLY_VERIFIED" as const,
+		constructionClusters: cases.map((item) => ({
+			constructionClusterId: item.provenance.constructionClusterId,
+			language: item.language,
+			causeIds: [`source-${item.language}`, `editor-${item.language}`],
+		})),
+		statement: "PILOT_DISJOINTNESS_AND_CONSTRUCTION_CAUSES_REVIEWED" as const,
+	};
+	const review = {
+		...unsigned,
+		signatureBase64: sign(
+			null,
+			evidenceSignaturePayload(unsigned),
+			privateKey,
+		).toString("base64"),
+	};
+	const paths = [
+		join(directory, "power-pilot-contract.json"),
+		join(directory, "sample-size-assumptions.json"),
+		join(directory, "power-review.json"),
+		join(directory, "power-review-trust-policy.json"),
+	];
+	await Promise.all([
+		writeFile(paths[0], JSON.stringify(pilotContract)),
+		writeFile(paths[1], JSON.stringify(assumptions)),
+		writeFile(paths[2], JSON.stringify(review)),
+		writeFile(
+			paths[3],
+			JSON.stringify({
+				reviewerPublicKeys: {
+					"external-power-reviewer": publicKey
+						.export({ type: "spki", format: "pem" })
+						.toString(),
+				},
+			}),
+		),
+	]);
+	return { paths, assumptionsSha256: evidenceObjectSha256(assumptions) };
+}
+
 function captureStdout(output: string[]): void {
 	vi.spyOn(process.stdout, "write").mockImplementation((value) => {
 		output.push(String(value));
@@ -472,6 +585,43 @@ afterEach(async () => {
 });
 
 describe("semantic public gate CLI", () => {
+	it("requires and qualifies independent pilot power evidence on the full path", async () => {
+		const output: string[] = [];
+		captureStdout(output);
+		const directory = await root();
+		const fixture = await writeFixture(directory);
+		const executionPaths = await writeExecutionFixture(
+			directory,
+			fixture.contract,
+		);
+		const adjudicationPaths = await writeAdjudicationFixture(
+			directory,
+			fixture.contract,
+			executionPaths[0],
+		);
+		const power = await writePowerReviewFixture(directory, fixture.contract);
+		const analysisPlanPaths = await writeAnalysisPlanFixture(
+			directory,
+			fixture.contract,
+			power.assumptionsSha256,
+		);
+		expect(
+			await runSemanticPublicGateCli([
+				...fixture.paths,
+				...executionPaths,
+				...adjudicationPaths,
+				...analysisPlanPaths,
+				...power.paths,
+			]),
+		).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}")).toMatchObject({
+			powerReviewQualified: true,
+			reviewedConstructionClusterCount: 3,
+			constructionCauseIndependenceVerified: false,
+			promotable: false,
+		});
+	});
+
 	it("recomputes signed multilingual adjudication but keeps promotion closed", async () => {
 		const output: string[] = [];
 		captureStdout(output);

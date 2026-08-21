@@ -639,3 +639,37 @@ note itself rejected circular wording that implied the note was part of that
 earlier digest; this paragraph records the corrected chronology.
 Repository-wide Biome is not claimed as passing because existing generated,
 recovery, and unrelated workspace files remain outside this change.
+
+## Independent pilot power-review gate
+
+The v4 plan previously required a disjoint pilot and external review only in
+prose. The public gate now accepts a signed power-review artifact that binds the
+pilot contract, public contract, sample-size assumptions, reviewer identity,
+review chronology, and every declared construction cluster. It rejects reused
+family or case IDs, normalized content duplicates, construction-cluster and
+corpus-role overlap, reviewer key or identity reuse, non-development pilot
+cases, and non-test public cases. The review must precede preregistration.
+
+This gate intentionally reports
+`constructionCauseIndependenceVerified: false`. Cause IDs and a reviewer
+signature make the construction claim auditable, but they cannot empirically
+prove that two authors, translators, templates, or editors were independent.
+The artifact is approved only for estimating preregistration assumptions; it
+cannot promote a benchmark result. The public gate therefore remains
+`promotable: false`, and the 14-input path explicitly reports that independent
+pilot review was not evaluated.
+
+The first OpenCode adversarial pass returned **NOT_CLEAN**. It found that the
+power reviewer could overlap pilot staff, punctuation/case changes could evade
+duplicate detection, direct library callers did not validate the public
+contract, and cause-independence wording could overclaim. After those fixes, a
+second pass found malformed-date, public-split, and public-participant bypasses.
+All were fixed and covered by regressions. The final OpenCode pass returned
+**CLEAN** after independently running 24 focused tests and TypeScript checking.
+
+This stage improves evidence integrity and resistance to benchmark overfitting;
+it does **not** increase any measured Naia score. Public status remains
+**NO-GO** until a genuinely independent multilingual pilot is collected and
+reviewed, the preregistered public corpus reaches its required construction
+cluster and case counts, all competitor executions have external receipts, and
+the frozen competitive and latency gates pass on a released commit.
