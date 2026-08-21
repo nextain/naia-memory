@@ -28,6 +28,16 @@ function sameMultiValue(left: string, right: string): boolean {
 	return !shorter.endsWith("s") && longer === `${shorter}s`;
 }
 
+/** Compares values without requiring extractor cardinality agreement. */
+export function sameStructuredValue(
+	left: Pick<StructuredFact, "value" | "cardinality">,
+	right: Pick<StructuredFact, "value" | "cardinality">,
+): boolean {
+	return left.cardinality === "multi" || right.cardinality === "multi"
+		? sameMultiValue(left.value, right.value)
+		: comparisonKey(left.value) === comparisonKey(right.value);
+}
+
 /**
  * Compares a subject/property pair without interpreting either language.
  * Complete opaque IDs take precedence; labels are the migration fallback.
@@ -72,9 +82,7 @@ export function sameStructuredFact(
 ): boolean {
 	return (
 		sameStructuredIdentity(left, right) &&
-		(left.cardinality === "multi"
-			? sameMultiValue(left.value, right.value)
-			: comparisonKey(left.value) === comparisonKey(right.value)) &&
+		sameStructuredValue(left, right) &&
 		left.polarity === right.polarity &&
 		left.cardinality === right.cardinality
 	);

@@ -232,7 +232,12 @@ describe("OpenAI-compatible LLM auth", () => {
 			model: "test-model",
 		})([episode]);
 
-		expect(prompt).toContain("durable state has permanently ended");
+		expect(prompt).toContain(
+			"previously durable state no longer holds in the present",
+		);
+		expect(prompt).toContain(
+			'words such as "permanently" or "forever" are not required',
+		);
 		expect(prompt).toMatch(/temporary\s+exceptions/);
 		expect(prompt).toContain("quoted speech");
 		expect(prompt).toContain("another person's state");

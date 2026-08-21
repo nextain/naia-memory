@@ -54,6 +54,9 @@ export async function resolveFactContradictions(options: {
 	supersessions: Fact[];
 	fallbackFacts: Fact[];
 	contradictionFilter: ContradictionFilterProvider;
+	/** Original trusted-user evidence. The extractor's normalized fact can omit
+	 * explicit replacement cues that the contextual verifier still needs. */
+	contextualEvidence?: string;
 }): Promise<Array<{ fact: Fact; result: ReconsolidationResult }>> {
 	const { extracted, existingFacts, contradictionFilter } = options;
 	if (!extracted.structured) {
@@ -86,12 +89,22 @@ export async function resolveFactContradictions(options: {
 	const verdicts = await contradictionFilter.filter(
 		contextualFacts.map((existing) => ({
 			existing,
-			newInfo: extracted.content,
+			newInfo: options.contextualEvidence ?? extracted.content,
 		})),
 	);
 	const contextual = verdicts.flatMap((verdict) => {
 		const fact = contextualFacts[verdict.index];
-		return fact ? [{ fact, result: verdict.result }] : [];
+		return fact
+			? [
+					{
+						fact,
+						result:
+							verdict.result.action === "update"
+								? { ...verdict.result, updatedContent: extracted.content }
+								: verdict.result,
+					},
+				]
+			: [];
 	});
 	return [...deterministic, ...contextual];
 }

@@ -11,9 +11,11 @@ import { pathToFileURL } from "node:url";
 import { LocalAdapter } from "../../memory/adapters/local.js";
 import { GeminiFlashLiteContradictionFilter } from "../../memory/contradiction-filter.js";
 import { OpenAICompatEmbeddingProvider } from "../../memory/embeddings.js";
+import { buildLLMDeleteVerifier } from "../../memory/llm-delete-verifier.js";
 import { buildLLMFactExtractor } from "../../memory/llm-fact-extractor.js";
 import { benchmarkReceipt } from "../provenance.js";
 import { createHindsightSemanticBridge } from "./bridge-hindsight-semantic.js";
+import { createLettaSemanticBridge } from "./bridge-letta-semantic.js";
 import { createMem0SemanticBridge } from "./bridge-mem0-semantic.js";
 import { createNaiaSemanticBridge } from "./bridge-naia-semantic.js";
 import { runSemanticRawContract } from "./memory-semantic-runner.js";
@@ -22,7 +24,7 @@ import {
 	validateMemoryUpdateContract,
 } from "./memory-update-contract.js";
 
-export type SemanticEngine = "hindsight" | "mem0" | "naia";
+export type SemanticEngine = "hindsight" | "letta" | "mem0" | "naia";
 export type SemanticRawCliArgs = {
 	engine: SemanticEngine;
 	contractPath: string;
@@ -45,8 +47,13 @@ export function parseSemanticRawCliArgs(args: string[]): SemanticRawCliArgs {
 		values.set(match[1], match[2]);
 	}
 	const engine = values.get("engine");
-	if (engine !== "hindsight" && engine !== "mem0" && engine !== "naia")
-		throw new Error("--engine must be hindsight, mem0, or naia");
+	if (
+		engine !== "hindsight" &&
+		engine !== "letta" &&
+		engine !== "mem0" &&
+		engine !== "naia"
+	)
+		throw new Error("--engine must be hindsight, letta, mem0, or naia");
 	const contractPath = values.get("contract");
 	const outputPath = values.get("output");
 	if (!contractPath || !outputPath)
@@ -142,7 +149,10 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 		readFileSync(contractPath, "utf8"),
 	) as MemoryUpdateContract;
 	validateMemoryUpdateContract(contract);
-	const provider = parsed.engine === "hindsight" ? undefined : providerConfig();
+	const provider =
+		parsed.engine === "hindsight" || parsed.engine === "letta"
+			? undefined
+			: providerConfig();
 	const requireProvider = () => {
 		if (!provider)
 			throw new Error("semantic provider configuration is unavailable");
@@ -170,6 +180,12 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 							model: configuredProvider.llmModel,
 							auth: configuredProvider.auth,
 							failurePolicy: "throw",
+						}),
+						deleteVerifier: buildLLMDeleteVerifier({
+							apiKey: configuredProvider.apiKey,
+							baseURL: configuredProvider.baseURL,
+							model: configuredProvider.llmModel,
+							auth: configuredProvider.auth,
 						}),
 						contradictionFilter: new GeminiFlashLiteContradictionFilter({
 							apiKey: configuredProvider.apiKey,
@@ -212,12 +228,25 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 							},
 						});
 					}
-				: async () =>
-						createHindsightSemanticBridge({
-							baseUrl: process.env.HINDSIGHT_URL ?? "http://127.0.0.1:18888",
-							bankIdPrefix: `semantic-${runId}`,
-							apiKey: process.env.HINDSIGHT_API_KEY,
-						});
+				: parsed.engine === "letta"
+					? async () =>
+							createLettaSemanticBridge({
+								baseUrl: process.env.LETTA_URL ?? "http://127.0.0.1:8283",
+								apiKey: process.env.LETTA_API_KEY,
+								model: process.env.LETTA_LLM_MODEL ?? "openai/gpt-4.1-mini",
+								embeddingModel:
+									process.env.LETTA_EMBEDDING_MODEL ?? "text-embedding-3-small",
+								embeddingDimensions: Number(
+									process.env.LETTA_EMBEDDING_DIMENSIONS ?? "1536",
+								),
+								embeddingEndpoint: process.env.LETTA_EMBEDDING_ENDPOINT,
+							})
+					: async () =>
+							createHindsightSemanticBridge({
+								baseUrl: process.env.HINDSIGHT_URL ?? "http://127.0.0.1:18888",
+								bankIdPrefix: `semantic-${runId}`,
+								apiKey: process.env.HINDSIGHT_API_KEY,
+							});
 	const receipts = await runSemanticRawContract(
 		contract,
 		createBridge,
@@ -226,6 +255,7 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 	);
 	const hindsightEndpoint =
 		process.env.HINDSIGHT_URL ?? "http://127.0.0.1:18888";
+	const lettaEndpoint = process.env.LETTA_URL ?? "http://127.0.0.1:8283";
 	const hindsightRuntime = () => {
 		const version = process.env.HINDSIGHT_ENGINE_VERSION?.trim();
 		const imageDigest = process.env.HINDSIGHT_IMAGE_DIGEST?.trim();
@@ -241,10 +271,41 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 			);
 		return { version, imageDigest, llmProvider, llmModel };
 	};
+	const lettaRuntime = () => {
+		const version = process.env.LETTA_ENGINE_VERSION?.trim();
+		const imageDigest = process.env.LETTA_IMAGE_DIGEST?.trim();
+		const llmModel = process.env.LETTA_LLM_MODEL?.trim();
+		const embeddingModel = process.env.LETTA_EMBEDDING_MODEL?.trim();
+		const embeddingDimensions = Number(process.env.LETTA_EMBEDDING_DIMENSIONS);
+		if (
+			!version ||
+			!imageDigest ||
+			!llmModel ||
+			!embeddingModel ||
+			!Number.isInteger(embeddingDimensions) ||
+			embeddingDimensions < 1
+		)
+			throw new Error(
+				"Letta runs require LETTA_ENGINE_VERSION, LETTA_IMAGE_DIGEST, LETTA_LLM_MODEL, LETTA_EMBEDDING_MODEL, and positive LETTA_EMBEDDING_DIMENSIONS",
+			);
+		if (!/^sha256:[a-f0-9]{64}$/.test(imageDigest))
+			throw new Error("LETTA_IMAGE_DIGEST must be an immutable sha256 digest");
+		return {
+			version,
+			imageDigest,
+			llmModel,
+			embeddingModel,
+			embeddingDimensions,
+		};
+	};
 	const disclosure = {
 		engine: parsed.engine,
 		topK: parsed.topK,
 		executionSeed,
+		mutationAuthorizationPolicy:
+			parsed.engine === "naia"
+				? "independent-llm-delete-verifier-fail-closed-v1"
+				: "engine-native-mutation-policy-v1",
 		...(provider
 			? {
 					embeddingModel: provider.embeddingModel,
@@ -254,11 +315,20 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 					authScheme: provider.auth,
 					endpoint: discloseEndpoint(provider.baseURL),
 				}
-			: {
-					providerPolicy: "engine-server-native-configuration-v1",
-					endpoint: discloseEndpoint(hindsightEndpoint),
-					hindsightRuntime: hindsightRuntime(),
-				}),
+			: parsed.engine === "letta"
+				? {
+						providerPolicy: "engine-server-native-configuration-v1",
+						ingestionSurface: "agent-user-message-v1",
+						stateObservationPolicy:
+							"full-nonpersona-core-state-no-query-ranking-v1",
+						endpoint: discloseEndpoint(lettaEndpoint),
+						lettaRuntime: lettaRuntime(),
+					}
+				: {
+						providerPolicy: "engine-server-native-configuration-v1",
+						endpoint: discloseEndpoint(hindsightEndpoint),
+						hindsightRuntime: hindsightRuntime(),
+					}),
 	};
 	const output = {
 		schemaVersion: "naia-memory-semantic-raw-artifact-v2",

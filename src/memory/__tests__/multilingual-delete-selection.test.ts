@@ -113,7 +113,7 @@ describe("multilingual delete selection", () => {
 		);
 
 		expect((await system.consolidateNow(true)).factsUpdated).toBe(1);
-		expect(candidateValues.sort()).toEqual(["peanut", "tree nuts"].sort());
+		expect(candidateValues).toEqual(["peanut"]);
 		const stored = await adapter.semantic.getAll();
 		expect(stored.find((fact) => fact.content === peanut)?.status).toBe(
 			"archived",
@@ -124,8 +124,7 @@ describe("multilingual delete selection", () => {
 		await system.close();
 	});
 
-	it("fails closed instead of truncating an oversized identity candidate set", async () => {
-		const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
+	it("does not widen a delete across many different values of one identity", async () => {
 		const deleteContent = "내 알레르기 기억을 지워줘";
 		let verifierCalls = 0;
 		const adapter = new LocalAdapter(
@@ -188,10 +187,7 @@ describe("multilingual delete selection", () => {
 
 		expect((await system.consolidateNow(true)).factsUpdated).toBe(0);
 		expect(verifierCalls).toBe(0);
-		expect(getUsage().deleteOutcomes?.oversized).toBe(1);
-		expect(warning).toHaveBeenCalledWith(
-			expect.stringContaining("candidate limit was exceeded"),
-		);
+		expect(getUsage().deleteOutcomes?.denied).toBe(1);
 		expect(
 			(await adapter.semantic.getAll()).filter(
 				(fact) => fact.status === "active",

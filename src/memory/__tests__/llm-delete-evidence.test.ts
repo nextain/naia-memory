@@ -164,7 +164,7 @@ describe("secondary LLM delete authorization", () => {
 
 		expect(requestBody).toMatchObject({
 			model: "gemini-2.5-flash",
-			max_tokens: 96,
+			max_tokens: 2048,
 		});
 		const prompt = String(
 			(requestBody?.messages as Array<{ content: string }>)[0]?.content,
@@ -172,6 +172,8 @@ describe("secondary LLM delete authorization", () => {
 		expect(prompt).toContain(
 			'"candidates":[{"id":"folk-fact","structured":{"subjectId":"person:self","propertyId":"profile:music-preference","value":"folk","polarity":"affirmed","cardinality":"single"}}]',
 		);
+		expect(prompt).toContain('"proposedEvidenceKind":"durable_cessation"');
+		expect(prompt).toContain("echo proposedEvidenceKind as kind");
 	});
 });
 
@@ -211,6 +213,34 @@ describe("LLM fact delete evidence", () => {
 			model: "test-model",
 		})([{ ...episode, ...overrides }]);
 	}
+
+	it("prompts for multilingual unqualified present-state cessation without requiring forever wording", async () => {
+		let requestBody: Record<string, unknown> | undefined;
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_input, init) => {
+				requestBody = JSON.parse(String(init?.body));
+				return Response.json({
+					choices: [{ message: { content: JSON.stringify({ "1": [] }) } }],
+				});
+			}),
+		);
+		await buildLLMFactExtractor({
+			apiKey: "test-secret",
+			baseURL: "https://provider.test/v1/",
+			model: "test-model",
+		})([episode]);
+		const prompt = String(
+			(requestBody?.messages as Array<{ content: string }>)[0]?.content,
+		);
+		expect(prompt).toContain(
+			'words such as "permanently" or "forever" are not required',
+		);
+		expect(prompt).toContain("I no longer use Vim.");
+		expect(prompt).toContain("이제 재즈를 듣지 않아요.");
+		expect(prompt).toContain("もう紅茶は飲みません。");
+		expect(prompt).toContain('"today", "this week", or "for now"');
+	});
 
 	it.each([
 		["missing evidence kind", { deleteEvidenceKind: undefined }],

@@ -70,6 +70,7 @@ describe("resolveFactContradictions trust boundary", () => {
 			supersessions: [existing],
 			fallbackFacts: [existing],
 			contradictionFilter: filter,
+			contextualEvidence: "I now use the new value instead of the old value.",
 		});
 
 		expect(result).toEqual([]);
@@ -104,5 +105,36 @@ describe("resolveFactContradictions trust boundary", () => {
 		expect(getUsage().mutationOutcomes).toEqual({
 			untrusted_contradiction_denied: 1,
 		});
+	});
+
+	it("uses trusted source evidence for contextual verification but stores the normalized fact", async () => {
+		const filter = {
+			name: "test",
+			filter: vi.fn().mockResolvedValue([
+				{
+					index: 0,
+					result: {
+						action: "update" as const,
+						updatedContent: "raw replacement utterance",
+						reason: "explicit replacement",
+					},
+				},
+			]),
+		} satisfies ContradictionFilterProvider;
+
+		const result = await resolveFactContradictions({
+			extracted,
+			existingFacts: [existing],
+			trustedUserMutation: true,
+			supersessions: [],
+			fallbackFacts: [existing],
+			contradictionFilter: filter,
+			contextualEvidence: "I use Busan instead of Seoul now.",
+		});
+
+		expect(filter.filter).toHaveBeenCalledWith([
+			{ existing, newInfo: "I use Busan instead of Seoul now." },
+		]);
+		expect(result[0]?.result.updatedContent).toBe(extracted.content);
 	});
 });

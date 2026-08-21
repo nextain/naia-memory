@@ -13,6 +13,7 @@ import type { SemanticEngine } from "./semantic-raw-cli.js";
 
 export const SUPPORTED_SEMANTIC_ENGINES = [
 	"hindsight",
+	"letta",
 	"mem0",
 	"naia",
 ] as const;
@@ -114,7 +115,8 @@ export function validateRawArtifact(
 					}) ||
 				item.ingestionPolicy !== "sequential-turn-commit-v1" ||
 				item.temporalInputPolicy !== "engine-default-ingest-time-v1" ||
-				item.retrievalSurface !== "engine-native-semantic-memory-v1" ||
+				(item.retrievalSurface !== "engine-native-semantic-memory-v1" &&
+					item.retrievalSurface !== "engine-native-core-state-v1") ||
 				!Array.isArray(item.ingestionReceipts) ||
 				!Array.isArray(item.nativeState) ||
 				!Array.isArray(item.retrieved) ||
@@ -330,7 +332,7 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 		generalizationBoundary:
 			"Generated diagnostic cases only; repetitions measure execution stability, not held-out generalization.",
 		configurationPolicy:
-			"Engine-native semantic surfaces are compared with their disclosed native configurations; component-level parity is not claimed.",
+			"Engine-native surfaces are observed with disclosed native configurations. Letta exposes full non-persona core state without query ranking; the other engines expose semantic retrieval. Component-level parity and a single retrieval leaderboard are not claimed.",
 	};
 	const manifest = {
 		schemaVersion: "naia-memory-semantic-campaign-v3",
@@ -341,6 +343,7 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 			"src/benchmark/quality/semantic-raw-cli.ts",
 			"src/benchmark/quality/memory-semantic-runner.ts",
 			"src/benchmark/quality/bridge-hindsight-semantic.ts",
+			"src/benchmark/quality/bridge-letta-semantic.ts",
 			"src/benchmark/quality/bridge-mem0-semantic.ts",
 			"src/benchmark/quality/bridge-naia-semantic.ts",
 		]),

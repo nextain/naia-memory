@@ -14,7 +14,7 @@ import {
 } from "./contradiction-filter.js";
 import { scoreImportance as scoreImportanceFn } from "./importance.js";
 import { MemorySystem } from "./index.js";
-import type { FactExtractor } from "./index.js";
+import type { DeleteVerifier, FactExtractor } from "./index.js";
 import type {
 	BackupCapableProvider,
 	CompactableCapableProvider,
@@ -35,6 +35,8 @@ import type { MemoryAdapter } from "./types.js";
 export interface NaiaMemoryProviderOptions {
 	adapter: MemoryAdapter;
 	factExtractor?: FactExtractor;
+	/** Independent fail-closed authorization for destructive memory updates. */
+	deleteVerifier?: DeleteVerifier;
 	/** R2.5 — pluggable contradiction filter. Defaults to env-based selection
 	 *  (Vllm > Gemini > Heuristic). */
 	contradictionFilter?: ContradictionFilterProvider;
@@ -61,6 +63,7 @@ export class NaiaMemoryProvider
 		this.system = new MemorySystem({
 			adapter: opts.adapter,
 			factExtractor: opts.factExtractor,
+			deleteVerifier: opts.deleteVerifier,
 			contradictionFilter: this.contradictionFilter,
 		});
 	}

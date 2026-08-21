@@ -20,6 +20,8 @@ import {
 	validateRawArtifact,
 } from "./semantic-campaign-cli.js";
 
+const LEGACY_V2_SEMANTIC_ENGINES = ["hindsight", "mem0", "naia"] as const;
+
 type CampaignManifest = {
 	schemaVersion:
 		| "naia-memory-semantic-campaign-v2"
@@ -105,7 +107,7 @@ export function buildSemanticBlindArtifacts(input: {
 	const disclosure = input.campaign.disclosure;
 	const engines =
 		input.campaign.schemaVersion === "naia-memory-semantic-campaign-v2"
-			? [...SUPPORTED_SEMANTIC_ENGINES]
+			? [...LEGACY_V2_SEMANTIC_ENGINES]
 			: disclosure?.engines;
 	if (
 		(input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v2" &&
@@ -113,9 +115,9 @@ export function buildSemanticBlindArtifacts(input: {
 		(input.campaign.schemaVersion === "naia-memory-semantic-campaign-v2" &&
 			disclosure?.engines !== undefined &&
 			(!Array.isArray(disclosure.engines) ||
-				disclosure.engines.length !== SUPPORTED_SEMANTIC_ENGINES.length ||
+				disclosure.engines.length !== LEGACY_V2_SEMANTIC_ENGINES.length ||
 				disclosure.engines.some(
-					(engine, index) => engine !== SUPPORTED_SEMANTIC_ENGINES[index],
+					(engine, index) => engine !== LEGACY_V2_SEMANTIC_ENGINES[index],
 				))) ||
 		!Array.isArray(engines) ||
 		engines.length < 2 ||

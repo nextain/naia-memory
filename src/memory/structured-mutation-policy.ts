@@ -70,7 +70,7 @@ export function resolveStructuredMutationPolicy(options: {
 				fact.status === "active" &&
 				!!fact.structured &&
 				fact.structured.cardinality === "single" &&
-				structured.cardinality === "single" &&
+				structured.polarity === "affirmed" &&
 				sameStructuredSubject(fact.structured, structured),
 		),
 	};

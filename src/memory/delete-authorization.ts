@@ -7,6 +7,7 @@ import type {
 import {
 	findStructuredDeletionTargets,
 	sameStructuredIdentity,
+	sameStructuredValue,
 } from "./structured-facts.js";
 import type { Episode, Fact } from "./types.js";
 
@@ -48,17 +49,36 @@ function eligibleCandidates(
 	const proposed = fact.structured;
 	if (!proposed) return [];
 	const exact = findStructuredDeletionTargets(existingFacts, proposed);
-	const byId = existingFacts.filter(
+	const sameIdentity = existingFacts.filter(
 		(candidate) =>
 			candidate.status === "active" &&
 			candidate.structured?.polarity === "affirmed" &&
 			Boolean(proposed.subjectId && proposed.propertyId) &&
-			candidate.structured.cardinality === proposed.cardinality &&
 			sameStructuredIdentity(candidate.structured, proposed),
 	);
+	const sameValue = sameIdentity.filter(
+		(candidate) =>
+			candidate.structured !== undefined &&
+			sameStructuredValue(candidate.structured, proposed),
+	);
+	// Extractors can represent one referent with different surface forms across
+	// turns. A sole value is unambiguous enough for the verifier even when it was
+	// duplicated across turns; multiple distinct values remain fail-closed.
+	const oneEquivalentValue = sameIdentity.every((candidate) =>
+		sameIdentity.every(
+			(other) =>
+				candidate.structured !== undefined &&
+				other.structured !== undefined &&
+				sameStructuredValue(candidate.structured, other.structured),
+		),
+	);
+	const identityFallback = oneEquivalentValue ? sameIdentity : [];
 	return [
 		...new Map(
-			[...exact, ...byId].map((candidate) => [candidate.id, candidate]),
+			[...exact, ...sameValue, ...identityFallback].map((candidate) => [
+				candidate.id,
+				candidate,
+			]),
 		).values(),
 	];
 }
@@ -67,7 +87,7 @@ export type DeleteResolution =
 	| { status: "denied" }
 	| { status: "oversized" }
 	| { status: "verifier_failed" }
-	| { status: "authorized"; target: Fact };
+	| { status: "authorized"; targets: Fact[] };
 
 export async function resolveDeleteTarget(options: {
 	episode: Episode;
@@ -105,7 +125,16 @@ export async function resolveDeleteTarget(options: {
 		const target = candidates.find(
 			(candidate) => candidate.id === verification.targetFactId,
 		);
-		return target ? { status: "authorized", target } : { status: "denied" };
+		if (!target?.structured) return { status: "denied" };
+		const targets = candidates.filter(
+			(candidate) =>
+				candidate.structured !== undefined &&
+				sameStructuredIdentity(candidate.structured, target.structured!) &&
+				sameStructuredValue(candidate.structured, target.structured!),
+		);
+		return targets.length > 0
+			? { status: "authorized", targets }
+			: { status: "denied" };
 	} catch {
 		return { status: "verifier_failed" };
 	}

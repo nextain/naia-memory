@@ -200,14 +200,15 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 							continue;
 						}
 						recordDeleteOutcome("authorized");
-						const target = resolution.target;
-						await this.adapter.semantic.upsert({
-							...target,
-							status: "archived",
-							updatedAt: now,
-							validTo: now,
-						});
-						factsUpdated++;
+						for (const target of resolution.targets) {
+							await this.adapter.semantic.upsert({
+								...target,
+								status: "archived",
+								updatedAt: now,
+								validTo: now,
+							});
+							factsUpdated++;
+						}
 						continue;
 					}
 
@@ -271,6 +272,12 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						supersessions: mutationPolicy.supersessions,
 						fallbackFacts: mutationPolicy.fallbackFacts,
 						contradictionFilter: this.contradictionFilter,
+						contextualEvidence: sourceEpisodes
+							.filter(
+								(episode): episode is NonNullable<typeof episode> => !!episode,
+							)
+							.map((episode) => episode.content)
+							.join("\n"),
 					});
 
 					if (contradictions.length > 0) {

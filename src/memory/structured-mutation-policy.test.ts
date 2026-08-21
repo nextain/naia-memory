@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { hasTrustedUserMutationSources } from "./structured-mutation-policy.js";
-import type { Episode } from "./types.js";
+import type { ContradictionFilterProvider } from "./contradiction-filter.js";
+import {
+	hasTrustedUserMutationSources,
+	resolveStructuredMutationPolicy,
+} from "./structured-mutation-policy.js";
+import type { Episode, Fact, StructuredFact } from "./types.js";
 
 function episode(id: string, role: Episode["role"]): Episode {
 	return {
@@ -39,5 +43,50 @@ describe("structured mutation source trust", () => {
 		expect(hasTrustedUserMutationSources(["user", "missing"], episodes)).toBe(
 			false,
 		);
+	});
+
+	it("sends a single-to-multi schema mismatch to a non-heuristic verifier", () => {
+		const existingStructured: StructuredFact = {
+			subject: "User",
+			subjectId: "person:self",
+			property: "preferred genre",
+			propertyId: "preference:music-genre",
+			value: "classical",
+			polarity: "affirmed",
+			cardinality: "single",
+		};
+		const existing = {
+			id: "fact",
+			content: "User prefers classical",
+			entities: ["User"],
+			topics: ["music"],
+			createdAt: 1,
+			updatedAt: 1,
+			importance: 0.8,
+			recallCount: 0,
+			lastAccessed: 1,
+			strength: 0.8,
+			status: "active",
+			sourceEpisodes: ["episode"],
+			structured: existingStructured,
+		} satisfies Fact;
+		const verifier = {
+			name: "test-verifier",
+			filter: async () => [],
+		} satisfies ContradictionFilterProvider;
+
+		const result = resolveStructuredMutationPolicy({
+			trustedUserMutation: true,
+			structured: {
+				...existingStructured,
+				value: "jazz",
+				cardinality: "multi",
+			},
+			existingFacts: [existing],
+			contradictionFilter: verifier,
+		});
+
+		expect(result.supersessions).toEqual([]);
+		expect(result.fallbackFacts).toEqual([existing]);
 	});
 });

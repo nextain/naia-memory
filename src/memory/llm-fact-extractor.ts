@@ -13,9 +13,9 @@
  * - +accuracy: atomic facts embed cleanly, improving vector search recall
  */
 
+import { hasGroundedDeleteEvidence } from "./delete-grounding.js";
 import type { ExtractedFact } from "./index.js";
 import type { Episode, StructuredFact } from "./types.js";
-import { hasGroundedDeleteEvidence } from "./delete-grounding.js";
 
 export interface LLMFactExtractorOptions {
 	/** Gemini (or OpenAI-compatible) API key */
@@ -198,12 +198,12 @@ Anti-pattern (do NOT do):
   "저녁에는 달리기 대신 스트레칭을 해요", and "夜は走る代わりにストレッチをしています"
   all describe a replacement of the evening routine; do not relabel the new
   value as a generic hobby.
-
 CRITICAL — DELETE / DURABLE CESSATION statements:
 When the speaker explicitly asks to remove a previously stored fact, or
-unambiguously says a durable state has permanently ended (for example
-"forget my peanut allergy", "I no longer collect stamps", "더 이상 우표
-수집을 하지 않아요", or "もう辛い食べ物は好きではありません"), return an object with
+unambiguously says a previously durable state no longer holds in the present
+without a temporary qualifier (for example
+"forget my peanut allergy", "I no longer play chess", "이제 재즈를 듣지
+않아요", or "もう紅茶は飲みません"), return an object with
 "operation":"delete" and the exact affirmative structured fact to remove.
 Do not turn the request into a new negated fact. Delete requires complete
 subject, property, value, polarity="affirmed", and cardinality. Never infer a
@@ -233,6 +233,15 @@ Durable cessation is language-independent. Phrases equivalent to "no longer",
 "더 이상 ... 않다", and "もう ... ではない" must delete the exact prior
 affirmative value when the statement is explicit and durable, even if the same
 turn also states a new negative preference.
+Treat an unqualified present-state ending as durable for memory-update purposes;
+words such as "permanently" or "forever" are not required. Temporal qualifiers
+such as "today", "this week", or "for now" still make the statement temporary
+and must not authorize deletion. Examples with unrelated attributes:
+- "I no longer use Vim." deletes the affirmative editor preference "Vim".
+- "이제 재즈를 듣지 않아요." deletes the affirmative music preference "재즈".
+- "もう紅茶は飲みません。" deletes the affirmative beverage preference "紅茶".
+For each example, use the complete current episode as deleteEvidenceQuote and
+the exact target mention ("Vim", "재즈", or "紅茶") as deleteTargetQuote.
 
 Language-preservation rules (apply independently to every episode):
 - Never translate the fact, structured labels, or value into another language.

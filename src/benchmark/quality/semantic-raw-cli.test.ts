@@ -42,6 +42,16 @@ describe("semantic raw CLI", () => {
 		).toMatchObject({ engine: "hindsight" });
 	});
 
+	it("accepts Letta as an agent-managed memory engine", () => {
+		expect(
+			parseSemanticRawCliArgs([
+				"--engine=letta",
+				"--contract=contract.json",
+				"--output=receipt.json",
+			]),
+		).toMatchObject({ engine: "letta" });
+	});
+
 	it("rejects a blank execution seed", () => {
 		expect(() =>
 			parseSemanticRawCliArgs([
