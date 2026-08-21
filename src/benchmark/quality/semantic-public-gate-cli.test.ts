@@ -370,6 +370,70 @@ async function writeAdjudicationFixture(
 	return [...paths, blindingSeed];
 }
 
+async function writeAnalysisPlanFixture(
+	directory: string,
+	contract: MemoryUpdateContract,
+) {
+	const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+	const requiredIndependentFamiliesByLanguage = Object.fromEntries(
+		(["ko", "en", "ja"] as const).map((language) => [
+			language,
+			new Set(
+				contract.cases
+					.filter((item) => item.split === "test" && item.language === language)
+					.map((item) => item.familyId),
+			).size,
+		]),
+	);
+	const unsigned = {
+		schemaVersion: "naia-memory-semantic-analysis-plan-v1" as const,
+		administrator: "external-statistician",
+		contractSha256: evidenceObjectSha256(contract),
+		engines: ["hindsight", "mem0", "naia"],
+		primaryEngine: "naia" as const,
+		primaryMetric: "currentAt1" as const,
+		primaryComparisons: ["hindsight", "mem0"],
+		familyWiseAlpha: 0.05,
+		multiplicityAdjustment: "holm" as const,
+		targetPower: 0.8,
+		minimumDetectableDifference: 0.1,
+		requiredIndependentFamiliesByLanguage,
+		sampleSizeMethod: "paired-family simulation",
+		sampleSizeAssumptionsSha256: "d".repeat(64),
+		stoppingRule:
+			"collect-all-frozen-test-families-no-outcome-peeking" as const,
+		createdAt: "2026-01-04T00:00:00Z",
+		signedAt: "2026-01-04T00:01:00Z",
+		statement: "ANALYSIS_PLAN_PREREGISTERED" as const,
+	};
+	const plan = {
+		...unsigned,
+		signatureBase64: sign(
+			null,
+			evidenceSignaturePayload(unsigned),
+			privateKey,
+		).toString("base64"),
+	};
+	const paths = [
+		join(directory, "analysis-plan.json"),
+		join(directory, "analysis-plan-trust-policy.json"),
+	];
+	await Promise.all([
+		writeFile(paths[0], JSON.stringify(plan)),
+		writeFile(
+			paths[1],
+			JSON.stringify({
+				administratorPublicKeys: {
+					"external-statistician": publicKey
+						.export({ type: "spki", format: "pem" })
+						.toString(),
+				},
+			}),
+		),
+	]);
+	return paths;
+}
+
 function captureStdout(output: string[]): void {
 	vi.spyOn(process.stdout, "write").mockImplementation((value) => {
 		output.push(String(value));
@@ -405,17 +469,26 @@ describe("semantic public gate CLI", () => {
 			fixture.contract,
 			executionPaths[0],
 		);
+		const analysisPlanPaths = await writeAnalysisPlanFixture(
+			directory,
+			fixture.contract,
+		);
 		expect(
 			await runSemanticPublicGateCli([
 				...fixture.paths,
 				...executionPaths,
 				...adjudicationPaths,
+				...analysisPlanPaths,
 			]),
 		).toBe(1);
 		expect(JSON.parse(output.pop() ?? "{}")).toMatchObject({
 			corpusQualified: true,
 			executionEvidenceQualified: true,
 			adjudicationEvidenceQualified: true,
+			analysisPlanIntegrityQualified: true,
+			plannedFamilyCount: 102,
+			sampleSizeAdequacyVerified: false,
+			trustedTimestampVerified: false,
 			adjudicatorCount: 3,
 			humanJudgedLanguages: ["en", "ja", "ko"],
 			modelOnlyLanguages: [],

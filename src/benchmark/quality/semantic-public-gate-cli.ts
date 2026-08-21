@@ -14,6 +14,11 @@ import {
 	validateSemanticAdjudicationEvidence,
 } from "./semantic-adjudication-evidence.js";
 import {
+	isSemanticAnalysisPlan,
+	isSemanticAnalysisPlanTrustPolicy,
+	validateSemanticAnalysisPlan,
+} from "./semantic-analysis-plan.js";
+import {
 	isSemanticExecutionEvidenceBundle,
 	isSemanticExecutionTrustPolicy,
 	validateSemanticExecutionEvidence,
@@ -35,12 +40,13 @@ async function runSemanticEvidenceGateCli(
 		(mode === "public" &&
 			args.length !== 3 &&
 			args.length !== 6 &&
-			args.length !== 12)
+			args.length !== 12 &&
+			args.length !== 14)
 	) {
 		process.stderr.write(
 			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>${
 				mode === "public"
-					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed>]]"
+					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json>]]]"
 					: ""
 			}\n`,
 		);
@@ -131,7 +137,7 @@ async function runSemanticEvidenceGateCli(
 				bundle: executionBundle,
 				trustPolicy: executionTrustPolicy,
 			});
-			if (args.length === 12) {
+			if (args.length >= 12) {
 				const packet = await readJson(args[6], "blind packet");
 				const seal = await readJson(args[7], "blind seal");
 				let judgmentsBytes: Buffer;
@@ -203,6 +209,54 @@ async function runSemanticEvidenceGateCli(
 						...Object.values(executionTrustPolicy.executorPublicKeys),
 					],
 				});
+				let analysisPlan = {};
+				if (args.length === 14) {
+					const parsedPlan = await readJson(args[12], "analysis plan");
+					if (!isSemanticAnalysisPlan(parsedPlan))
+						throw new Error("semantic analysis plan shape is invalid");
+					const analysisTrust = await readJson(
+						args[13],
+						"analysis plan trust policy",
+					);
+					if (!isSemanticAnalysisPlanTrustPolicy(analysisTrust))
+						throw new Error(
+							"semantic analysis plan trust policy shape is invalid",
+						);
+					const firstExecutionStartedAt = executionBundle.receipts
+						.map((receipt) => receipt.startedAt)
+						.sort()[0];
+					if (!firstExecutionStartedAt)
+						throw new Error("semantic execution start time is unavailable");
+					analysisPlan = validateSemanticAnalysisPlan({
+						contract,
+						plan: parsedPlan,
+						trustPolicy: analysisTrust,
+						campaign: campaign as Record<string, unknown>,
+						firstExecutionStartedAt,
+						forbiddenTrustIdentities: [
+							...Object.values(trustPolicy.authorPublicKeysByLanguage).flatMap(
+								(keys) => Object.keys(keys),
+							),
+							...Object.values(
+								trustPolicy.nativeReviewerPublicKeysByLanguage,
+							).flatMap((keys) => Object.keys(keys)),
+							...Object.keys(executionTrustPolicy.executorPublicKeys),
+							...Object.keys(adjudicationTrust.adjudicators),
+						],
+						forbiddenTrustPublicKeys: [
+							...Object.values(trustPolicy.authorPublicKeysByLanguage).flatMap(
+								(keys) => Object.values(keys),
+							),
+							...Object.values(
+								trustPolicy.nativeReviewerPublicKeysByLanguage,
+							).flatMap((keys) => Object.values(keys)),
+							...Object.values(executionTrustPolicy.executorPublicKeys),
+							...Object.values(adjudicationTrust.adjudicators).map(
+								(policy) => policy.publicKey,
+							),
+						],
+					});
+				}
 				process.stdout.write(
 					`${JSON.stringify({
 						...corpusResult,
@@ -210,9 +264,12 @@ async function runSemanticEvidenceGateCli(
 						...execution,
 						adjudicationEvidenceQualified: true,
 						...adjudication,
+						...analysisPlan,
 						promotable: false,
 						failure:
-							"competitive thresholds, uncertainty, latency, and released-commit evidence are not evaluated by this gate",
+							args.length === 14
+								? "competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+								: "a preregistered analysis plan, competitive thresholds, uncertainty, latency, and released-commit evidence are not evaluated by this gate",
 					})}\n`,
 				);
 				return 1;

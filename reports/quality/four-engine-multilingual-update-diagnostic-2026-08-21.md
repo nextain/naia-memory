@@ -386,3 +386,42 @@ honesty and reproducibility of uncertainty claims; it does not alter an engine
 score. The existing three-family-per-language diagnostic would correctly raise
 the sparse-cluster warning, so the public competitiveness decision remains
 **NO-GO** pending the external native-human campaign described above.
+
+## Preregistered analysis-plan stage
+
+The 100-family public coverage floor is not a statistical power calculation.
+It prevents a very small or development-contaminated corpus from entering the
+public path, but by itself cannot establish that a campaign can detect a
+practically meaningful difference. The gate now keeps those two claims
+separate by accepting an optional signed v1 analysis plan only on the complete
+14-input evidence path.
+
+The plan freezes the exact engine order, Naia's primary metric, every primary
+competitor comparison, family-wise alpha, Holm multiplicity adjustment, target
+power, minimum detectable difference, language-specific independent-family
+targets, a hash of the sample-size assumptions, the named sample-size method,
+and a no-outcome-peeking stopping rule. Its declared signed timestamp must
+predate the first declared engine-execution timestamp. The administrator's identity and
+canonical public key must be distinct from corpus authors, native reviewers,
+engine executors, and adjudicators. The test corpus must meet every declared
+language-specific family target, and the plan must cover every campaign engine
+exactly once as either Naia or a primary comparator.
+
+A qualified plan proves signature and content-binding integrity, not statistical
+correctness or trusted wall-clock chronology. The public output therefore names
+this state `analysisPlanIntegrityQualified` and explicitly returns
+`sampleSizeAdequacyVerified: false` and `trustedTimestampVerified: false`.
+The assumptions hash may bind a flawed power analysis; independent statistical
+review and publication of the assumptions artifact are still required. The
+gate also does not yet apply Holm-adjusted competitive thresholds to the paired
+family intervals, evaluate simultaneous uncertainty, or verify released-commit
+latency and cost comparability. It therefore continues to return
+`promotable: false`. No engine was rerun and no performance uplift is claimed.
+
+The focused analysis-plan and public-gate suites pass 16 tests, including
+pre-execution chronology, signature mutation, unmet family targets, exact
+language coverage, and administrator role/key reuse. The first OpenCode MiMo
+adversarial pass returned `CLEAN` at complexity digest
+`sha256:5af0049897633a17ff0c74de28f641510ee04717ba22b250172610b1ebc67004`.
+Final whole-tree validation and the required consecutive post-documentation
+reviews are recorded with the commit evidence below.
