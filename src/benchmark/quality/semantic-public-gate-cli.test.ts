@@ -16,7 +16,10 @@ import type {
 	SemanticPublicAttestationBundle,
 	SemanticPublicTrustPolicy,
 } from "./semantic-public-attestation.js";
-import { runSemanticPublicGateCli } from "./semantic-public-gate-cli.js";
+import {
+	runSemanticCorpusGateCli,
+	runSemanticPublicGateCli,
+} from "./semantic-public-gate-cli.js";
 
 const roots: string[] = [];
 async function root(): Promise<string> {
@@ -158,15 +161,43 @@ afterEach(async () => {
 });
 
 describe("semantic public gate CLI", () => {
-	it("promotes only a sufficiently large frozen contract signed by every author and reviewer", async () => {
+	it("qualifies the corpus but refuses public promotion without engine execution evidence", async () => {
 		const output: string[] = [];
 		captureStdout(output);
 		const { paths } = await writeFixture(await root());
-		expect(await runSemanticPublicGateCli(paths)).toBe(0);
+		expect(await runSemanticPublicGateCli(paths)).toBe(1);
 		expect(JSON.parse(output.pop() ?? "{}")).toEqual({
-			promotable: true,
+			corpusQualified: true,
 			testCaseCount: 102,
 			testFamilyCount: 102,
+			promotable: false,
+			failure:
+				"semantic engine execution evidence is not evaluated by this gate",
+		});
+	});
+
+	it("provides a separate successful gate for corpus qualification", async () => {
+		const output: string[] = [];
+		captureStdout(output);
+		const { paths } = await writeFixture(await root());
+		expect(await runSemanticCorpusGateCli(paths)).toBe(0);
+		expect(JSON.parse(output.pop() ?? "{}")).toEqual({
+			corpusQualified: true,
+			testCaseCount: 102,
+			testFamilyCount: 102,
+		});
+	});
+
+	it("reports corpus qualification failures without promotion semantics", async () => {
+		const output: string[] = [];
+		captureStdout(output);
+		const fixture = await writeFixture(await root());
+		first(fixture.contract.cases, "case").query = "tampered after review";
+		await writeFile(fixture.paths[0], JSON.stringify(fixture.contract));
+		expect(await runSemanticCorpusGateCli(fixture.paths)).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}")).toEqual({
+			corpusQualified: false,
+			failure: "semantic attestation bundle is not bound to the contract",
 		});
 	});
 
@@ -243,14 +274,22 @@ describe("semantic public gate CLI", () => {
 				.toString(),
 		};
 		await writeFile(fixture.paths[2], JSON.stringify(fixture.policy));
-		expect(await runSemanticPublicGateCli(fixture.paths)).toBe(0);
-		expect(JSON.parse(output.pop() ?? "{}").promotable).toBe(true);
+		expect(await runSemanticCorpusGateCli(fixture.paths)).toBe(0);
+		expect(JSON.parse(output.pop() ?? "{}").corpusQualified).toBe(true);
 	});
 
 	it("uses exit code 2 for invalid arity", async () => {
-		vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+		const errors: string[] = [];
+		vi.spyOn(process.stderr, "write").mockImplementation((value) => {
+			errors.push(String(value));
+			return true;
+		});
 		expect(await runSemanticPublicGateCli([])).toBe(2);
 		expect(await runSemanticPublicGateCli(["a", "b"])).toBe(2);
+		expect(await runSemanticCorpusGateCli([])).toBe(2);
+		expect(errors).toContainEqual(
+			expect.stringContaining("benchmark:semantic-corpus-gate"),
+		);
 	});
 
 	it("fails closed with sanitized intake errors for each evidence file", async () => {

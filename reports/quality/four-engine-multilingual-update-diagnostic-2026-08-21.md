@@ -215,3 +215,25 @@ private-key PEM more explicitly. The full project now passes 64 files and 684
 tests, typecheck, build, formatting, and diff checks. This hardens publication
 evidence integrity; it does not improve or remeasure engine performance, so the
 public competitiveness status remains NO-GO.
+
+The semantic evidence tooling now separates corpus qualification from public
+competitive promotion. Previously, a sufficiently large frozen contract with
+trusted author and native-reviewer signatures made
+`benchmark:semantic-public-gate` emit `promotable: true`, even though that
+three-input command did not inspect any engine execution, comparable receipts,
+repetitions, adjudication, latency, cost, or released commit. That was a
+claim-boundary defect: independent corpus provenance is necessary evidence, but
+not evidence that an engine is competitive. The public gate now fails closed
+with `promotable: false` and an explicit missing-execution-evidence blocker.
+The useful provenance check remains available under the narrower
+`benchmark:semantic-corpus-gate` command, whose success and failure payloads
+use only `corpusQualified` semantics.
+
+Two Claude Code Sonnet headless adversarial passes required fixes to corpus
+failure output and a positive reusable-trust-store regression; the final pass
+returned `VERDICT: CLEAN`. The full project passes 64 files and 686 tests,
+typecheck, build, formatting, and diff checks. This stage deliberately reports
+no performance increase. It prevents a signed dataset from being presented as
+a measured competitive result. Public status remains NO-GO; the next evidence
+stage must define and collect semantic engine execution receipts on the frozen
+corpus before this gate can ever return a promotion success.

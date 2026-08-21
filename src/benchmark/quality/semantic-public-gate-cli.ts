@@ -16,12 +16,13 @@ import {
 
 const MAX_CONTRACT_BYTES = 16 * 1024 * 1024;
 
-export async function runSemanticPublicGateCli(
+async function runSemanticEvidenceGateCli(
 	args: string[],
+	mode: "corpus" | "public",
 ): Promise<number> {
 	if (args.length !== 3) {
 		process.stderr.write(
-			"Usage: pnpm benchmark:semantic-public-gate <contract.json> <attestations.json> <trust-policy.json>\n",
+			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>\n`,
 		);
 		return 2;
 	}
@@ -61,25 +62,49 @@ export async function runSemanticPublicGateCli(
 		const testCases = contract.cases.filter(
 			(current) => current.split === "test",
 		);
+		const corpusResult = {
+			corpusQualified: true,
+			testCaseCount: testCases.length,
+			testFamilyCount: new Set(testCases.map((current) => current.familyId))
+				.size,
+		};
+		if (mode === "corpus") {
+			process.stdout.write(`${JSON.stringify(corpusResult)}\n`);
+			return 0;
+		}
 		process.stdout.write(
 			`${JSON.stringify({
-				promotable: true,
-				testCaseCount: testCases.length,
-				testFamilyCount: new Set(testCases.map((current) => current.familyId))
-					.size,
-			})}\n`,
-		);
-		return 0;
-	} catch (error) {
-		process.stdout.write(
-			`${JSON.stringify({
+				...corpusResult,
 				promotable: false,
 				failure:
-					error instanceof Error ? error.message : "contract intake failed",
+					"semantic engine execution evidence is not evaluated by this gate",
 			})}\n`,
 		);
 		return 1;
+	} catch (error) {
+		const failure =
+			error instanceof Error ? error.message : "contract intake failed";
+		process.stdout.write(
+			`${JSON.stringify(
+				mode === "corpus"
+					? { corpusQualified: false, failure }
+					: { promotable: false, failure },
+			)}\n`,
+		);
+		return 1;
 	}
+}
+
+export async function runSemanticPublicGateCli(
+	args: string[],
+): Promise<number> {
+	return runSemanticEvidenceGateCli(args, "public");
+}
+
+export async function runSemanticCorpusGateCli(
+	args: string[],
+): Promise<number> {
+	return runSemanticEvidenceGateCli(args, "corpus");
 }
 
 const invokedPath =
