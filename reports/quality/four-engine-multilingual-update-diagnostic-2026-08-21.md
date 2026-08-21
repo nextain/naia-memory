@@ -1347,3 +1347,24 @@ change retrieval, extraction, matching, multilingual behavior, benchmark
 scores, or comparative rank. Public competitiveness therefore remains
 **NO-GO**. The decisive evidence step remains execution of the frozen campaign
 under genuinely independent multilingual control.
+
+### Durability latency trade-off
+
+A same-host microbenchmark alternated 100 replacements of a 53,791-byte store
+on the workspace's Btrfs SSD. The old unsynced write-plus-rename path measured
+0.170 ms median and 0.396 ms p95; the durable file-sync, rename, and directory-
+sync path measured 9.736 ms median and 10.574 ms p95. These warm-cache,
+single-host measurements are diagnostic rather than a portable performance
+contract. They exclude cold-cache behavior, concurrent I/O, and sustained
+filesystem pressure, but on this host they show a flush/import cost increase of
+about 9.6 ms median. Search and recall do not synchronously execute this path.
+Ordinary mutations are coalesced by a non-resetting two-second save timer, which
+also means the newest mutations can remain unpersisted for up to that interval;
+explicit flush, import, close, and reset paths write synchronously.
+
+A follow-up alternated full `fsync` with file `fdatasync` plus directory
+`fsync`. It found no improvement: 9.840 ms versus 9.861 ms median and 10.618 ms
+versus 10.913 ms p95. Because the alternative provided no measured benefit on
+this host, the simpler existing `fsync` implementation was retained. Further
+optimization should investigate flush frequency and write amplification while
+preserving explicit persistence semantics.
