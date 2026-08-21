@@ -300,8 +300,11 @@ export function validateSemanticAdjudicationEvidence(input: {
 		evidenceScope: "signed-artifact-integrity-and-coverage" as const,
 		blindnessVerified: false,
 		organizationalIndependenceVerified: false,
-		interRaterAgreementEvaluated: false,
+		nativeLanguageStatusVerified: false,
+		interRaterAgreementEvaluated: score.agreement !== null,
 		disclosure:
-			"Signatures prove artifact integrity, trusted-key control, role-key separation, and judgment coverage. They do not prove that adjudicators never saw the confidential seal, that the trust-policy issuer is organizationally independent, or that multiple raters agreed.",
+			score.agreement === null
+				? "Signatures prove artifact integrity, trusted-key control, role-key separation, and judgment coverage. They do not prove that adjudicators never saw the confidential seal, that the trust-policy issuer is organizationally independent, that declared native-language status was externally verified, or that multiple raters agreed."
+				: "Signatures prove artifact integrity, trusted-key control, role-key separation, and complete eligible-rater coverage. Agreement is recomputed from signed per-rater judgments; it does not prove that adjudicators never saw the confidential seal, that the trust-policy issuer is organizationally independent, or that declared native-language status was externally verified.",
 	};
 }

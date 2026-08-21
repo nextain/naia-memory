@@ -150,6 +150,7 @@ describe("semantic adjudication evidence", () => {
 				evidenceScope: "signed-artifact-integrity-and-coverage",
 				blindnessVerified: false,
 				organizationalIndependenceVerified: false,
+				nativeLanguageStatusVerified: false,
 				interRaterAgreementEvaluated: false,
 			});
 		} finally {

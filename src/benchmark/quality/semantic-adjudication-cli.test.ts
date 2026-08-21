@@ -237,4 +237,167 @@ describe("semantic adjudication scorer", () => {
 			rmSync(directory, { recursive: true, force: true });
 		}
 	});
+
+	it("scores complete native multi-rater judgments and reports disagreement", () => {
+		const directory = mkdtempSync(resolve(tmpdir(), "semantic-score-multi-"));
+		try {
+			const value = setup(directory, {
+				engines: ["naia", "mem0"],
+				schemaVersion: "naia-memory-semantic-campaign-v3",
+			});
+			const adjudicators = ["native-ko-a", "native-ko-b"].map((id) => ({
+				id,
+				nativeLanguages: ["ko"],
+				completedAt: "2026-08-19T08:00:00Z",
+				independentFromEngineImplementers: true,
+			}));
+			const samples = value.artifacts.packet.samples.flatMap((sample, index) =>
+				adjudicators.map((adjudicator, adjudicatorIndex) => ({
+					sampleId: sample.sampleId,
+					adjudicatorId: adjudicator.id,
+					judgments: sample.retrieved.map((memory, memoryIndex) => ({
+						memoryId: memory.memoryId,
+						label:
+							index === 0 && memoryIndex === 0 && adjudicatorIndex === 1
+								? "stale"
+								: "current",
+						notes: "",
+					})),
+				})),
+			);
+			const score = scoreSemanticAdjudication({
+				contract: value.current.contract,
+				campaign: value.current.campaign,
+				campaignDirectory: directory,
+				blindingSeed: value.blindingSeed,
+				...value.hashes,
+				packet: value.artifacts.packet,
+				seal: value.artifacts.seal,
+				judgmentsBytes: JSON.stringify({
+					schemaVersion: "naia-memory-semantic-judgments-v3",
+					packetContentSha256: value.artifacts.packet.packetContentSha256,
+					adjudicators,
+					samples,
+				}),
+			});
+			expect(score.disclosure.interRaterAgreementEvaluated).toBe(true);
+			expect(score.agreement?.overall).toMatchObject({
+				disagreementSubjects: 1,
+				ratings: 8,
+			});
+			expect(score.samples[0].labels[0]).toBe("uncertain");
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects missing or single-native-rater v3 coverage", () => {
+		const directory = mkdtempSync(resolve(tmpdir(), "semantic-score-multi-"));
+		try {
+			const value = setup(directory, {
+				engines: ["naia", "mem0"],
+				schemaVersion: "naia-memory-semantic-campaign-v3",
+			});
+			const oneJudge = {
+				id: "native-ko-a",
+				nativeLanguages: ["ko"],
+				completedAt: "2026-08-19T08:00:00Z",
+				independentFromEngineImplementers: true,
+			};
+			const judgments = {
+				schemaVersion: "naia-memory-semantic-judgments-v3",
+				packetContentSha256: value.artifacts.packet.packetContentSha256,
+				adjudicators: [oneJudge],
+				samples: value.artifacts.packet.samples.map((sample) => ({
+					sampleId: sample.sampleId,
+					adjudicatorId: oneJudge.id,
+					judgments: sample.retrieved.map((memory) => ({
+						memoryId: memory.memoryId,
+						label: "current",
+						notes: "",
+					})),
+				})),
+			};
+			const base = {
+				contract: value.current.contract,
+				campaign: value.current.campaign,
+				campaignDirectory: directory,
+				blindingSeed: value.blindingSeed,
+				...value.hashes,
+				packet: value.artifacts.packet,
+				seal: value.artifacts.seal,
+			};
+			expect(() =>
+				scoreSemanticAdjudication({
+					...base,
+					judgmentsBytes: JSON.stringify(judgments),
+				}),
+			).toThrow("two native human");
+			const second = { ...oneJudge, id: "native-ko-b" };
+			const incomplete = {
+				...judgments,
+				adjudicators: [oneJudge, second],
+			};
+			expect(() =>
+				scoreSemanticAdjudication({
+					...base,
+					judgmentsBytes: JSON.stringify(incomplete),
+				}),
+			).toThrow("incomplete multi-rater coverage");
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects model adjudicators from v3 agreement evidence", () => {
+		const directory = mkdtempSync(resolve(tmpdir(), "semantic-score-model-"));
+		try {
+			const value = setup(directory, {
+				engines: ["naia", "mem0"],
+				schemaVersion: "naia-memory-semantic-campaign-v3",
+			});
+			expect(() =>
+				scoreSemanticAdjudication({
+					contract: value.current.contract,
+					campaign: value.current.campaign,
+					campaignDirectory: directory,
+					blindingSeed: value.blindingSeed,
+					...value.hashes,
+					packet: value.artifacts.packet,
+					seal: value.artifacts.seal,
+					judgmentsBytes: JSON.stringify({
+						schemaVersion: "naia-memory-semantic-judgments-v3",
+						packetContentSha256: value.artifacts.packet.packetContentSha256,
+						adjudicators: [
+							{
+								id: "native-ko-a",
+								nativeLanguages: ["ko"],
+								completedAt: "2026-08-19T08:00:00Z",
+								independentFromEngineImplementers: true,
+							},
+							{
+								id: "native-ko-b",
+								nativeLanguages: ["ko"],
+								completedAt: "2026-08-19T08:00:00Z",
+								independentFromEngineImplementers: true,
+							},
+							{
+								id: "model-ko",
+								kind: "model",
+								languageCoverage: ["ko"],
+								completedAt: "2026-08-19T08:00:00Z",
+								independentFromEngineImplementers: true,
+								provider: "example",
+								model: "judge-v1",
+								promptSha256: "a".repeat(64),
+							},
+						],
+						samples: [],
+					}),
+				}),
+			).toThrow("native human adjudicators only");
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
 });

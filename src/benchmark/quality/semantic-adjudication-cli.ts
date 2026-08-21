@@ -4,6 +4,12 @@ import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { MemoryUpdateContract } from "./memory-update-contract.js";
 import { buildSemanticBlindArtifacts } from "./semantic-blind-packet-cli.js";
+import {
+	type RatedSemanticMemory,
+	type SemanticJudgmentLabel,
+	calculateSemanticInterRaterAgreement,
+	consensusSemanticLabel,
+} from "./semantic-inter-rater-agreement.js";
 
 type BlindBuildInput = Parameters<typeof buildSemanticBlindArtifacts>[0];
 type BlindArtifacts = ReturnType<typeof buildSemanticBlindArtifacts>;
@@ -12,14 +18,13 @@ type BlindSeal = BlindArtifacts["seal"];
 type BlindSample = BlindPacket["samples"][number];
 type JudgmentSampleRecord = Record<string, unknown>;
 
-const LABELS = [
+const LABELS: SemanticJudgmentLabel[] = [
 	"current",
 	"stale",
 	"deleted",
 	"irrelevant",
 	"uncertain",
-] as const;
-type JudgmentLabel = (typeof LABELS)[number];
+];
 
 type HumanAdjudicator = {
 	id: string;
@@ -43,13 +48,18 @@ type ModelAdjudicator = {
 type JudgmentFile = {
 	schemaVersion:
 		| "naia-memory-semantic-judgments-v1"
-		| "naia-memory-semantic-judgments-v2";
+		| "naia-memory-semantic-judgments-v2"
+		| "naia-memory-semantic-judgments-v3";
 	packetContentSha256: string;
 	adjudicators: Array<HumanAdjudicator | ModelAdjudicator>;
 	samples: Array<{
 		sampleId: string;
 		adjudicatorId: string;
-		judgments: Array<{ memoryId: string; label: JudgmentLabel; notes: string }>;
+		judgments: Array<{
+			memoryId: string;
+			label: SemanticJudgmentLabel;
+			notes: string;
+		}>;
 	}>;
 };
 
@@ -82,7 +92,8 @@ function validateJudgments(value: unknown, packet: BlindPacket): JudgmentFile {
 	assertObject(value, "judgments");
 	if (
 		value.schemaVersion !== "naia-memory-semantic-judgments-v1" &&
-		value.schemaVersion !== "naia-memory-semantic-judgments-v2"
+		value.schemaVersion !== "naia-memory-semantic-judgments-v2" &&
+		value.schemaVersion !== "naia-memory-semantic-judgments-v3"
 	)
 		throw new Error("unsupported semantic judgments schema");
 	if (value.packetContentSha256 !== packet.packetContentSha256)
@@ -104,7 +115,7 @@ function validateJudgments(value: unknown, packet: BlindPacket): JudgmentFile {
 			field.length === 0 ||
 			field.some((item) => typeof item !== "string" || !item.trim());
 		const provenanceInvalid = isModel
-			? value.schemaVersion !== "naia-memory-semantic-judgments-v2" ||
+			? value.schemaVersion === "naia-memory-semantic-judgments-v1" ||
 				invalidCoverage(adjudicator.languageCoverage) ||
 				typeof adjudicator.provider !== "string" ||
 				!adjudicator.provider.trim() ||
@@ -117,63 +128,119 @@ function validateJudgments(value: unknown, packet: BlindPacket): JudgmentFile {
 			throw new Error("invalid or non-independent adjudicator provenance");
 		adjudicators.set(adjudicator.id, adjudicator);
 	}
+	if (!Array.isArray(value.samples))
+		throw new Error("judgments must be an array");
+	const multiRater =
+		value.schemaVersion === "naia-memory-semantic-judgments-v3";
 	if (
-		!Array.isArray(value.samples) ||
-		value.samples.length !== packet.samples.length
+		multiRater &&
+		[...adjudicators.values()].some(
+			(adjudicator) => adjudicator.kind === "model",
+		)
 	)
+		throw new Error(
+			"multi-rater agreement evidence accepts native human adjudicators only",
+		);
+	if (!multiRater && value.samples.length !== packet.samples.length)
 		throw new Error("judgments must cover every packet sample exactly once");
-	const bySample = new Map<string, JudgmentSampleRecord>();
+	const byAssignment = new Map<string, JudgmentSampleRecord>();
 	const usedAdjudicators = new Set<string>();
 	for (const sample of value.samples) {
 		assertObject(sample, "judgment sample");
-		if (typeof sample.sampleId !== "string" || bySample.has(sample.sampleId))
-			throw new Error("duplicate or invalid judgment sample ID");
-		bySample.set(sample.sampleId, sample);
+		const assignment = `${String(sample.sampleId)}\0${String(sample.adjudicatorId)}`;
+		if (
+			typeof sample.sampleId !== "string" ||
+			typeof sample.adjudicatorId !== "string" ||
+			byAssignment.has(assignment)
+		)
+			throw new Error("duplicate or invalid judgment assignment");
+		byAssignment.set(assignment, sample);
 	}
 	for (const packetSample of packet.samples) {
-		const sample = bySample.get(packetSample.sampleId);
-		const adjudicator = sample
-			? adjudicators.get(String(sample.adjudicatorId))
-			: undefined;
-		const languageCoverage =
-			adjudicator?.kind === "model"
-				? adjudicator.languageCoverage
-				: adjudicator?.nativeLanguages;
-		if (
-			!sample ||
-			!adjudicator ||
-			!(languageCoverage as string[] | undefined)?.includes(
-				packetSample.language,
-			) ||
-			!Array.isArray(sample.judgments) ||
-			sample.judgments.length !== packetSample.retrieved.length
-		)
+		const eligible = [...adjudicators.entries()].filter(([, adjudicator]) => {
+			const coverage =
+				adjudicator.kind === "model"
+					? adjudicator.languageCoverage
+					: adjudicator.nativeLanguages;
+			return (coverage as string[]).includes(packetSample.language);
+		});
+		if (multiRater) {
+			const nativeHumans = eligible.filter(
+				([, adjudicator]) => adjudicator.kind !== "model",
+			);
+			if (nativeHumans.length < 2)
+				throw new Error(
+					`multi-rater judgments require two native human adjudicators for ${packetSample.language}`,
+				);
+		} else if (eligible.length === 0) {
 			throw new Error(
 				`incomplete or uncovered judgments for ${packetSample.sampleId}`,
 			);
-		usedAdjudicators.add(String(sample.adjudicatorId));
-		const expectedIds = packetSample.retrieved.map((item) => item.memoryId);
-		const seen = new Set<string>();
-		for (const judgment of sample.judgments) {
-			assertObject(judgment, "memory judgment");
+		}
+		const assignments = multiRater
+			? eligible
+			: eligible.filter(([id]) =>
+					byAssignment.has(`${packetSample.sampleId}\0${id}`),
+				);
+		if (!multiRater && assignments.length !== 1)
+			throw new Error(
+				`incomplete or uncovered judgments for ${packetSample.sampleId}`,
+			);
+		for (const [adjudicatorId] of assignments) {
+			const sample = byAssignment.get(
+				`${packetSample.sampleId}\0${adjudicatorId}`,
+			);
 			if (
-				typeof judgment.memoryId !== "string" ||
-				seen.has(judgment.memoryId) ||
-				!expectedIds.includes(judgment.memoryId)
-			)
-				throw new Error(`invalid memory judgment in ${packetSample.sampleId}`);
-			seen.add(judgment.memoryId);
-			if (!LABELS.includes(judgment.label as JudgmentLabel))
-				throw new Error(`invalid label in ${packetSample.sampleId}`);
-			if (
-				typeof judgment.notes !== "string" ||
-				(judgment.label === "uncertain" && !judgment.notes.trim())
+				!sample ||
+				!Array.isArray(sample.judgments) ||
+				sample.judgments.length !== packetSample.retrieved.length
 			)
 				throw new Error(
-					`uncertain judgment requires notes in ${packetSample.sampleId}`,
+					`incomplete multi-rater coverage for ${packetSample.sampleId}/${adjudicatorId}`,
 				);
+			usedAdjudicators.add(adjudicatorId);
+			const expectedIds = packetSample.retrieved.map((item) => item.memoryId);
+			const seen = new Set<string>();
+			for (const judgment of sample.judgments) {
+				assertObject(judgment, "memory judgment");
+				if (
+					typeof judgment.memoryId !== "string" ||
+					seen.has(judgment.memoryId) ||
+					!expectedIds.includes(judgment.memoryId)
+				)
+					throw new Error(
+						`invalid memory judgment in ${packetSample.sampleId}`,
+					);
+				seen.add(judgment.memoryId);
+				if (!LABELS.includes(judgment.label as SemanticJudgmentLabel))
+					throw new Error(`invalid label in ${packetSample.sampleId}`);
+				if (
+					typeof judgment.notes !== "string" ||
+					(judgment.label === "uncertain" && !judgment.notes.trim())
+				)
+					throw new Error(
+						`uncertain judgment requires notes in ${packetSample.sampleId}`,
+					);
+			}
 		}
 	}
+	if (byAssignment.size !== value.samples.length)
+		throw new Error("judgment assignments are invalid");
+	const expectedAssignments = packet.samples.reduce((count, sample) => {
+		if (!multiRater) return count + 1;
+		return (
+			count +
+			[...adjudicators.values()].filter((adjudicator) => {
+				const coverage =
+					adjudicator.kind === "model"
+						? adjudicator.languageCoverage
+						: adjudicator.nativeLanguages;
+				return (coverage as string[]).includes(sample.language);
+			}).length
+		);
+	}, 0);
+	if (value.samples.length !== expectedAssignments)
+		throw new Error("judgments contain uncovered or missing assignments");
 	if (usedAdjudicators.size !== adjudicators.size)
 		throw new Error("every declared adjudicator must be assigned a sample");
 	return value as unknown as JudgmentFile;
@@ -213,27 +280,42 @@ export function scoreSemanticAdjudication(input: {
 	if (JSON.stringify(input.seal) !== JSON.stringify(rebuilt.seal))
 		throw new Error("adjudication seal does not match frozen inputs and seed");
 	const judgments = validateJudgments(judgmentValue, input.packet);
-	const judgmentBySample = new Map(
-		judgments.samples.map((item) => [item.sampleId, item]),
-	);
+	const judgmentsBySample = new Map<string, JudgmentFile["samples"]>();
+	for (const item of judgments.samples) {
+		const current = judgmentsBySample.get(item.sampleId) ?? [];
+		current.push(item);
+		judgmentsBySample.set(item.sampleId, current);
+	}
 	const packetBySample = new Map<string, BlindSample>(
 		input.packet.samples.map((item) => [item.sampleId, item]),
 	);
 	const cells: Record<string, ScoreCell> = {};
+	const agreementSubjects: RatedSemanticMemory[] = [];
 	const sampleResults = input.seal.samples.map((sealed) => {
 		const packetSample = packetBySample.get(sealed.sampleId);
-		const judged = judgmentBySample.get(sealed.sampleId);
-		if (!packetSample || !judged)
+		const judged = judgmentsBySample.get(sealed.sampleId);
+		if (!packetSample || !judged?.length)
 			throw new Error(`unmatched sealed sample: ${sealed.sampleId}`);
 		const labels = packetSample.retrieved.map((memory) => {
-			const label = judged.judgments.find(
-				(item) => item.memoryId === memory.memoryId,
-			)?.label;
-			if (!label)
+			const ratings = judged.map(
+				(record) =>
+					record.judgments.find((item) => item.memoryId === memory.memoryId)
+						?.label,
+			);
+			if (ratings.some((label) => !label))
 				throw new Error(
 					`missing scored judgment for ${sealed.sampleId}/${memory.memoryId}`,
 				);
-			return label;
+			const completeRatings = ratings as SemanticJudgmentLabel[];
+			if (judgments.schemaVersion === "naia-memory-semantic-judgments-v3") {
+				agreementSubjects.push({
+					subjectId: `${sealed.sampleId}\0${memory.memoryId}`,
+					language: packetSample.language,
+					ratings: completeRatings,
+				});
+				return consensusSemanticLabel(completeRatings);
+			}
+			return completeRatings[0];
 		});
 		const key = `${sealed.engine}/${packetSample.language}`;
 		if (!cells[key]) cells[key] = emptyCell();
@@ -255,6 +337,10 @@ export function scoreSemanticAdjudication(input: {
 			labels,
 		};
 	});
+	const agreement =
+		judgments.schemaVersion === "naia-memory-semantic-judgments-v3"
+			? calculateSemanticInterRaterAgreement(agreementSubjects)
+			: null;
 	return {
 		schemaVersion: "naia-memory-semantic-adjudication-score-v1" as const,
 		disclosure: {
@@ -264,9 +350,11 @@ export function scoreSemanticAdjudication(input: {
 			judgmentsFileSha256: sha256(input.judgmentsBytes),
 			judgmentsCanonicalSha256: sha256(JSON.stringify(judgments)),
 			adjudicators: judgments.adjudicators,
+			interRaterAgreementEvaluated: agreement !== null,
 		},
 		cells,
 		samples: sampleResults,
+		agreement,
 	};
 }
 

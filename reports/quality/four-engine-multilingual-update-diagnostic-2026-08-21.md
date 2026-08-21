@@ -308,3 +308,46 @@ and 690 tests, typecheck, build, formatting, and diff checks. The workspace
 benchmark-contract, entrypoint, and context-translation suites also pass. This
 stage improves evidence integrity, not engine quality, so no performance uplift
 is claimed.
+
+The semantic judgment contract now supports a v3 multi-rater mode. For every
+blind sample, all declared native-language human adjudicators eligible for that
+language must submit an independent label for every retrieved memory. Fewer
+than two eligible humans, a missing assignment, duplicate assignment, extra
+assignment, incomplete memory coverage, unused declared adjudicator, or any
+model adjudicator causes scoring to fail closed. The resulting score reports
+exact-agreement subjects, disagreement subjects, agreeing and total rating
+pairs, pairwise observed agreement, exact-agreement rate, and a pooled-category
+chance-corrected multi-rater kappa overall and by language. Unique majorities
+become the scoring consensus; ties become `uncertain` and remain visible as
+disagreement.
+
+This closes a specific evidence gap: signed judgments can now demonstrate what
+the declared raters individually submitted and quantify their agreement. It
+does not prove that they were administered independently, did not see the seal,
+belong to independent organizations, or are actually native speakers. Those
+last properties remain trust-policy declarations, so the evidence result now
+also emits `nativeLanguageStatusVerified: false`. The overall kappa pools label
+prevalence across languages and is explicitly unsuitable for language-specific
+claims; such claims must use `byLanguage`. No real external judgments were
+collected in this stage, no engine was rerun, and no performance uplift or
+global superiority is claimed. Public status therefore remains NO-GO.
+
+The first valid OpenCode adversarial review identified the multilingual pooled
+kappa interpretation risk. The output now carries an explicit scope caveat. A
+second suggested missing-assignment weakness was independently tested and not
+reproduced: validation already resolves every expected sample/adjudicator pair
+and fails on the first absent record, then separately rejects extra records.
+After the disclosure fix, OpenCode HY-3 and MiMo post-fix reviews both returned
+`CLEAN`. Claude Code headless timed out and is recorded as `NOT_RUN`, not an
+approval. The project passes 67 files and 702 tests, typecheck, build, Biome,
+deterministic review preflight, and the workspace benchmark-contract suite.
+
+The next result that would materially change the publication decision must be
+external rather than synthetic: freeze a qualifying multilingual corpus,
+administer the same blind packet to at least two independently recruited native
+human judges per language using separately held keys, publish signed raw
+judgments and per-language disagreement/kappa, and rerun all engines from a
+released commit with comparable signed latency and cost receipts. Only that
+campaign can show whether the current ranking survives independent human
+interpretation and whether Naia Memory has a defensible global or Korean-first
+advantage.
