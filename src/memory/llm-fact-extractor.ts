@@ -79,6 +79,39 @@ const EXTRACTOR_PROPERTY_IDS = new Set([
 	"preference:communication",
 ]);
 
+const GENERIC_IDENTITY_TOKENS = new Set([
+	"profile",
+	"preference",
+	"prefer",
+	"preferred",
+	"routine",
+]);
+
+function identityTokens(value: string): Set<string> {
+	return new Set(
+		value
+			.normalize("NFC")
+			.toLocaleLowerCase("en")
+			.match(/[a-z]+/g)
+			?.filter((token) => !GENERIC_IDENTITY_TOKENS.has(token)) ?? [],
+	);
+}
+
+function inferEnglishPropertyId(property: string): string | undefined {
+	if ([...property].some((character) => (character.codePointAt(0) ?? 0) > 0x7f))
+		return undefined;
+	const propertyTokens = identityTokens(property);
+	if (propertyTokens.size === 0) return undefined;
+	const candidates = [...EXTRACTOR_PROPERTY_IDS].filter((propertyId) => {
+		const idTokens = identityTokens(propertyId);
+		return (
+			[...propertyTokens].every((token) => idTokens.has(token)) ||
+			[...idTokens].every((token) => propertyTokens.has(token))
+		);
+	});
+	return candidates.length === 1 ? candidates[0] : undefined;
+}
+
 /**
  * Factory: returns a FactExtractor function that calls Gemini Flash.
  * Pass the result as `factExtractor` in MemorySystemOptions.
@@ -482,7 +515,7 @@ function parseStructuredFact(value: unknown): StructuredFact | undefined {
 		typeof candidate.propertyId === "string" &&
 		EXTRACTOR_PROPERTY_IDS.has(candidate.propertyId)
 			? candidate.propertyId
-			: undefined;
+			: inferEnglishPropertyId(candidate.property);
 	const identityIds = subjectId && propertyId ? { subjectId, propertyId } : {};
 	return {
 		subject: candidate.subject,

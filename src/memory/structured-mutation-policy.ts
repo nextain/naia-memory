@@ -69,7 +69,6 @@ export function resolveStructuredMutationPolicy(options: {
 				contradictionFilter.name !== "heuristic" &&
 				fact.status === "active" &&
 				!!fact.structured &&
-				fact.structured.cardinality === "single" &&
 				structured.polarity === "affirmed" &&
 				sameStructuredSubject(fact.structured, structured),
 		),

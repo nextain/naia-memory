@@ -446,6 +446,226 @@ describe("[#39 structured facts] conservative multilingual supersession", () => 
 		await system.close();
 	});
 
+	it("contextually replaces duplicate facts when one extractor identity is missing", async () => {
+		const first = "User preferred music genre: classical";
+		const duplicate = "User's music genre preference: classical music";
+		const replacement = "User music preference: jazz";
+		const { system, adapter } = makeSystem({
+			contradictionFilter: {
+				name: "contextual-test",
+				filter: async (pairs) =>
+					pairs.map((pair, index) => ({
+						index,
+						result:
+							pair.newInfo.includes("jazz") &&
+							pair.existing.content.toLocaleLowerCase().includes("music")
+								? {
+										action: "update" as const,
+										updatedContent: replacement,
+										reason: "explicit replacement",
+									}
+								: { action: "keep" as const, reason: "reaffirmation" },
+					})),
+			},
+			factExtractor: structuredExtractor({
+				[first]: {
+					subject: "User",
+					subjectId: "person:self",
+					property: "preferred music genre",
+					propertyId: "preference:music-genre",
+					value: "classical",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[duplicate]: {
+					subject: "User's",
+					property: "music genre preference",
+					value: "classical music",
+					polarity: "affirmed",
+					cardinality: "multi",
+				},
+				[replacement]: {
+					subject: "User",
+					subjectId: "person:self",
+					property: "music preference",
+					propertyId: "preference:music-genre",
+					value: "jazz",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+			}),
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		for (const content of [first, duplicate, replacement]) {
+			await system.encode(input({ content, timestamp }), DEFAULT_CTX);
+			await system.consolidateNow(true);
+		}
+		const facts = await adapter.semantic.getAll();
+		expect(
+			facts
+				.filter((fact) => fact.status === "active")
+				.map((fact) => fact.content),
+		).toEqual([replacement]);
+		await system.close();
+	});
+
+	it("merges multiple active predecessors into one canonical successor", async () => {
+		const replacement = "User music preference: jazz";
+		const { system, adapter } = makeSystem({
+			contradictionFilter: {
+				name: "contextual-test",
+				filter: async (pairs) =>
+					pairs.map((_, index) => ({
+						index,
+						result: {
+							action: "update" as const,
+							updatedContent: replacement,
+							reason: "explicit replacement",
+						},
+					})),
+			},
+			factExtractor: structuredExtractor({
+				[replacement]: {
+					subject: "User",
+					subjectId: "person:self",
+					property: "music preference",
+					propertyId: "preference:music-genre",
+					value: "jazz",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+			}),
+		});
+		const now = Date.now() - 10 * 60 * 1000;
+		const baseFact = {
+			entities: ["User"],
+			topics: ["music"],
+			createdAt: now,
+			updatedAt: now,
+			importance: 0.8,
+			recallCount: 0,
+			lastAccessed: now,
+			strength: 0.8,
+			status: "active" as const,
+			sourceEpisodes: ["prior"],
+		} satisfies Partial<Fact>;
+		await adapter.semantic.upsert({
+			...baseFact,
+			id: "classical-1",
+			content: "User preferred music genre: classical",
+			structured: {
+				subject: "User",
+				subjectId: "person:self",
+				property: "preferred music genre",
+				propertyId: "preference:music-genre",
+				value: "classical",
+				polarity: "affirmed",
+				cardinality: "single",
+			},
+		});
+		await adapter.semantic.upsert({
+			...baseFact,
+			id: "classical-2",
+			content: "User's music genre preference: classical music",
+			structured: {
+				subject: "User's",
+				property: "music genre preference",
+				value: "classical music",
+				polarity: "affirmed",
+				cardinality: "multi",
+			},
+		});
+
+		await system.encode(
+			input({ content: replacement, timestamp: now + 1 }),
+			DEFAULT_CTX,
+		);
+		await system.consolidateNow(true);
+
+		const facts = await adapter.semantic.getAll();
+		const active = facts.filter((fact) => fact.status === "active");
+		expect(active).toHaveLength(1);
+		expect(active[0]?.content).toBe(replacement);
+		const predecessors = facts.filter((fact) => fact.status === "superseded");
+		expect(predecessors).toHaveLength(2);
+		expect(new Set(predecessors.map((fact) => fact.successorId)).size).toBe(1);
+		await system.close();
+	});
+
+	it("does not contextually compare subjects whose complete opaque IDs conflict", async () => {
+		const first = "User preferred music genre: classical";
+		const replacement = "User music preference: jazz";
+		const { system, adapter } = makeSystem({
+			factExtractor: structuredExtractor({
+				[first]: {
+					subject: "User",
+					subjectId: "person:other",
+					property: "music preference",
+					propertyId: "preference:music-genre",
+					value: "classical",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[replacement]: {
+					subject: "User",
+					subjectId: "person:self",
+					property: "music preference",
+					propertyId: "preference:music-genre",
+					value: "jazz",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+			}),
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		for (const content of [first, replacement]) {
+			await system.encode(input({ content, timestamp }), DEFAULT_CTX);
+			await system.consolidateNow(true);
+		}
+		expect(
+			(await adapter.semantic.getAll()).filter(
+				(fact) => fact.status === "active",
+			),
+		).toHaveLength(2);
+		await system.close();
+	});
+
+	it("does not use a missing-ID label fallback for another person", async () => {
+		const first = "User preferred music genre: classical";
+		const replacement = "User music preference: jazz";
+		const { system, adapter } = makeSystem({
+			factExtractor: structuredExtractor({
+				[first]: {
+					subject: "User",
+					subjectId: "person:other",
+					property: "music preference",
+					propertyId: "preference:music-genre",
+					value: "classical",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+				[replacement]: {
+					subject: "User",
+					property: "music preference",
+					value: "jazz",
+					polarity: "affirmed",
+					cardinality: "single",
+				},
+			}),
+		});
+		const timestamp = Date.now() - 10 * 60 * 1000;
+		for (const content of [first, replacement]) {
+			await system.encode(input({ content, timestamp }), DEFAULT_CTX);
+			await system.consolidateNow(true);
+		}
+		expect(
+			(await adapter.semantic.getAll()).filter(
+				(fact) => fact.status === "active",
+			),
+		).toHaveLength(2);
+		await system.close();
+	});
+
 	it("fails closed when only one side has IDs or an identity is incomplete", async () => {
 		const legacy = "User residence: Seoul";
 		const identified = "User residence: Busan";

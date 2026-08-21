@@ -297,18 +297,16 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						// Update ALL contradicted facts to prevent stale contradictory data
 						// (Partial resolution bug #4 fixed).
 						// R2.5 v2: chain + bi-temporal validity (보존 우선).
-						for (const { fact, result } of contradictions) {
-							if (result.action === "update" && result.updatedContent) {
-								const newImportance = Math.max(
-									fact.importance,
-									ef.importance,
-									0.7,
-								);
-								const newMaxEmotion = Math.max(
-									fact.maxEmotion ?? 0,
-									ef.maxEmotion ?? 0,
-								);
-								const successorId = `${fact.id}-v${Date.now()}`;
+						const updates = contradictions.filter(
+							(entry) =>
+								entry.result.action === "update" &&
+								Boolean(entry.result.updatedContent),
+						);
+						const anchor = updates[0]?.fact;
+						if (anchor) {
+							const predecessorIds = updates.map(({ fact }) => fact.id);
+							const successorId = `${anchor.id}-v${Date.now()}`;
+							for (const { fact } of updates) {
 								await this.adapter.semantic.upsert({
 									...fact,
 									status: "superseded",
@@ -316,48 +314,57 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 									validTo: now,
 									successorId,
 								});
-								await this.adapter.semantic.upsert({
-									...fact,
-									id: successorId,
-									content: result.updatedContent,
-									status: "active",
-									createdAt: now,
-									updatedAt: now,
-									lastAccessed: now,
-									importance: newImportance,
-									maxEmotion: newMaxEmotion,
-									strength: newImportance,
-									sourceEpisodes: [
-										...new Set([
-											...fact.sourceEpisodes,
-											...ef.sourceEpisodeIds,
-										]),
-									],
-									entities: ef.entities,
-									topics: ef.topics,
-									structured: ef.structured ?? fact.structured,
-									encodingContext:
-										fact.encodingContext ?? srcEp?.encodingContext,
-									supersedes: fact.id,
-									validFrom: now,
-									validTo: null,
-								}); // R4 #26 Step 3a — supersede 시점 spike emit
 								if (structured)
 									recordMutationOutcome("structured_supersession_applied");
-								// (consolidate path).
-								await this.emitSpike({
-									factId: successorId,
-									content: result.updatedContent,
-									reason: "contradiction",
-									confidence: 0.9,
-									relatedFactIds: [fact.id],
-									emittedAt: now,
-									scope: fact.encodingContext?.project
-										? { project: fact.encodingContext.project }
-										: undefined,
-								});
 								factsUpdated++;
 							}
+							const newImportance = Math.max(
+								ef.importance,
+								0.7,
+								...updates.map(({ fact }) => fact.importance),
+							);
+							const newMaxEmotion = Math.max(
+								ef.maxEmotion ?? 0,
+								...updates.map(({ fact }) => fact.maxEmotion ?? 0),
+							);
+							await this.adapter.semantic.upsert({
+								...anchor,
+								id: successorId,
+								content: ef.content,
+								status: "active",
+								createdAt: now,
+								updatedAt: now,
+								lastAccessed: now,
+								importance: newImportance,
+								maxEmotion: newMaxEmotion,
+								strength: newImportance,
+								sourceEpisodes: [
+									...new Set([
+										...updates.flatMap(({ fact }) => fact.sourceEpisodes),
+										...ef.sourceEpisodeIds,
+									]),
+								],
+								entities: ef.entities,
+								topics: ef.topics,
+								structured: ef.structured ?? anchor.structured,
+								encodingContext:
+									anchor.encodingContext ?? srcEp?.encodingContext,
+								supersedes: anchor.id,
+								validFrom: now,
+								validTo: null,
+							}); // R4 #26 Step 3a — supersede 시점 spike emit
+							// (consolidate path).
+							await this.emitSpike({
+								factId: successorId,
+								content: ef.content,
+								reason: "contradiction",
+								confidence: 0.9,
+								relatedFactIds: predecessorIds,
+								emittedAt: now,
+								scope: anchor.encodingContext?.project
+									? { project: anchor.encodingContext.project }
+									: undefined,
+							});
 						}
 					} else {
 						if (structured && !mutationPolicy.trustedUserMutation) continue;

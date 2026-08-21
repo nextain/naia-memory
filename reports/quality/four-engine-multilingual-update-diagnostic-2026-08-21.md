@@ -473,30 +473,55 @@ They disclose branch outcomes, not memory text or benchmark labels: structured
 fact creation, duplicate no-op/reconciliation, supersession, and denied
 conflicts. This instrumentation does not change retrieval or scoring behavior.
 
-Four fresh executions of the frozen nine-case EN/KO/JA contract produced 12/12
-structured update turns with exactly one `structured_supersession_applied` and
-zero conflict denials. All 12 deletion cases returned zero memories. Ten of the
-12 update queries returned one memory; two English update queries returned two.
-The previous stale symptom therefore did not reproduce as a failed mutation:
-the predecessor was superseded in every observed update. Any future stale
-judgment can now be separated into mutation failure versus retrieval-surface or
-adjudication effects instead of being attributed to the update engine as a
-whole.
+Four initial executions of the frozen nine-case EN/KO/JA contract produced
+12/12 structured update turns with supersession counters and zero conflict
+denials, but deeper native-state inspection corrected the initial
+interpretation: two English runs still exposed both the old and new value. The
+extractor had assigned inconsistent property identities/cardinalities to two
+paraphrases, and the contextual path created one successor per contradicted
+predecessor. Counter presence alone was therefore insufficient evidence of a
+correct latest view.
+
+The repair is deliberately split into conservative layers. The parser may
+recover only a unique English property ID from the existing closed vocabulary;
+ambiguous or non-ASCII labels remain unidentified. When one extractor identity
+is incomplete, a trusted-user, non-heuristic contextual verifier may inspect
+same-subject active facts, including cardinality-mismatched facts. Conflicting
+complete subject IDs remain isolated. Finally, all predecessors accepted as
+updates are retired toward one canonical successor, rather than producing one
+active successor per predecessor.
+
+One direct regression test preloads two active predecessors and verifies one
+active successor with both predecessor `successorId` links converging on it.
+Five post-repair executions (seeds `2026082204` through `2026082208`) then
+produced 15/15 EN/KO/JA update queries with exactly one retrieved memory and
+only the new value. The English native history contained two predecessors and
+one successor in every run. All 15 deletion queries returned zero memories.
+This closes the observed stale/duplicate latest-view defect on this fixture; it
+does not establish a population-level accuracy rate.
 
 This is mechanistic localization evidence, not a new comparative score. The
 four executions reuse a development-visible generated contract, are not
 independent, and were not human-adjudicated. The counters are process-global;
 per-turn deltas are valid for the current sequential semantic runner but would
 need async-local or bridge-local accounting before concurrent ingestion in one
-process. OpenCode returned a server error and Claude produced no verdict within
-the review window, so this stage has no completed external adversarial-review
-approval. The public competitiveness status remains **NO-GO**.
+process. OpenCode returned provider server errors on two read-only review
+attempts, and Claude headless reached the review timeout without a final
+verdict. Both are recorded as `NOT_RUN`, never as approval. The public
+competitiveness status remains **NO-GO**.
 
 Raw artifact SHA-256 values, in execution order, were
 `a30504bd67cda3475203c0df204a02e671b50a547a8a139a23e2fc59f4c3ce35`,
 `49cfeebdb0c3d51c8c3f3ece48551a0fa74bda1f48b9c25f2369bf72b6719a3b`,
 `90a9667bbb1dc0bc292c1f98ce1390a17df4613db65a275c9902c8f9acd6a5dc`,
 and `85819fb46425ce23f5483c2d26c6b4174be9e18ba9155071ca9b1c2dbf2330ba`.
+
+Post-repair raw artifact SHA-256 values, in seed order, were
+`62bcfb1239861186a6856d8712e26fe8e9ce52cb0b974d1b2fab79a23dcb8732`,
+`71ab3890d04cadc244046062da4578bb24832bda11f8c5d08745b97d8cb1ba7b`,
+`653495f125854b7461b80247840e1c061cfa371b543895463dbcce3c4978a962`,
+`3c85d1644ed9d5e1bcf6511b55b2b495ca228259798daa4c72b89be943715478`,
+and `8159b191f498e5129da4aad111aefe7c300526e6c6d00bfdd4f9d9b909af1329`.
 
 ## Complete-rule sample-size simulation stage
 

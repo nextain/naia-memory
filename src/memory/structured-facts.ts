@@ -4,6 +4,13 @@ function comparisonKey(value: string): string {
 	return value.normalize("NFC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
 
+function subjectComparisonKey(value: string): string {
+	return comparisonKey(value)
+		.replace(/[’']s\b/gu, "")
+		.replace(/\s+/g, " ")
+		.trim();
+}
+
 function opaqueId(value: string | undefined): string {
 	return value?.normalize("NFC").trim() ?? "";
 }
@@ -14,9 +21,12 @@ export function sameStructuredSubject(
 ): boolean {
 	const leftId = opaqueId(left.subjectId);
 	const rightId = opaqueId(right.subjectId);
-	if (leftId || rightId)
-		return Boolean(leftId && rightId && leftId === rightId);
-	return comparisonKey(left.subject) === comparisonKey(right.subject);
+	if (leftId && rightId) return leftId === rightId;
+	const partialId = leftId || rightId;
+	if (partialId && partialId !== "person:self") return false;
+	return (
+		subjectComparisonKey(left.subject) === subjectComparisonKey(right.subject)
+	);
 }
 
 function sameMultiValue(left: string, right: string): boolean {

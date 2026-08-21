@@ -210,6 +210,97 @@ describe("OpenAI-compatible LLM auth", () => {
 		expect(fact.structured?.propertyId).toBe("preference:color");
 	});
 
+	it("recovers a unique closed-vocabulary English property identity", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						JSON.stringify({
+							choices: [
+								{
+									message: {
+										content: JSON.stringify({
+											"1": [
+												{
+													content: "User's music preference: jazz",
+													structured: {
+														subject: "User",
+														subjectId: "person:self",
+														property: "music preference",
+														propertyId: "profile:music-preference",
+														value: "jazz",
+														polarity: "affirmed",
+														cardinality: "single",
+													},
+												},
+											],
+										}),
+									},
+								},
+							],
+						}),
+						{ status: 200, headers: { "content-type": "application/json" } },
+					),
+			),
+		);
+
+		const [fact] = await buildLLMFactExtractor({
+			apiKey: "test-secret",
+			baseURL: "https://provider.test/v1/",
+			model: "test-model",
+		})([episode]);
+
+		expect(fact.structured).toMatchObject({
+			subjectId: "person:self",
+			propertyId: "preference:music-genre",
+		});
+	});
+
+	it("does not infer an ambiguous English property identity", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						JSON.stringify({
+							choices: [
+								{
+									message: {
+										content: JSON.stringify({
+											"1": [
+												{
+													content: "User genre preference: fiction",
+													structured: {
+														subject: "User",
+														subjectId: "person:self",
+														property: "genre preference",
+														value: "fiction",
+														polarity: "affirmed",
+														cardinality: "single",
+													},
+												},
+											],
+										}),
+									},
+								},
+							],
+						}),
+						{ status: 200, headers: { "content-type": "application/json" } },
+					),
+			),
+		);
+
+		const [fact] = await buildLLMFactExtractor({
+			apiKey: "test-secret",
+			baseURL: "https://provider.test/v1/",
+			model: "test-model",
+		})([episode]);
+
+		expect(fact.structured?.subjectId).toBeUndefined();
+		expect(fact.structured?.propertyId).toBeUndefined();
+	});
+
 	it("fact extractor prompt distinguishes durable cessation from temporary negation", async () => {
 		let prompt = "";
 		vi.stubGlobal(

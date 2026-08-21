@@ -89,4 +89,51 @@ describe("structured mutation source trust", () => {
 		expect(result.supersessions).toEqual([]);
 		expect(result.fallbackFacts).toEqual([existing]);
 	});
+
+	it("sends a multi-to-single schema mismatch to a non-heuristic verifier", () => {
+		const existingStructured: StructuredFact = {
+			subject: "User's",
+			property: "music genre preference",
+			value: "classical music",
+			polarity: "affirmed",
+			cardinality: "multi",
+		};
+		const existing = {
+			id: "fact",
+			content: "User's music genre preference is classical music",
+			entities: ["User"],
+			topics: ["music"],
+			createdAt: 1,
+			updatedAt: 1,
+			importance: 0.8,
+			recallCount: 0,
+			lastAccessed: 1,
+			strength: 0.8,
+			status: "active",
+			sourceEpisodes: ["episode"],
+			structured: existingStructured,
+		} satisfies Fact;
+		const verifier = {
+			name: "test-verifier",
+			filter: async () => [],
+		} satisfies ContradictionFilterProvider;
+
+		const result = resolveStructuredMutationPolicy({
+			trustedUserMutation: true,
+			structured: {
+				subject: "User",
+				subjectId: "person:self",
+				property: "music preference",
+				propertyId: "preference:music-genre",
+				value: "jazz",
+				polarity: "affirmed",
+				cardinality: "single",
+			},
+			existingFacts: [existing],
+			contradictionFilter: verifier,
+		});
+
+		expect(result.supersessions).toEqual([]);
+		expect(result.fallbackFacts).toEqual([existing]);
+	});
 });
