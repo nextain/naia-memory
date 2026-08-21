@@ -237,3 +237,33 @@ no performance increase. It prevents a signed dataset from being presented as
 a measured competitive result. Public status remains NO-GO; the next evidence
 stage must define and collect semantic engine execution receipts on the frozen
 corpus before this gate can ever return a promotion success.
+
+That execution-receipt contract is now implemented. A v1 receipt is issued per
+engine and signed by a trusted Ed25519 executor identity. It binds the canonical
+contract hash, exact campaign-file byte hash, ordered per-engine run-set hash,
+clean 40-hex implementation revision, implementation artifact and configuration
+hashes, execution interval and elapsed time, cost disclosure, and the executor's
+confirmation statement. The verifier rebuilds the frozen balanced plan, requires
+exact one-receipt-per-engine coverage, rereads every raw artifact, verifies its
+shape and declared hash, rejects symlinks and non-regular files, canonicalizes
+trust keys to prevent identity aliases, and rejects forged, stale, duplicate, or
+input-mismatched receipts. Unknown cost is permitted only as an explicit null and
+is surfaced as `costComplete: false`; it cannot support a cost-efficiency claim.
+
+The six-input public-gate path is covered end to end. Successfully verified
+receipts produce `executionEvidenceQualified: true`, engine/run counts, and the
+cost-completeness flag, but still produce `promotable: false`. This distinction
+is intentional: signed execution provenance proves which immutable artifacts
+were run; it does not score their quality. Public competitiveness remains NO-GO
+until the already blinded packet is completed by independent adjudicators,
+unsealed into reproducible per-language competitive metrics with disagreement
+and uncertainty, and bound to equally auditable latency/cost evidence.
+
+OpenCode adversarial review first found a manifest symlink escape and the lack
+of full six-input gate coverage. Both were fixed and regression-tested. Two
+subsequent focused reviews found no remaining blocker for this narrow execution
+provenance stage and returned `VERDICT: CLEAN`. The full project passes 65 files
+and 690 tests, typecheck, build, formatting, and diff checks. The workspace
+benchmark-contract, entrypoint, and context-translation suites also pass. This
+stage improves evidence integrity, not engine quality, so no performance uplift
+is claimed.

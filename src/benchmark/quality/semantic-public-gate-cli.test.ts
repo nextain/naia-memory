@@ -1,4 +1,4 @@
-import { generateKeyPairSync, sign } from "node:crypto";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -11,6 +11,11 @@ import {
 	evidenceObjectSha256,
 	evidenceSignaturePayload,
 } from "./public-evidence-crypto.js";
+import { buildSemanticCampaignPlan } from "./semantic-campaign-cli.js";
+import {
+	type SemanticExecutionEvidenceBundle,
+	semanticEngineRunSetSha256,
+} from "./semantic-execution-evidence.js";
 import type {
 	SemanticPublicAttestation,
 	SemanticPublicAttestationBundle,
@@ -140,6 +145,129 @@ async function writeFixture(directory: string, contract = publicContract()) {
 	return { contract, bundle, policy, paths };
 }
 
+function hash(value: string | Buffer): string {
+	return createHash("sha256").update(value).digest("hex");
+}
+
+async function writeExecutionFixture(
+	directory: string,
+	contract: MemoryUpdateContract,
+) {
+	const engines = ["hindsight", "mem0", "naia"] as const;
+	const plan = buildSemanticCampaignPlan("public-gate", 3, engines);
+	const runs = [];
+	for (const run of plan) {
+		const cases = contract.cases.map((item, executionPosition) => {
+			const output = {
+				ingestionReceipts: [{ outcome: "opaque" }],
+				nativeState: [{ nativeId: "current", content: "current" }],
+				retrieved: [{ nativeId: "current", content: "current" }],
+			};
+			return {
+				caseId: item.id,
+				executionPosition: executionPosition + 1,
+				language: item.language,
+				fixtureSha256: hash(
+					JSON.stringify({
+						language: item.language,
+						turns: item.turns,
+						query: item.query,
+					}),
+				),
+				engineInputSha256: hash(
+					JSON.stringify({
+						language: item.language,
+						turns: item.turns.map(({ content }) => ({ content })),
+						query: item.query,
+					}),
+				),
+				ingestionPolicy: "sequential-turn-commit-v1",
+				temporalInputPolicy: "engine-default-ingest-time-v1",
+				retrievalSurface: "engine-native-semantic-memory-v1",
+				...output,
+				outputSha256: hash(JSON.stringify(output)),
+			};
+		});
+		const artifact = {
+			schemaVersion: "naia-memory-semantic-raw-artifact-v2",
+			disclosure: {
+				engine: run.engine,
+				executionSeed: run.caseExecutionSeed,
+				topK: 5,
+			},
+			cases,
+		};
+		const bytes = JSON.stringify(artifact);
+		await writeFile(join(directory, run.outputFile), bytes);
+		runs.push({ ...run, artifactSha256: hash(bytes) });
+	}
+	const campaign = {
+		schemaVersion: "naia-memory-semantic-campaign-v3" as const,
+		disclosure: {
+			executionSeed: "public-gate",
+			repetitions: 3,
+			topK: 5,
+			engines: [...engines],
+		},
+		runs,
+	};
+	const campaignBytes = Buffer.from(JSON.stringify(campaign));
+	const contractSha256 = evidenceObjectSha256(contract);
+	const campaignSha256 = hash(campaignBytes);
+	const executorPublicKeys: Record<string, string> = {};
+	const receipts = engines.map((engine) => {
+		const executor = `executor-${engine}`;
+		const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+		executorPublicKeys[executor] = publicKey
+			.export({ type: "spki", format: "pem" })
+			.toString();
+		const unsigned = {
+			schemaVersion: "naia-memory-semantic-execution-receipt-v1" as const,
+			executor,
+			engine,
+			contractSha256,
+			campaignSha256,
+			campaignRunSetSha256: semanticEngineRunSetSha256(campaign, engine),
+			implementationRevision: "a".repeat(40),
+			workspaceClean: true as const,
+			implementationArtifactSha256: "b".repeat(64),
+			configurationSha256: "c".repeat(64),
+			startedAt: "2026-01-05T00:00:00Z",
+			completedAt: "2026-01-05T00:01:00Z",
+			elapsedMs: 60_000,
+			estimatedCostUsd: null,
+			costDisclosure: "unknown" as const,
+			signedAt: "2026-01-05T00:02:00Z",
+			statement: "EXECUTION_ARTIFACTS_CONFIRMED" as const,
+		};
+		return {
+			...unsigned,
+			signatureBase64: sign(
+				null,
+				evidenceSignaturePayload(unsigned),
+				privateKey,
+			).toString("base64"),
+		};
+	});
+	const bundle: SemanticExecutionEvidenceBundle = {
+		schemaVersion: "naia-memory-semantic-execution-evidence-bundle-v1",
+		contractSha256,
+		campaignSha256,
+		receipts,
+	};
+	const paths = [
+		join(directory, "campaign.json"),
+		join(directory, "execution-evidence.json"),
+		join(directory, "execution-trust-policy.json"),
+	];
+	await Promise.all([
+		writeFile(paths[0], campaignBytes),
+		writeFile(paths[1], JSON.stringify(bundle)),
+		writeFile(paths[2], JSON.stringify({ executorPublicKeys })),
+	]);
+	return paths;
+}
+
 function captureStdout(output: string[]): void {
 	vi.spyOn(process.stdout, "write").mockImplementation((value) => {
 		output.push(String(value));
@@ -161,6 +289,28 @@ afterEach(async () => {
 });
 
 describe("semantic public gate CLI", () => {
+	it("qualifies signed execution evidence but still refuses quality promotion", async () => {
+		const output: string[] = [];
+		captureStdout(output);
+		const directory = await root();
+		const fixture = await writeFixture(directory);
+		const executionPaths = await writeExecutionFixture(
+			directory,
+			fixture.contract,
+		);
+		expect(
+			await runSemanticPublicGateCli([...fixture.paths, ...executionPaths]),
+		).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}")).toMatchObject({
+			corpusQualified: true,
+			executionEvidenceQualified: true,
+			engineCount: 3,
+			runCount: 9,
+			costComplete: false,
+			promotable: false,
+		});
+	});
+
 	it("qualifies the corpus but refuses public promotion without engine execution evidence", async () => {
 		const output: string[] = [];
 		captureStdout(output);

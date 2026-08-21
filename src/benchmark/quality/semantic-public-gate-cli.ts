@@ -1,4 +1,4 @@
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
 	type MemoryUpdateContract,
@@ -8,6 +8,11 @@ import {
 	PublicEvidenceFileTooLargeError,
 	readBoundedEvidenceFile,
 } from "./public-evidence-file-io.js";
+import {
+	isSemanticExecutionEvidenceBundle,
+	isSemanticExecutionTrustPolicy,
+	validateSemanticExecutionEvidence,
+} from "./semantic-execution-evidence.js";
 import {
 	isSemanticPublicAttestationBundle,
 	isSemanticPublicTrustPolicy,
@@ -20,9 +25,16 @@ async function runSemanticEvidenceGateCli(
 	args: string[],
 	mode: "corpus" | "public",
 ): Promise<number> {
-	if (args.length !== 3) {
+	if (
+		(mode === "corpus" && args.length !== 3) ||
+		(mode === "public" && args.length !== 3 && args.length !== 6)
+	) {
 		process.stderr.write(
-			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>\n`,
+			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>${
+				mode === "public"
+					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json>]"
+					: ""
+			}\n`,
 		);
 		return 2;
 	}
@@ -71,6 +83,57 @@ async function runSemanticEvidenceGateCli(
 		if (mode === "corpus") {
 			process.stdout.write(`${JSON.stringify(corpusResult)}\n`);
 			return 0;
+		}
+		if (args.length === 6) {
+			const campaignPath = resolve(args[3]);
+			let campaignBytes: Buffer;
+			try {
+				campaignBytes = await readBoundedEvidenceFile(
+					campaignPath,
+					MAX_CONTRACT_BYTES,
+				);
+			} catch (error) {
+				if (error instanceof PublicEvidenceFileTooLargeError)
+					throw new Error("campaign exceeds the 16 MiB intake limit");
+				throw new Error("campaign is unreadable");
+			}
+			let campaign: unknown;
+			try {
+				campaign = JSON.parse(campaignBytes.toString("utf8"));
+			} catch {
+				throw new Error("campaign is not valid JSON");
+			}
+			const executionBundle = await readJson(
+				args[4],
+				"execution evidence bundle",
+			);
+			if (!isSemanticExecutionEvidenceBundle(executionBundle))
+				throw new Error("semantic execution evidence bundle shape is invalid");
+			const executionTrustPolicy = await readJson(
+				args[5],
+				"execution trust policy",
+			);
+			if (!isSemanticExecutionTrustPolicy(executionTrustPolicy))
+				throw new Error("semantic execution trust policy shape is invalid");
+			const execution = validateSemanticExecutionEvidence({
+				contract,
+				campaign,
+				campaignBytes,
+				campaignDirectory: dirname(campaignPath),
+				bundle: executionBundle,
+				trustPolicy: executionTrustPolicy,
+			});
+			process.stdout.write(
+				`${JSON.stringify({
+					...corpusResult,
+					executionEvidenceQualified: true,
+					...execution,
+					promotable: false,
+					failure:
+						"blinded independent adjudication and competitive metrics are not evaluated by this gate",
+				})}\n`,
+			);
+			return 1;
 		}
 		process.stdout.write(
 			`${JSON.stringify({
