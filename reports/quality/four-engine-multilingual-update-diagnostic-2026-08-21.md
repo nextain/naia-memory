@@ -584,3 +584,58 @@ produced no result and was interrupted after hanging, while its entry-point sync
 subtest had passed. An initial adversarial review found and prompted a fix for a
 missing-`authorId` value being counted as one `undefined` cluster; the final
 validator rejects missing or blank author clusters and has a regression test.
+
+## Construction-cluster inference stage
+
+The author-cluster review exposed one remaining pseudoreplication path: several
+nominally different authors can still share a translator, prompt template,
+source-generation process, or coordinating editor. Analysis-plan schema v4 now
+requires a preregistered `construction-cluster` independence unit and a
+language-specific minimum number of those clusters. Each independently reviewed
+case carries the cluster in signed provenance. Missing IDs, engine-side cluster
+disagreement, or a campaign that meets its author target but not its
+construction-cluster target fails closed.
+
+Inference now averages families equally within each author, authors equally
+within each construction cluster, and runs the shifted exact sign test and Holm
+correction only across construction clusters. This prevents six authors using
+one shared construction pipeline from being treated as six independent units;
+a regression test exercises that exact failure. The output also reports
+author-equal and family-equal descriptive means and whether their directions
+agree. A second regression fixture deliberately makes five lightly sampled
+authors favor Naia while one prolific author favors the competitor: the two
+descriptive estimands point in opposite directions and the disagreement is
+surfaced rather than allowing a favorable weighting to be selected silently.
+
+This is stricter evidence accounting, not a score improvement. A signed cluster
+label is an auditable declaration, not proof of real independence; corpus
+operators must define clusters from shared construction causes before outcomes
+are observed, and an external reviewer must audit those definitions. The
+existing fixture has only one author per language and no qualifying independent
+construction campaign, so the competitive report remains **NO-GO** and no
+global superiority statement is public-quotable. The next empirical step is a
+multi-author, multi-construction-cluster pilot that is disjoint from the frozen
+public test corpus, followed by externally reviewed v4 power assumptions.
+
+The first construction-cluster review pass also exposed a contract drift in
+the power layer: inference had moved to construction clusters while the signed
+sample-size assumptions and simulator still named and counted author clusters.
+Assumptions and simulation schema v4 now use construction-cluster candidate
+counts, exceedance probabilities, dependency shocks, signed-plan targets, and
+output labels throughout. Coverage is checked against the plan's required
+construction clusters, and a plan target absent from the simulated candidate
+grid fails closed. The shock sensitivity remains deliberately pessimistic and
+conditional; it neither proves that declared construction clusters are truly
+independent nor makes the current corpus adequate.
+
+The implementation passes 72 test files and 723 tests, production build, both
+main and benchmark TypeScript checks, changed-file Biome, and diff checks.
+Before this review note was appended, an OpenCode/Nemotron adversarial review
+independently matched staged-diff digest
+`a243009f80d7bfd56875d3e37776ef08f6618c593ea765aab1235a574fb30bbf` and
+returned `HASH MATCH; CLEAN`, including the corrected construction-cluster
+power unit, fail-closed paths, and Naia-favoring risks. A later review of the
+note itself rejected circular wording that implied the note was part of that
+earlier digest; this paragraph records the corrected chronology.
+Repository-wide Biome is not claimed as passing because existing generated,
+recovery, and unrelated workspace files remain outside this change.

@@ -10,7 +10,12 @@ type Hypothesis = {
 	language: string;
 	independentAuthorClusters: number;
 	effectiveAuthorClusters: number;
+	independentConstructionClusters: number;
+	effectiveConstructionClusters: number;
 	observedMeanDifference: number;
+	authorEqualMeanDifference: number;
+	familyEqualMeanDifference: number;
+	sensitivityDirectionalAgreement: boolean;
 	minimumPracticallyImportantDifference: number;
 	rawPValue: number;
 	minimumAttainablePValue: number;
@@ -23,6 +28,7 @@ type Hypothesis = {
 type SemanticCompetitiveSample = SemanticBootstrapSample & {
 	caseId: string;
 	authorClusterId: string;
+	constructionClusterId: string;
 };
 
 function metricValue(
@@ -52,6 +58,7 @@ export function calculateSemanticCompetitiveInference(input: {
 			!sample.familyId ||
 			!sample.caseId ||
 			!sample.authorClusterId ||
+			!sample.constructionClusterId ||
 			![
 				sample.currentAt1,
 				sample.currentAtK,
@@ -69,7 +76,7 @@ export function calculateSemanticCompetitiveInference(input: {
 	if ([...plan.engines].sort().join("\0") !== sampleEngines.join("\0"))
 		throw new Error("competitive inference engine coverage mismatch");
 	const languages = Object.keys(
-		plan.requiredIndependentAuthorClustersByLanguage,
+		plan.requiredIndependentConstructionClustersByLanguage,
 	).sort();
 	const sampleLanguages = [
 		...new Set(samples.map((sample) => sample.language)),
@@ -124,8 +131,18 @@ export function calculateSemanticCompetitiveInference(input: {
 					throw new Error(
 						`competitive inference author-cluster mismatch: ${language}/${family}`,
 					);
+				const constructionClusters = new Set(
+					[...primary, ...comparison].map(
+						(sample) => sample.constructionClusterId,
+					),
+				);
+				if (constructionClusters.size !== 1)
+					throw new Error(
+						`competitive inference construction-cluster mismatch: ${language}/${family}`,
+					);
 				return {
 					authorClusterId: [...authorClusters][0],
+					constructionClusterId: [...constructionClusters][0],
 					difference: lowerIsBetter ? -raw : raw,
 				};
 			});
@@ -146,7 +163,40 @@ export function calculateSemanticCompetitiveInference(input: {
 						.map((item) => item.difference),
 				),
 			);
-			const shifted = differences.map(
+			const constructionClusters = [
+				...new Set(familyDifferences.map((item) => item.constructionClusterId)),
+			].sort();
+			if (
+				constructionClusters.length <
+				plan.requiredIndependentConstructionClustersByLanguage[language]
+			)
+				throw new Error(
+					`competitive inference construction-cluster target unmet: ${language}`,
+				);
+			const constructionDifferences = constructionClusters.map(
+				(constructionClusterId) => {
+					const clusterFamilies = familyDifferences.filter(
+						(item) => item.constructionClusterId === constructionClusterId,
+					);
+					const clusterAuthors = [
+						...new Set(clusterFamilies.map((item) => item.authorClusterId)),
+					];
+					return mean(
+						clusterAuthors.map((authorClusterId) =>
+							mean(
+								clusterFamilies
+									.filter((item) => item.authorClusterId === authorClusterId)
+									.map((item) => item.difference),
+							),
+						),
+					);
+				},
+			);
+			const familyEqualMeanDifference = mean(
+				familyDifferences.map((item) => item.difference),
+			);
+			const authorEqualMeanDifference = mean(differences);
+			const shifted = constructionDifferences.map(
 				(value) => value - plan.minimumPracticallyImportantDifference,
 			);
 			const discordant = shifted.filter(
@@ -169,8 +219,15 @@ export function calculateSemanticCompetitiveInference(input: {
 				competitor,
 				language,
 				independentAuthorClusters: authorClusters.length,
-				effectiveAuthorClusters: shifted.length,
-				observedMeanDifference: mean(differences),
+				effectiveAuthorClusters: authorClusters.length,
+				independentConstructionClusters: constructionClusters.length,
+				effectiveConstructionClusters: shifted.length,
+				observedMeanDifference: mean(constructionDifferences),
+				authorEqualMeanDifference,
+				familyEqualMeanDifference,
+				sensitivityDirectionalAgreement:
+					Math.sign(authorEqualMeanDifference) ===
+					Math.sign(familyEqualMeanDifference),
 				minimumPracticallyImportantDifference:
 					plan.minimumPracticallyImportantDifference,
 				rawPValue,
@@ -213,9 +270,9 @@ export function calculateSemanticCompetitiveInference(input: {
 	});
 
 	return {
-		method: "exact-author-cluster-sign-test-shifted-null-v1" as const,
+		method: "exact-construction-cluster-sign-test-shifted-null-v1" as const,
 		testedNull:
-			"at most half of independent paired author clusters have a family-mean direction-normalized difference exceeding the preregistered MPID",
+			"at most half of independent paired construction clusters have an author-equal family-mean direction-normalized difference exceeding the preregistered MPID",
 		multiplicityAdjustment: "holm" as const,
 		decisionRule: plan.decisionRule,
 		hypotheses: hypotheses.sort((a, b) =>
@@ -232,6 +289,6 @@ export function calculateSemanticCompetitiveInference(input: {
 		methodAdequacyVerified: false as const,
 		sampleSizeAdequacyVerified: false as const,
 		caveat:
-			"This exact sign test targets author-cluster-majority superiority beyond MPID, not mean superiority; each signed corpus author contributes one equally weighted cluster mean per language. Independence across authors remains a preregistered design assumption. Shifted differences within 1e-12 are ties. Holm plus an all-cells rule is conservative; power must be verified for this complete rule before any public claim.",
+			"This exact sign test targets construction-cluster-majority superiority beyond MPID, not mean superiority. Families are averaged equally within authors and authors equally within each signed construction cluster; construction clusters are the inferential units. Author-equal and family-equal descriptive means are disclosed as a directional sensitivity check. Signed cluster IDs do not by themselves prove independence. Shifted differences within 1e-12 are ties. Holm plus an all-cells rule is conservative; power must be verified for this complete rule before any public claim.",
 	};
 }

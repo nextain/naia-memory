@@ -7,20 +7,20 @@ import {
 } from "./semantic-sign-test.js";
 
 export type SemanticSampleSizeAssumptions = {
-	schemaVersion: "naia-memory-semantic-sample-size-assumptions-v3";
+	schemaVersion: "naia-memory-semantic-sample-size-assumptions-v4";
 	languages: string[];
 	competitors: string[];
-	nullAuthorClusterExceedanceProbability: 0.5;
-	alternativeAuthorClusterExceedanceProbability: Record<
+	nullConstructionClusterExceedanceProbability: 0.5;
+	alternativeConstructionClusterExceedanceProbability: Record<
 		string,
 		Record<string, number>
 	>;
-	dependencyModel: "shared-uniform-within-cell-author-cluster-shock-mixture";
+	dependencyModel: "shared-uniform-within-cell-construction-cluster-shock-mixture";
 	dependencyScenarios: {
 		id: string;
 		sharedCellShockProbability: number;
 	}[];
-	candidateIndependentAuthorClustersByLanguage: Record<string, number>[];
+	candidateIndependentConstructionClustersByLanguage: Record<string, number>[];
 	simulationIterations: number;
 	seed: number;
 	statement: "FROZEN_BEFORE_CAMPAIGN_EXECUTION";
@@ -44,14 +44,14 @@ export function isSemanticSampleSizeAssumptions(
 		return false;
 	const item = value as Record<string, unknown>;
 	if (
-		item.schemaVersion !== "naia-memory-semantic-sample-size-assumptions-v3" ||
+		item.schemaVersion !== "naia-memory-semantic-sample-size-assumptions-v4" ||
 		!uniqueNonemptyStrings(item.languages) ||
 		item.languages.length > 64 ||
 		!uniqueNonemptyStrings(item.competitors) ||
 		item.competitors.length > 64 ||
-		item.nullAuthorClusterExceedanceProbability !== 0.5 ||
+		item.nullConstructionClusterExceedanceProbability !== 0.5 ||
 		item.dependencyModel !==
-			"shared-uniform-within-cell-author-cluster-shock-mixture" ||
+			"shared-uniform-within-cell-construction-cluster-shock-mixture" ||
 		!Array.isArray(item.dependencyScenarios) ||
 		item.dependencyScenarios.length < 2 ||
 		item.dependencyScenarios.length > 20 ||
@@ -62,12 +62,13 @@ export function isSemanticSampleSizeAssumptions(
 		Number(item.seed) < 1 ||
 		Number(item.seed) > 0xffff_ffff ||
 		item.statement !== "FROZEN_BEFORE_CAMPAIGN_EXECUTION" ||
-		typeof item.alternativeAuthorClusterExceedanceProbability !== "object" ||
-		item.alternativeAuthorClusterExceedanceProbability === null ||
-		Array.isArray(item.alternativeAuthorClusterExceedanceProbability) ||
-		!Array.isArray(item.candidateIndependentAuthorClustersByLanguage) ||
-		item.candidateIndependentAuthorClustersByLanguage.length === 0 ||
-		item.candidateIndependentAuthorClustersByLanguage.length > 100
+		typeof item.alternativeConstructionClusterExceedanceProbability !==
+			"object" ||
+		item.alternativeConstructionClusterExceedanceProbability === null ||
+		Array.isArray(item.alternativeConstructionClusterExceedanceProbability) ||
+		!Array.isArray(item.candidateIndependentConstructionClustersByLanguage) ||
+		item.candidateIndependentConstructionClustersByLanguage.length === 0 ||
+		item.candidateIndependentConstructionClustersByLanguage.length > 100
 	)
 		return false;
 	const scenarioIds = new Set<string>();
@@ -99,7 +100,7 @@ export function isSemanticSampleSizeAssumptions(
 	}
 	if (!hasIndependentScenario) return false;
 	const probabilities =
-		item.alternativeAuthorClusterExceedanceProbability as Record<
+		item.alternativeConstructionClusterExceedanceProbability as Record<
 			string,
 			unknown
 		>;
@@ -130,7 +131,7 @@ export function isSemanticSampleSizeAssumptions(
 			return false;
 	}
 	const candidateKeys = new Set<string>();
-	return item.candidateIndependentAuthorClustersByLanguage.every(
+	return item.candidateIndependentConstructionClustersByLanguage.every(
 		(candidate) => {
 			if (
 				typeof candidate !== "object" ||
@@ -191,21 +192,23 @@ function streamSeed(input: {
 }
 
 function cellSuccesses(input: {
-	authorClusters: number;
+	constructionClusters: number;
 	probability: number;
 	sharedCellShockProbability: number;
 	random: () => number;
 }): number {
 	// With probability q the whole cell shares one Bernoulli outcome; otherwise
-	// author clusters are independent. Marginals stay p and pairwise covariance is
+	// construction clusters are independent. Marginals stay p and pairwise covariance is
 	// q * p * (1 - p), so every declared q >= 0 is nonnegative dependence.
 	if (input.sharedCellShockProbability > 0) {
 		const shocked = input.random() < input.sharedCellShockProbability;
 		if (shocked)
-			return input.random() < input.probability ? input.authorClusters : 0;
+			return input.random() < input.probability
+				? input.constructionClusters
+				: 0;
 	}
 	let successes = 0;
-	for (let cluster = 0; cluster < input.authorClusters; cluster++)
+	for (let cluster = 0; cluster < input.constructionClusters; cluster++)
 		if (input.random() < input.probability) successes++;
 	return successes;
 }
@@ -239,7 +242,7 @@ export function simulateSemanticSampleSize(input: {
 		throw new Error("semantic sample-size assumptions hash mismatch");
 	if (
 		[...assumptions.languages].sort().join("\0") !==
-			Object.keys(plan.requiredIndependentAuthorClustersByLanguage)
+			Object.keys(plan.requiredIndependentConstructionClustersByLanguage)
 				.sort()
 				.join("\0") ||
 		[...assumptions.competitors].sort().join("\0") !==
@@ -248,7 +251,7 @@ export function simulateSemanticSampleSize(input: {
 		throw new Error("semantic sample-size assumptions coverage mismatch");
 
 	const candidates =
-		assumptions.candidateIndependentAuthorClustersByLanguage.map(
+		assumptions.candidateIndependentConstructionClustersByLanguage.map(
 			(counts, candidateIndex) => {
 				const scenarios = assumptions.dependencyScenarios.map(
 					(scenario, scenarioIndex) => {
@@ -280,38 +283,39 @@ export function simulateSemanticSampleSize(input: {
 							const alternativePValues: number[] = [];
 							for (const competitor of assumptions.competitors) {
 								for (const language of assumptions.languages) {
-									const authorClusters = counts[language];
+									const constructionClusters = counts[language];
 									const alternativeProbability =
-										assumptions.alternativeAuthorClusterExceedanceProbability[
+										assumptions
+											.alternativeConstructionClusterExceedanceProbability[
 											language
 										]?.[competitor];
 									if (
-										authorClusters === undefined ||
+										constructionClusters === undefined ||
 										alternativeProbability === undefined
 									)
 										throw new Error("semantic sample-size cell is missing");
 									const nullSuccesses = cellSuccesses({
-										authorClusters,
+										constructionClusters,
 										probability:
-											assumptions.nullAuthorClusterExceedanceProbability,
+											assumptions.nullConstructionClusterExceedanceProbability,
 										sharedCellShockProbability:
 											scenario.sharedCellShockProbability,
 										random: nullRandom,
 									});
 									const alternativeSuccesses = cellSuccesses({
-										authorClusters,
+										constructionClusters,
 										probability: alternativeProbability,
 										sharedCellShockProbability:
 											scenario.sharedCellShockProbability,
 										random: alternativeRandom,
 									});
 									nullPValues.push(
-										exactBinomialUpperTail(nullSuccesses, authorClusters),
+										exactBinomialUpperTail(nullSuccesses, constructionClusters),
 									);
 									alternativePValues.push(
 										exactBinomialUpperTail(
 											alternativeSuccesses,
-											authorClusters,
+											constructionClusters,
 										),
 									);
 								}
@@ -345,19 +349,23 @@ export function simulateSemanticSampleSize(input: {
 						};
 					},
 				);
-				return { independentAuthorClustersByLanguage: counts, scenarios };
+				return { independentConstructionClustersByLanguage: counts, scenarios };
 			},
 		);
 	const targetKey = JSON.stringify(
 		Object.fromEntries(
-			Object.entries(plan.requiredIndependentAuthorClustersByLanguage).sort(),
+			Object.entries(
+				plan.requiredIndependentConstructionClustersByLanguage,
+			).sort(),
 		),
 	);
 	const plannedCandidate = candidates.find(
 		(candidate) =>
 			JSON.stringify(
 				Object.fromEntries(
-					Object.entries(candidate.independentAuthorClustersByLanguage).sort(),
+					Object.entries(
+						candidate.independentConstructionClustersByLanguage,
+					).sort(),
 				),
 			) === targetKey,
 	);
@@ -369,20 +377,20 @@ export function simulateSemanticSampleSize(input: {
 			scenario.alternativeCompleteDecisionPower.lower95 >= plan.targetPower,
 	);
 	return {
-		schemaVersion: "naia-memory-semantic-sample-size-simulation-v3" as const,
+		schemaVersion: "naia-memory-semantic-sample-size-simulation-v4" as const,
 		assumptionsSha256: evidenceObjectSha256(assumptions),
 		method:
 			"seeded-monte-carlo-complete-exact-sign-test-holm-dependency-sensitivity-rule" as const,
 		iterations: assumptions.simulationIterations,
 		seed: assumptions.seed,
 		candidates,
-		plannedIndependentAuthorClustersByLanguage:
-			plan.requiredIndependentAuthorClustersByLanguage,
+		plannedIndependentConstructionClustersByLanguage:
+			plan.requiredIndependentConstructionClustersByLanguage,
 		plannedCandidate,
 		planTargetSatisfiedUnderAssumptions,
 		sampleSizeAdequacyVerified: false as const,
 		claimEligible: false as const,
 		caveat:
-			"Power and null calibration are conditional on preregistered Bernoulli probabilities and the enumerated within-cell author-cluster-shock sensitivity scenarios. A positive shock scenario intentionally violates independence across authors to expose effective-sample-size risk; it does not estimate actual dependence, exhaust all structures, establish corpus validity, or permit public claims.",
+			"Power and null calibration are conditional on preregistered Bernoulli probabilities and the enumerated within-cell construction-cluster-shock sensitivity scenarios. A positive shock scenario intentionally violates independence across construction clusters to expose effective-sample-size risk; it does not estimate actual dependence, prove that signed cluster IDs are independent, exhaust all structures, establish corpus validity, or permit public claims.",
 	};
 }

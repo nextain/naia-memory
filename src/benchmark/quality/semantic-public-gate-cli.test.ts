@@ -55,6 +55,7 @@ function publicContract(): MemoryUpdateContract {
 			expectedDecision: decision,
 			provenance: {
 				authorId: `author-${language}`,
+				constructionClusterId: `construction-${index}`,
 				authorNativeLanguages: [language],
 				authoredAt: "2026-01-02T00:00:00Z",
 				reviewerId: `reviewer-${language}`,
@@ -385,8 +386,18 @@ async function writeAnalysisPlanFixture(
 			).size,
 		]),
 	);
+	const requiredIndependentConstructionClustersByLanguage = Object.fromEntries(
+		(["ko", "en", "ja"] as const).map((language) => [
+			language,
+			new Set(
+				contract.cases
+					.filter((item) => item.split === "test" && item.language === language)
+					.map((item) => item.provenance?.constructionClusterId),
+			).size,
+		]),
+	);
 	const unsigned = {
-		schemaVersion: "naia-memory-semantic-analysis-plan-v3" as const,
+		schemaVersion: "naia-memory-semantic-analysis-plan-v4" as const,
 		administrator: "external-statistician",
 		contractSha256: evidenceObjectSha256(contract),
 		engines: ["hindsight", "mem0", "naia"],
@@ -400,6 +411,10 @@ async function writeAnalysisPlanFixture(
 		minimumPracticallyImportantDifference: 0.1,
 		decisionRule: "holm-all-language-competitor-superiority" as const,
 		requiredIndependentAuthorClustersByLanguage,
+		requiredIndependentConstructionClustersByLanguage,
+		independenceUnit: "construction-cluster" as const,
+		sensitivityAnalysis:
+			"author-equal-and-family-equal-directional-agreement" as const,
 		sampleSizeMethod: "paired-family simulation",
 		sampleSizeAssumptionsSha256: "d".repeat(64),
 		stoppingRule:

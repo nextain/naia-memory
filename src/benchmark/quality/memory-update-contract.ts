@@ -29,6 +29,7 @@ export type MemoryUpdateCase = {
 	lifecycleOperations?: LifecycleOperation[];
 	provenance?: {
 		authorId: string;
+		constructionClusterId: string;
 		authorNativeLanguages: MemoryUpdateLanguage[];
 		authoredAt: string;
 		reviewerId: string;
@@ -239,6 +240,7 @@ export function validateMemoryUpdateContract(
 			if (
 				!provenance ||
 				!provenance.authorId.trim() ||
+				!provenance.constructionClusterId.trim() ||
 				!provenance.reviewerId.trim()
 			)
 				throw new Error(`${current.id}: independent case requires provenance`);

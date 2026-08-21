@@ -8,7 +8,7 @@ import {
 const SHA256 = /^[a-f0-9]{64}$/;
 
 export type SemanticAnalysisPlan = {
-	schemaVersion: "naia-memory-semantic-analysis-plan-v3";
+	schemaVersion: "naia-memory-semantic-analysis-plan-v4";
 	administrator: string;
 	contractSha256: string;
 	engines: string[];
@@ -22,6 +22,9 @@ export type SemanticAnalysisPlan = {
 	minimumPracticallyImportantDifference: number;
 	decisionRule: "holm-all-language-competitor-superiority";
 	requiredIndependentAuthorClustersByLanguage: Record<string, number>;
+	requiredIndependentConstructionClustersByLanguage: Record<string, number>;
+	independenceUnit: "construction-cluster";
+	sensitivityAnalysis: "author-equal-and-family-equal-directional-agreement";
 	sampleSizeMethod: string;
 	sampleSizeAssumptionsSha256: string;
 	stoppingRule: "collect-all-frozen-test-families-no-outcome-peeking";
@@ -62,7 +65,7 @@ export function isSemanticAnalysisPlan(
 ): value is SemanticAnalysisPlan {
 	return (
 		isRecord(value) &&
-		value.schemaVersion === "naia-memory-semantic-analysis-plan-v3" &&
+		value.schemaVersion === "naia-memory-semantic-analysis-plan-v4" &&
 		typeof value.administrator === "string" &&
 		value.administrator.trim().length > 0 &&
 		typeof value.contractSha256 === "string" &&
@@ -97,6 +100,13 @@ export function isSemanticAnalysisPlan(
 		Object.values(value.requiredIndependentAuthorClustersByLanguage).every(
 			(count) => Number.isInteger(count) && Number(count) > 0,
 		) &&
+		isRecord(value.requiredIndependentConstructionClustersByLanguage) &&
+		Object.values(
+			value.requiredIndependentConstructionClustersByLanguage,
+		).every((count) => Number.isInteger(count) && Number(count) > 0) &&
+		value.independenceUnit === "construction-cluster" &&
+		value.sensitivityAnalysis ===
+			"author-equal-and-family-equal-directional-agreement" &&
 		typeof value.sampleSizeMethod === "string" &&
 		value.sampleSizeMethod.trim().length > 0 &&
 		typeof value.sampleSizeAssumptionsSha256 === "string" &&
@@ -134,6 +144,7 @@ export function validateSemanticAnalysisPlan(input: {
 }): {
 	analysisPlanIntegrityQualified: true;
 	plannedIndependentAuthorClusterCount: number;
+	plannedIndependentConstructionClusterCount: number;
 	sampleSizeAdequacyVerified: false;
 	trustedTimestampVerified: false;
 } {
@@ -193,6 +204,14 @@ export function validateSemanticAnalysisPlan(input: {
 			.join("\0") !== languages.join("\0")
 	)
 		throw new Error("semantic analysis plan language coverage is invalid");
+	if (
+		Object.keys(plan.requiredIndependentConstructionClustersByLanguage)
+			.sort()
+			.join("\0") !== languages.join("\0")
+	)
+		throw new Error(
+			"semantic analysis plan construction-cluster coverage is invalid",
+		);
 	for (const language of languages) {
 		const languageCases = testCases.filter(
 			(item) => item.language === language,
@@ -201,10 +220,12 @@ export function validateSemanticAnalysisPlan(input: {
 			languageCases.some(
 				(item) =>
 					typeof item.provenance?.authorId !== "string" ||
-					item.provenance.authorId.trim().length === 0,
+					item.provenance.authorId.trim().length === 0 ||
+					typeof item.provenance.constructionClusterId !== "string" ||
+					item.provenance.constructionClusterId.trim().length === 0,
 			)
 		)
-			throw new Error("semantic analysis plan author cluster is invalid");
+			throw new Error("semantic analysis plan provenance cluster is invalid");
 		const actual = new Set(
 			languageCases.map((item) => item.provenance?.authorId),
 		).size;
@@ -212,11 +233,24 @@ export function validateSemanticAnalysisPlan(input: {
 			actual < (plan.requiredIndependentAuthorClustersByLanguage[language] ?? 0)
 		)
 			throw new Error("semantic analysis plan sample-size target is unmet");
+		const constructionClusters = new Set(
+			languageCases.map((item) => item.provenance?.constructionClusterId),
+		).size;
+		if (
+			constructionClusters <
+			(plan.requiredIndependentConstructionClustersByLanguage[language] ?? 0)
+		)
+			throw new Error(
+				"semantic analysis plan construction-cluster target is unmet",
+			);
 	}
 	return {
 		analysisPlanIntegrityQualified: true,
 		plannedIndependentAuthorClusterCount: Object.values(
 			plan.requiredIndependentAuthorClustersByLanguage,
+		).reduce((sum, count) => sum + count, 0),
+		plannedIndependentConstructionClusterCount: Object.values(
+			plan.requiredIndependentConstructionClustersByLanguage,
 		).reduce((sum, count) => sum + count, 0),
 		sampleSizeAdequacyVerified: false,
 		trustedTimestampVerified: false,

@@ -29,6 +29,7 @@ function reviewedCase(language: "ko" | "en" | "ja", id = language) {
 		...semanticCase(language, id),
 		provenance: {
 			authorId: `author-${language}`,
+			constructionClusterId: `construction-${id}`,
 			authorNativeLanguages: [language],
 			authoredAt: "2026-01-02T00:00:00Z",
 			reviewerId: `reviewer-${language}`,

@@ -35,6 +35,7 @@ function fixture() {
 			expectedDecision: "update",
 			provenance: {
 				authorId: `author-${language}`,
+				constructionClusterId: `construction-${language}`,
 				authorNativeLanguages: [language],
 				authoredAt: "2026-01-01T01:00:00Z",
 				reviewerId: `reviewer-${language}`,
@@ -46,7 +47,7 @@ function fixture() {
 	};
 	const { privateKey, publicKey } = generateKeyPairSync("ed25519");
 	const unsigned = {
-		schemaVersion: "naia-memory-semantic-analysis-plan-v3" as const,
+		schemaVersion: "naia-memory-semantic-analysis-plan-v4" as const,
 		administrator: "external-statistician",
 		contractSha256: evidenceObjectSha256(contract),
 		engines: ["hindsight", "mem0", "naia"],
@@ -60,6 +61,14 @@ function fixture() {
 		minimumPracticallyImportantDifference: 0.1,
 		decisionRule: "holm-all-language-competitor-superiority" as const,
 		requiredIndependentAuthorClustersByLanguage: { ko: 1, en: 1, ja: 1 },
+		requiredIndependentConstructionClustersByLanguage: {
+			ko: 1,
+			en: 1,
+			ja: 1,
+		},
+		independenceUnit: "construction-cluster" as const,
+		sensitivityAnalysis:
+			"author-equal-and-family-equal-directional-agreement" as const,
 		sampleSizeMethod: "paired-family simulation",
 		sampleSizeAssumptionsSha256: "1".repeat(64),
 		stoppingRule:
@@ -110,6 +119,7 @@ describe("semantic analysis plan", () => {
 		).toEqual({
 			analysisPlanIntegrityQualified: true,
 			plannedIndependentAuthorClusterCount: 3,
+			plannedIndependentConstructionClusterCount: 3,
 			sampleSizeAdequacyVerified: false,
 			trustedTimestampVerified: false,
 		});
@@ -156,7 +166,7 @@ describe("semantic analysis plan", () => {
 				...current,
 				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
 			}),
-		).toThrow("semantic analysis plan author cluster is invalid");
+		).toThrow("semantic analysis plan provenance cluster is invalid");
 	});
 
 	it("rejects an administrator identity or key reused by another role", () => {
