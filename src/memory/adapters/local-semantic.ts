@@ -23,95 +23,121 @@ export function createLocalSemanticMemory(
 	host: LocalSemanticHost,
 ): MemoryAdapter["semantic"] {
 	const pendingWrites = new Map<string, Promise<void>>();
-	const enqueueWrite = (id: string, operation: () => Promise<void>) => {
-		const previous = pendingWrites.get(id) ?? Promise.resolve();
-		const current = previous.catch(() => undefined).then(operation);
-		pendingWrites.set(id, current);
+	const enqueueWrite = (ids: string[], operation: () => Promise<void>) => {
+		const uniqueIds = [...new Set(ids)].sort();
+		const previous = Promise.all(
+			uniqueIds.map((id) => pendingWrites.get(id)?.catch(() => undefined)),
+		);
+		const current = previous.then(operation);
+		for (const id of uniqueIds) pendingWrites.set(id, current);
 		return current.finally(() => {
-			if (pendingWrites.get(id) === current) pendingWrites.delete(id);
+			for (const id of uniqueIds) {
+				if (pendingWrites.get(id) === current) pendingWrites.delete(id);
+			}
 		});
 	};
-	return {
-		upsert: async (fact: Fact): Promise<void> => {
-			const incoming = structuredClone(fact);
-			const invocationStore = host.getStore();
-			return enqueueWrite(incoming.id, async () => {
-				if (host.getStore() !== invocationStore) {
-					throw new Error("Memory store changed while embedding semantic fact");
-				}
-				const now = Date.now();
-				const store = invocationStore;
-				const initialExisting = store.facts.find(
-					(candidate) => candidate.id === incoming.id,
-				);
-				const needsEmbedding =
-					!initialExisting ||
-					initialExisting.content !== incoming.content ||
-					!store.factEmbeddings?.[incoming.id];
-				const fVec = needsEmbedding
-					? await host.embedDocument(incoming.content)
-					: null;
-				if (host.getStore() !== store) {
-					throw new Error("Memory store changed while embedding semantic fact");
-				}
-				const existing = store.facts.find(
-					(candidate) => candidate.id === incoming.id,
-				);
-				if (existing) {
-					existing.content = incoming.content;
-					existing.entities = [
-						...new Set([...existing.entities, ...incoming.entities]),
-					];
-					existing.topics = [
-						...new Set([...existing.topics, ...incoming.topics]),
-					];
-					existing.updatedAt = incoming.updatedAt;
-					existing.importance = Math.max(
-						existing.importance,
-						incoming.importance,
+	const upsertMany = async (facts: Fact[]): Promise<void> => {
+		if (facts.length === 0) return;
+		const incomingFacts = facts.map((fact) => structuredClone(fact));
+		if (
+			new Set(incomingFacts.map((fact) => fact.id)).size !==
+			incomingFacts.length
+		)
+			throw new Error("Semantic batch upsert requires unique fact IDs");
+		const invocationStore = host.getStore();
+		return enqueueWrite(
+			incomingFacts.map((fact) => fact.id),
+			async () => {
+				if (host.getStore() !== invocationStore)
+					throw new Error(
+						"Memory store changed while embedding semantic facts",
 					);
-					existing.sourceEpisodes = [
-						...new Set([
-							...existing.sourceEpisodes,
-							...incoming.sourceEpisodes,
-						]),
-					];
-					existing.status = incoming.status ?? existing.status;
-					existing.maxEmotion = incoming.maxEmotion ?? existing.maxEmotion;
-					existing.strength = incoming.strength;
-					existing.lastAccessed = incoming.lastAccessed;
-					existing.recallCount = incoming.recallCount;
-					if ("validFrom" in incoming) existing.validFrom = incoming.validFrom;
-					if ("validTo" in incoming) existing.validTo = incoming.validTo;
-					if ("successorId" in incoming)
-						existing.successorId = incoming.successorId;
-					if ("supersedes" in incoming)
-						existing.supersedes = incoming.supersedes;
-					existing.encodingContext =
-						incoming.encodingContext ?? existing.encodingContext;
-					existing.structured = incoming.structured ?? existing.structured;
-				} else {
-					store.facts.push(incoming);
+				const store = invocationStore;
+				const prepared: Array<{
+					incoming: Fact;
+					needsEmbedding: boolean;
+					vector: number[] | null;
+				}> = [];
+				// Keep provider calls sequential, matching the pre-batch upsert path.
+				// Every async operation still finishes before the mutation section.
+				for (const incoming of incomingFacts) {
+					const existing = store.facts.find((fact) => fact.id === incoming.id);
+					const needsEmbedding =
+						!existing ||
+						existing.content !== incoming.content ||
+						!store.factEmbeddings?.[incoming.id];
+					prepared.push({
+						incoming,
+						needsEmbedding,
+						vector: needsEmbedding
+							? await host.embedDocument(incoming.content)
+							: null,
+					});
 				}
-
-				const entities = existing?.entities ?? incoming.entities;
+				if (host.getStore() !== store)
+					throw new Error(
+						"Memory store changed while embedding semantic facts",
+					);
+				const now = Date.now();
+				const touchedEntities: string[][] = [];
+				for (const { incoming, needsEmbedding, vector } of prepared) {
+					const existing = store.facts.find((fact) => fact.id === incoming.id);
+					if (existing) {
+						existing.content = incoming.content;
+						existing.entities = [
+							...new Set([...existing.entities, ...incoming.entities]),
+						];
+						existing.topics = [
+							...new Set([...existing.topics, ...incoming.topics]),
+						];
+						existing.updatedAt = incoming.updatedAt;
+						existing.importance = Math.max(
+							existing.importance,
+							incoming.importance,
+						);
+						existing.sourceEpisodes = [
+							...new Set([
+								...existing.sourceEpisodes,
+								...incoming.sourceEpisodes,
+							]),
+						];
+						existing.status = incoming.status ?? existing.status;
+						existing.maxEmotion = incoming.maxEmotion ?? existing.maxEmotion;
+						existing.strength = incoming.strength;
+						existing.lastAccessed = incoming.lastAccessed;
+						existing.recallCount = incoming.recallCount;
+						if ("validFrom" in incoming)
+							existing.validFrom = incoming.validFrom;
+						if ("validTo" in incoming) existing.validTo = incoming.validTo;
+						if ("successorId" in incoming)
+							existing.successorId = incoming.successorId;
+						if ("supersedes" in incoming)
+							existing.supersedes = incoming.supersedes;
+						existing.encodingContext =
+							incoming.encodingContext ?? existing.encodingContext;
+						existing.structured = incoming.structured ?? existing.structured;
+					} else store.facts.push(incoming);
+					touchedEntities.push(existing?.entities ?? incoming.entities);
+					if (vector) {
+						store.factEmbeddings ??= {};
+						store.factEmbeddings[incoming.id] = vector;
+					} else if (needsEmbedding) delete store.factEmbeddings?.[incoming.id];
+				}
 				const kg = host.getKnowledgeGraph();
-				for (const entity of entities) kg.touchNode(entity, now);
-				for (let i = 0; i < entities.length; i++) {
-					for (let j = i + 1; j < entities.length; j++) {
-						kg.strengthen(entities[i], entities[j], 0.05, now);
-					}
-				}
-				if (fVec) {
-					store.factEmbeddings ??= {};
-					store.factEmbeddings[incoming.id] = fVec;
-				} else if (needsEmbedding) {
-					delete store.factEmbeddings?.[incoming.id];
+				for (const entities of touchedEntities) {
+					for (const entity of entities) kg.touchNode(entity, now);
+					for (let i = 0; i < entities.length; i++)
+						for (let j = i + 1; j < entities.length; j++)
+							kg.strengthen(entities[i], entities[j], 0.05, now);
 				}
 				host.markDirty();
 				host.save();
-			});
-		},
+			},
+		);
+	};
+	return {
+		upsert: async (fact: Fact): Promise<void> => upsertMany([fact]),
+		upsertMany,
 
 		search: (
 			query,

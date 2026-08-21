@@ -1253,3 +1253,50 @@ does not manufacture external independence. Public competitiveness remains
 **NO-GO** until real independent multilingual operators provide identity-bound
 receipts and execute the frozen four-engine campaign. That campaign—not more
 local integrity plumbing—is now the decisive evidence-producing step.
+
+## Local lifecycle batch integrity
+
+The LocalAdapter previously applied a multi-fact deletion or supersession as a
+sequence of independent semantic writes. A reset or failed later write could
+therefore leave predecessors archived or superseded without completing the
+related successor set. The semantic adapter contract now has an optional
+`upsertMany` operation. LocalAdapter locks every affected identity, prepares
+all asynchronous embeddings before mutation, rechecks that the store instance
+has not changed, then applies the facts and vectors in one synchronous
+in-memory section and schedules one save. Consolidation uses this path for
+authorized multi-target deletion and predecessor-plus-successor lifecycle
+updates; adapters without the capability retain the prior sequential behavior.
+
+Failure injection proves two distinct boundaries. A reset while batch
+embeddings are in flight rejects the write without inserting either fact, and
+duplicate identities are rejected before mutation. A consolidation-level
+authorized deletion test also forces `upsertMany` to fail and proves that the
+batch path was selected and the stored target remains active. Result counters
+and supersession telemetry are advanced only after a successful batch. The
+complete repository regression passes 86 test files and 819 tests, both
+TypeScript checks, the production build, scoped Biome, and `git diff --check`.
+
+This is in-memory lifecycle integrity, not a durable database transaction.
+Process failure during persistence remains governed by each adapter's storage
+implementation, and non-Local adapters receive no new atomicity unless they
+implement `upsertMany`. Retrieval, extraction, matching, and benchmark scoring
+were not changed, so the four-engine measurements are unchanged and no score
+increase is claimed.
+
+The deterministic review preflight first returned `REFACTOR_REQUIRED` because
+the integration failure test had been added to an existing 1,000-line suite.
+The test was moved to a dedicated 83-line lifecycle batch-integrity file and
+the repeated preflight returned `REVIEW_REQUIRED` with complexity digest
+`sha256:84ced7eda3fd46130585356a1bc6a2d326b86d7634dc16634585f4cdca2ddda7`.
+The modified 507-line consolidation method remains a cohesive lifecycle unit
+after a 31-line change. The 546-line Local write-consistency suite remains a
+cohesive adapter failure-injection suite after an 80-line change, while the
+cross-layer assertion is now isolated. Neither changed file crosses the
+mandatory refactor threshold. Claude and OpenCode each inspected the change but
+timed out before returning a verdict, so both are recorded as `NOT_RUN`, not
+approval. Recovery mode also prevents a formal review-pass `CLEAN` claim.
+
+This closes one mechanistic trust gap but does not change the public evidence
+decision. Public competitiveness remains **NO-GO** until the frozen campaign is
+executed by independently controlled multilingual participants and engines
+with identity-bound receipts and trusted timestamps.

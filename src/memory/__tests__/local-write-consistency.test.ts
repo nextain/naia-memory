@@ -149,6 +149,86 @@ describe("LocalAdapter write consistency", () => {
 		expect(starts).toBe(1);
 	});
 
+	it("does not partially apply an in-memory semantic batch across reset", async () => {
+		const dir = await mkdtemp(join(tmpdir(), "naia-batch-reset-race-"));
+		dirs.push(dir);
+		let release!: () => void;
+		let started!: () => void;
+		const blocked = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		const didStart = new Promise<void>((resolve) => {
+			started = resolve;
+		});
+		const embedder: EmbeddingProvider = {
+			name: "blocked-batch",
+			dims: 2,
+			embeddingSpaceId: "blocked-batch-v1",
+			async embed() {
+				return [1, 0];
+			},
+			async embedBatch(texts) {
+				started();
+				await blocked;
+				return texts.map(() => [1, 0]);
+			},
+		};
+		const adapter = new LocalAdapter({
+			storePath: join(dir, "memory.json"),
+			embeddingProvider: embedder,
+		});
+		const now = Date.now();
+		const makeFact = (id: string) => ({
+			id,
+			content: id,
+			entities: [],
+			topics: [],
+			createdAt: now,
+			updatedAt: now,
+			importance: 1,
+			recallCount: 0,
+			lastAccessed: now,
+			strength: 1,
+			status: "active" as const,
+			sourceEpisodes: [],
+		});
+		const write = adapter.semantic.upsertMany?.([
+			makeFact("first"),
+			makeFact("second"),
+		]);
+		expect(write).toBeDefined();
+		await didStart;
+		adapter.reset();
+		release();
+		await expect(write).rejects.toThrow(/Memory store changed while embedding/);
+		expect(adapter.getStore().facts).toEqual([]);
+	});
+
+	it("rejects duplicate IDs before mutating an in-memory semantic batch", async () => {
+		const dir = await mkdtemp(join(tmpdir(), "naia-batch-duplicate-"));
+		dirs.push(dir);
+		const adapter = new LocalAdapter({ storePath: join(dir, "memory.json") });
+		const now = Date.now();
+		const fact = {
+			id: "same",
+			content: "same",
+			entities: [],
+			topics: [],
+			createdAt: now,
+			updatedAt: now,
+			importance: 1,
+			recallCount: 0,
+			lastAccessed: now,
+			strength: 1,
+			status: "active" as const,
+			sourceEpisodes: [],
+		};
+		await expect(adapter.semantic.upsertMany?.([fact, fact])).rejects.toThrow(
+			/unique fact IDs/,
+		);
+		expect(adapter.getStore().facts).toEqual([]);
+	});
+
 	it("removes a mismatched vector after a concurrent embedding failure", async () => {
 		const dir = await mkdtemp(join(tmpdir(), "naia-content-race-"));
 		dirs.push(dir);

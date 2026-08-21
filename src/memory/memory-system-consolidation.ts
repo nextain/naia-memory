@@ -200,15 +200,21 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 							continue;
 						}
 						recordDeleteOutcome("authorized");
-						for (const target of resolution.targets) {
-							await this.adapter.semantic.upsert({
+						const archivedTargets: Fact[] = resolution.targets.map(
+							(target) => ({
 								...target,
 								status: "archived",
 								updatedAt: now,
 								validTo: now,
-							});
-							factsUpdated++;
+							}),
+						);
+						if (this.adapter.semantic.upsertMany)
+							await this.adapter.semantic.upsertMany(archivedTargets);
+						else {
+							for (const target of archivedTargets)
+								await this.adapter.semantic.upsert(target);
 						}
+						factsUpdated += archivedTargets.length;
 						continue;
 					}
 
@@ -306,18 +312,13 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						if (anchor) {
 							const predecessorIds = updates.map(({ fact }) => fact.id);
 							const successorId = `${anchor.id}-v${Date.now()}`;
-							for (const { fact } of updates) {
-								await this.adapter.semantic.upsert({
-									...fact,
-									status: "superseded",
-									updatedAt: now,
-									validTo: now,
-									successorId,
-								});
-								if (structured)
-									recordMutationOutcome("structured_supersession_applied");
-								factsUpdated++;
-							}
+							const predecessorUpdates: Fact[] = updates.map(({ fact }) => ({
+								...fact,
+								status: "superseded",
+								updatedAt: now,
+								validTo: now,
+								successorId,
+							}));
 							const newImportance = Math.max(
 								ef.importance,
 								0.7,
@@ -327,7 +328,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								ef.maxEmotion ?? 0,
 								...updates.map(({ fact }) => fact.maxEmotion ?? 0),
 							);
-							await this.adapter.semantic.upsert({
+							const successor: Fact = {
 								...anchor,
 								id: successorId,
 								content: ef.content,
@@ -352,7 +353,19 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								supersedes: anchor.id,
 								validFrom: now,
 								validTo: null,
-							}); // R4 #26 Step 3a — supersede 시점 spike emit
+							};
+							const lifecycleUpdates = [...predecessorUpdates, successor];
+							if (this.adapter.semantic.upsertMany)
+								await this.adapter.semantic.upsertMany(lifecycleUpdates);
+							else {
+								for (const update of lifecycleUpdates)
+									await this.adapter.semantic.upsert(update);
+							}
+							if (structured)
+								for (const _update of predecessorUpdates)
+									recordMutationOutcome("structured_supersession_applied");
+							factsUpdated += predecessorUpdates.length;
+							// R4 #26 Step 3a — supersede 시점 spike emit
 							// (consolidate path).
 							await this.emitSpike({
 								factId: successorId,

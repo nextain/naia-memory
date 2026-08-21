@@ -361,6 +361,9 @@ export interface MemoryAdapter {
 	semantic: {
 		/** Insert or update a fact (includes reconsolidation logic) */
 		upsert(fact: Fact): Promise<void>;
+		/** Apply a related fact set as one in-memory batch when supported.
+		 * Durable crash atomicity remains adapter-specific. */
+		upsertMany?(facts: Fact[]): Promise<void>;
 		/** Search facts by query string. deepRecall ignores decay for long-term retrieval.
 		 *  context.atTimestamp (optional, ms): bi-temporal recall — only fact versions valid
 		 *  at the given timestamp are considered. Adapters without bi-temporal support may
