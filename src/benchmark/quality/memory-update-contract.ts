@@ -52,6 +52,101 @@ export const SEMANTIC_DIAGNOSTIC_DECISIONS = [
 	"no-update",
 ] as const;
 
+export const SEMANTIC_PUBLIC_MINIMUM_CASES = 100;
+export const SEMANTIC_PUBLIC_MINIMUM_FAMILIES = 100;
+export const SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_LANGUAGE = 30;
+export const SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_DECISION = 10;
+
+/**
+ * Applies the sample-size floor for public semantic-update claims.
+ *
+ * The general contract validator intentionally permits small independently
+ * reviewed pilot contracts. Callers promoting comparative evidence must use
+ * this stricter gate so development cases cannot be counted as held-out test
+ * evidence.
+ */
+export function validateSemanticPublicEvidenceCoverage(
+	contract: MemoryUpdateContract,
+): void {
+	validateMemoryUpdateContract(contract);
+	if (
+		contract.tier !== "semantic-update-interpretation" ||
+		contract.construction !== "independent-native-reviewed"
+	)
+		throw new Error(
+			"public semantic gate requires independent native-reviewed evidence",
+		);
+	const testCases = contract.cases.filter(
+		(current) => current.split === "test",
+	);
+	if (testCases.length < SEMANTIC_PUBLIC_MINIMUM_CASES)
+		throw new Error(
+			`public semantic gate requires at least ${SEMANTIC_PUBLIC_MINIMUM_CASES} test cases`,
+		);
+	const familyCount = new Set(testCases.map((current) => current.familyId))
+		.size;
+	if (familyCount < SEMANTIC_PUBLIC_MINIMUM_FAMILIES)
+		throw new Error(
+			`public semantic gate requires at least ${SEMANTIC_PUBLIC_MINIMUM_FAMILIES} distinct test families`,
+		);
+	if (testCases.some((current) => current.expectedDecision === "create"))
+		throw new Error(
+			"public semantic update gate does not admit create decisions",
+		);
+	for (const current of testCases) {
+		if (
+			current.expectedDecision === "update" &&
+			(current.expectedCurrentIds.length === 0 ||
+				current.forbiddenStaleIds.length === 0)
+		)
+			throw new Error(
+				`${current.id}: public update decision requires current and stale labels`,
+			);
+		if (
+			current.expectedDecision === "delete" &&
+			current.expectedDeletedIds.length === 0
+		)
+			throw new Error(
+				`${current.id}: public delete decision requires deleted labels`,
+			);
+		if (
+			current.expectedDecision === "no-update" &&
+			current.noUpdateIds.length === 0
+		)
+			throw new Error(
+				`${current.id}: public no-update decision requires no-update labels`,
+			);
+	}
+	const authorIds = new Set(
+		testCases.map((current) => current.provenance?.authorId),
+	);
+	const reviewerIds = new Set(
+		testCases.map((current) => current.provenance?.reviewerId),
+	);
+	if ([...authorIds].some((authorId) => reviewerIds.has(authorId)))
+		throw new Error(
+			"public semantic gate requires globally independent author and reviewer roles",
+		);
+	for (const language of MEMORY_UPDATE_LANGUAGES) {
+		const languageCases = testCases.filter(
+			(current) => current.language === language,
+		);
+		if (languageCases.length < SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_LANGUAGE)
+			throw new Error(
+				`public semantic gate requires at least ${SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_LANGUAGE} ${language} test cases`,
+			);
+		for (const decision of SEMANTIC_DIAGNOSTIC_DECISIONS) {
+			const decisionCount = languageCases.filter(
+				(current) => current.expectedDecision === decision,
+			).length;
+			if (decisionCount < SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_DECISION)
+				throw new Error(
+					`public semantic gate requires at least ${SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_DECISION} ${language}/${decision} test cases`,
+				);
+		}
+	}
+}
+
 export function validateSemanticDiagnosticCoverage(
 	contract: MemoryUpdateContract,
 ): void {

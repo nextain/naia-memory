@@ -113,7 +113,7 @@ does not establish out-of-distribution generalization.
 
 ## Verification
 
-- Project tests: 62 files, 662 tests passed
+- Project tests: 63 files, 668 tests passed
 - Typecheck: passed
 - Build: passed
 - `git diff --check`: passed
@@ -122,9 +122,30 @@ does not establish out-of-distribution generalization.
 
 ## Public-report gate
 
-Before an external competitiveness report can be published, run at least 30
-independently authored, frozen held-out cases per language; separate ranked
-retrieval from state inspection; use multiple independent native-language
-judges with disagreement reporting; add latency and cost; and repeat from a
-clean released commit with immutable artifacts. The Korean stochastic miss and
-partial-failure behavior should be resolved or explicitly budgeted first.
+The publication coverage floor is now machine-enforced separately from the base
+pilot contract. It requires at least 100 held-out test cases and 100 distinct
+test families, at least 30 cases in each of Korean, English, and Japanese, and
+at least 10 update, delete, and no-update decisions per language. Development
+and diagnostic cases cannot inflate these counts. `create` is outside this
+claim scope, and each counted decision must carry coherent current/stale,
+deleted, or no-update labels. Author IDs and reviewer IDs must be globally
+role-disjoint. The bounded CLI reports held-out case and family counts only and
+fails closed on malformed, non-regular, symlinked, or oversized input.
+
+The current nine-case generated diagnostic is correctly rejected. Therefore
+this change improves evidence integrity, not measured engine performance, and
+the external competitiveness report remains blocked. Promotion still requires
+an independently authored and native-reviewed frozen corpus satisfying the
+gate; external identity attestation and signed immutable artifacts; human
+near-duplicate auditing; multiple independent native-language judges with
+disagreement reporting; comparable engine receipts; latency and cost; and
+repetition from a clean released commit. Ranked retrieval and full-state
+inspection must remain separate. The Korean stochastic miss and partial-failure
+behavior should be resolved or explicitly budgeted first.
+
+OpenCode adversarial review reproduced and drove fixes for inflated all-split
+counts, one-family padding, vacuous decision labels, raw malformed-root errors,
+and unbounded file reads. The final implementation passes the focused 16-test
+suite, all 668 project tests, typecheck, build, and diff checks. Public status
+remains NO-GO because no qualifying external corpus or execution receipts have
+been supplied; implementation status is commit GO.

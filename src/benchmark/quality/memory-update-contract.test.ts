@@ -4,6 +4,7 @@ import {
 	computeFamilySplitDigest,
 	validateMemoryUpdateContract,
 	validateSemanticDiagnosticCoverage,
+	validateSemanticPublicEvidenceCoverage,
 } from "./memory-update-contract.js";
 import diagnostic from "./memory-update-semantic-diagnostic-v1.json";
 
@@ -72,9 +73,91 @@ describe("memory update contract", () => {
 		expect(() => validateMemoryUpdateContract(contract)).not.toThrow();
 	});
 
+	it("keeps small independent pilots out of the public semantic gate", () => {
+		const cases = [reviewedCase("ko"), reviewedCase("en"), reviewedCase("ja")];
+		const contract: MemoryUpdateContract = {
+			schemaVersion: "naia-memory-update-contract-v1",
+			tier: "semantic-update-interpretation",
+			construction: "independent-native-reviewed",
+			familySplitFreeze: {
+				frozenAt: "2026-01-04T00:00:00Z",
+				digest: computeFamilySplitDigest(cases) as `sha256:${string}`,
+			},
+			cases,
+		};
+		expect(() => validateSemanticPublicEvidenceCoverage(contract)).toThrow(
+			"at least 100 test cases",
+		);
+	});
+
+	it("requires every public test language to cover update/delete/no-update", () => {
+		const languages: readonly ["ko", "en", "ja"] = ["ko", "en", "ja"];
+		const cases = Array.from({ length: 102 }, (_, index) => {
+			const language = languages[index % languages.length] ?? "ko";
+			return reviewedCase(language, `public-${index}`);
+		});
+		const contract: MemoryUpdateContract = {
+			schemaVersion: "naia-memory-update-contract-v1",
+			tier: "semantic-update-interpretation",
+			construction: "independent-native-reviewed",
+			familySplitFreeze: {
+				frozenAt: "2026-01-04T00:00:00Z",
+				digest: computeFamilySplitDigest(cases) as `sha256:${string}`,
+			},
+			cases,
+		};
+		expect(() => validateSemanticPublicEvidenceCoverage(contract)).toThrow(
+			"at least 10 ko/delete test cases",
+		);
+		for (const [index, current] of cases.entries())
+			current.expectedDecision = ["update", "delete", "no-update"][
+				Math.floor(index / languages.length) % 3
+			] as "update" | "delete" | "no-update";
+		for (const current of cases) {
+			if (current.expectedDecision === "delete")
+				current.expectedDeletedIds = ["deleted"];
+			if (current.expectedDecision === "no-update")
+				current.noUpdateIds = ["unchanged"];
+		}
+		expect(() =>
+			validateSemanticPublicEvidenceCoverage(contract),
+		).not.toThrow();
+		const deleteCase = cases.find(
+			(current) => current.expectedDecision === "delete",
+		);
+		if (!deleteCase) throw new Error("fixture requires a delete case");
+		deleteCase.expectedDeletedIds = [];
+		expect(() => validateSemanticPublicEvidenceCoverage(contract)).toThrow(
+			"public delete decision requires deleted labels",
+		);
+		deleteCase.expectedDeletedIds = ["deleted"];
+		for (const current of cases) current.familyId = "one-public-family";
+		if (!contract.familySplitFreeze)
+			throw new Error("fixture requires a family split freeze");
+		contract.familySplitFreeze.digest = computeFamilySplitDigest(
+			cases,
+		) as `sha256:${string}`;
+		expect(() => validateSemanticPublicEvidenceCoverage(contract)).toThrow(
+			"at least 100 distinct test families",
+		);
+		for (const [index, current] of cases.entries())
+			current.familyId = `family-public-${index}`;
+		contract.familySplitFreeze.digest = computeFamilySplitDigest(
+			cases,
+		) as `sha256:${string}`;
+		const [firstPublicCase] = cases;
+		if (!firstPublicCase) throw new Error("fixture requires a first case");
+		firstPublicCase.expectedDecision = "create";
+		expect(() => validateSemanticPublicEvidenceCoverage(contract)).toThrow(
+			"does not admit create decisions",
+		);
+	});
+
 	it("rejects self-reviewed evidence and a stale family split freeze", () => {
 		const cases = [reviewedCase("ko"), reviewedCase("en"), reviewedCase("ja")];
-		cases[0]!.provenance.reviewerId = cases[0]!.provenance.authorId;
+		const [firstCase] = cases;
+		if (!firstCase) throw new Error("fixture requires a first case");
+		firstCase.provenance.reviewerId = firstCase.provenance.authorId;
 		const contract: MemoryUpdateContract = {
 			schemaVersion: "naia-memory-update-contract-v1",
 			tier: "semantic-update-interpretation",
@@ -88,7 +171,7 @@ describe("memory update contract", () => {
 		expect(() => validateMemoryUpdateContract(contract)).toThrow(
 			"author and reviewer must be independent",
 		);
-		cases[0]!.provenance.reviewerId = "reviewer-ko";
+		firstCase.provenance.reviewerId = "reviewer-ko";
 		expect(() => validateMemoryUpdateContract(contract)).toThrow(
 			"freeze digest does not match",
 		);
