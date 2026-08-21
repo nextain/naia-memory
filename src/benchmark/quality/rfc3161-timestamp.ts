@@ -37,6 +37,7 @@ const GEN_TIME = /^Time stamp:\s*(.+)$/m;
 const POLICY_OID = /^Policy OID:\s*(\S+)$/m;
 const OPENSSL_GMT_TIME =
 	/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2})\s+(\d{2}):(\d{2}):(\d{2})\s+(\d{4})\s+GMT$/;
+const UTC_RFC3339_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 const MONTHS = [
 	"Jan",
 	"Feb",
@@ -60,12 +61,16 @@ function defaultCommandRunner(
 	const directory = mkdtempSync(join(tmpdir(), "naia-rfc3161-"));
 	const tokenPath = join(directory, "timestamp-response.tsr");
 	const trustedCaPath = join(directory, "trusted-ca.pem");
+	const emptyConfigPath = join(directory, "empty-openssl.cnf");
 	try {
 		writeFileSync(tokenPath, token, { mode: 0o600, flag: "wx" });
 		writeFileSync(trustedCaPath, trustedCa, { mode: 0o600, flag: "wx" });
-		const resolvedArgs = args.map((arg) =>
-			arg === "__TRUSTED_CA_FILE__" ? trustedCaPath : arg,
-		);
+		writeFileSync(emptyConfigPath, "", { mode: 0o600, flag: "wx" });
+		const resolvedArgs = args.map((arg) => {
+			if (arg === "__TRUSTED_CA_FILE__") return trustedCaPath;
+			if (arg === "__EMPTY_CONFIG_FILE__") return emptyConfigPath;
+			return arg;
+		});
 		const result = spawnSync("openssl", [...resolvedArgs, "-in", tokenPath], {
 			encoding: "utf8",
 			maxBuffer: 1024 * 1024,
@@ -166,7 +171,11 @@ export function validateRfc3161PriorExistence(input: {
 		throw new Error(
 			"RFC 3161 timestamp signature or message imprint is invalid",
 		);
-	const inspection = run(["ts", "-reply", "-text"], token, trustedCa);
+	const inspection = run(
+		["ts", "-reply", "-text", "-config", "__EMPTY_CONFIG_FILE__"],
+		token,
+		trustedCa,
+	);
 	if (inspection.error || inspection.status !== 0)
 		throw new Error("RFC 3161 timestamp token cannot be inspected");
 	const policyOid = POLICY_OID.exec(inspection.stdout)?.[1];
@@ -187,8 +196,18 @@ export function validateRfc3161PriorExistence(input: {
 				Number(parts[5]),
 			)
 		: Number.NaN;
-	const earliestAuthoredAt = Date.parse(input.earliestAuthoredAt);
+	const earliestAuthoredAt = UTC_RFC3339_TIME.test(input.earliestAuthoredAt)
+		? Date.parse(input.earliestAuthoredAt)
+		: Number.NaN;
+	const normalizedAuthoredAt = Number.isFinite(earliestAuthoredAt)
+		? new Date(earliestAuthoredAt).toISOString()
+		: "";
+	const expectedAuthoredAt = input.earliestAuthoredAt.includes(".")
+		? input.earliestAuthoredAt
+		: input.earliestAuthoredAt.replace("Z", ".000Z");
 	if (!Number.isFinite(timestampedAt) || !Number.isFinite(earliestAuthoredAt))
+		throw new Error("RFC 3161 timestamp chronology is invalid");
+	if (normalizedAuthoredAt !== expectedAuthoredAt)
 		throw new Error("RFC 3161 timestamp chronology is invalid");
 	if (timestampedAt + 1000 > earliestAuthoredAt)
 		throw new Error(

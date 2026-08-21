@@ -51,6 +51,7 @@
 		"benchmark:semantic-corpus-gate": "tsx src/benchmark/quality/semantic-corpus-gate-cli.ts",
 		"benchmark:semantic-signing-packet": "tsx src/benchmark/quality/semantic-attestation-packet-cli.ts",
 		"benchmark:semantic-pilot-packet": "tsx src/benchmark/quality/semantic-pilot-collection-packet-cli.ts",
+		"benchmark:semantic-pilot-timestamp": "tsx src/benchmark/quality/rfc3161-timestamp-cli.ts",
 		"benchmark:semantic-collect-signatures": "tsx src/benchmark/quality/semantic-attestation-collector-cli.ts",
 		"benchmark:public-evidence": "tsx src/benchmark/quality/public-evidence-cli.ts",
 		"check": "biome check --write ."

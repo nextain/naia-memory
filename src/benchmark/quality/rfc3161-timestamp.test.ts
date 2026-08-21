@@ -109,6 +109,11 @@ describe("RFC 3161 prior-existence verification", () => {
 		expect(() => validateRfc3161PriorExistence(ambiguousTime)).toThrow(
 			"timestamp chronology is invalid",
 		);
+		const ambiguousAuthorship = fixture();
+		ambiguousAuthorship.earliestAuthoredAt = "January 2, 2026";
+		expect(() => validateRfc3161PriorExistence(ambiguousAuthorship)).toThrow(
+			"timestamp chronology is invalid",
+		);
 	});
 
 	it("rejects plan, token, and trusted CA substitution", () => {

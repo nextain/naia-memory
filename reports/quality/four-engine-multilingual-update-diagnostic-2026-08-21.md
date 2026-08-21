@@ -757,3 +757,38 @@ competitiveness therefore remains **NO-GO** pending real independent pilot
 collection, construction-cause independence evidence, the preregistered public
 campaign, same-protocol competitor runs, uncertainty, latency, and
 released-commit receipts.
+
+## Provider-neutral pilot timestamp workflow
+
+The repository now provides a provider-neutral RFC 3161 workflow for the next
+campaign. `benchmark:semantic-pilot-timestamp request` validates the complete
+collection plan, hashes its canonical representation, and creates a
+nonce-bearing OpenSSL timestamp query without overwriting an existing artifact.
+After any RFC 3161 provider returns a response, `seal` records the exact plan
+hash, response hash, and absolute response path without claiming that the
+response is trusted. Trust is established only later by the verifier-owned CA
+bundle and policy described above.
+
+A real local OpenSSL TSA integration test now exercises request generation,
+response issuance, certificate-chain and timestamp-signing-purpose validation,
+message-imprint validation, numeric policy-OID validation, and chronology. The
+test exposed a portability defect: the host OpenSSL configuration rendered a
+numeric policy as the local alias `tsa_policy1`, causing a valid token to be
+rejected. Inspection now uses an empty private OpenSSL configuration so policy
+comparison is against the numeric OID rather than host aliases. Authorship time
+input is also restricted to valid UTC RFC 3339 instead of environment-dependent
+`Date.parse` formats.
+
+OpenCode's first review model completed source inspection but did not return a
+verdict before timeout. A second OpenCode headless adversarial review returned
+**CLEAN** and listed five observations. The ambiguous-date observation was
+accepted and fixed; the other observations were non-blocking or inapplicable:
+the example OID exists only in the local test, empty request output must fail,
+and replaying a response cannot pass for a different canonical plan hash.
+
+This is operational and cryptographic validation, not independent empirical
+evidence. It changes no Naia or competitor score, does not timestamp an existing
+campaign retroactively, and does not change the public **NO-GO** decision. The
+next campaign must send the frozen query to an independently trusted TSA before
+any author receives an assignment, then preserve the provider response and
+verifier-owned trust policy with the released evidence bundle.
