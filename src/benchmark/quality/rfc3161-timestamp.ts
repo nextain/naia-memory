@@ -12,6 +12,13 @@ export type Rfc3161TimestampEvidence = {
 	tokenPath: string;
 };
 
+export type Rfc3161DigestTimestampEvidence = {
+	schemaVersion: "naia-memory-rfc3161-digest-timestamp-evidence-v1";
+	artifactSha256: string;
+	tokenSha256: string;
+	tokenPath: string;
+};
+
 export type Rfc3161TimestampTrustPolicy = {
 	schemaVersion: "naia-memory-rfc3161-timestamp-trust-policy-v1";
 	trustedCaFilePath: string;
@@ -100,6 +107,22 @@ function assertEvidenceShape(value: Rfc3161TimestampEvidence): void {
 		throw new Error("RFC 3161 timestamp evidence shape is invalid");
 }
 
+function assertDigestEvidenceShape(
+	value: Rfc3161DigestTimestampEvidence,
+): void {
+	if (
+		!value ||
+		typeof value !== "object" ||
+		value.schemaVersion !==
+			"naia-memory-rfc3161-digest-timestamp-evidence-v1" ||
+		!SHA256.test(value.artifactSha256) ||
+		!SHA256.test(value.tokenSha256) ||
+		typeof value.tokenPath !== "string" ||
+		value.tokenPath.trim().length === 0
+	)
+		throw new Error("RFC 3161 digest timestamp evidence shape is invalid");
+}
+
 function assertTrustPolicyShape(value: Rfc3161TimestampTrustPolicy): void {
 	if (
 		!value ||
@@ -164,16 +187,29 @@ export function validateRfc3161TimestampBinding(input: {
 	const planSha256 = evidenceObjectSha256(input.collectionPlan);
 	if (input.evidence.collectionPlanSha256 !== planSha256)
 		throw new Error("RFC 3161 timestamp collection plan hash mismatch");
+	return validateDigestTimestampCore({
+		artifactSha256: planSha256,
+		tokenSha256: input.evidence.tokenSha256,
+		tokenPath: input.evidence.tokenPath,
+		trustPolicy: input.trustPolicy,
+		commandRunner: input.commandRunner,
+	});
+}
+
+function validateDigestTimestampCore(input: {
+	artifactSha256: string;
+	tokenSha256: string;
+	tokenPath: string;
+	trustPolicy: Rfc3161TimestampTrustPolicy;
+	commandRunner?: Rfc3161CommandRunner;
+}): { trustedTimestampVerified: true; timestampedAt: string } {
 	let token: Buffer;
 	try {
-		token = readFileSync(input.evidence.tokenPath);
+		token = readFileSync(input.tokenPath);
 	} catch {
 		throw new Error("RFC 3161 timestamp token is unreadable");
 	}
-	if (
-		createHash("sha256").update(token).digest("hex") !==
-		input.evidence.tokenSha256
-	)
+	if (createHash("sha256").update(token).digest("hex") !== input.tokenSha256)
 		throw new Error("RFC 3161 timestamp token hash mismatch");
 	let trustedCa: Buffer;
 	try {
@@ -192,7 +228,7 @@ export function validateRfc3161TimestampBinding(input: {
 			"ts",
 			"-verify",
 			"-digest",
-			planSha256,
+			input.artifactSha256,
 			"-CAfile",
 			"__TRUSTED_CA_FILE__",
 			"-purpose",
@@ -236,4 +272,29 @@ export function validateRfc3161TimestampBinding(input: {
 		trustedTimestampVerified: true,
 		timestampedAt: new Date(timestampedAt).toISOString(),
 	};
+}
+
+export function validateRfc3161DigestTimestampBinding(input: {
+	expectedArtifactSha256: string;
+	evidence: Rfc3161DigestTimestampEvidence;
+	trustPolicy: Rfc3161TimestampTrustPolicy;
+	commandRunner?: Rfc3161CommandRunner;
+}): {
+	trustedTimestampVerified: true;
+	timestampedAt: string;
+} {
+	assertDigestEvidenceShape(input.evidence);
+	assertTrustPolicyShape(input.trustPolicy);
+	if (
+		!SHA256.test(input.expectedArtifactSha256) ||
+		input.evidence.artifactSha256 !== input.expectedArtifactSha256
+	)
+		throw new Error("RFC 3161 timestamp artifact hash mismatch");
+	return validateDigestTimestampCore({
+		artifactSha256: input.expectedArtifactSha256,
+		tokenSha256: input.evidence.tokenSha256,
+		tokenPath: input.evidence.tokenPath,
+		trustPolicy: input.trustPolicy,
+		commandRunner: input.commandRunner,
+	});
 }

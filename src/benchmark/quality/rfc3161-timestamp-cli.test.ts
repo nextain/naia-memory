@@ -204,6 +204,64 @@ describe("RFC 3161 timestamp campaign CLI", () => {
 		writes.mockRestore();
 	});
 
+	it("creates and seals timestamp artifacts for an exact external digest", async () => {
+		const current = fixture();
+		const artifactSha256 = "c".repeat(64);
+		const queryPath = join(current.directory, "bundle.tsq");
+		const runner = vi.fn(() => ({
+			status: 0,
+			stdout: Buffer.from("bundle timestamp query"),
+			stderr: "",
+		}));
+		expect(
+			await runRfc3161TimestampCli(
+				["request-digest", artifactSha256, queryPath],
+				runner,
+			),
+		).toBe(0);
+		expect(runner).toHaveBeenCalledWith([
+			"ts",
+			"-query",
+			"-digest",
+			artifactSha256,
+			"-sha256",
+			"-cert",
+		]);
+
+		const tokenPath = join(current.directory, "bundle.tsr");
+		writeFileSync(tokenPath, "bundle timestamp response");
+		const writes = vi
+			.spyOn(process.stdout, "write")
+			.mockImplementation(() => true);
+		expect(
+			await runRfc3161TimestampCli(["seal-digest", artifactSha256, tokenPath]),
+		).toBe(0);
+		expect(JSON.parse(String(writes.mock.calls.at(-1)?.[0]))).toMatchObject({
+			schemaVersion: "naia-memory-rfc3161-digest-timestamp-evidence-v1",
+			artifactSha256,
+			tokenPath,
+		});
+		writes.mockRestore();
+	});
+
+	it("rejects malformed external digests", async () => {
+		const current = fixture();
+		const writes = vi
+			.spyOn(process.stdout, "write")
+			.mockImplementation(() => true);
+		expect(
+			await runRfc3161TimestampCli([
+				"request-digest",
+				"not-a-digest",
+				join(current.directory, "bundle.tsq"),
+			]),
+		).toBe(1);
+		expect(String(writes.mock.calls.at(-1)?.[0])).toContain(
+			"artifact SHA-256 is invalid",
+		);
+		writes.mockRestore();
+	});
+
 	it("does not overwrite an existing request artifact", async () => {
 		const current = fixture();
 		const queryPath = join(current.directory, "plan.tsq");

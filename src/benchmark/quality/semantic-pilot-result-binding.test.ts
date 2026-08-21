@@ -260,6 +260,31 @@ function participantDeliveryEvidence(
 	};
 }
 
+function deliveryTimestampEvidence(
+	delivery: SemanticPilotDeliveryAcknowledgementBundle,
+	tokenPath: string,
+	tokenSha256: string,
+	timestamp = "Jan  1 02:00:00 2026 GMT",
+) {
+	return {
+		deliveryTimestampEvidence: {
+			schemaVersion:
+				"naia-memory-rfc3161-digest-timestamp-evidence-v1" as const,
+			artifactSha256: delivery.bundleSha256,
+			tokenSha256,
+			tokenPath,
+		},
+		deliveryTimestampCommandRunner: (args: string[]) =>
+			args.includes("-verify")
+				? { status: 0, stdout: "Verification: OK\n", stderr: "" }
+				: {
+						status: 0,
+						stdout: `Status info:\nPolicy OID: 1.2.3.4\nTime stamp: ${timestamp}\n`,
+						stderr: "",
+					},
+	};
+}
+
 describe("semantic pilot result binding", () => {
 	it("binds a trusted prior timestamp and exact launch receipt through the result gate", () => {
 		const current = fixture();
@@ -301,13 +326,20 @@ describe("semantic pilot result binding", () => {
 			current,
 			launch.receipt.receiptSha256,
 		);
+		const deliveryTimestamp = deliveryTimestampEvidence(
+			delivery.deliveryAcknowledgements,
+			tokenPath,
+			timestampEvidence.tokenSha256,
+		);
 
 		expect(
 			validateSemanticPilotResultBinding({
 				...current,
 				...delivery,
+				...deliveryTimestamp,
 				timestampEvidence,
 				timestampTrustPolicy,
+				deliveryTimestampTrustPolicy: timestampTrustPolicy,
 				launchReceipt: launch.receipt,
 				timestampCommandRunner,
 			}),
@@ -319,19 +351,84 @@ describe("semantic pilot result binding", () => {
 			participantDeliveryAcknowledgementSignaturesVerified: true,
 			participantDeliveryChronologyClaimConsistent: true,
 			acknowledgedParticipantSlotCount: 6,
+			deliveryBundleTrustedTimestampVerified: true,
+			deliveryBundleTimestampedAt: "2026-01-01T02:00:00.000Z",
 		});
+
+		expect(() =>
+			validateSemanticPilotResultBinding({
+				...current,
+				...delivery,
+				...deliveryTimestamp,
+				deliveryTimestampEvidence: {
+					...deliveryTimestamp.deliveryTimestampEvidence,
+					artifactSha256: "f".repeat(64),
+				},
+				timestampEvidence,
+				timestampTrustPolicy,
+				deliveryTimestampTrustPolicy: timestampTrustPolicy,
+				launchReceipt: launch.receipt,
+				timestampCommandRunner,
+			}),
+		).toThrow("artifact hash mismatch");
+
+		const prematureTimestamp = deliveryTimestampEvidence(
+			delivery.deliveryAcknowledgements,
+			tokenPath,
+			timestampEvidence.tokenSha256,
+			"Jan  1 00:30:00 2026 GMT",
+		);
+		expect(() =>
+			validateSemanticPilotResultBinding({
+				...current,
+				...delivery,
+				...prematureTimestamp,
+				timestampEvidence,
+				timestampTrustPolicy,
+				deliveryTimestampTrustPolicy: timestampTrustPolicy,
+				launchReceipt: launch.receipt,
+				timestampCommandRunner,
+			}),
+		).toThrow("timestamped before acknowledgement");
+
+		const postResultTimestamp = deliveryTimestampEvidence(
+			delivery.deliveryAcknowledgements,
+			tokenPath,
+			timestampEvidence.tokenSha256,
+			"Jan  2 01:00:00 2026 GMT",
+		);
+		expect(() =>
+			validateSemanticPilotResultBinding({
+				...current,
+				...delivery,
+				...postResultTimestamp,
+				timestampEvidence,
+				timestampTrustPolicy,
+				deliveryTimestampTrustPolicy: timestampTrustPolicy,
+				launchReceipt: launch.receipt,
+				timestampCommandRunner,
+			}),
+		).toThrow("not timestamped before participant result");
 
 		const lateDelivery = participantDeliveryEvidence(
 			current,
 			launch.receipt.receiptSha256,
 			"2026-01-03T00:00:00.000Z",
 		);
+		const lateDeliveryTimestamp = deliveryTimestampEvidence(
+			lateDelivery.deliveryAcknowledgements,
+			tokenPath,
+			timestampEvidence.tokenSha256,
+			"Jan  3 01:00:00 2026 GMT",
+		);
 		expect(() =>
 			validateSemanticPilotResultBinding({
 				...current,
 				...lateDelivery,
+				...lateDeliveryTimestamp,
 				timestampEvidence,
 				timestampTrustPolicy,
+				deliveryTimestampTrustPolicy: timestampTrustPolicy,
 				launchReceipt: launch.receipt,
 				timestampCommandRunner,
 			}),

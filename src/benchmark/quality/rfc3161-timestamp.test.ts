@@ -4,7 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
-import { validateRfc3161PriorExistence } from "./rfc3161-timestamp.js";
+import {
+	validateRfc3161DigestTimestampBinding,
+	validateRfc3161PriorExistence,
+} from "./rfc3161-timestamp.js";
 
 function fixture(timestamp = "Jan  1 00:00:00 2026 GMT") {
 	const directory = mkdtempSync(join(tmpdir(), "naia-rfc3161-"));
@@ -48,6 +51,45 @@ function fixture(timestamp = "Jan  1 00:00:00 2026 GMT") {
 }
 
 describe("RFC 3161 prior-existence verification", () => {
+	it("verifies a trusted timestamp over an exact externally validated digest", () => {
+		const current = fixture();
+		const artifactSha256 = "c".repeat(64);
+		expect(
+			validateRfc3161DigestTimestampBinding({
+				expectedArtifactSha256: artifactSha256,
+				evidence: {
+					schemaVersion: "naia-memory-rfc3161-digest-timestamp-evidence-v1",
+					artifactSha256,
+					tokenSha256: current.evidence.tokenSha256,
+					tokenPath: current.evidence.tokenPath,
+				},
+				trustPolicy: current.trustPolicy,
+				commandRunner: current.commandRunner,
+			}),
+		).toEqual({
+			trustedTimestampVerified: true,
+			timestampedAt: "2026-01-01T00:00:00.000Z",
+		});
+		expect(current.calls[0]).toContain(artifactSha256);
+	});
+
+	it("rejects digest evidence bound to a different artifact", () => {
+		const current = fixture();
+		expect(() =>
+			validateRfc3161DigestTimestampBinding({
+				expectedArtifactSha256: "c".repeat(64),
+				evidence: {
+					schemaVersion: "naia-memory-rfc3161-digest-timestamp-evidence-v1",
+					artifactSha256: "d".repeat(64),
+					tokenSha256: current.evidence.tokenSha256,
+					tokenPath: current.evidence.tokenPath,
+				},
+				trustPolicy: current.trustPolicy,
+				commandRunner: current.commandRunner,
+			}),
+		).toThrow("artifact hash mismatch");
+	});
+
 	it("requires a trusted timestamp over the exact collection plan hash", () => {
 		const current = fixture();
 		expect(validateRfc3161PriorExistence(current)).toEqual({

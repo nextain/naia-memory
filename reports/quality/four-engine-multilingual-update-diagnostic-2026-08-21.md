@@ -959,3 +959,39 @@ digest alone is still operator-mintable after the fact. It changes no engine
 score and public competitiveness remains **NO-GO**. The next gate must verify an
 RFC 3161 token whose message imprint is exactly `bundleSha256` and whose trusted
 time precedes every authored or reviewed result.
+
+## Trusted timestamp over the delivery bundle
+
+The result gate now requires the participant-signed acknowledgement bundle, an
+RFC 3161 token over its exact canonical `bundleSha256`, and a pinned TSA trust
+policy as one inseparable input set. It re-verifies the token bytes, token hash,
+trusted CA bytes and hash, OpenSSL signature and message imprint, and authorized
+policy OID. It then requires the trusted bundle time to be no earlier than the
+latest signed acknowledgement claim and at least one full RFC 3161 timestamp
+second before every affected authored or reviewed result. Substituted bundle
+digests, timestamps before acknowledgement, and timestamps at or after result
+authorship are rejected.
+
+The campaign CLI now supports `request-digest` and `seal-digest`, allowing an
+operator to obtain evidence for an exact externally computed bundle digest
+without pretending that sealing alone verifies TSA trust. The original
+collection-plan commands remain compatible. The cryptographic verifier is
+shared between plan and arbitrary-digest evidence, avoiding two subtly
+different RFC 3161 implementations.
+
+Claude and OpenCode both inspected the diff but timed out before returning a
+verdict; these attempts are recorded as `NOT_RUN`, not as approval. The local
+adversarial review found no additional bypass after the shared-verifier refactor.
+The proof boundary remains deliberately narrow: the token establishes that the
+signed acknowledgement bundle existed by trusted time. It does not establish
+human identity, comprehension, independence, physical delivery, or the truth of
+the participant-asserted acknowledgement time.
+
+The repository passes 79 test files and 788 tests, both TypeScript checks, the
+production build, scoped Biome, and `git diff --check`. This closes the planned
+operator-backdating gap in the supported result gate, but it creates no new
+independent benchmark observation and changes no engine score. Public
+competitiveness remains **NO-GO**. The next meaningful evidence cannot be
+manufactured in fixtures: freeze a real multilingual campaign, distribute the
+timestamp-qualified packets to independently controlled participants, timestamp
+their complete acknowledgement bundle, and only then collect blinded results.

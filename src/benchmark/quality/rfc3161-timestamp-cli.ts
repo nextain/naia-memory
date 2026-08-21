@@ -8,7 +8,10 @@ import {
 	PublicEvidenceFileTooLargeError,
 	readBoundedEvidenceFile,
 } from "./public-evidence-file-io.js";
-import type { Rfc3161TimestampEvidence } from "./rfc3161-timestamp.js";
+import type {
+	Rfc3161DigestTimestampEvidence,
+	Rfc3161TimestampEvidence,
+} from "./rfc3161-timestamp.js";
 import {
 	type SemanticPilotCollectionPlan,
 	validateSemanticPilotCollectionPlan,
@@ -25,6 +28,7 @@ type OpenSslRunner = (args: string[]) => OpenSslResult;
 
 const MAX_PLAN_BYTES = 4 * 1024 * 1024;
 const MAX_TOKEN_BYTES = 1024 * 1024;
+const SHA256 = /^[a-f0-9]{64}$/;
 
 function defaultOpenSslRunner(args: string[]): OpenSslResult {
 	const result = spawnSync("openssl", args, {
@@ -63,17 +67,24 @@ export async function runRfc3161TimestampCli(
 	args: string[],
 	openSslRunner: OpenSslRunner = defaultOpenSslRunner,
 ): Promise<number> {
-	if (args.length !== 3 || !["request", "seal"].includes(args[0])) {
+	if (
+		args.length !== 3 ||
+		!["request", "seal", "request-digest", "seal-digest"].includes(args[0])
+	) {
 		process.stderr.write(
-			"Usage: pnpm benchmark:semantic-pilot-timestamp <request|seal> <collection-plan.json> <query.tsq|response.tsr>\n",
+			"Usage: pnpm benchmark:semantic-pilot-timestamp <request|seal> <collection-plan.json> <query.tsq|response.tsr>\n       pnpm benchmark:semantic-pilot-timestamp <request-digest|seal-digest> <sha256> <query.tsq|response.tsr>\n",
 		);
 		return 2;
 	}
 	try {
-		const plan = await readPlan(args[1]);
-		const collectionPlanSha256 = evidenceObjectSha256(plan);
+		const digestMode = args[0].endsWith("-digest");
+		if (digestMode && !SHA256.test(args[1]))
+			throw new Error("RFC 3161 artifact SHA-256 is invalid");
+		const collectionPlanSha256 = digestMode
+			? args[1]
+			: evidenceObjectSha256(await readPlan(args[1]));
 		const artifactPath = resolve(args[2]);
-		if (args[0] === "request") {
+		if (args[0].startsWith("request")) {
 			const result = openSslRunner([
 				"ts",
 				"-query",
@@ -98,12 +109,21 @@ export async function runRfc3161TimestampCli(
 				throw new Error("RFC 3161 timestamp response exceeds the 1 MiB limit");
 			throw new Error("RFC 3161 timestamp response is unreadable");
 		}
-		const evidence: Rfc3161TimestampEvidence = {
-			schemaVersion: "naia-memory-rfc3161-timestamp-evidence-v1",
-			collectionPlanSha256,
-			tokenSha256: createHash("sha256").update(token).digest("hex"),
-			tokenPath: artifactPath,
-		};
+		const tokenSha256 = createHash("sha256").update(token).digest("hex");
+		const evidence: Rfc3161TimestampEvidence | Rfc3161DigestTimestampEvidence =
+			digestMode
+				? {
+						schemaVersion: "naia-memory-rfc3161-digest-timestamp-evidence-v1",
+						artifactSha256: collectionPlanSha256,
+						tokenSha256,
+						tokenPath: artifactPath,
+					}
+				: {
+						schemaVersion: "naia-memory-rfc3161-timestamp-evidence-v1",
+						collectionPlanSha256,
+						tokenSha256,
+						tokenPath: artifactPath,
+					};
 		process.stdout.write(`${JSON.stringify(evidence)}\n`);
 		return 0;
 	} catch (error) {

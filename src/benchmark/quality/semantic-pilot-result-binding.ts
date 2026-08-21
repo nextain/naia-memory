@@ -2,8 +2,10 @@ import type { MemoryUpdateContract } from "./memory-update-contract.js";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import {
 	type Rfc3161CommandRunner,
+	type Rfc3161DigestTimestampEvidence,
 	type Rfc3161TimestampEvidence,
 	type Rfc3161TimestampTrustPolicy,
+	validateRfc3161DigestTimestampBinding,
 	validateRfc3161PriorExistence,
 } from "./rfc3161-timestamp.js";
 import type { SemanticAnalysisPlan } from "./semantic-analysis-plan.js";
@@ -43,6 +45,9 @@ export type SemanticPilotResultBindingInput = {
 	timestampCommandRunner?: Rfc3161CommandRunner;
 	deliveryAcknowledgements?: SemanticPilotDeliveryAcknowledgementBundle;
 	participantTrustPolicy?: SemanticPublicTrustPolicy;
+	deliveryTimestampEvidence?: Rfc3161DigestTimestampEvidence;
+	deliveryTimestampTrustPolicy?: Rfc3161TimestampTrustPolicy;
+	deliveryTimestampCommandRunner?: Rfc3161CommandRunner;
 };
 
 function sameIdentifiers(left: string[], right: string[]): boolean {
@@ -69,6 +74,8 @@ export function validateSemanticPilotResultBinding(
 	participantDeliveryAcknowledgementSignaturesVerified: boolean;
 	participantDeliveryChronologyClaimConsistent: boolean;
 	acknowledgedParticipantSlotCount?: number;
+	deliveryBundleTrustedTimestampVerified: boolean;
+	deliveryBundleTimestampedAt?: string;
 } {
 	buildSemanticPilotCollectionPacket(input.collectionPlan);
 	if (
@@ -195,6 +202,16 @@ export function validateSemanticPilotResultBinding(
 		);
 	if (input.deliveryAcknowledgements && !input.launchReceipt)
 		throw new Error("delivery acknowledgements require a launch receipt");
+	if (
+		new Set([
+			Boolean(input.deliveryAcknowledgements),
+			Boolean(input.deliveryTimestampEvidence),
+			Boolean(input.deliveryTimestampTrustPolicy),
+		]).size !== 1
+	)
+		throw new Error(
+			"delivery acknowledgements, bundle timestamp evidence, and bundle timestamp trust policy must be supplied together",
+		);
 	const delivery = input.deliveryAcknowledgements
 		? validateSemanticPilotDeliveryAcknowledgements({
 				collectionPlan: input.collectionPlan,
@@ -205,7 +222,29 @@ export function validateSemanticPilotResultBinding(
 				trustPolicy: input.participantTrustPolicy as SemanticPublicTrustPolicy,
 			})
 		: { participantDeliveryAcknowledgementSignaturesVerified: false as const };
+	const deliveryTimestamp = input.deliveryAcknowledgements
+		? validateRfc3161DigestTimestampBinding({
+				expectedArtifactSha256: input.deliveryAcknowledgements.bundleSha256,
+				evidence:
+					input.deliveryTimestampEvidence as Rfc3161DigestTimestampEvidence,
+				trustPolicy:
+					input.deliveryTimestampTrustPolicy as Rfc3161TimestampTrustPolicy,
+				commandRunner: input.deliveryTimestampCommandRunner,
+			})
+		: { trustedTimestampVerified: false as const };
 	if (input.deliveryAcknowledgements) {
+		const bundleTimestamp = Date.parse(
+			deliveryTimestamp.timestampedAt as string,
+		);
+		const latestAcknowledgement = Math.max(
+			...input.deliveryAcknowledgements.acknowledgements.map((item) =>
+				Date.parse(item.acknowledgedAt),
+			),
+		);
+		if (bundleTimestamp < latestAcknowledgement)
+			throw new Error(
+				"delivery acknowledgement bundle was timestamped before acknowledgement",
+			);
 		for (const acknowledgement of input.deliveryAcknowledgements
 			.acknowledgements) {
 			const participantCases = input.pilotContract.cases.filter(
@@ -230,6 +269,10 @@ export function validateSemanticPilotResultBinding(
 				throw new Error(
 					"semantic pilot delivery acknowledgement chronology claim is inconsistent",
 				);
+			if (bundleTimestamp + 1000 > Math.min(...deadlines))
+				throw new Error(
+					"delivery acknowledgement bundle was not timestamped before participant result",
+				);
 		}
 	}
 	return {
@@ -239,6 +282,9 @@ export function validateSemanticPilotResultBinding(
 		...timestamp,
 		...launch,
 		...delivery,
+		deliveryBundleTrustedTimestampVerified:
+			deliveryTimestamp.trustedTimestampVerified,
+		deliveryBundleTimestampedAt: deliveryTimestamp.timestampedAt,
 		participantDeliveryChronologyClaimConsistent: Boolean(
 			input.deliveryAcknowledgements,
 		),
