@@ -864,6 +864,8 @@ describe("semantic public gate CLI", () => {
 
 	it("uses exit code 2 for invalid arity", async () => {
 		const errors: string[] = [];
+		const output: string[] = [];
+		captureStdout(output);
 		vi.spyOn(process.stderr, "write").mockImplementation((value) => {
 			errors.push(String(value));
 			return true;
@@ -871,6 +873,14 @@ describe("semantic public gate CLI", () => {
 		expect(await runSemanticPublicGateCli([])).toBe(2);
 		expect(await runSemanticPublicGateCli(["a", "b"])).toBe(2);
 		expect(await runSemanticCorpusGateCli([])).toBe(2);
+		expect(
+			await runSemanticPublicGateCli(
+				Array.from({ length: 26 }, (_, index) => `missing-${index}.json`),
+			),
+		).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+			"contract is unreadable",
+		);
 		expect(errors).toContainEqual(
 			expect.stringContaining("benchmark:semantic-corpus-gate"),
 		);

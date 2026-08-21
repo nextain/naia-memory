@@ -9,6 +9,7 @@ import {
 	readBoundedEvidenceFile,
 } from "./public-evidence-file-io.js";
 import type {
+	Rfc3161DigestTimestampEvidence,
 	Rfc3161TimestampEvidence,
 	Rfc3161TimestampTrustPolicy,
 } from "./rfc3161-timestamp.js";
@@ -29,6 +30,7 @@ import {
 	validateSemanticExecutionEvidence,
 } from "./semantic-execution-evidence.js";
 import type { SemanticPilotCollectionPlan } from "./semantic-pilot-collection-packet.js";
+import type { SemanticPilotDeliveryAcknowledgementBundle } from "./semantic-pilot-delivery-acknowledgement.js";
 import type { SemanticPilotLaunchReceipt } from "./semantic-pilot-launch.js";
 import { validateSemanticPilotResultBinding } from "./semantic-pilot-result-binding.js";
 import {
@@ -56,12 +58,13 @@ async function runSemanticEvidenceGateCli(
 			args.length !== 12 &&
 			args.length !== 14 &&
 			args.length !== 19 &&
-			args.length !== 22)
+			args.length !== 22 &&
+			args.length !== 26)
 	) {
 		process.stderr.write(
 			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>${
 				mode === "public"
-					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-collection-plan.json> <pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json> [<rfc3161-timestamp-evidence.json> <rfc3161-timestamp-trust-policy.json> <pilot-launch-receipt.json>]]]]]"
+					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-collection-plan.json> <pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json> [<rfc3161-timestamp-evidence.json> <rfc3161-timestamp-trust-policy.json> <pilot-launch-receipt.json> [<delivery-acknowledgements.json> <participant-trust-policy.json> <delivery-rfc3161-evidence.json> <delivery-rfc3161-trust-policy.json>]]]]]]"
 					: ""
 			}\n`,
 		);
@@ -313,25 +316,55 @@ async function runSemanticEvidenceGateCli(
 								"semantic power review trust policy shape is invalid",
 							);
 						const timestampEvidence =
-							args.length === 22
+							args.length >= 22
 								? ((await readJson(
 										args[19],
 										"RFC 3161 timestamp evidence",
 									)) as Rfc3161TimestampEvidence)
 								: undefined;
 						const timestampTrustPolicy =
-							args.length === 22
+							args.length >= 22
 								? ((await readJson(
 										args[20],
 										"RFC 3161 timestamp verifier trust policy",
 									)) as Rfc3161TimestampTrustPolicy)
 								: undefined;
 						const launchReceipt =
-							args.length === 22
+							args.length >= 22
 								? ((await readJson(
 										args[21],
 										"semantic pilot launch receipt",
 									)) as SemanticPilotLaunchReceipt)
+								: undefined;
+						const deliveryAcknowledgements =
+							args.length === 26
+								? ((await readJson(
+										args[22],
+										"delivery acknowledgement bundle",
+									)) as SemanticPilotDeliveryAcknowledgementBundle)
+								: undefined;
+						const participantTrustPolicy =
+							args.length === 26
+								? await readJson(args[23], "participant trust policy")
+								: undefined;
+						if (
+							participantTrustPolicy !== undefined &&
+							!isSemanticPublicTrustPolicy(participantTrustPolicy)
+						)
+							throw new Error("participant trust policy shape is invalid");
+						const deliveryTimestampEvidence =
+							args.length === 26
+								? ((await readJson(
+										args[24],
+										"delivery RFC 3161 timestamp evidence",
+									)) as Rfc3161DigestTimestampEvidence)
+								: undefined;
+						const deliveryTimestampTrustPolicy =
+							args.length === 26
+								? ((await readJson(
+										args[25],
+										"delivery RFC 3161 timestamp trust policy",
+									)) as Rfc3161TimestampTrustPolicy)
 								: undefined;
 						analysisPlan = {
 							...analysisPlan,
@@ -346,6 +379,10 @@ async function runSemanticEvidenceGateCli(
 								timestampEvidence,
 								timestampTrustPolicy,
 								launchReceipt,
+								deliveryAcknowledgements,
+								participantTrustPolicy,
+								deliveryTimestampEvidence,
+								deliveryTimestampTrustPolicy,
 								forbiddenTrustIdentities: [
 									...Object.values(
 										trustPolicy.authorPublicKeysByLanguage,
@@ -413,9 +450,11 @@ async function runSemanticEvidenceGateCli(
 						failure:
 							args.length >= 14
 								? args.length >= 19
-									? args.length === 22
-										? "pilot review and prior-assignment timing are verified, and the operator-created launch receipt is internally consistent with the plan and timestamp token; actual delivery causality and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
-										: "pilot review is attested but construction-cause independence and prior-assignment timing are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+									? args.length === 26
+										? "pilot review, prior-assignment timing, participant acknowledgement signatures, and trusted prior existence of the complete acknowledgement bundle are verified; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+										: args.length === 22
+											? "pilot review and prior-assignment timing are verified, and the operator-created launch receipt is internally consistent with the plan and timestamp token; participant delivery and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+											: "pilot review is attested but construction-cause independence and prior-assignment timing are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 									: "an independent pilot power review, competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 								: "a preregistered analysis plan, competitive thresholds, uncertainty, latency, and released-commit evidence are not evaluated by this gate",
 					})}\n`,

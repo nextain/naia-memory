@@ -995,3 +995,15 @@ competitiveness remains **NO-GO**. The next meaningful evidence cannot be
 manufactured in fixtures: freeze a real multilingual campaign, distribute the
 timestamp-qualified packets to independently controlled participants, timestamp
 their complete acknowledgement bundle, and only then collect blinded results.
+
+The public evidence CLI now exposes this strongest result-binding path as an
+explicit 26-artifact invocation. The final four artifacts are the canonical
+delivery-acknowledgement bundle, participant trust policy, delivery-bundle RFC
+3161 evidence, and its TSA trust policy. The prior 22-artifact invocation stays
+available but its output continues to state that participant delivery is not
+verified. The 26-artifact wording reports only signature and trusted
+prior-existence verification and continues to deny human identity,
+comprehension, independence, and physical delivery. Public CLI arity routing,
+the complete test suite, type checks, and production build pass; a real
+26-artifact invocation remains part of the independent campaign rather than a
+synthetic competitiveness claim.
