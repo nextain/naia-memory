@@ -1044,3 +1044,40 @@ construction. Therefore it changes neither the published score nor the public
 fixture: execute the frozen protocol with independently controlled participants
 and engines, retain the externally timestamped evidence chain, and adjudicate
 the blinded multilingual outputs under the preregistered analysis plan.
+
+## Hash-pinned campaign manifest
+
+The strongest public gate no longer requires an operator to manually preserve
+the order of 25 file paths around one positional blinding seed. A strict
+`naia-memory-semantic-public-gate-manifest-v1` manifest names every artifact,
+pins the exact SHA-256 of its bytes, confines relative paths beneath the
+manifest directory (including rejection of intermediate symbolic-link
+escapes), and deterministically constructs the existing 26-argument gate call.
+The existing gate remains the sole evaluator; the wrapper only reduces file
+substitution and argument-order risk.
+
+The complete Ed25519 and RFC 3161 integration proof now enters through this
+one-manifest command. Unit coverage checks every name-to-slot mapping, strict
+root/artifact/reference fields, hash substitution, lexical and symbolic-link
+escape, unreadable files, and 16 MiB intake limits. Intake errors are normalized
+so public JSON neither emits an empty failure nor leaks host absolute paths.
+The repository passes 81 test files and 793 tests plus both TypeScript checks.
+The deterministic review preflight is `PREFLIGHT_CLEAN` at complexity digest
+`sha256:109ede17707f7558a5c9e2c73ee6f1817b7c5453e1cb63c2d7441c9b7857ac57`.
+
+Claude's first adversarial pass found no blocking defect but identified weak
+slot coverage, opaque key diagnostics, empty oversized-file errors, host-path
+leakage, and the seed magic index; all five were corrected and regression
+tested. Its second pass exceeded the 300-second process limit before returning
+a verdict. OpenCode reached its provider twice but both attempts ended in a
+retryable server error before any verdict. These are `NOT_RUN`, not approval,
+and recovery mode does not support a formal review-pass `CLEAN` claim.
+
+This manifest is an integrity envelope, not an external authenticity root. It
+does not sign the selected artifact set, remove all local filesystem race
+possibilities, generate the manifest for an operator, or establish participant
+identity and independence. It therefore changes no engine score and public
+competitiveness remains **NO-GO**. The next operational hardening step is a
+deterministic manifest generator and signed/timestamped manifest receipt; the
+next evidentiary step remains the real independently operated multilingual
+campaign.
