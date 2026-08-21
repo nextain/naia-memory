@@ -116,7 +116,7 @@ function parseReceipt(bytes: Buffer): SemanticPublicGateManifestReceipt {
 	return value as SemanticPublicGateManifestReceipt;
 }
 
-function validateTrustPolicy(
+export function validateSemanticPublicGateManifestSignerTrustPolicy(
 	value: SemanticPublicGateManifestSignerTrustPolicy,
 ): void {
 	if (
@@ -199,7 +199,7 @@ export async function validateSemanticPublicGateManifestReceipt(input: {
 	signerId: string;
 	timestampedAt: string;
 }> {
-	validateTrustPolicy(input.signerTrustPolicy);
+	validateSemanticPublicGateManifestSignerTrustPolicy(input.signerTrustPolicy);
 	if (!SHA256.test(input.expectedManifestSha256))
 		throw new Error("semantic public gate manifest digest is invalid");
 	const receiptBytes = await bounded(

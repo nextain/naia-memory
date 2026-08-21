@@ -14,7 +14,7 @@ export async function readBoundedEvidenceFile(
 		if (!metadata.isFile())
 			throw new Error("evidence path is not a regular file");
 		if (metadata.size > maxBytes) throw new PublicEvidenceFileTooLargeError();
-		const buffer = Buffer.allocUnsafe(maxBytes + 1);
+		const buffer = Buffer.alloc(maxBytes + 1);
 		let offset = 0;
 		while (offset <= maxBytes) {
 			const { bytesRead } = await handle.read(

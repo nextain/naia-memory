@@ -1161,3 +1161,38 @@ achieves a competitive score. No engine observation was added, so public
 competitiveness remains **NO-GO**. The remaining decisive step is operational:
 obtain a real signer receipt and TSA token, then execute the independently
 controlled multilingual campaign through the sealed gate.
+
+## Offline manifest-signing operation
+
+The publisher no longer needs to expose an Ed25519 private key to the benchmark
+host. The new `packet` operation hashes the exact manifest bytes, resolves the
+declared signer against a fully validated trust policy, and emits a canonical
+packet containing the domain-separated payload and a canonical packet digest.
+An offline signer returns only a detached signature bound to that packet. The
+`collect` operation rederives every binding, verifies the trusted key and
+canonical 64-byte signature, and writes stable receipt bytes without replacing
+an existing path. Inputs use bounded no-follow reads; output publication uses a
+synced exclusive temporary file and a hard link, leaving no partial public
+receipt after a failed write.
+
+The integration test now covers the complete local handoff: exact manifest
+bytes → offline packet → detached Ed25519 signature → stable receipt digest →
+RFC 3161 digest evidence → signer-validity check at trusted TSA time. It also
+rejects packet mutation, cross-packet signatures, malformed policies,
+non-canonical Base64, repeated output, and symbolic-link inputs and outputs.
+
+OpenCode's first hostile review returned `BLOCK` for incomplete output-path
+hardening and missing symbolic-link tests. After the atomic publication and
+tests were added, its fixed-implementation review returned `CLEAN`. This is an
+ordinary external review result, not a formal recovery-mode review-pass claim.
+The full repository regression passes 85 test files and 809 tests, production
+build, and both TypeScript checks; scoped Biome and `git diff --check` pass.
+Repository-wide Biome remains non-authoritative here because it includes
+pre-existing generated `dist`, coverage, recovery, and workspace files with
+unrelated diagnostics.
+
+This closes an operational key-custody gap, but it adds no benchmark score and
+does not manufacture external independence. Public competitiveness remains
+**NO-GO** until real independent multilingual operators provide identity-bound
+receipts and execute the frozen four-engine campaign. That campaign—not more
+local integrity plumbing—is now the decisive evidence-producing step.
