@@ -12,6 +12,18 @@ import {
 	resolveFactIds,
 	top1Agreement,
 } from "./hnsw-exact-gate.js";
+import {
+	type ContaminationReceipt,
+	buildScaleCorpus,
+} from "./hnsw-scale-corpus.js";
+import {
+	type CorpusGeometryReceipt,
+	GEOMETRY_PAIR_COUNT,
+	GEOMETRY_SEED,
+	PROVISIONAL_GEOMETRY_LIMITS,
+	qualifyCorpusGeometry,
+} from "./hnsw-corpus-geometry.js";
+import { loadVectorCache, saveVectorCache } from "./hnsw-vector-cache.js";
 
 const MODEL = "multilingual-e5-large";
 const QDRANT_URL = process.env.QDRANT_URL ?? "http://127.0.0.1:6334";
@@ -19,6 +31,13 @@ const TOP_K = 10;
 const HNSW_EF_VALUES = [16, 32, 64, 128, 256, 512] as const;
 const REPEATS = 3;
 const BUILD_REPEATS = 3;
+const TARGET_CORPUS_SIZE = Number(process.env.BENCH_CORPUS_SIZE ?? 100_000);
+const EMBEDDING_BATCH_SIZE = Number(process.env.BENCH_EMBED_BATCH_SIZE ?? 32);
+const UPSERT_BATCH_SIZE = Number(process.env.BENCH_UPSERT_BATCH_SIZE ?? 500);
+const INDEX_TIMEOUT_MS = Number(process.env.BENCH_INDEX_TIMEOUT_MS ?? 600_000);
+const INDEX_STABLE_POLLS = Number(process.env.BENCH_INDEX_STABLE_POLLS ?? 5);
+const VECTOR_CACHE_DIR =
+	process.env.BENCH_VECTOR_CACHE_DIR ?? "/tmp/naia-memory-hnsw-vector-cache";
 const MIN_OVERLAP = 0.98;
 const MIN_TOP1_AGREEMENT = 0.99;
 const MAX_RECALL_LOSS = 0.01;
@@ -65,6 +84,25 @@ interface CollectionInfo {
 	};
 }
 
+interface PreparedCorpus {
+	facts: Array<{ id: string; statement: string }>;
+	vectors: Float32Array;
+	contaminationReceipt: ContaminationReceipt;
+	geometryReceipt: CorpusGeometryReceipt;
+}
+
+const preparedCorpora = new Map<string, PreparedCorpus>();
+
+class CorpusGeometryRejectedError extends Error {
+	constructor(
+		readonly language: string,
+		readonly geometryReceipt: CorpusGeometryReceipt,
+		readonly contaminationReceipt: ContaminationReceipt,
+	) {
+		super(`${language}: synthetic corpus geometry rejected before HNSW evaluation`);
+	}
+}
+
 class QdrantRest {
 	constructor(private readonly baseUrl: string) {}
 
@@ -92,6 +130,13 @@ class QdrantRest {
 	create(name: string, body: Record<string, unknown>) {
 		return this.request<boolean>(`/collections/${name}`, {
 			method: "PUT",
+			body: JSON.stringify(body),
+		});
+	}
+
+	update(name: string, body: Record<string, unknown>) {
+		return this.request<boolean>(`/collections/${name}`, {
+			method: "PATCH",
 			body: JSON.stringify(body),
 		});
 	}
@@ -156,14 +201,19 @@ async function waitForIndex(
 	collection: string,
 	expectedPoints: number,
 ) {
-	const deadline = Date.now() + 120_000;
+	const deadline = Date.now() + INDEX_TIMEOUT_MS;
+	let stablePolls = 0;
 	while (Date.now() < deadline) {
 		const info = await client.collection(collection);
 		if (
 			info.status === "green" &&
-			(info.indexed_vectors_count ?? 0) >= expectedPoints
+			(info.indexed_vectors_count ?? 0) >= expectedPoints &&
+			info.segments_count <= 2
 		) {
-			return info;
+			stablePolls++;
+			if (stablePolls >= INDEX_STABLE_POLLS) return info;
+		} else {
+			stablePolls = 0;
 		}
 		await new Promise((resolve) => setTimeout(resolve, 250));
 	}
@@ -183,6 +233,81 @@ async function rankedSearch(
 		params,
 	});
 	return points.map((point) => String(point.payload?.factId));
+}
+
+async function prepareCorpus(
+	embedder: OfflineEmbeddingProvider,
+	language: string,
+	baseFacts: Array<{ id: string; statement: string }>,
+	referenceTexts: string[],
+): Promise<PreparedCorpus> {
+	const existing = preparedCorpora.get(language);
+	if (existing) return existing;
+	const { facts, receipt } = buildScaleCorpus({
+		language,
+		baseFacts,
+		referenceTexts,
+		targetSize: TARGET_CORPUS_SIZE,
+	});
+	const cacheIdentity = {
+		directory: VECTOR_CACHE_DIR,
+		language,
+		corpusSha256: receipt.corpusSha256,
+		embeddingSpaceId: embedder.embeddingSpaceId,
+		dims: embedder.dims,
+		vectorCount: facts.length,
+	};
+	const cached = loadVectorCache(cacheIdentity);
+	if (cached) {
+		console.log(`Loaded ${language} vectors from verified cache`);
+		const geometryReceipt = qualifyCorpusGeometry({
+			vectors: cached,
+			dims: embedder.dims,
+			baseSize: baseFacts.length,
+		});
+		const prepared = {
+			facts,
+			vectors: cached,
+			contaminationReceipt: receipt,
+			geometryReceipt,
+		};
+		preparedCorpora.set(language, prepared);
+		return prepared;
+	}
+	const vectors = new Float32Array(facts.length * embedder.dims);
+	for (let offset = 0; offset < facts.length; offset += EMBEDDING_BATCH_SIZE) {
+		const batch = facts.slice(offset, offset + EMBEDDING_BATCH_SIZE);
+		const embedded = await embedder.embedBatch(
+			batch.map(({ statement }) => statement),
+		);
+		for (let row = 0; row < embedded.length; row++) {
+			if (embedded[row].length !== embedder.dims) {
+				throw new Error(
+					`${language}: embedding dimension mismatch at ${offset + row}`,
+				);
+			}
+			vectors.set(embedded[row], (offset + row) * embedder.dims);
+		}
+		if (offset === 0 || (offset + batch.length) % 1000 === 0) {
+			console.log(
+				`Embedded ${language}: ${offset + batch.length}/${facts.length}`,
+			);
+		}
+	}
+	saveVectorCache({ ...cacheIdentity, vectors });
+	const geometryReceipt = qualifyCorpusGeometry({
+		vectors,
+		dims: embedder.dims,
+		baseSize: baseFacts.length,
+	});
+	const prepared = {
+		facts,
+		vectors,
+		contaminationReceipt: receipt,
+		geometryReceipt,
+	};
+	preparedCorpora.set(language, prepared);
+	return prepared;
 }
 
 async function evaluateLanguage(
@@ -205,8 +330,8 @@ async function evaluateLanguage(
 			statement: fact.statement,
 		}),
 	);
-	const facts = [...primaryFacts, ...backgroundFacts];
-	const factIds = new Set(facts.map(({ id }) => id));
+	const baseFacts = [...primaryFacts, ...backgroundFacts];
+	const factIds = new Set(baseFacts.map(({ id }) => id));
 	const sourceQueries = load<{ queries: Query[] }>(spec.queries).queries;
 	const negativeQueryCount = sourceQueries.filter(
 		(query) => query.fact_ref === "NONE",
@@ -220,9 +345,20 @@ async function evaluateLanguage(
 			`${spec.language}: resolved ${queries.length} positive and ${negativeQueryCount} explicit negative queries from ${sourceQueries.length} source queries`,
 		);
 	}
-	const factVectors = await embedder.embedBatch(
-		facts.map(({ statement }) => statement),
+	const prepared = await prepareCorpus(
+		embedder,
+		spec.language,
+		baseFacts,
+		sourceQueries.map(({ query }) => query),
 	);
+	const { facts, vectors: factVectors } = prepared;
+	if (!prepared.geometryReceipt.passed) {
+		throw new CorpusGeometryRejectedError(
+			spec.language,
+			prepared.geometryReceipt,
+			prepared.contaminationReceipt,
+		);
+	}
 	const queryVectors: number[][] = [];
 	for (const query of queries)
 		queryVectors.push(await embedder.embed(query.query));
@@ -234,19 +370,30 @@ async function evaluateLanguage(
 	}
 	await client.create(collection, {
 		vectors: { size: embedder.dims, distance: "Cosine" },
-		hnsw_config: { m: 16, ef_construct: 100, full_scan_threshold: 10 },
-		optimizers_config: { indexing_threshold: 1 },
+		hnsw_config: { m: 0, ef_construct: 100, full_scan_threshold: 10 },
+		optimizers_config: { indexing_threshold: 0, default_segment_number: 1 },
 	});
-	for (let offset = 0; offset < facts.length; offset += 100) {
+	for (let offset = 0; offset < facts.length; offset += UPSERT_BATCH_SIZE) {
 		await client.upsert(
 			collection,
-			facts.slice(offset, offset + 100).map((fact, batchIndex) => ({
-				id: offset + batchIndex + 1,
-				vector: factVectors[offset + batchIndex],
-				payload: { factId: fact.id },
-			})),
+			facts
+				.slice(offset, offset + UPSERT_BATCH_SIZE)
+				.map((fact, batchIndex) => ({
+					id: offset + batchIndex + 1,
+					vector: Array.from(
+						factVectors.subarray(
+							(offset + batchIndex) * embedder.dims,
+							(offset + batchIndex + 1) * embedder.dims,
+						),
+					),
+					payload: { factId: fact.id },
+				})),
 		);
 	}
+	await client.update(collection, {
+		hnsw_config: { m: 16, ef_construct: 100, full_scan_threshold: 10 },
+		optimizers_config: { indexing_threshold: 1, default_segment_number: 1 },
+	});
 	const indexInfo = await waitForIndex(client, collection, facts.length);
 
 	const exactRankings: string[][] = [];
@@ -339,6 +486,8 @@ async function evaluateLanguage(
 		sourceQueryCount: sourceQueries.length,
 		queryCount: queries.length,
 		negativeQueryCount,
+		contaminationReceipt: prepared.contaminationReceipt,
+		geometryReceipt: prepared.geometryReceipt,
 		indexReceipt: {
 			status: indexInfo.status,
 			pointsCount: indexInfo.points_count,
@@ -359,6 +508,17 @@ async function evaluateLanguage(
 }
 
 async function main() {
+	for (const [name, value] of Object.entries({
+		BENCH_CORPUS_SIZE: TARGET_CORPUS_SIZE,
+		BENCH_EMBED_BATCH_SIZE: EMBEDDING_BATCH_SIZE,
+		BENCH_UPSERT_BATCH_SIZE: UPSERT_BATCH_SIZE,
+		BENCH_INDEX_TIMEOUT_MS: INDEX_TIMEOUT_MS,
+		BENCH_INDEX_STABLE_POLLS: INDEX_STABLE_POLLS,
+	})) {
+		if (!Number.isSafeInteger(value) || value <= 0) {
+			throw new Error(`${name} must be a positive safe integer`);
+		}
+	}
 	const client = new QdrantRest(QDRANT_URL);
 	const service = (await fetch(QDRANT_URL).then((response) =>
 		response.json(),
@@ -367,15 +527,72 @@ async function main() {
 	};
 	const embedder = new OfflineEmbeddingProvider(MODEL, "cpu");
 	const results = [];
+	const paths = LANGUAGES.flatMap(({ facts, background, queries }) => [
+		facts,
+		background,
+		queries,
+	]);
 	for (const language of LANGUAGES) {
 		for (let buildIndex = 1; buildIndex <= BUILD_REPEATS; buildIndex++) {
 			console.log(
 				`Evaluating ${language.language} build ${buildIndex}/${BUILD_REPEATS} against exact Qdrant search...`,
 			);
-			results.push(
-				await evaluateLanguage(client, embedder, language, buildIndex),
-			);
+			try {
+				results.push(
+					await evaluateLanguage(client, embedder, language, buildIndex),
+				);
+			} catch (error) {
+				if (!(error instanceof CorpusGeometryRejectedError)) throw error;
+				const output =
+					"reports/quality/hnsw-exact-scale-gate-geometry-rejected.json";
+				const artifact = {
+					benchmark: "qdrant-hnsw-exact-quality-gate",
+					status: "corpus_geometry_rejected",
+					language: error.language,
+					geometryReceipt: error.geometryReceipt,
+					contaminationReceipt: error.contaminationReceipt,
+					gate: {
+						policy: "density-inflation-guard",
+						maxAllowedDelta: PROVISIONAL_GEOMETRY_LIMITS,
+						pairCount: GEOMETRY_PAIR_COUNT,
+						seed: GEOMETRY_SEED,
+					},
+					model: {
+						name: MODEL,
+						dims: embedder.dims,
+						embeddingSpaceId: embedder.embeddingSpaceId,
+						device: "cpu",
+					},
+					receipt: benchmarkReceipt(
+						paths,
+						{
+							model: MODEL,
+							device: "cpu",
+							targetCorpusSize: TARGET_CORPUS_SIZE,
+							geometryPolicy: "density-inflation-guard",
+							geometryMaxAllowedDelta: PROVISIONAL_GEOMETRY_LIMITS,
+							geometryPairCount: GEOMETRY_PAIR_COUNT,
+							geometrySeed: GEOMETRY_SEED,
+						},
+						[
+							"src/benchmark/quality/hnsw-exact-gate-cli.ts",
+							"src/benchmark/quality/hnsw-scale-corpus.ts",
+							"src/benchmark/quality/hnsw-vector-cache.ts",
+							"src/benchmark/quality/hnsw-corpus-geometry.ts",
+							"src/benchmark/quality/hnsw-corpus-geometry.test.ts",
+						],
+					),
+				};
+				mkdirSync(join(process.cwd(), "reports/quality"), { recursive: true });
+				writeFileSync(
+					join(process.cwd(), output),
+					`${JSON.stringify(artifact, null, 2)}\n`,
+				);
+				console.log(JSON.stringify({ output, status: artifact.status }, null, 2));
+				return;
+			}
 		}
+		preparedCorpora.delete(language.language);
 	}
 	const selectedEf =
 		HNSW_EF_VALUES.find((hnswEf) =>
@@ -385,15 +602,12 @@ async function main() {
 						?.passesQualityGate,
 			),
 		) ?? null;
-	const paths = LANGUAGES.flatMap(({ facts, background, queries }) => [
-		facts,
-		background,
-		queries,
-	]);
 	const artifact = {
 		benchmark: "qdrant-hnsw-exact-quality-gate",
 		status: selectedEf
-			? "candidate_for_100k_scale_validation"
+			? TARGET_CORPUS_SIZE >= 100_000
+				? "scale_quality_gate_passed"
+				: "diagnostic_only_below_scale_floor"
 			: "quality_gate_rejected",
 		selectedEf,
 		gate: {
@@ -401,6 +615,10 @@ async function main() {
 			minOverlapAt10: MIN_OVERLAP,
 			minTop1Agreement: MIN_TOP1_AGREEMENT,
 			maxRecallLoss: MAX_RECALL_LOSS,
+			geometryPolicy: "density-inflation-guard",
+			geometryMaxAllowedDelta: PROVISIONAL_GEOMETRY_LIMITS,
+			geometryPairCount: GEOMETRY_PAIR_COUNT,
+			geometrySeed: GEOMETRY_SEED,
 		},
 		service: { engine: "Qdrant", version: service.version, url: QDRANT_URL },
 		model: {
@@ -410,8 +628,8 @@ async function main() {
 			device: "cpu",
 		},
 		limitations: [
-			"This 1,310-fact experiment qualifies retrieval quality only; naia-memory requires at least 100,000 facts for scale or latency claims.",
-			"The labeled v2 corpus is augmented with 1,000 namespaced legacy facts as background distractors; this is not an independently authored scale corpus.",
+			"This experiment qualifies approximate-vs-exact retrieval preservation only; it does not establish cross-engine superiority.",
+			"Scale distractors are deterministic synthetic facts, not independently authored user memories; passing does not establish production workload validity.",
 			"English is a deterministic translation of the Korean corpus, not an independently authored multilingual benchmark.",
 			"Exact and approximate searches use the same Qdrant service, so latency includes local REST overhead and is not a cross-engine comparison.",
 			"Passing does not authorize product integration or a public competitiveness claim.",
@@ -427,16 +645,30 @@ async function main() {
 				hnswEfValues: HNSW_EF_VALUES,
 				repeats: REPEATS,
 				buildRepeats: BUILD_REPEATS,
+				targetCorpusSize: TARGET_CORPUS_SIZE,
+				embeddingBatchSize: EMBEDDING_BATCH_SIZE,
+				upsertBatchSize: UPSERT_BATCH_SIZE,
+				indexTimeoutMs: INDEX_TIMEOUT_MS,
+				indexStablePolls: INDEX_STABLE_POLLS,
+				indexBuildStrategy:
+					"upload-with-indexing-disabled-then-build-single-segment",
 			},
 			[
 				"src/benchmark/quality/binary-quantization-gate.ts",
 				"src/benchmark/quality/hnsw-exact-gate.ts",
 				"src/benchmark/quality/hnsw-exact-gate-cli.ts",
 				"src/benchmark/quality/hnsw-exact-gate-cli.test.ts",
+				"src/benchmark/quality/hnsw-scale-corpus.ts",
+				"src/benchmark/quality/hnsw-scale-corpus.test.ts",
+				"src/benchmark/quality/hnsw-vector-cache.ts",
+				"src/benchmark/quality/hnsw-vector-cache.test.ts",
+				"src/benchmark/quality/hnsw-corpus-geometry.ts",
+				"src/benchmark/quality/hnsw-corpus-geometry.test.ts",
 			],
 		),
 	};
-	const output = "reports/quality/hnsw-exact-gate-2026-08-22.json";
+	const output =
+		"reports/quality/hnsw-exact-scale-gate-staged-indexing-2026-08-22.json";
 	mkdirSync(join(process.cwd(), "reports/quality"), { recursive: true });
 	writeFileSync(
 		join(process.cwd(), output),
@@ -444,7 +676,13 @@ async function main() {
 	);
 	console.log(
 		JSON.stringify(
-			{ output, status: artifact.status, selectedEf, results },
+			{
+				output,
+				status: artifact.status,
+				selectedEf,
+				resultCount: results.length,
+				corpusSizes: [...new Set(results.map(({ corpusSize }) => corpusSize))],
+			},
 			null,
 			2,
 		),

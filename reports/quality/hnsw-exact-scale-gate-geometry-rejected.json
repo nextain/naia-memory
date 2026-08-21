@@ -1,0 +1,112 @@
+{
+  "benchmark": "qdrant-hnsw-exact-quality-gate",
+  "status": "corpus_geometry_rejected",
+  "language": "ko",
+  "geometryReceipt": {
+    "policy": "density-inflation-guard",
+    "normalization": "cosine-with-measured-l2-norms",
+    "normRange": {
+      "min": 0.9999989413690484,
+      "max": 1.0000012031741103
+    },
+    "seed": 2654435769,
+    "pairCount": 10000,
+    "base": {
+      "min": 0.7455312480465611,
+      "p05": 0.8005318760089044,
+      "p50": 0.83770459332934,
+      "p95": 0.875052997980313,
+      "p99": 0.8941141034949976,
+      "max": 0.9819182094820481
+    },
+    "generated": {
+      "min": 0.8407804359866619,
+      "p05": 0.8653654930747403,
+      "p50": 0.8896424504119613,
+      "p95": 0.9301501471600306,
+      "p99": 0.9464475233182893,
+      "max": 0.9709575561958376
+    },
+    "delta": {
+      "p50": 0.05193785708262133,
+      "p95": 0.05509714917971764,
+      "p99": 0.05233341982329165
+    },
+    "maxAllowedDelta": {
+      "p50": 0.03,
+      "p95": 0.03,
+      "p99": 0.03
+    },
+    "passed": false
+  },
+  "contaminationReceipt": {
+    "targetSize": 100000,
+    "baseSize": 1310,
+    "generatedSize": 98690,
+    "uniqueIds": 100000,
+    "uniqueStatements": 99993,
+    "baseDuplicateStatements": 7,
+    "generatedStatementCollisions": 0,
+    "exactReferenceCollisions": 0,
+    "referenceSubstringCollisions": 0,
+    "corpusSha256": "b2e1eb021a623f82d472e00e45eb79a065a667477fd7783cc7948ff5fa042c98"
+  },
+  "gate": {
+    "policy": "density-inflation-guard",
+    "maxAllowedDelta": {
+      "p50": 0.03,
+      "p95": 0.03,
+      "p99": 0.03
+    },
+    "pairCount": 10000,
+    "seed": 2654435769
+  },
+  "model": {
+    "name": "multilingual-e5-large",
+    "dims": 1024,
+    "embeddingSpaceId": "offline:Xenova/multilingual-e5-large@00fc3aeb3dbb95842de2ac1961d33c6319acf57b:dims=1024:dtype=q8:mean-normalized:query-passage-v2",
+    "device": "cpu"
+  },
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-21T22:18:25.393Z",
+    "git": {
+      "revision": "998e129ae85ababd278ae29d33b37e97d3926465",
+      "dirty": true
+    },
+    "datasets": {
+      "src/benchmark/fact-bank-v2.json": "e1ff0e495f81f9bc6123fdad9f164434781fb4c87da9ad7ad8bca866651d361a",
+      "src/benchmark/fact-bank.json": "3133825669c5bfe86718c5185f2c68b9bb81010da568abe6a4e26d27701b9774",
+      "src/benchmark/query-templates-v2.json": "b9282493f7a6785134c7b6f2250bf5841d67f221a36fd01fdf57dc235e1db09a",
+      "src/benchmark/fact-bank-v2.en.json": "a7fada96e55c0ff64296408d797cedfc88a8e95a0a2172c74f9bfbb53cd32aca",
+      "src/benchmark/fact-bank.en.json": "4965bcfd82dba3a59a44b4dc916adeef88bfe9d1ff39d82225ee085b19f38809",
+      "src/benchmark/query-templates-v2.en.json": "4e4b85e07a8e978111cfd4ffbf8a231e4615ba7a57073a2ddeb92c57e45e3619"
+    },
+    "implementations": {
+      "src/benchmark/quality/hnsw-exact-gate-cli.ts": "f680cb0902aefb4882455843afe64ef99037a7e8087181cbf8c12f2472197b7b",
+      "src/benchmark/quality/hnsw-scale-corpus.ts": "f885de04c65ee83bb2b1d53d6c05fca88022c7a1f311c46d8193aa7424b613a4",
+      "src/benchmark/quality/hnsw-vector-cache.ts": "a57cc6d8bc1f850ec0603442f92efdfc8132c546f70d48cc567c6aa95ccb67f0",
+      "src/benchmark/quality/hnsw-corpus-geometry.ts": "950ff7e95b7fae746a40df035a7526da2616795ea22077e41698ac0be0fda829",
+      "src/benchmark/quality/hnsw-corpus-geometry.test.ts": "aaa2de6af597cd4a568e235abcbffe98a92890e0eef607275343767172746797"
+    },
+    "config": {
+      "model": "multilingual-e5-large",
+      "device": "cpu",
+      "targetCorpusSize": 100000,
+      "geometryPolicy": "density-inflation-guard",
+      "geometryMaxAllowedDelta": {
+        "p50": 0.03,
+        "p95": 0.03,
+        "p99": 0.03
+      },
+      "geometryPairCount": 10000,
+      "geometrySeed": 2654435769
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  }
+}

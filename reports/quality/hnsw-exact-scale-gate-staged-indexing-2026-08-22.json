@@ -1,0 +1,1255 @@
+{
+  "benchmark": "qdrant-hnsw-exact-quality-gate",
+  "status": "quality_gate_rejected",
+  "selectedEf": null,
+  "gate": {
+    "topK": 10,
+    "minOverlapAt10": 0.98,
+    "minTop1Agreement": 0.99,
+    "maxRecallLoss": 0.01
+  },
+  "service": {
+    "engine": "Qdrant",
+    "version": "1.15.4",
+    "url": "http://127.0.0.1:6334"
+  },
+  "model": {
+    "name": "multilingual-e5-large",
+    "dims": 1024,
+    "embeddingSpaceId": "offline:Xenova/multilingual-e5-large@00fc3aeb3dbb95842de2ac1961d33c6319acf57b:dims=1024:dtype=q8:mean-normalized:query-passage-v2",
+    "device": "cpu"
+  },
+  "limitations": [
+    "This experiment qualifies approximate-vs-exact retrieval preservation only; it does not establish cross-engine superiority.",
+    "Scale distractors are deterministic synthetic facts, not independently authored user memories; passing does not establish production workload validity.",
+    "English is a deterministic translation of the Korean corpus, not an independently authored multilingual benchmark.",
+    "Exact and approximate searches use the same Qdrant service, so latency includes local REST overhead and is not a cross-engine comparison.",
+    "Passing does not authorize product integration or a public competitiveness claim."
+  ],
+  "results": [
+    {
+      "language": "ko",
+      "buildIndex": 1,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99993,
+        "baseDuplicateStatements": 7,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "corpusSha256": "b2e1eb021a623f82d472e00e45eb79a065a667477fd7783cc7948ff5fa042c98"
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 16,
+          "ef_construct": 100,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.1650485436893204,
+          "recall5": 0.5194174757281553,
+          "recall10": 0.5631067961165048,
+          "mrr": 0.30715248882724616
+        },
+        "latencyMs": {
+          "p50": 20.951741000000766,
+          "p95": 22.748811999997997
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 16,
+          "overlapAt10": 0.5053398058252428,
+          "agreementAt1": 0.5388349514563107,
+          "metrics": {
+            "recall1": 0.0825242718446602,
+            "recall5": 0.3058252427184466,
+            "recall10": 0.3446601941747573,
+            "mrr": 0.1792051934042225
+          },
+          "recallLoss": {
+            "recall1": 0.0825242718446602,
+            "recall5": 0.21359223300970875,
+            "recall10": 0.21844660194174753,
+            "mrr": 0.12794729542302366
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.4634299999997893,
+            "p95": 0.990856000000349
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 32,
+          "overlapAt10": 0.5364077669902914,
+          "agreementAt1": 0.5388349514563107,
+          "metrics": {
+            "recall1": 0.0825242718446602,
+            "recall5": 0.3058252427184466,
+            "recall10": 0.33495145631067963,
+            "mrr": 0.17678571428571427
+          },
+          "recallLoss": {
+            "recall1": 0.0825242718446602,
+            "recall5": 0.21359223300970875,
+            "recall10": 0.2281553398058252,
+            "mrr": 0.1303667745415319
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.4521729999978561,
+            "p95": 1.1271789999991597
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 64,
+          "overlapAt10": 0.5524271844660193,
+          "agreementAt1": 0.5436893203883495,
+          "metrics": {
+            "recall1": 0.0825242718446602,
+            "recall5": 0.3155339805825243,
+            "recall10": 0.3446601941747573,
+            "mrr": 0.1806769147788565
+          },
+          "recallLoss": {
+            "recall1": 0.0825242718446602,
+            "recall5": 0.20388349514563103,
+            "recall10": 0.21844660194174753,
+            "mrr": 0.12647557404838966
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.5802890000013576,
+            "p95": 1.2105149999988498
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 128,
+          "overlapAt10": 0.566990291262136,
+          "agreementAt1": 0.5631067961165048,
+          "metrics": {
+            "recall1": 0.08737864077669903,
+            "recall5": 0.3300970873786408,
+            "recall10": 0.3592233009708738,
+            "mrr": 0.18714940668824165
+          },
+          "recallLoss": {
+            "recall1": 0.07766990291262137,
+            "recall5": 0.18932038834951453,
+            "recall10": 0.20388349514563103,
+            "mrr": 0.12000308213900451
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.6373940000012226,
+            "p95": 1.4242819999999483
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 256,
+          "overlapAt10": 0.5728155339805825,
+          "agreementAt1": 0.5679611650485437,
+          "metrics": {
+            "recall1": 0.08737864077669903,
+            "recall5": 0.33980582524271846,
+            "recall10": 0.36893203883495146,
+            "mrr": 0.1928128371089536
+          },
+          "recallLoss": {
+            "recall1": 0.07766990291262137,
+            "recall5": 0.17961165048543687,
+            "recall10": 0.19417475728155337,
+            "mrr": 0.11433965171829255
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.7028890000001411,
+            "p95": 1.5971199999985402
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 512,
+          "overlapAt10": 0.587378640776699,
+          "agreementAt1": 0.587378640776699,
+          "metrics": {
+            "recall1": 0.08737864077669903,
+            "recall5": 0.3446601941747573,
+            "recall10": 0.3737864077669903,
+            "mrr": 0.19362189859762677
+          },
+          "recallLoss": {
+            "recall1": 0.07766990291262137,
+            "recall5": 0.17475728155339804,
+            "recall10": 0.18932038834951453,
+            "mrr": 0.1135305902296194
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 1.0265760000002047,
+            "p95": 2.0197530000004917
+          },
+          "passesQualityGate": false
+        }
+      ]
+    },
+    {
+      "language": "ko",
+      "buildIndex": 2,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99993,
+        "baseDuplicateStatements": 7,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "corpusSha256": "b2e1eb021a623f82d472e00e45eb79a065a667477fd7783cc7948ff5fa042c98"
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 16,
+          "ef_construct": 100,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.1650485436893204,
+          "recall5": 0.5194174757281553,
+          "recall10": 0.5631067961165048,
+          "mrr": 0.30715248882724616
+        },
+        "latencyMs": {
+          "p50": 19.57098699999915,
+          "p95": 21.821265999999014
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 16,
+          "overlapAt10": 0.6834951456310678,
+          "agreementAt1": 0.7135922330097088,
+          "metrics": {
+            "recall1": 0.13592233009708737,
+            "recall5": 0.3592233009708738,
+            "recall10": 0.3932038834951456,
+            "mrr": 0.22358028972106642
+          },
+          "recallLoss": {
+            "recall1": 0.029126213592233025,
+            "recall5": 0.16019417475728154,
+            "recall10": 0.1699029126213592,
+            "mrr": 0.08357219910617975
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.4486089999991236,
+            "p95": 0.928633000003174
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 32,
+          "overlapAt10": 0.7237864077669907,
+          "agreementAt1": 0.7330097087378641,
+          "metrics": {
+            "recall1": 0.13592233009708737,
+            "recall5": 0.36893203883495146,
+            "recall10": 0.4029126213592233,
+            "mrr": 0.22724996147326243
+          },
+          "recallLoss": {
+            "recall1": 0.029126213592233025,
+            "recall5": 0.15048543689320387,
+            "recall10": 0.16019417475728154,
+            "mrr": 0.07990252735398373
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.38585500000044703,
+            "p95": 0.6910680000000866
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 64,
+          "overlapAt10": 0.7456310679611649,
+          "agreementAt1": 0.7427184466019418,
+          "metrics": {
+            "recall1": 0.1407766990291262,
+            "recall5": 0.38349514563106796,
+            "recall10": 0.4174757281553398,
+            "mrr": 0.23494375096316844
+          },
+          "recallLoss": {
+            "recall1": 0.02427184466019419,
+            "recall5": 0.13592233009708737,
+            "recall10": 0.14563106796116504,
+            "mrr": 0.07220873786407772
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.491598000000522,
+            "p95": 1.0641319999995176
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 128,
+          "overlapAt10": 0.7514563106796117,
+          "agreementAt1": 0.7475728155339806,
+          "metrics": {
+            "recall1": 0.1407766990291262,
+            "recall5": 0.38349514563106796,
+            "recall10": 0.4174757281553398,
+            "mrr": 0.23494375096316844
+          },
+          "recallLoss": {
+            "recall1": 0.02427184466019419,
+            "recall5": 0.13592233009708737,
+            "recall10": 0.14563106796116504,
+            "mrr": 0.07220873786407772
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.6229200000016135,
+            "p95": 1.460401999996975
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 256,
+          "overlapAt10": 0.7621359223300971,
+          "agreementAt1": 0.7572815533980582,
+          "metrics": {
+            "recall1": 0.1407766990291262,
+            "recall5": 0.3883495145631068,
+            "recall10": 0.4223300970873786,
+            "mrr": 0.23737093542918788
+          },
+          "recallLoss": {
+            "recall1": 0.02427184466019419,
+            "recall5": 0.13106796116504854,
+            "recall10": 0.1407766990291262,
+            "mrr": 0.06978155339805828
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.7581519999948796,
+            "p95": 1.8299469999983557
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 512,
+          "overlapAt10": 0.7621359223300971,
+          "agreementAt1": 0.7572815533980582,
+          "metrics": {
+            "recall1": 0.1407766990291262,
+            "recall5": 0.3883495145631068,
+            "recall10": 0.4223300970873786,
+            "mrr": 0.23737093542918788
+          },
+          "recallLoss": {
+            "recall1": 0.02427184466019419,
+            "recall5": 0.13106796116504854,
+            "recall10": 0.1407766990291262,
+            "mrr": 0.06978155339805828
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.8597529999969993,
+            "p95": 2.2409950000001118
+          },
+          "passesQualityGate": false
+        }
+      ]
+    },
+    {
+      "language": "ko",
+      "buildIndex": 3,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99993,
+        "baseDuplicateStatements": 7,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "corpusSha256": "b2e1eb021a623f82d472e00e45eb79a065a667477fd7783cc7948ff5fa042c98"
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 16,
+          "ef_construct": 100,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.1650485436893204,
+          "recall5": 0.5194174757281553,
+          "recall10": 0.5631067961165048,
+          "mrr": 0.30715248882724616
+        },
+        "latencyMs": {
+          "p50": 19.36153199999535,
+          "p95": 21.479229000004125
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 16,
+          "overlapAt10": 0.6247572815533982,
+          "agreementAt1": 0.6456310679611651,
+          "metrics": {
+            "recall1": 0.10679611650485436,
+            "recall5": 0.3106796116504854,
+            "recall10": 0.34951456310679613,
+            "mrr": 0.19141431653567575
+          },
+          "recallLoss": {
+            "recall1": 0.058252427184466035,
+            "recall5": 0.20873786407766992,
+            "recall10": 0.2135922330097087,
+            "mrr": 0.11573817229157041
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.4392509999888716,
+            "p95": 0.8999310000072
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 32,
+          "overlapAt10": 0.6601941747572818,
+          "agreementAt1": 0.6601941747572816,
+          "metrics": {
+            "recall1": 0.10679611650485436,
+            "recall5": 0.32038834951456313,
+            "recall10": 0.3592233009708738,
+            "mrr": 0.19407266142703034
+          },
+          "recallLoss": {
+            "recall1": 0.058252427184466035,
+            "recall5": 0.1990291262135922,
+            "recall10": 0.20388349514563103,
+            "mrr": 0.11307982740021583
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.42185900000913534,
+            "p95": 1.0376630000100704
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 64,
+          "overlapAt10": 0.6762135922330098,
+          "agreementAt1": 0.6747572815533981,
+          "metrics": {
+            "recall1": 0.11165048543689321,
+            "recall5": 0.33495145631067963,
+            "recall10": 0.3737864077669903,
+            "mrr": 0.20176645091693632
+          },
+          "recallLoss": {
+            "recall1": 0.05339805825242719,
+            "recall5": 0.1844660194174757,
+            "recall10": 0.18932038834951453,
+            "mrr": 0.10538603791030984
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.4687979999871459,
+            "p95": 1.1952690000034636
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 128,
+          "overlapAt10": 0.6883495145631069,
+          "agreementAt1": 0.6796116504854369,
+          "metrics": {
+            "recall1": 0.12135922330097088,
+            "recall5": 0.3446601941747573,
+            "recall10": 0.38349514563106796,
+            "mrr": 0.21147518878101398
+          },
+          "recallLoss": {
+            "recall1": 0.04368932038834952,
+            "recall5": 0.17475728155339804,
+            "recall10": 0.17961165048543687,
+            "mrr": 0.09567730004623218
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.5630820000078529,
+            "p95": 1.3416639999923063
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 256,
+          "overlapAt10": 0.6893203883495146,
+          "agreementAt1": 0.6844660194174758,
+          "metrics": {
+            "recall1": 0.12135922330097088,
+            "recall5": 0.34951456310679613,
+            "recall10": 0.3883495145631068,
+            "mrr": 0.2139023732470334
+          },
+          "recallLoss": {
+            "recall1": 0.04368932038834952,
+            "recall5": 0.1699029126213592,
+            "recall10": 0.17475728155339804,
+            "mrr": 0.09325011558021276
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.5654590000049211,
+            "p95": 1.4235249999910593
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 512,
+          "overlapAt10": 0.7087378640776699,
+          "agreementAt1": 0.7038834951456311,
+          "metrics": {
+            "recall1": 0.12135922330097088,
+            "recall5": 0.35436893203883496,
+            "recall10": 0.3932038834951456,
+            "mrr": 0.21552049622437972
+          },
+          "recallLoss": {
+            "recall1": 0.04368932038834952,
+            "recall5": 0.16504854368932037,
+            "recall10": 0.1699029126213592,
+            "mrr": 0.09163199260286645
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.9304439999978058,
+            "p95": 2.393435000005411
+          },
+          "passesQualityGate": false
+        }
+      ]
+    },
+    {
+      "language": "en-translated",
+      "buildIndex": 1,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99992,
+        "baseDuplicateStatements": 8,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "corpusSha256": "836893d04c04aa06fb9ecf7d89f6ae2596bda3deeaeefd66200ad22ab817d114"
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 16,
+          "ef_construct": 100,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.16990291262135923,
+          "recall5": 0.32524271844660196,
+          "recall10": 0.3883495145631068,
+          "mrr": 0.23947064262598247
+        },
+        "latencyMs": {
+          "p50": 19.747596000001067,
+          "p95": 21.454870999994455
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 16,
+          "overlapAt10": 0.14951456310679612,
+          "agreementAt1": 0.15048543689320387,
+          "metrics": {
+            "recall1": 0.038834951456310676,
+            "recall5": 0.05339805825242718,
+            "recall10": 0.06310679611650485,
+            "mrr": 0.045442286947141315
+          },
+          "recallLoss": {
+            "recall1": 0.13106796116504854,
+            "recall5": 0.2718446601941748,
+            "recall10": 0.3252427184466019,
+            "mrr": 0.19402835567884116
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.5131189999956405,
+            "p95": 1.0574269999924581
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 32,
+          "overlapAt10": 0.1980582524271845,
+          "agreementAt1": 0.1941747572815534,
+          "metrics": {
+            "recall1": 0.043689320388349516,
+            "recall5": 0.06310679611650485,
+            "recall10": 0.07281553398058252,
+            "mrr": 0.052723840345199564
+          },
+          "recallLoss": {
+            "recall1": 0.1262135922330097,
+            "recall5": 0.2621359223300971,
+            "recall10": 0.31553398058252424,
+            "mrr": 0.18674680228078291
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.459577999994508,
+            "p95": 0.81083000000217
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 64,
+          "overlapAt10": 0.25728155339805825,
+          "agreementAt1": 0.25728155339805825,
+          "metrics": {
+            "recall1": 0.06310679611650485,
+            "recall5": 0.09223300970873786,
+            "recall10": 0.10679611650485436,
+            "mrr": 0.07667206040992448
+          },
+          "recallLoss": {
+            "recall1": 0.10679611650485438,
+            "recall5": 0.23300970873786409,
+            "recall10": 0.2815533980582524,
+            "mrr": 0.16279858221605797
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.6192879999871366,
+            "p95": 1.1517380000004778
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 128,
+          "overlapAt10": 0.3893203883495145,
+          "agreementAt1": 0.38349514563106796,
+          "metrics": {
+            "recall1": 0.07766990291262135,
+            "recall5": 0.1262135922330097,
+            "recall10": 0.15048543689320387,
+            "mrr": 0.09848204654029898
+          },
+          "recallLoss": {
+            "recall1": 0.09223300970873788,
+            "recall5": 0.19902912621359226,
+            "recall10": 0.23786407766990292,
+            "mrr": 0.14098859608568348
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.7331220000050962,
+            "p95": 1.5914860000048066
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 256,
+          "overlapAt10": 0.4922330097087379,
+          "agreementAt1": 0.48058252427184467,
+          "metrics": {
+            "recall1": 0.08737864077669903,
+            "recall5": 0.15048543689320387,
+            "recall10": 0.1796116504854369,
+            "mrr": 0.11474418246262906
+          },
+          "recallLoss": {
+            "recall1": 0.0825242718446602,
+            "recall5": 0.1747572815533981,
+            "recall10": 0.2087378640776699,
+            "mrr": 0.12472646016335341
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 1.003406999996514,
+            "p95": 1.6194229999964591
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 512,
+          "overlapAt10": 0.5902912621359223,
+          "agreementAt1": 0.5825242718446602,
+          "metrics": {
+            "recall1": 0.10194174757281553,
+            "recall5": 0.1941747572815534,
+            "recall10": 0.24757281553398058,
+            "mrr": 0.14552704576976422
+          },
+          "recallLoss": {
+            "recall1": 0.0679611650485437,
+            "recall5": 0.13106796116504857,
+            "recall10": 0.1407766990291262,
+            "mrr": 0.09394359685621825
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 1.5352940000011586,
+            "p95": 2.7383479999989504
+          },
+          "passesQualityGate": false
+        }
+      ]
+    },
+    {
+      "language": "en-translated",
+      "buildIndex": 2,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99992,
+        "baseDuplicateStatements": 8,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "corpusSha256": "836893d04c04aa06fb9ecf7d89f6ae2596bda3deeaeefd66200ad22ab817d114"
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 16,
+          "ef_construct": 100,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.16990291262135923,
+          "recall5": 0.32524271844660196,
+          "recall10": 0.3883495145631068,
+          "mrr": 0.23947064262598247
+        },
+        "latencyMs": {
+          "p50": 20.49262400000589,
+          "p95": 21.540422999998555
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 16,
+          "overlapAt10": 0.5218446601941749,
+          "agreementAt1": 0.558252427184466,
+          "metrics": {
+            "recall1": 0.10679611650485436,
+            "recall5": 0.20388349514563106,
+            "recall10": 0.24271844660194175,
+            "mrr": 0.1495723532131299
+          },
+          "recallLoss": {
+            "recall1": 0.06310679611650487,
+            "recall5": 0.1213592233009709,
+            "recall10": 0.14563106796116504,
+            "mrr": 0.08989828941285258
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.4945770000049379,
+            "p95": 1.019283000001451
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 32,
+          "overlapAt10": 0.5558252427184467,
+          "agreementAt1": 0.5631067961165048,
+          "metrics": {
+            "recall1": 0.10679611650485436,
+            "recall5": 0.19902912621359223,
+            "recall10": 0.24271844660194175,
+            "mrr": 0.14848782555093235
+          },
+          "recallLoss": {
+            "recall1": 0.06310679611650487,
+            "recall5": 0.12621359223300974,
+            "recall10": 0.14563106796116504,
+            "mrr": 0.09098281707505013
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.36198899999726564,
+            "p95": 0.7255099999892991
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 64,
+          "overlapAt10": 0.5718446601941749,
+          "agreementAt1": 0.5679611650485437,
+          "metrics": {
+            "recall1": 0.11165048543689321,
+            "recall5": 0.2087378640776699,
+            "recall10": 0.2524271844660194,
+            "mrr": 0.15558637694560024
+          },
+          "recallLoss": {
+            "recall1": 0.05825242718446602,
+            "recall5": 0.11650485436893207,
+            "recall10": 0.13592233009708737,
+            "mrr": 0.08388426568038224
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.4219920000177808,
+            "p95": 0.7397890000138432
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 128,
+          "overlapAt10": 0.5815533980582525,
+          "agreementAt1": 0.5776699029126213,
+          "metrics": {
+            "recall1": 0.11165048543689321,
+            "recall5": 0.21844660194174756,
+            "recall10": 0.2621359223300971,
+            "mrr": 0.15941015564801972
+          },
+          "recallLoss": {
+            "recall1": 0.05825242718446602,
+            "recall5": 0.1067961165048544,
+            "recall10": 0.1262135922330097,
+            "mrr": 0.08006048697796275
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.6192109999828972,
+            "p95": 1.316491000005044
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 256,
+          "overlapAt10": 0.6679611650485436,
+          "agreementAt1": 0.6553398058252428,
+          "metrics": {
+            "recall1": 0.11165048543689321,
+            "recall5": 0.22815533980582525,
+            "recall10": 0.2766990291262136,
+            "mrr": 0.16474996147326243
+          },
+          "recallLoss": {
+            "recall1": 0.05825242718446602,
+            "recall5": 0.09708737864077671,
+            "recall10": 0.11165048543689321,
+            "mrr": 0.07472068115272004
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.9227680000185501,
+            "p95": 1.8373069999797735
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 512,
+          "overlapAt10": 0.7218446601941747,
+          "agreementAt1": 0.7135922330097088,
+          "metrics": {
+            "recall1": 0.11650485436893204,
+            "recall5": 0.23786407766990292,
+            "recall10": 0.2912621359223301,
+            "mrr": 0.17272499614732625
+          },
+          "recallLoss": {
+            "recall1": 0.05339805825242719,
+            "recall5": 0.08737864077669905,
+            "recall10": 0.09708737864077671,
+            "mrr": 0.06674564647865622
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 1.065725000022212,
+            "p95": 2.544780999975046
+          },
+          "passesQualityGate": false
+        }
+      ]
+    },
+    {
+      "language": "en-translated",
+      "buildIndex": 3,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99992,
+        "baseDuplicateStatements": 8,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "corpusSha256": "836893d04c04aa06fb9ecf7d89f6ae2596bda3deeaeefd66200ad22ab817d114"
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 16,
+          "ef_construct": 100,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.16990291262135923,
+          "recall5": 0.32524271844660196,
+          "recall10": 0.3883495145631068,
+          "mrr": 0.23947064262598247
+        },
+        "latencyMs": {
+          "p50": 19.288300999993226,
+          "p95": 21.43225800001528
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 16,
+          "overlapAt10": 0.031067961165048546,
+          "agreementAt1": 0.03398058252427184,
+          "metrics": {
+            "recall1": 0.009708737864077669,
+            "recall5": 0.009708737864077669,
+            "recall10": 0.009708737864077669,
+            "mrr": 0.009708737864077669
+          },
+          "recallLoss": {
+            "recall1": 0.16019417475728157,
+            "recall5": 0.3155339805825243,
+            "recall10": 0.3786407766990291,
+            "mrr": 0.2297619047619048
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.41888599999947473,
+            "p95": 0.9728079999913462
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 32,
+          "overlapAt10": 0.03398058252427184,
+          "agreementAt1": 0.038834951456310676,
+          "metrics": {
+            "recall1": 0.014563106796116505,
+            "recall5": 0.014563106796116505,
+            "recall10": 0.014563106796116505,
+            "mrr": 0.014563106796116505
+          },
+          "recallLoss": {
+            "recall1": 0.15533980582524273,
+            "recall5": 0.31067961165048547,
+            "recall10": 0.3737864077669903,
+            "mrr": 0.22490753582986597
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.5378940000082366,
+            "p95": 1.2942599999951199
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 64,
+          "overlapAt10": 0.05048543689320389,
+          "agreementAt1": 0.04854368932038835,
+          "metrics": {
+            "recall1": 0.024271844660194174,
+            "recall5": 0.03398058252427184,
+            "recall10": 0.03398058252427184,
+            "mrr": 0.02669902912621359
+          },
+          "recallLoss": {
+            "recall1": 0.14563106796116507,
+            "recall5": 0.29126213592233013,
+            "recall10": 0.35436893203883496,
+            "mrr": 0.2127716134997689
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.5576430000073742,
+            "p95": 1.1788119999982882
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 128,
+          "overlapAt10": 0.0703883495145631,
+          "agreementAt1": 0.06796116504854369,
+          "metrics": {
+            "recall1": 0.02912621359223301,
+            "recall5": 0.038834951456310676,
+            "recall10": 0.038834951456310676,
+            "mrr": 0.032362459546925564
+          },
+          "recallLoss": {
+            "recall1": 0.1407766990291262,
+            "recall5": 0.2864077669902913,
+            "recall10": 0.34951456310679613,
+            "mrr": 0.2071081830790569
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 0.7066819999890868,
+            "p95": 1.2319579999893904
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 256,
+          "overlapAt10": 0.17330097087378643,
+          "agreementAt1": 0.16990291262135923,
+          "metrics": {
+            "recall1": 0.03398058252427184,
+            "recall5": 0.05825242718446602,
+            "recall10": 0.05825242718446602,
+            "mrr": 0.04207119741100324
+          },
+          "recallLoss": {
+            "recall1": 0.13592233009708737,
+            "recall5": 0.2669902912621359,
+            "recall10": 0.33009708737864074,
+            "mrr": 0.19739944521497924
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 1.067592000006698,
+            "p95": 1.7689200000022538
+          },
+          "passesQualityGate": false
+        },
+        {
+          "hnswEf": 512,
+          "overlapAt10": 0.3092233009708738,
+          "agreementAt1": 0.3058252427184466,
+          "metrics": {
+            "recall1": 0.043689320388349516,
+            "recall5": 0.08737864077669903,
+            "recall10": 0.0970873786407767,
+            "mrr": 0.05995145631067961
+          },
+          "recallLoss": {
+            "recall1": 0.1262135922330097,
+            "recall5": 0.23786407766990292,
+            "recall10": 0.2912621359223301,
+            "mrr": 0.17951918631530286
+          },
+          "stableAcrossRepeats": true,
+          "latencyMs": {
+            "p50": 1.7393869999796152,
+            "p95": 2.88629199998104
+          },
+          "passesQualityGate": false
+        }
+      ]
+    }
+  ],
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-21T22:05:20.707Z",
+    "git": {
+      "revision": "998e129ae85ababd278ae29d33b37e97d3926465",
+      "dirty": true
+    },
+    "datasets": {
+      "src/benchmark/fact-bank-v2.json": "e1ff0e495f81f9bc6123fdad9f164434781fb4c87da9ad7ad8bca866651d361a",
+      "src/benchmark/fact-bank.json": "3133825669c5bfe86718c5185f2c68b9bb81010da568abe6a4e26d27701b9774",
+      "src/benchmark/query-templates-v2.json": "b9282493f7a6785134c7b6f2250bf5841d67f221a36fd01fdf57dc235e1db09a",
+      "src/benchmark/fact-bank-v2.en.json": "a7fada96e55c0ff64296408d797cedfc88a8e95a0a2172c74f9bfbb53cd32aca",
+      "src/benchmark/fact-bank.en.json": "4965bcfd82dba3a59a44b4dc916adeef88bfe9d1ff39d82225ee085b19f38809",
+      "src/benchmark/query-templates-v2.en.json": "4e4b85e07a8e978111cfd4ffbf8a231e4615ba7a57073a2ddeb92c57e45e3619"
+    },
+    "implementations": {
+      "src/benchmark/quality/binary-quantization-gate.ts": "4827b88ca17e464e556ac6ffc9eb21298cd295b3fc235edb19339fb979cae564",
+      "src/benchmark/quality/hnsw-exact-gate.ts": "b7bd03d4e9bf6903db05c47078274ca8696eb76527b099ad74a057ddd00e9d5f",
+      "src/benchmark/quality/hnsw-exact-gate-cli.ts": "61f7e93317cdb97e1c799c7bbff3d348af421ea72b524645ad8663cf2c8dff26",
+      "src/benchmark/quality/hnsw-exact-gate-cli.test.ts": "5ad776c03890b250c7effaa114a3ca115f12006542b6e38e0f992c2b04da43f4",
+      "src/benchmark/quality/hnsw-scale-corpus.ts": "f885de04c65ee83bb2b1d53d6c05fca88022c7a1f311c46d8193aa7424b613a4",
+      "src/benchmark/quality/hnsw-scale-corpus.test.ts": "9865ec6df6f917376f6865277ad27a4d3eb7ad851033e2f3a96cffa0fd838a42",
+      "src/benchmark/quality/hnsw-vector-cache.ts": "a57cc6d8bc1f850ec0603442f92efdfc8132c546f70d48cc567c6aa95ccb67f0",
+      "src/benchmark/quality/hnsw-vector-cache.test.ts": "df94cbe46eeccb9ebc31a93e40bd09c019e8e9a1a20b3fb7daeecaeaecde4c59"
+    },
+    "config": {
+      "model": "multilingual-e5-large",
+      "device": "cpu",
+      "qdrantVersion": "1.15.4",
+      "topK": 10,
+      "hnswEfValues": [
+        16,
+        32,
+        64,
+        128,
+        256,
+        512
+      ],
+      "repeats": 3,
+      "buildRepeats": 3,
+      "targetCorpusSize": 100000,
+      "embeddingBatchSize": 32,
+      "upsertBatchSize": 500,
+      "indexTimeoutMs": 600000,
+      "indexStablePolls": 5,
+      "indexBuildStrategy": "upload-with-indexing-disabled-then-build-single-segment"
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  }
+}
