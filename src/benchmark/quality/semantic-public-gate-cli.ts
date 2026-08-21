@@ -8,42 +8,56 @@ import {
 	PublicEvidenceFileTooLargeError,
 	readBoundedEvidenceFile,
 } from "./public-evidence-file-io.js";
+import {
+	isSemanticPublicAttestationBundle,
+	isSemanticPublicTrustPolicy,
+	validateSemanticPublicAttestations,
+} from "./semantic-public-attestation.js";
 
 const MAX_CONTRACT_BYTES = 16 * 1024 * 1024;
 
 export async function runSemanticPublicGateCli(
 	args: string[],
 ): Promise<number> {
-	if (args.length !== 1) {
+	if (args.length !== 3) {
 		process.stderr.write(
-			"Usage: pnpm benchmark:semantic-public-gate <contract.json>\n",
+			"Usage: pnpm benchmark:semantic-public-gate <contract.json> <attestations.json> <trust-policy.json>\n",
 		);
 		return 2;
 	}
 	try {
-		let bytes: Buffer;
-		try {
-			bytes = await readBoundedEvidenceFile(
-				resolve(args[0]),
-				MAX_CONTRACT_BYTES,
-			);
-		} catch (error) {
-			if (error instanceof PublicEvidenceFileTooLargeError)
-				throw new Error("contract exceeds the 16 MiB intake limit");
-			throw new Error("contract is unreadable");
-		}
-		let parsed: unknown;
-		try {
-			parsed = JSON.parse(bytes.toString("utf8"));
-		} catch {
-			throw new Error("contract is not valid JSON");
-		}
+		const readJson = async (path: string, label: string): Promise<unknown> => {
+			let bytes: Buffer;
+			try {
+				bytes = await readBoundedEvidenceFile(
+					resolve(path),
+					MAX_CONTRACT_BYTES,
+				);
+			} catch (error) {
+				if (error instanceof PublicEvidenceFileTooLargeError)
+					throw new Error(`${label} exceeds the 16 MiB intake limit`);
+				throw new Error(`${label} is unreadable`);
+			}
+			try {
+				return JSON.parse(bytes.toString("utf8"));
+			} catch {
+				throw new Error(`${label} is not valid JSON`);
+			}
+		};
+		const parsed = await readJson(args[0], "contract");
 		if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed))
 			throw new Error("contract root must be an object");
 		if (!("cases" in parsed) || !Array.isArray(parsed.cases))
 			throw new Error("contract cases must be an array");
 		const contract = parsed as MemoryUpdateContract;
 		validateSemanticPublicEvidenceCoverage(contract);
+		const bundle = await readJson(args[1], "attestation bundle");
+		if (!isSemanticPublicAttestationBundle(bundle))
+			throw new Error("semantic attestation bundle shape is invalid");
+		const trustPolicy = await readJson(args[2], "trust policy");
+		if (!isSemanticPublicTrustPolicy(trustPolicy))
+			throw new Error("semantic trust policy shape is invalid");
+		validateSemanticPublicAttestations(contract, bundle, trustPolicy);
 		const testCases = contract.cases.filter(
 			(current) => current.split === "test",
 		);

@@ -1,3 +1,4 @@
+import { generateKeyPairSync, sign } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,10 +7,18 @@ import {
 	type MemoryUpdateContract,
 	computeFamilySplitDigest,
 } from "./memory-update-contract.js";
+import {
+	evidenceObjectSha256,
+	evidenceSignaturePayload,
+} from "./public-evidence-crypto.js";
+import type {
+	SemanticPublicAttestation,
+	SemanticPublicAttestationBundle,
+	SemanticPublicTrustPolicy,
+} from "./semantic-public-attestation.js";
 import { runSemanticPublicGateCli } from "./semantic-public-gate-cli.js";
 
 const roots: string[] = [];
-
 async function root(): Promise<string> {
 	const path = await mkdtemp(join(tmpdir(), "naia-semantic-public-gate-"));
 	roots.push(path);
@@ -20,12 +29,8 @@ function publicContract(): MemoryUpdateContract {
 	const languages = ["ko", "en", "ja"] as const;
 	const decisions = ["update", "delete", "no-update"] as const;
 	const cases = Array.from({ length: 102 }, (_, index) => {
-		const language = languages[index % languages.length] ?? "ko";
-		const decision =
-			decisions[Math.floor(index / languages.length) % decisions.length] ??
-			"update";
-		const isDelete = decision === "delete";
-		const isNoUpdate = decision === "no-update";
+		const language = languages[index % 3] ?? "ko";
+		const decision = decisions[Math.floor(index / 3) % 3] ?? "update";
 		return {
 			id: `public-${index}`,
 			familyId: `family-public-${index}`,
@@ -35,8 +40,8 @@ function publicContract(): MemoryUpdateContract {
 			query: `query-${index}`,
 			expectedCurrentIds: ["current"],
 			forbiddenStaleIds: ["stale"],
-			expectedDeletedIds: isDelete ? ["deleted"] : [],
-			noUpdateIds: isNoUpdate ? ["unchanged"] : [],
+			expectedDeletedIds: decision === "delete" ? ["deleted"] : [],
+			noUpdateIds: decision === "no-update" ? ["unchanged"] : [],
 			expectedDecision: decision,
 			provenance: {
 				authorId: `author-${language}`,
@@ -61,6 +66,90 @@ function publicContract(): MemoryUpdateContract {
 	};
 }
 
+function signedEvidence(
+	contract: MemoryUpdateContract,
+	signedAt = "2026-01-05T00:00:00Z",
+): {
+	bundle: SemanticPublicAttestationBundle;
+	policy: SemanticPublicTrustPolicy;
+} {
+	const contractSha256 = evidenceObjectSha256(contract);
+	const policy: SemanticPublicTrustPolicy = {
+		authorPublicKeysByLanguage: {},
+		nativeReviewerPublicKeysByLanguage: {},
+	};
+	const attestations: SemanticPublicAttestation[] = [];
+	for (const language of ["ko", "en", "ja"] as const) {
+		for (const role of ["author", "native-reviewer"] as const) {
+			const signer = `${role === "author" ? "author" : "reviewer"}-${language}`;
+			const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+			const languageMap =
+				role === "author"
+					? policy.authorPublicKeysByLanguage
+					: policy.nativeReviewerPublicKeysByLanguage;
+			languageMap[language] = {
+				[signer]: publicKey.export({ type: "spki", format: "pem" }).toString(),
+			};
+			const unsigned = {
+				schemaVersion: "naia-memory-semantic-attestation-v1" as const,
+				signer,
+				role,
+				language,
+				contractSha256,
+				signedAt,
+				statement:
+					role === "author"
+						? ("AUTHORSHIP_CONFIRMED" as const)
+						: ("NATIVE_REVIEW_ACCEPTED" as const),
+			};
+			attestations.push({
+				...unsigned,
+				signatureBase64: sign(
+					null,
+					evidenceSignaturePayload(unsigned),
+					privateKey,
+				).toString("base64"),
+			});
+		}
+	}
+	return {
+		bundle: {
+			schemaVersion: "naia-memory-semantic-attestation-bundle-v1",
+			contractSha256,
+			attestations,
+		},
+		policy,
+	};
+}
+
+async function writeFixture(directory: string, contract = publicContract()) {
+	const { bundle, policy } = signedEvidence(contract);
+	const paths: [string, string, string] = [
+		join(directory, "contract.json"),
+		join(directory, "attestations.json"),
+		join(directory, "trust-policy.json"),
+	];
+	await Promise.all([
+		writeFile(paths[0], JSON.stringify(contract)),
+		writeFile(paths[1], JSON.stringify(bundle)),
+		writeFile(paths[2], JSON.stringify(policy)),
+	]);
+	return { contract, bundle, policy, paths };
+}
+
+function captureStdout(output: string[]): void {
+	vi.spyOn(process.stdout, "write").mockImplementation((value) => {
+		output.push(String(value));
+		return true;
+	});
+}
+
+function first<T>(values: T[], label: string): T {
+	const value = values[0];
+	if (value === undefined) throw new Error(`${label} is missing`);
+	return value;
+}
+
 afterEach(async () => {
 	vi.restoreAllMocks();
 	await Promise.all(
@@ -69,15 +158,11 @@ afterEach(async () => {
 });
 
 describe("semantic public gate CLI", () => {
-	it("reports only held-out test cases and distinct families", async () => {
+	it("promotes only a sufficiently large frozen contract signed by every author and reviewer", async () => {
 		const output: string[] = [];
-		vi.spyOn(process.stdout, "write").mockImplementation((value) => {
-			output.push(String(value));
-			return true;
-		});
-		const contractPath = join(await root(), "public.json");
-		await writeFile(contractPath, JSON.stringify(publicContract()));
-		expect(await runSemanticPublicGateCli([contractPath])).toBe(0);
+		captureStdout(output);
+		const { paths } = await writeFixture(await root());
+		expect(await runSemanticPublicGateCli(paths)).toBe(0);
 		expect(JSON.parse(output.pop() ?? "{}")).toEqual({
 			promotable: true,
 			testCaseCount: 102,
@@ -85,82 +170,116 @@ describe("semantic public gate CLI", () => {
 		});
 	});
 
+	it("rejects contract mutation after signatures were issued", async () => {
+		const output: string[] = [];
+		captureStdout(output);
+		const fixture = await writeFixture(await root());
+		first(fixture.contract.cases, "case").query = "tampered after review";
+		await writeFile(fixture.paths[0], JSON.stringify(fixture.contract));
+		expect(await runSemanticPublicGateCli(fixture.paths)).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+			"semantic attestation bundle is not bound to the contract",
+		);
+	});
+
+	it("rejects missing attestations and signatures issued before the freeze", async () => {
+		const output: string[] = [];
+		captureStdout(output);
+		const fixture = await writeFixture(await root());
+		fixture.bundle.attestations.pop();
+		await writeFile(fixture.paths[1], JSON.stringify(fixture.bundle));
+		expect(await runSemanticPublicGateCli(fixture.paths)).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+			"semantic attestations do not cover all case assignments",
+		);
+
+		const preFreeze = signedEvidence(
+			fixture.contract,
+			"2026-01-03T00:00:00Z",
+		).bundle;
+		await writeFile(fixture.paths[1], JSON.stringify(preFreeze));
+		expect(await runSemanticPublicGateCli(fixture.paths)).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+			"semantic attestation content is invalid",
+		);
+	});
+
+	it("rejects forged signatures and trust-key reuse across identities", async () => {
+		const output: string[] = [];
+		captureStdout(output);
+		const fixture = await writeFixture(await root());
+		first(fixture.bundle.attestations, "attestation").signatureBase64 =
+			Buffer.alloc(64).toString("base64");
+		await writeFile(fixture.paths[1], JSON.stringify(fixture.bundle));
+		expect(await runSemanticPublicGateCli(fixture.paths)).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+			"semantic attestation signature is untrusted or invalid",
+		);
+
+		const trusted = signedEvidence(fixture.contract);
+		const authorKey =
+			trusted.policy.authorPublicKeysByLanguage.ko?.["author-ko"];
+		if (!authorKey) throw new Error("fixture author key is missing");
+		trusted.policy.authorPublicKeysByLanguage.en = { "author-en": authorKey };
+		await Promise.all([
+			writeFile(fixture.paths[1], JSON.stringify(trusted.bundle)),
+			writeFile(fixture.paths[2], JSON.stringify(trusted.policy)),
+		]);
+		expect(await runSemanticPublicGateCli(fixture.paths)).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+			"semantic trust keys overlap across identities",
+		);
+	});
+
+	it("allows unrelated identities in a reusable external trust store", async () => {
+		const output: string[] = [];
+		captureStdout(output);
+		const fixture = await writeFixture(await root());
+		const { publicKey } = generateKeyPairSync("ed25519");
+		fixture.policy.authorPublicKeysByLanguage.ko = {
+			...fixture.policy.authorPublicKeysByLanguage.ko,
+			"unrelated-author": publicKey
+				.export({ type: "spki", format: "pem" })
+				.toString(),
+		};
+		await writeFile(fixture.paths[2], JSON.stringify(fixture.policy));
+		expect(await runSemanticPublicGateCli(fixture.paths)).toBe(0);
+		expect(JSON.parse(output.pop() ?? "{}").promotable).toBe(true);
+	});
+
 	it("uses exit code 2 for invalid arity", async () => {
 		vi.spyOn(process.stderr, "write").mockImplementation(() => true);
 		expect(await runSemanticPublicGateCli([])).toBe(2);
+		expect(await runSemanticPublicGateCli(["a", "b"])).toBe(2);
 	});
 
-	it("fails closed with sanitized unreadable and malformed errors", async () => {
+	it("fails closed with sanitized intake errors for each evidence file", async () => {
 		const output: string[] = [];
-		vi.spyOn(process.stdout, "write").mockImplementation((value) => {
-			output.push(String(value));
-			return true;
-		});
+		captureStdout(output);
 		const directory = await root();
-		expect(
-			await runSemanticPublicGateCli([join(directory, "missing.json")]),
-		).toBe(1);
-		expect(JSON.parse(output.pop() ?? "{}")).toEqual({
-			promotable: false,
-			failure: "contract is unreadable",
-		});
-
-		const malformed = join(directory, "malformed.json");
-		await writeFile(malformed, "{");
-		expect(await runSemanticPublicGateCli([malformed])).toBe(1);
-		expect(JSON.parse(output.pop() ?? "{}")).toEqual({
-			promotable: false,
-			failure: "contract is not valid JSON",
-		});
-
-		const nullRoot = join(directory, "null.json");
-		await writeFile(nullRoot, "null");
-		expect(await runSemanticPublicGateCli([nullRoot])).toBe(1);
-		expect(JSON.parse(output.pop() ?? "{}")).toEqual({
-			promotable: false,
-			failure: "contract root must be an object",
-		});
-
-		const arrayRoot = join(directory, "array.json");
-		await writeFile(arrayRoot, "[]");
-		expect(await runSemanticPublicGateCli([arrayRoot])).toBe(1);
-		expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
-			"contract root must be an object",
-		);
-
-		const missingCases = join(directory, "missing-cases.json");
-		await writeFile(missingCases, "{}");
-		expect(await runSemanticPublicGateCli([missingCases])).toBe(1);
-		expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
-			"contract cases must be an array",
-		);
-
-		const pilot = publicContract();
-		pilot.cases = pilot.cases.slice(0, 3);
-		if (!pilot.familySplitFreeze)
-			throw new Error("fixture requires a family split freeze");
-		pilot.familySplitFreeze.digest = computeFamilySplitDigest(
-			pilot.cases,
-		) as `sha256:${string}`;
-		const pilotPath = join(directory, "pilot.json");
-		await writeFile(pilotPath, JSON.stringify(pilot));
-		expect(await runSemanticPublicGateCli([pilotPath])).toBe(1);
-		expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
-			"public semantic gate requires at least 100 test cases",
-		);
+		const fixture = await writeFixture(directory);
+		for (const [index, label] of [
+			"contract",
+			"attestation bundle",
+			"trust policy",
+		].entries()) {
+			const args = [...fixture.paths];
+			args[index] = join(directory, `missing-${index}.json`);
+			expect(await runSemanticPublicGateCli(args)).toBe(1);
+			expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+				`${label} is unreadable`,
+			);
+		}
 	});
 
 	it("rejects oversized input before parsing", async () => {
 		const output: string[] = [];
-		vi.spyOn(process.stdout, "write").mockImplementation((value) => {
-			output.push(String(value));
-			return true;
-		});
-		const oversized = join(await root(), "oversized.json");
-		await writeFile(oversized, Buffer.alloc(16 * 1024 * 1024 + 1));
-		expect(await runSemanticPublicGateCli([oversized])).toBe(1);
+		captureStdout(output);
+		const fixture = await writeFixture(await root());
+		await writeFile(fixture.paths[1], Buffer.alloc(16 * 1024 * 1024 + 1));
+		expect(await runSemanticPublicGateCli(fixture.paths)).toBe(1);
 		expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
-			"contract exceeds the 16 MiB intake limit",
+			"attestation bundle exceeds the 16 MiB intake limit",
 		);
 	});
 });

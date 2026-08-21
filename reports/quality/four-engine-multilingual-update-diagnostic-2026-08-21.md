@@ -113,7 +113,7 @@ does not establish out-of-distribution generalization.
 
 ## Verification
 
-- Project tests: 63 files, 668 tests passed
+- Project tests: 63 files, 672 tests passed
 - Typecheck: passed
 - Build: passed
 - `git diff --check`: passed
@@ -132,20 +132,36 @@ deleted, or no-update labels. Author IDs and reviewer IDs must be globally
 role-disjoint. The bounded CLI reports held-out case and family counts only and
 fails closed on malformed, non-regular, symlinked, or oversized input.
 
+The identity strings are no longer sufficient evidence by themselves. Promotion
+now also requires an external Ed25519 trust policy and one signed attestation
+for every distinct `(role, language, identity)` assignment. Each attestation
+binds the signer, author or native-reviewer role, language, statement, signing
+time, and canonical SHA-256 of the complete frozen contract. Signatures issued
+before the split freeze, missing or duplicate assignments, post-signing contract
+mutation, forged signatures, role overlap, identity aliases sharing a key, and
+one identity mapped to multiple keys all fail closed. A reusable external trust
+store may contain unrelated identities, but only the exact case assignments
+satisfy coverage.
+
 The current nine-case generated diagnostic is correctly rejected. Therefore
 this change improves evidence integrity, not measured engine performance, and
 the external competitiveness report remains blocked. Promotion still requires
 an independently authored and native-reviewed frozen corpus satisfying the
-gate; external identity attestation and signed immutable artifacts; human
+gate with real externally held signing keys; human
 near-duplicate auditing; multiple independent native-language judges with
 disagreement reporting; comparable engine receipts; latency and cost; and
 repetition from a clean released commit. Ranked retrieval and full-state
 inspection must remain separate. The Korean stochastic miss and partial-failure
 behavior should be resolved or explicitly budgeted first.
 
-OpenCode adversarial review reproduced and drove fixes for inflated all-split
+Earlier OpenCode adversarial review reproduced and drove fixes for inflated all-split
 counts, one-family padding, vacuous decision labels, raw malformed-root errors,
-and unbounded file reads. The final implementation passes the focused 16-test
-suite, all 668 project tests, typecheck, build, and diff checks. Public status
-remains NO-GO because no qualifying external corpus or execution receipts have
-been supplied; implementation status is commit GO.
+and unbounded file reads. A new OpenCode/Azure DeepSeek hostile review of the
+signature stage checked whole-contract binding, complete assignments,
+role/language confusion, key aliasing and reuse, replay, mutation, malformed
+input, fail-open behavior, and claim inflation and returned `VERDICT: CLEAN`.
+The signature-focused suite passes 8/8; all 672 project tests, typecheck, build,
+format/lint, and diff checks pass. Public status remains NO-GO because generated
+fixture keys only test the mechanism: no qualifying external corpus, real
+external signatures, or comparable execution receipts have been supplied.
+Implementation status is commit GO.
