@@ -673,3 +673,26 @@ it does **not** increase any measured Naia score. Public status remains
 reviewed, the preregistered public corpus reaches its required construction
 cluster and case counts, all competitor executions have external receipts, and
 the frozen competitive and latency gates pass on a released commit.
+
+## Independent pilot collection packet
+
+The next implementation step turns the pilot requirement into deterministic,
+role-separated collection instructions. A collection plan must cover every
+Korean, English, and Japanese update/delete/no-update cell, use globally
+separate author, reviewer, and power-reviewer identities, and assign unique
+construction clusters with explicit cause IDs. Author and reviewer packets do
+not reveal either role's identity, and both the plan and delivered packet are
+content-addressed. The CLI additionally verifies that the declared public
+contract hash is the hash of an actually valid frozen public contract.
+
+The packet labels itself `PILOT_COLLECTION_INSTRUCTIONS_ONLY` and
+`NOT_EVIDENCE_UNTIL_COMPLETED_REVIEWED_AND_SIGNED`. It therefore closes an
+operational provenance gap but does not create human observations, improve a
+score, or change the public **NO-GO** decision. An OpenCode adversarial pass
+found a packet/type mismatch, whitespace-normalization identity collisions,
+and ambiguous CLI errors; those defects were corrected. The resulting change
+passes 74 test files and 741 tests, production build, both TypeScript checks,
+and changed-file Biome. The remaining empirical work is to recruit independent
+native participants, execute this packet, bind completed cases back to their
+assignments and construction causes, and obtain the independent signed power
+review before preregistration.
