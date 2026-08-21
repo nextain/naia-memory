@@ -273,6 +273,7 @@ async function runSemanticEvidenceGateCli(
 								engine: sample.engine,
 								language: sample.language,
 								familyId: benchmarkCase.familyId,
+								authorClusterId: benchmarkCase.provenance?.authorId ?? "",
 								caseId: sample.caseId,
 								currentAt1: sample.labels[0] === "current" ? 1 : 0,
 								currentAtK: sample.labels.includes("current") ? 1 : 0,

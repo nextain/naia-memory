@@ -8,20 +8,20 @@ import {
 } from "./semantic-sample-size-simulation.js";
 
 const assumptions: SemanticSampleSizeAssumptions = {
-	schemaVersion: "naia-memory-semantic-sample-size-assumptions-v2",
+	schemaVersion: "naia-memory-semantic-sample-size-assumptions-v3",
 	languages: ["en", "ko"],
 	competitors: ["mem0"],
-	nullFamilyExceedanceProbability: 0.5,
-	alternativeFamilyExceedanceProbability: {
+	nullAuthorClusterExceedanceProbability: 0.5,
+	alternativeAuthorClusterExceedanceProbability: {
 		en: { mem0: 0.9 },
 		ko: { mem0: 0.9 },
 	},
-	dependencyModel: "shared-uniform-within-cell-family-shock-mixture",
+	dependencyModel: "shared-uniform-within-cell-author-cluster-shock-mixture",
 	dependencyScenarios: [
 		{ id: "independent", sharedCellShockProbability: 0 },
 		{ id: "moderate-positive", sharedCellShockProbability: 0.35 },
 	],
-	candidateIndependentFamiliesByLanguage: [
+	candidateIndependentAuthorClustersByLanguage: [
 		{ en: 6, ko: 6 },
 		{ en: 24, ko: 24 },
 	],
@@ -32,7 +32,7 @@ const assumptions: SemanticSampleSizeAssumptions = {
 
 function planFor(value = assumptions): SemanticAnalysisPlan {
 	return {
-		schemaVersion: "naia-memory-semantic-analysis-plan-v2",
+		schemaVersion: "naia-memory-semantic-analysis-plan-v3",
 		administrator: "statistician",
 		contractSha256: "0".repeat(64),
 		engines: ["mem0", "naia"],
@@ -45,7 +45,7 @@ function planFor(value = assumptions): SemanticAnalysisPlan {
 		minimumDetectableDifference: 0.1,
 		minimumPracticallyImportantDifference: 0.1,
 		decisionRule: "holm-all-language-competitor-superiority",
-		requiredIndependentFamiliesByLanguage: { en: 24, ko: 24 },
+		requiredIndependentAuthorClustersByLanguage: { en: 24, ko: 24 },
 		sampleSizeMethod: "simulation of complete decision rule",
 		sampleSizeAssumptionsSha256: evidenceObjectSha256(value),
 		stoppingRule: "collect-all-frozen-test-families-no-outcome-peeking",
@@ -74,7 +74,7 @@ describe("semantic sample-size simulation", () => {
 			first.plannedCandidate.scenarios[1]?.nullAnyHypothesisRejection.upper95,
 		).toBeGreaterThan(0.05);
 		expect(first.planTargetSatisfiedUnderAssumptions).toBe(false);
-		expect(first.plannedIndependentFamiliesByLanguage).toEqual({
+		expect(first.plannedIndependentAuthorClustersByLanguage).toEqual({
 			en: 24,
 			ko: 24,
 		});
@@ -94,7 +94,9 @@ describe("semantic sample-size simulation", () => {
 			string,
 			unknown
 		>;
-		invalid.alternativeFamilyExceedanceProbability = { en: { mem0: 0.9 } };
+		invalid.alternativeAuthorClusterExceedanceProbability = {
+			en: { mem0: 0.9 },
+		};
 		expect(isSemanticSampleSizeAssumptions(invalid)).toBe(false);
 		const noIndependence = structuredClone(assumptions);
 		noIndependence.dependencyScenarios = [
@@ -104,7 +106,9 @@ describe("semantic sample-size simulation", () => {
 		expect(isSemanticSampleSizeAssumptions(noIndependence)).toBe(false);
 
 		const missingTarget = structuredClone(assumptions);
-		missingTarget.candidateIndependentFamiliesByLanguage = [{ en: 6, ko: 6 }];
+		missingTarget.candidateIndependentAuthorClustersByLanguage = [
+			{ en: 6, ko: 6 },
+		];
 		expect(() =>
 			simulateSemanticSampleSize({
 				assumptions: missingTarget,

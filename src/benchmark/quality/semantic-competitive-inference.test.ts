@@ -3,7 +3,7 @@ import type { SemanticAnalysisPlan } from "./semantic-analysis-plan.js";
 import { calculateSemanticCompetitiveInference } from "./semantic-competitive-inference.js";
 
 const plan: SemanticAnalysisPlan = {
-	schemaVersion: "naia-memory-semantic-analysis-plan-v2",
+	schemaVersion: "naia-memory-semantic-analysis-plan-v3",
 	administrator: "statistician",
 	contractSha256: "0".repeat(64),
 	engines: ["mem0", "naia"],
@@ -16,7 +16,7 @@ const plan: SemanticAnalysisPlan = {
 	minimumDetectableDifference: 0.1,
 	minimumPracticallyImportantDifference: 0.1,
 	decisionRule: "holm-all-language-competitor-superiority",
-	requiredIndependentFamiliesByLanguage: { en: 6, ko: 6 },
+	requiredIndependentAuthorClustersByLanguage: { en: 6, ko: 6 },
 	sampleSizeMethod: "simulation of complete decision rule",
 	sampleSizeAssumptionsSha256: "1".repeat(64),
 	stoppingRule: "collect-all-frozen-test-families-no-outcome-peeking",
@@ -37,6 +37,7 @@ function sample(
 		engine,
 		language,
 		familyId,
+		authorClusterId: familyId,
 		caseId,
 		currentAt1: value,
 		currentAtK: value,
@@ -70,7 +71,7 @@ describe("semantic competitive inference", () => {
 	it("fails closed when p-value resolution or coverage is inadequate", () => {
 		const sparsePlan = {
 			...plan,
-			requiredIndependentFamiliesByLanguage: { en: 2, ko: 2 },
+			requiredIndependentAuthorClustersByLanguage: { en: 2, ko: 2 },
 		};
 		const samples = ["en", "ko"].flatMap((language) =>
 			[0, 1].flatMap((index) => [
@@ -97,7 +98,7 @@ describe("semantic competitive inference", () => {
 	it("evaluates the resolution floor at the hypothesis's actual Holm rank", () => {
 		const rankedPlan = {
 			...plan,
-			requiredIndependentFamiliesByLanguage: { en: 5, ko: 6 },
+			requiredIndependentAuthorClustersByLanguage: { en: 5, ko: 6 },
 		};
 		const samples = [
 			...Array.from({ length: 5 }, (_, index) => [
@@ -137,7 +138,7 @@ describe("semantic competitive inference", () => {
 		});
 		expect(
 			result.hypotheses.every(
-				(item) => item.reason === "no-discordant-families",
+				(item) => item.reason === "no-discordant-author-clusters",
 			),
 		).toBe(true);
 	});
@@ -145,7 +146,7 @@ describe("semantic competitive inference", () => {
 	it("counts MPID-boundary ties as failures under the all-family null", () => {
 		const mixedPlan = {
 			...plan,
-			requiredIndependentFamiliesByLanguage: { en: 10, ko: 10 },
+			requiredIndependentAuthorClustersByLanguage: { en: 10, ko: 10 },
 		};
 		const samples = ["en", "ko"].flatMap((language) =>
 			Array.from({ length: 10 }, (_, index) => [
@@ -175,6 +176,27 @@ describe("semantic competitive inference", () => {
 		).toThrow("pairing mismatch");
 	});
 
+	it("does not count many families from one author as independent evidence", () => {
+		const clusteredPlan = {
+			...plan,
+			requiredIndependentAuthorClustersByLanguage: { en: 2, ko: 2 },
+		};
+		const samples = ["en", "ko"].flatMap((language) =>
+			Array.from({ length: 20 }, (_, index) =>
+				[
+					sample("naia", language, `f-${language}-${index}`, 1),
+					sample("mem0", language, `f-${language}-${index}`, 0),
+				].map((item) => ({ ...item, authorClusterId: `author-${language}` })),
+			).flat(),
+		);
+		expect(() =>
+			calculateSemanticCompetitiveInference({
+				samples,
+				plan: clusteredPlan,
+			}),
+		).toThrow("author-cluster target unmet");
+	});
+
 	it("fails closed on non-binary samples and unsupported exact-test size", () => {
 		const valid = ["en", "ko"].flatMap((language) =>
 			Array.from({ length: 6 }, (_, index) => [
@@ -191,7 +213,7 @@ describe("semantic competitive inference", () => {
 
 		const oversizedPlan = {
 			...plan,
-			requiredIndependentFamiliesByLanguage: { en: 1024, ko: 1024 },
+			requiredIndependentAuthorClustersByLanguage: { en: 1024, ko: 1024 },
 		};
 		const oversized = ["en", "ko"].flatMap((language) =>
 			Array.from({ length: 1024 }, (_, index) => [

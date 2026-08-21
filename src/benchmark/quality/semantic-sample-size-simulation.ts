@@ -7,20 +7,20 @@ import {
 } from "./semantic-sign-test.js";
 
 export type SemanticSampleSizeAssumptions = {
-	schemaVersion: "naia-memory-semantic-sample-size-assumptions-v2";
+	schemaVersion: "naia-memory-semantic-sample-size-assumptions-v3";
 	languages: string[];
 	competitors: string[];
-	nullFamilyExceedanceProbability: 0.5;
-	alternativeFamilyExceedanceProbability: Record<
+	nullAuthorClusterExceedanceProbability: 0.5;
+	alternativeAuthorClusterExceedanceProbability: Record<
 		string,
 		Record<string, number>
 	>;
-	dependencyModel: "shared-uniform-within-cell-family-shock-mixture";
+	dependencyModel: "shared-uniform-within-cell-author-cluster-shock-mixture";
 	dependencyScenarios: {
 		id: string;
 		sharedCellShockProbability: number;
 	}[];
-	candidateIndependentFamiliesByLanguage: Record<string, number>[];
+	candidateIndependentAuthorClustersByLanguage: Record<string, number>[];
 	simulationIterations: number;
 	seed: number;
 	statement: "FROZEN_BEFORE_CAMPAIGN_EXECUTION";
@@ -44,14 +44,14 @@ export function isSemanticSampleSizeAssumptions(
 		return false;
 	const item = value as Record<string, unknown>;
 	if (
-		item.schemaVersion !== "naia-memory-semantic-sample-size-assumptions-v2" ||
+		item.schemaVersion !== "naia-memory-semantic-sample-size-assumptions-v3" ||
 		!uniqueNonemptyStrings(item.languages) ||
 		item.languages.length > 64 ||
 		!uniqueNonemptyStrings(item.competitors) ||
 		item.competitors.length > 64 ||
-		item.nullFamilyExceedanceProbability !== 0.5 ||
+		item.nullAuthorClusterExceedanceProbability !== 0.5 ||
 		item.dependencyModel !==
-			"shared-uniform-within-cell-family-shock-mixture" ||
+			"shared-uniform-within-cell-author-cluster-shock-mixture" ||
 		!Array.isArray(item.dependencyScenarios) ||
 		item.dependencyScenarios.length < 2 ||
 		item.dependencyScenarios.length > 20 ||
@@ -62,12 +62,12 @@ export function isSemanticSampleSizeAssumptions(
 		Number(item.seed) < 1 ||
 		Number(item.seed) > 0xffff_ffff ||
 		item.statement !== "FROZEN_BEFORE_CAMPAIGN_EXECUTION" ||
-		typeof item.alternativeFamilyExceedanceProbability !== "object" ||
-		item.alternativeFamilyExceedanceProbability === null ||
-		Array.isArray(item.alternativeFamilyExceedanceProbability) ||
-		!Array.isArray(item.candidateIndependentFamiliesByLanguage) ||
-		item.candidateIndependentFamiliesByLanguage.length === 0 ||
-		item.candidateIndependentFamiliesByLanguage.length > 100
+		typeof item.alternativeAuthorClusterExceedanceProbability !== "object" ||
+		item.alternativeAuthorClusterExceedanceProbability === null ||
+		Array.isArray(item.alternativeAuthorClusterExceedanceProbability) ||
+		!Array.isArray(item.candidateIndependentAuthorClustersByLanguage) ||
+		item.candidateIndependentAuthorClustersByLanguage.length === 0 ||
+		item.candidateIndependentAuthorClustersByLanguage.length > 100
 	)
 		return false;
 	const scenarioIds = new Set<string>();
@@ -98,10 +98,11 @@ export function isSemanticSampleSizeAssumptions(
 			hasIndependentScenario = true;
 	}
 	if (!hasIndependentScenario) return false;
-	const probabilities = item.alternativeFamilyExceedanceProbability as Record<
-		string,
-		unknown
-	>;
+	const probabilities =
+		item.alternativeAuthorClusterExceedanceProbability as Record<
+			string,
+			unknown
+		>;
 	if (
 		Object.keys(probabilities).sort().join("\0") !==
 		[...item.languages].sort().join("\0")
@@ -129,31 +130,33 @@ export function isSemanticSampleSizeAssumptions(
 			return false;
 	}
 	const candidateKeys = new Set<string>();
-	return item.candidateIndependentFamiliesByLanguage.every((candidate) => {
-		if (
-			typeof candidate !== "object" ||
-			candidate === null ||
-			Array.isArray(candidate)
-		)
-			return false;
-		const counts = candidate as Record<string, unknown>;
-		const valid =
-			Object.keys(counts).sort().join("\0") ===
-				[...item.languages].sort().join("\0") &&
-			Object.values(counts).every(
-				(count) =>
-					Number.isInteger(count) &&
-					Number(count) > 0 &&
-					Number(count) <= MAX_EXACT_BINOMIAL_TRIALS,
-			);
-		const key = [...item.languages]
-			.sort()
-			.map((language) => `${language}:${String(counts[language])}`)
-			.join("|");
-		if (!valid || candidateKeys.has(key)) return false;
-		candidateKeys.add(key);
-		return true;
-	});
+	return item.candidateIndependentAuthorClustersByLanguage.every(
+		(candidate) => {
+			if (
+				typeof candidate !== "object" ||
+				candidate === null ||
+				Array.isArray(candidate)
+			)
+				return false;
+			const counts = candidate as Record<string, unknown>;
+			const valid =
+				Object.keys(counts).sort().join("\0") ===
+					[...item.languages].sort().join("\0") &&
+				Object.values(counts).every(
+					(count) =>
+						Number.isInteger(count) &&
+						Number(count) > 0 &&
+						Number(count) <= MAX_EXACT_BINOMIAL_TRIALS,
+				);
+			const key = [...item.languages]
+				.sort()
+				.map((language) => `${language}:${String(counts[language])}`)
+				.join("|");
+			if (!valid || candidateKeys.has(key)) return false;
+			candidateKeys.add(key);
+			return true;
+		},
+	);
 }
 
 function holmDecision(pValues: number[], alpha: number): Decision {
@@ -188,20 +191,21 @@ function streamSeed(input: {
 }
 
 function cellSuccesses(input: {
-	families: number;
+	authorClusters: number;
 	probability: number;
 	sharedCellShockProbability: number;
 	random: () => number;
 }): number {
 	// With probability q the whole cell shares one Bernoulli outcome; otherwise
-	// families are independent. Marginals stay p and pairwise covariance is
+	// author clusters are independent. Marginals stay p and pairwise covariance is
 	// q * p * (1 - p), so every declared q >= 0 is nonnegative dependence.
 	if (input.sharedCellShockProbability > 0) {
 		const shocked = input.random() < input.sharedCellShockProbability;
-		if (shocked) return input.random() < input.probability ? input.families : 0;
+		if (shocked)
+			return input.random() < input.probability ? input.authorClusters : 0;
 	}
 	let successes = 0;
-	for (let family = 0; family < input.families; family++)
+	for (let cluster = 0; cluster < input.authorClusters; cluster++)
 		if (input.random() < input.probability) successes++;
 	return successes;
 }
@@ -235,7 +239,7 @@ export function simulateSemanticSampleSize(input: {
 		throw new Error("semantic sample-size assumptions hash mismatch");
 	if (
 		[...assumptions.languages].sort().join("\0") !==
-			Object.keys(plan.requiredIndependentFamiliesByLanguage)
+			Object.keys(plan.requiredIndependentAuthorClustersByLanguage)
 				.sort()
 				.join("\0") ||
 		[...assumptions.competitors].sort().join("\0") !==
@@ -243,111 +247,117 @@ export function simulateSemanticSampleSize(input: {
 	)
 		throw new Error("semantic sample-size assumptions coverage mismatch");
 
-	const candidates = assumptions.candidateIndependentFamiliesByLanguage.map(
-		(counts, candidateIndex) => {
-			const scenarios = assumptions.dependencyScenarios.map(
-				(scenario, scenarioIndex) => {
-					const nullRandom = seededRandom(
-						streamSeed({
-							base: assumptions.seed,
-							candidateIndex,
-							scenarioIndex,
-							arm: "null",
-						}),
-					);
-					const alternativeRandom = seededRandom(
-						streamSeed({
-							base: assumptions.seed,
-							candidateIndex,
-							scenarioIndex,
-							arm: "alternative",
-						}),
-					);
-					let nullAny = 0;
-					let nullAll = 0;
-					let alternativeAll = 0;
-					for (
-						let iteration = 0;
-						iteration < assumptions.simulationIterations;
-						iteration++
-					) {
-						const nullPValues: number[] = [];
-						const alternativePValues: number[] = [];
-						for (const competitor of assumptions.competitors) {
-							for (const language of assumptions.languages) {
-								const families = counts[language];
-								const alternativeProbability =
-									assumptions.alternativeFamilyExceedanceProbability[
-										language
-									]?.[competitor];
-								if (
-									families === undefined ||
-									alternativeProbability === undefined
-								)
-									throw new Error("semantic sample-size cell is missing");
-								const nullSuccesses = cellSuccesses({
-									families,
-									probability: assumptions.nullFamilyExceedanceProbability,
-									sharedCellShockProbability:
-										scenario.sharedCellShockProbability,
-									random: nullRandom,
-								});
-								const alternativeSuccesses = cellSuccesses({
-									families,
-									probability: alternativeProbability,
-									sharedCellShockProbability:
-										scenario.sharedCellShockProbability,
-									random: alternativeRandom,
-								});
-								nullPValues.push(
-									exactBinomialUpperTail(nullSuccesses, families),
-								);
-								alternativePValues.push(
-									exactBinomialUpperTail(alternativeSuccesses, families),
-								);
-							}
-						}
-						const nullDecision = holmDecision(
-							nullPValues,
-							plan.familyWiseAlpha,
+	const candidates =
+		assumptions.candidateIndependentAuthorClustersByLanguage.map(
+			(counts, candidateIndex) => {
+				const scenarios = assumptions.dependencyScenarios.map(
+					(scenario, scenarioIndex) => {
+						const nullRandom = seededRandom(
+							streamSeed({
+								base: assumptions.seed,
+								candidateIndex,
+								scenarioIndex,
+								arm: "null",
+							}),
 						);
-						if (nullDecision.anyRejected) nullAny++;
-						if (nullDecision.allRejected) nullAll++;
-						if (
-							holmDecision(alternativePValues, plan.familyWiseAlpha).allRejected
-						)
-							alternativeAll++;
-					}
-					return {
-						dependencyScenario: scenario,
-						nullAnyHypothesisRejection: wilson(
-							nullAny,
-							assumptions.simulationIterations,
-						),
-						nullAllHypothesesRejection: wilson(
-							nullAll,
-							assumptions.simulationIterations,
-						),
-						alternativeCompleteDecisionPower: wilson(
-							alternativeAll,
-							assumptions.simulationIterations,
-						),
-					};
-				},
-			);
-			return { independentFamiliesByLanguage: counts, scenarios };
-		},
-	);
+						const alternativeRandom = seededRandom(
+							streamSeed({
+								base: assumptions.seed,
+								candidateIndex,
+								scenarioIndex,
+								arm: "alternative",
+							}),
+						);
+						let nullAny = 0;
+						let nullAll = 0;
+						let alternativeAll = 0;
+						for (
+							let iteration = 0;
+							iteration < assumptions.simulationIterations;
+							iteration++
+						) {
+							const nullPValues: number[] = [];
+							const alternativePValues: number[] = [];
+							for (const competitor of assumptions.competitors) {
+								for (const language of assumptions.languages) {
+									const authorClusters = counts[language];
+									const alternativeProbability =
+										assumptions.alternativeAuthorClusterExceedanceProbability[
+											language
+										]?.[competitor];
+									if (
+										authorClusters === undefined ||
+										alternativeProbability === undefined
+									)
+										throw new Error("semantic sample-size cell is missing");
+									const nullSuccesses = cellSuccesses({
+										authorClusters,
+										probability:
+											assumptions.nullAuthorClusterExceedanceProbability,
+										sharedCellShockProbability:
+											scenario.sharedCellShockProbability,
+										random: nullRandom,
+									});
+									const alternativeSuccesses = cellSuccesses({
+										authorClusters,
+										probability: alternativeProbability,
+										sharedCellShockProbability:
+											scenario.sharedCellShockProbability,
+										random: alternativeRandom,
+									});
+									nullPValues.push(
+										exactBinomialUpperTail(nullSuccesses, authorClusters),
+									);
+									alternativePValues.push(
+										exactBinomialUpperTail(
+											alternativeSuccesses,
+											authorClusters,
+										),
+									);
+								}
+							}
+							const nullDecision = holmDecision(
+								nullPValues,
+								plan.familyWiseAlpha,
+							);
+							if (nullDecision.anyRejected) nullAny++;
+							if (nullDecision.allRejected) nullAll++;
+							if (
+								holmDecision(alternativePValues, plan.familyWiseAlpha)
+									.allRejected
+							)
+								alternativeAll++;
+						}
+						return {
+							dependencyScenario: scenario,
+							nullAnyHypothesisRejection: wilson(
+								nullAny,
+								assumptions.simulationIterations,
+							),
+							nullAllHypothesesRejection: wilson(
+								nullAll,
+								assumptions.simulationIterations,
+							),
+							alternativeCompleteDecisionPower: wilson(
+								alternativeAll,
+								assumptions.simulationIterations,
+							),
+						};
+					},
+				);
+				return { independentAuthorClustersByLanguage: counts, scenarios };
+			},
+		);
 	const targetKey = JSON.stringify(
 		Object.fromEntries(
-			Object.entries(plan.requiredIndependentFamiliesByLanguage).sort(),
+			Object.entries(plan.requiredIndependentAuthorClustersByLanguage).sort(),
 		),
 	);
 	const plannedCandidate = candidates.find(
 		(candidate) =>
 			JSON.stringify(
 				Object.fromEntries(
-					Object.entries(candidate.independentFamiliesByLanguage).sort(),
+					Object.entries(candidate.independentAuthorClustersByLanguage).sort(),
 				),
 			) === targetKey,
 	);
@@ -359,20 +369,20 @@ export function simulateSemanticSampleSize(input: {
 			scenario.alternativeCompleteDecisionPower.lower95 >= plan.targetPower,
 	);
 	return {
-		schemaVersion: "naia-memory-semantic-sample-size-simulation-v2" as const,
+		schemaVersion: "naia-memory-semantic-sample-size-simulation-v3" as const,
 		assumptionsSha256: evidenceObjectSha256(assumptions),
 		method:
 			"seeded-monte-carlo-complete-exact-sign-test-holm-dependency-sensitivity-rule" as const,
 		iterations: assumptions.simulationIterations,
 		seed: assumptions.seed,
 		candidates,
-		plannedIndependentFamiliesByLanguage:
-			plan.requiredIndependentFamiliesByLanguage,
+		plannedIndependentAuthorClustersByLanguage:
+			plan.requiredIndependentAuthorClustersByLanguage,
 		plannedCandidate,
 		planTargetSatisfiedUnderAssumptions,
 		sampleSizeAdequacyVerified: false as const,
 		claimEligible: false as const,
 		caveat:
-			"Power and null calibration are conditional on preregistered Bernoulli probabilities and the enumerated within-cell family-shock sensitivity scenarios. A positive shock scenario intentionally violates family independence to expose effective-sample-size risk; it does not estimate actual dependence, exhaust all structures, establish corpus validity, or permit public claims.",
+			"Power and null calibration are conditional on preregistered Bernoulli probabilities and the enumerated within-cell author-cluster-shock sensitivity scenarios. A positive shock scenario intentionally violates independence across authors to expose effective-sample-size risk; it does not estimate actual dependence, exhaust all structures, establish corpus validity, or permit public claims.",
 	};
 }

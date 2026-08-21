@@ -375,18 +375,18 @@ async function writeAnalysisPlanFixture(
 	contract: MemoryUpdateContract,
 ) {
 	const { privateKey, publicKey } = generateKeyPairSync("ed25519");
-	const requiredIndependentFamiliesByLanguage = Object.fromEntries(
+	const requiredIndependentAuthorClustersByLanguage = Object.fromEntries(
 		(["ko", "en", "ja"] as const).map((language) => [
 			language,
 			new Set(
 				contract.cases
 					.filter((item) => item.split === "test" && item.language === language)
-					.map((item) => item.familyId),
+					.map((item) => item.provenance?.authorId),
 			).size,
 		]),
 	);
 	const unsigned = {
-		schemaVersion: "naia-memory-semantic-analysis-plan-v2" as const,
+		schemaVersion: "naia-memory-semantic-analysis-plan-v3" as const,
 		administrator: "external-statistician",
 		contractSha256: evidenceObjectSha256(contract),
 		engines: ["hindsight", "mem0", "naia"],
@@ -399,7 +399,7 @@ async function writeAnalysisPlanFixture(
 		minimumDetectableDifference: 0.1,
 		minimumPracticallyImportantDifference: 0.1,
 		decisionRule: "holm-all-language-competitor-superiority" as const,
-		requiredIndependentFamiliesByLanguage,
+		requiredIndependentAuthorClustersByLanguage,
 		sampleSizeMethod: "paired-family simulation",
 		sampleSizeAssumptionsSha256: "d".repeat(64),
 		stoppingRule:
@@ -488,7 +488,7 @@ describe("semantic public gate CLI", () => {
 			executionEvidenceQualified: true,
 			adjudicationEvidenceQualified: true,
 			analysisPlanIntegrityQualified: true,
-			plannedFamilyCount: 102,
+			plannedIndependentAuthorClusterCount: 3,
 			sampleSizeAdequacyVerified: false,
 			trustedTimestampVerified: false,
 			adjudicatorCount: 3,

@@ -8,7 +8,7 @@ import {
 const SHA256 = /^[a-f0-9]{64}$/;
 
 export type SemanticAnalysisPlan = {
-	schemaVersion: "naia-memory-semantic-analysis-plan-v2";
+	schemaVersion: "naia-memory-semantic-analysis-plan-v3";
 	administrator: string;
 	contractSha256: string;
 	engines: string[];
@@ -21,7 +21,7 @@ export type SemanticAnalysisPlan = {
 	minimumDetectableDifference: number;
 	minimumPracticallyImportantDifference: number;
 	decisionRule: "holm-all-language-competitor-superiority";
-	requiredIndependentFamiliesByLanguage: Record<string, number>;
+	requiredIndependentAuthorClustersByLanguage: Record<string, number>;
 	sampleSizeMethod: string;
 	sampleSizeAssumptionsSha256: string;
 	stoppingRule: "collect-all-frozen-test-families-no-outcome-peeking";
@@ -62,7 +62,7 @@ export function isSemanticAnalysisPlan(
 ): value is SemanticAnalysisPlan {
 	return (
 		isRecord(value) &&
-		value.schemaVersion === "naia-memory-semantic-analysis-plan-v2" &&
+		value.schemaVersion === "naia-memory-semantic-analysis-plan-v3" &&
 		typeof value.administrator === "string" &&
 		value.administrator.trim().length > 0 &&
 		typeof value.contractSha256 === "string" &&
@@ -93,8 +93,8 @@ export function isSemanticAnalysisPlan(
 		value.minimumDetectableDifference <=
 			value.minimumPracticallyImportantDifference &&
 		value.decisionRule === "holm-all-language-competitor-superiority" &&
-		isRecord(value.requiredIndependentFamiliesByLanguage) &&
-		Object.values(value.requiredIndependentFamiliesByLanguage).every(
+		isRecord(value.requiredIndependentAuthorClustersByLanguage) &&
+		Object.values(value.requiredIndependentAuthorClustersByLanguage).every(
 			(count) => Number.isInteger(count) && Number(count) > 0,
 		) &&
 		typeof value.sampleSizeMethod === "string" &&
@@ -133,7 +133,7 @@ export function validateSemanticAnalysisPlan(input: {
 	forbiddenTrustPublicKeys?: Iterable<string>;
 }): {
 	analysisPlanIntegrityQualified: true;
-	plannedFamilyCount: number;
+	plannedIndependentAuthorClusterCount: number;
 	sampleSizeAdequacyVerified: false;
 	trustedTimestampVerified: false;
 } {
@@ -188,24 +188,35 @@ export function validateSemanticAnalysisPlan(input: {
 	);
 	const languages = [...new Set(testCases.map((item) => item.language))].sort();
 	if (
-		Object.keys(plan.requiredIndependentFamiliesByLanguage)
+		Object.keys(plan.requiredIndependentAuthorClustersByLanguage)
 			.sort()
 			.join("\0") !== languages.join("\0")
 	)
 		throw new Error("semantic analysis plan language coverage is invalid");
 	for (const language of languages) {
+		const languageCases = testCases.filter(
+			(item) => item.language === language,
+		);
+		if (
+			languageCases.some(
+				(item) =>
+					typeof item.provenance?.authorId !== "string" ||
+					item.provenance.authorId.trim().length === 0,
+			)
+		)
+			throw new Error("semantic analysis plan author cluster is invalid");
 		const actual = new Set(
-			testCases
-				.filter((item) => item.language === language)
-				.map((item) => item.familyId),
+			languageCases.map((item) => item.provenance?.authorId),
 		).size;
-		if (actual < (plan.requiredIndependentFamiliesByLanguage[language] ?? 0))
+		if (
+			actual < (plan.requiredIndependentAuthorClustersByLanguage[language] ?? 0)
+		)
 			throw new Error("semantic analysis plan sample-size target is unmet");
 	}
 	return {
 		analysisPlanIntegrityQualified: true,
-		plannedFamilyCount: Object.values(
-			plan.requiredIndependentFamiliesByLanguage,
+		plannedIndependentAuthorClusterCount: Object.values(
+			plan.requiredIndependentAuthorClustersByLanguage,
 		).reduce((sum, count) => sum + count, 0),
 		sampleSizeAdequacyVerified: false,
 		trustedTimestampVerified: false,

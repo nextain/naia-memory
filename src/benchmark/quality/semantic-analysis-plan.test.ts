@@ -33,11 +33,20 @@ function fixture() {
 			expectedDeletedIds: [],
 			noUpdateIds: [],
 			expectedDecision: "update",
+			provenance: {
+				authorId: `author-${language}`,
+				authorNativeLanguages: [language],
+				authoredAt: "2026-01-01T01:00:00Z",
+				reviewerId: `reviewer-${language}`,
+				reviewerNativeLanguages: [language],
+				reviewedAt: "2026-01-01T02:00:00Z",
+				reviewDecision: "accepted" as const,
+			},
 		})),
 	};
 	const { privateKey, publicKey } = generateKeyPairSync("ed25519");
 	const unsigned = {
-		schemaVersion: "naia-memory-semantic-analysis-plan-v2" as const,
+		schemaVersion: "naia-memory-semantic-analysis-plan-v3" as const,
 		administrator: "external-statistician",
 		contractSha256: evidenceObjectSha256(contract),
 		engines: ["hindsight", "mem0", "naia"],
@@ -50,7 +59,7 @@ function fixture() {
 		minimumDetectableDifference: 0.1,
 		minimumPracticallyImportantDifference: 0.1,
 		decisionRule: "holm-all-language-competitor-superiority" as const,
-		requiredIndependentFamiliesByLanguage: { ko: 1, en: 1, ja: 1 },
+		requiredIndependentAuthorClustersByLanguage: { ko: 1, en: 1, ja: 1 },
 		sampleSizeMethod: "paired-family simulation",
 		sampleSizeAssumptionsSha256: "1".repeat(64),
 		stoppingRule:
@@ -100,7 +109,7 @@ describe("semantic analysis plan", () => {
 			}),
 		).toEqual({
 			analysisPlanIntegrityQualified: true,
-			plannedFamilyCount: 3,
+			plannedIndependentAuthorClusterCount: 3,
 			sampleSizeAdequacyVerified: false,
 			trustedTimestampVerified: false,
 		});
@@ -116,7 +125,7 @@ describe("semantic analysis plan", () => {
 		).toThrow("semantic analysis plan content is invalid");
 
 		const underpowered = fixture();
-		underpowered.plan.requiredIndependentFamiliesByLanguage.ko = 2;
+		underpowered.plan.requiredIndependentAuthorClustersByLanguage.ko = 2;
 		resign(underpowered);
 		expect(() =>
 			validateSemanticAnalysisPlan({
@@ -133,6 +142,21 @@ describe("semantic analysis plan", () => {
 				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
 			}),
 		).toThrow("semantic analysis plan content is invalid");
+	});
+
+	it("rejects a missing author cluster instead of counting undefined as one", () => {
+		const current = fixture();
+		const firstCase = current.contract.cases[0];
+		if (!firstCase) throw new Error("fixture requires a case");
+		firstCase.provenance = undefined;
+		current.plan.contractSha256 = evidenceObjectSha256(current.contract);
+		resign(current);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan author cluster is invalid");
 	});
 
 	it("rejects an administrator identity or key reused by another role", () => {

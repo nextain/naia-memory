@@ -8,8 +8,8 @@ type Hypothesis = {
 	hypothesis: string;
 	competitor: string;
 	language: string;
-	independentFamilies: number;
-	effectiveFamilies: number;
+	independentAuthorClusters: number;
+	effectiveAuthorClusters: number;
 	observedMeanDifference: number;
 	minimumPracticallyImportantDifference: number;
 	rawPValue: number;
@@ -17,10 +17,13 @@ type Hypothesis = {
 	holmAdjustedPValue: number;
 	holmRejected: boolean;
 	estimable: boolean;
-	reason: "qualified" | "resolution-floor" | "no-discordant-families";
+	reason: "qualified" | "resolution-floor" | "no-discordant-author-clusters";
 };
 
-type SemanticCompetitiveSample = SemanticBootstrapSample & { caseId: string };
+type SemanticCompetitiveSample = SemanticBootstrapSample & {
+	caseId: string;
+	authorClusterId: string;
+};
 
 function metricValue(
 	sample: SemanticBootstrapSample,
@@ -48,6 +51,7 @@ export function calculateSemanticCompetitiveInference(input: {
 			!sample.language ||
 			!sample.familyId ||
 			!sample.caseId ||
+			!sample.authorClusterId ||
 			![
 				sample.currentAt1,
 				sample.currentAtK,
@@ -65,7 +69,7 @@ export function calculateSemanticCompetitiveInference(input: {
 	if ([...plan.engines].sort().join("\0") !== sampleEngines.join("\0"))
 		throw new Error("competitive inference engine coverage mismatch");
 	const languages = Object.keys(
-		plan.requiredIndependentFamiliesByLanguage,
+		plan.requiredIndependentAuthorClustersByLanguage,
 	).sort();
 	const sampleLanguages = [
 		...new Set(samples.map((sample) => sample.language)),
@@ -83,13 +87,7 @@ export function calculateSemanticCompetitiveInference(input: {
 			const families = [
 				...new Set(languageSamples.map((sample) => sample.familyId)),
 			].sort();
-			if (
-				families.length < plan.requiredIndependentFamiliesByLanguage[language]
-			)
-				throw new Error(
-					`competitive inference family target unmet: ${language}`,
-				);
-			const differences = families.map((family) => {
+			const familyDifferences = families.map((family) => {
 				const select = (engine: string) =>
 					languageSamples.filter(
 						(sample) => sample.engine === engine && sample.familyId === family,
@@ -119,8 +117,35 @@ export function calculateSemanticCompetitiveInference(input: {
 					mean(
 						comparison.map((sample) => metricValue(sample, plan.primaryMetric)),
 					);
-				return lowerIsBetter ? -raw : raw;
+				const authorClusters = new Set(
+					[...primary, ...comparison].map((sample) => sample.authorClusterId),
+				);
+				if (authorClusters.size !== 1)
+					throw new Error(
+						`competitive inference author-cluster mismatch: ${language}/${family}`,
+					);
+				return {
+					authorClusterId: [...authorClusters][0],
+					difference: lowerIsBetter ? -raw : raw,
+				};
 			});
+			const authorClusters = [
+				...new Set(familyDifferences.map((item) => item.authorClusterId)),
+			].sort();
+			if (
+				authorClusters.length <
+				plan.requiredIndependentAuthorClustersByLanguage[language]
+			)
+				throw new Error(
+					`competitive inference author-cluster target unmet: ${language}`,
+				);
+			const differences = authorClusters.map((authorClusterId) =>
+				mean(
+					familyDifferences
+						.filter((item) => item.authorClusterId === authorClusterId)
+						.map((item) => item.difference),
+				),
+			);
 			const shifted = differences.map(
 				(value) => value - plan.minimumPracticallyImportantDifference,
 			);
@@ -143,8 +168,8 @@ export function calculateSemanticCompetitiveInference(input: {
 				hypothesis: `${plan.primaryEngine}>${competitor}/${language}/${plan.primaryMetric}`,
 				competitor,
 				language,
-				independentFamilies: families.length,
-				effectiveFamilies: shifted.length,
+				independentAuthorClusters: authorClusters.length,
+				effectiveAuthorClusters: shifted.length,
 				observedMeanDifference: mean(differences),
 				minimumPracticallyImportantDifference:
 					plan.minimumPracticallyImportantDifference,
@@ -154,7 +179,9 @@ export function calculateSemanticCompetitiveInference(input: {
 				holmRejected: false,
 				estimable: discordant.length > 0,
 				reason:
-					discordant.length === 0 ? "no-discordant-families" : "qualified",
+					discordant.length === 0
+						? "no-discordant-author-clusters"
+						: "qualified",
 			});
 		}
 	}
@@ -169,7 +196,7 @@ export function calculateSemanticCompetitiveInference(input: {
 	ordered.forEach((item, index) => {
 		const remaining = ordered.length - index;
 		if (
-			item.reason !== "no-discordant-families" &&
+			item.reason !== "no-discordant-author-clusters" &&
 			item.minimumAttainablePValue > plan.familyWiseAlpha / remaining
 		) {
 			item.estimable = false;
@@ -186,9 +213,9 @@ export function calculateSemanticCompetitiveInference(input: {
 	});
 
 	return {
-		method: "exact-family-sign-test-shifted-null-v1" as const,
+		method: "exact-author-cluster-sign-test-shifted-null-v1" as const,
 		testedNull:
-			"at most half of independent paired families have a direction-normalized difference exceeding the preregistered MPID",
+			"at most half of independent paired author clusters have a family-mean direction-normalized difference exceeding the preregistered MPID",
 		multiplicityAdjustment: "holm" as const,
 		decisionRule: plan.decisionRule,
 		hypotheses: hypotheses.sort((a, b) =>
@@ -205,6 +232,6 @@ export function calculateSemanticCompetitiveInference(input: {
 		methodAdequacyVerified: false as const,
 		sampleSizeAdequacyVerified: false as const,
 		caveat:
-			"This exact sign test targets family-majority superiority beyond MPID, not mean superiority; shifted differences within 1e-12 are ties. Holm plus an all-cells rule is conservative; power must be verified for this complete rule before any public claim.",
+			"This exact sign test targets author-cluster-majority superiority beyond MPID, not mean superiority; each signed corpus author contributes one equally weighted cluster mean per language. Independence across authors remains a preregistered design assumption. Shifted differences within 1e-12 are ties. Holm plus an all-cells rule is conservative; power must be verified for this complete rule before any public claim.",
 	};
 }

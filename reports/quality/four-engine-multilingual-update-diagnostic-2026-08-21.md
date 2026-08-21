@@ -518,3 +518,69 @@ The final changed tree passes 72 test files and 719 tests, TypeScript build and
 typecheck, Biome, and staged-diff checks. The synthetic positive case only
 proves that the decision calculator can reach its internal threshold; it is not
 an engine result and cannot be quoted as competitive evidence.
+
+## Author-cluster inference stage
+
+The dependency sensitivity stage found a structural problem rather than a
+larger-family-count problem. The signed corpus contract records who authored
+each case, but v2 inference counted every `familyId` as independent. A single
+author could therefore contribute many stylistically or procedurally related
+families and make an exact family sign test appear to have far more independent
+evidence than the corpus construction supports. No resampling method can
+recover an independent unit that the frozen design did not identify.
+
+Analysis-plan schema v3 now preregisters language-specific **independent author
+cluster** targets. Public inference obtains that cluster only from the case's
+signed `provenance.authorId`; it cannot be supplied by an engine result or
+post-hoc score file. All paired family differences from one author and language
+are averaged into one equally weighted author-cluster difference before the
+MPID shift, exact one-sided sign test, and Holm correction. Engine pairing must
+agree on the author cluster, and missing IDs or an unmet author-cluster target
+fail closed. A regression test verifies that twenty winning families written by
+one author still count as one cluster and cannot satisfy a two-cluster plan.
+
+The corresponding sample-size assumptions schema is v3 as well. Candidate
+counts, null and alternative exceedance probabilities, dependency shocks, and
+reported plan targets now refer to independent author clusters rather than
+families. This is a change in the estimand: the null is now that at most half of
+independent author clusters have a family-mean advantage above MPID. It does not
+claim mean superiority, and it gives authors equal weight even when they
+contribute different numbers of families. Independence across authors remains
+a design assumption; shared prompts, translators, templates, or editorial
+coordination across authors would require a still higher preregistered cluster.
+Equal author weighting does not inherently favor an engine, but it can disagree
+with a family-weighted result when an engine's gains concentrate in prolific
+authors. A public report must therefore name the author-level majority estimand
+and disclose a preregistered family-weighted sensitivity analysis; disagreement
+between them is heterogeneity evidence, not permission to select the favorable
+result.
+
+This design follows the general clustered-inference requirement that the unit
+treated as independent must match the dependence structure, and it deliberately
+avoids relying on asymptotic cluster-robust corrections with very few clusters.
+Relevant primary literature includes Cameron, Gelbach, and Miller's
+[multi-way clustering framework](https://www.nber.org/papers/t0327), MacKinnon
+and Webb's [few-cluster warning and wild-bootstrap
+analysis](https://doi.org/10.1080/07350015.2017.1292783), and Watson, Akinyemi,
+and Hemming's [permutation-based multiple-testing analysis for clustered
+trials](https://arxiv.org/abs/2107.10017). These sources motivate the failure
+condition; they do not validate Naia's chosen power assumptions.
+
+This materially strengthens resistance to benchmark overfitting and
+pseudoreplication, but it makes the present evidence weaker, not stronger: the
+current fixture has one author identity per language and therefore cannot
+support a competitive claim at useful exact-test resolution. Public status
+remains **NO-GO**. The next campaign-design task is to freeze a genuinely
+independent multi-author corpus, declare any higher-level shared construction
+clusters, and obtain external statistical review of the author-cluster estimand
+and v3 power assumptions before collection begins. No engine score or claimed
+performance changed in this stage.
+
+The author-cluster implementation passes 72 test files and 721 tests, build,
+typecheck, Biome, and diff checks. The workspace benchmark-contract package,
+context-translation suite, and session-contract gate also pass. The combined
+entry-point command is not claimed as passing: its agents-context mirror test
+produced no result and was interrupted after hanging, while its entry-point sync
+subtest had passed. An initial adversarial review found and prompted a fix for a
+missing-`authorId` value being counted as one `undefined` cluster; the final
+validator rejects missing or blank author clusters and has a regression test.
