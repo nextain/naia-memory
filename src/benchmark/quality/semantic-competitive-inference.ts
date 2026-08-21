@@ -1,8 +1,8 @@
 import type { SemanticAnalysisPlan } from "./semantic-analysis-plan.js";
 import type { SemanticBootstrapSample } from "./semantic-cluster-bootstrap.js";
+import { exactBinomialUpperTail } from "./semantic-sign-test.js";
 
 const PRACTICAL_DIFFERENCE_TIE_TOLERANCE = 1e-12;
-const MAX_EXACT_BINOMIAL_TRIALS = 1023;
 
 type Hypothesis = {
 	hypothesis: string;
@@ -21,21 +21,6 @@ type Hypothesis = {
 };
 
 type SemanticCompetitiveSample = SemanticBootstrapSample & { caseId: string };
-
-function binomialUpperTail(successes: number, trials: number): number {
-	if (trials === 0) return 1;
-	if (trials > MAX_EXACT_BINOMIAL_TRIALS)
-		throw new Error(
-			"competitive inference exact sign test exceeds numerical range",
-		);
-	let probability = 2 ** -trials;
-	let total = 0;
-	for (let count = 0; count <= trials; count++) {
-		if (count >= successes) total += probability;
-		if (count < trials) probability *= (trials - count) / (count + 1);
-	}
-	return Math.min(1, total);
-}
 
 function metricValue(
 	sample: SemanticBootstrapSample,
@@ -146,7 +131,14 @@ export function calculateSemanticCompetitiveInference(input: {
 				(value) => value > PRACTICAL_DIFFERENCE_TIE_TOLERANCE,
 			).length;
 			const minimumAttainablePValue = 2 ** -shifted.length;
-			const rawPValue = binomialUpperTail(successes, shifted.length);
+			let rawPValue: number;
+			try {
+				rawPValue = exactBinomialUpperTail(successes, shifted.length);
+			} catch {
+				throw new Error(
+					"competitive inference exact sign test exceeds numerical range",
+				);
+			}
 			hypotheses.push({
 				hypothesis: `${plan.primaryEngine}>${competitor}/${language}/${plan.primaryMetric}`,
 				competitor,

@@ -466,7 +466,41 @@ globally superior. Public status remains **NO-GO** until the native-human,
 released-commit campaign supplies enough independent families and its full
 decision rule receives independent statistical validation.
 
-The final changed tree passes 70 test files and 713 tests, TypeScript build and
+## Complete-rule sample-size simulation stage
+
+The repository now has a fail-closed schema and deterministic simulator for the
+sample-size assumptions referenced by the signed analysis plan. The artifact
+must enumerate every language and competitor cell, an alternative probability
+that an independent family exceeds the MPID, candidate language-specific family
+counts, a fixed seed and iteration count, and the explicit independence model.
+Its canonical SHA-256 must equal the hash frozen in the signed plan.
+
+For each candidate, the simulator generates both global-null and planned-effect
+family outcomes, runs the same exact binomial upper-tail implementation used by
+the campaign inference, applies Holm step-down across all competitor × language
+hypotheses, and evaluates the actual all-cells decision. It reports Wilson 95%
+intervals for any-null rejection, all-null rejection, and complete-rule power.
+A signed plan target passes only when that exact language-specific count vector
+is present in the frozen simulations, the null-any upper bound is at most the
+family-wise alpha, and the complete-power lower bound reaches target power.
+This prevents choosing a favorable candidate after simulation. The command is
+`pnpm benchmark:semantic-sample-size <assumptions.json>
+<analysis-plan.json>`.
+
+This closes a reproducibility gap but does not yet establish adequate sample
+size. In particular, the repository does not currently contain a defensible,
+pre-campaign estimate for each cell's probability of exceeding the MPID, and
+the v1 dependency model assumes independence across language/competitor/family
+cells. Choosing those probabilities after seeing the held-out campaign would
+be outcome-peeking; choosing optimistic values now would merely manufacture a
+small target. Therefore every simulation output remains
+`sampleSizeAdequacyVerified: false` and `claimEligible: false`, even if a frozen
+synthetic fixture reaches target power. Before the public campaign, those cell
+probabilities need external statistical justification from disjoint pilot data
+or a conservative sensitivity grid, and correlated dependency scenarios need
+to be added and reviewed. Public status remains **NO-GO**.
+
+The final changed tree passes 72 test files and 719 tests, TypeScript build and
 typecheck, Biome, and staged-diff checks. The synthetic positive case only
 proves that the decision calculator can reach its internal threshold; it is not
 an engine result and cannot be quoted as competitive evidence.
