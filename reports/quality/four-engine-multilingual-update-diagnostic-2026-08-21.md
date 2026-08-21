@@ -891,3 +891,47 @@ example, participant-signed delivery acknowledgements bound to packet and
 receipt hashes, or an independently operated append-only transparency log at
 delivery time. Only a real preregistered multilingual campaign using that
 mechanism can produce new competitive evidence.
+
+## Participant-signed delivery acknowledgement gate
+
+The pilot gate now accepts delivery evidence only when every assigned Korean,
+English, and Japanese author and native reviewer signs an exact-schema
+acknowledgement. Each signature binds the collection-plan hash, the launch
+receipt hash, and a participant-specific packet hash containing only that
+signer's assignments. The validator rejects missing or duplicate participants,
+role or language key substitution, packet substitution, unknown fields,
+non-canonical timestamps, acknowledgements claimed before the launch timestamp,
+and acknowledgements claimed after that participant's first authored or
+reviewed result. The result gate requires the acknowledgement bundle and pinned
+participant trust policy together and exposes the chronology result explicitly
+as a claim-consistency check.
+
+Claude's adversarial review found that the first exported validator trusted a
+caller-supplied receipt hash even though the integrated result path had already
+validated it. That module-boundary defect was accepted and fixed: standalone
+acknowledgement validation now also requires the timestamp evidence and
+verified timestamp and rechecks the receipt's canonical hash, plan, packet,
+token, and time bindings. The review also caught an ambiguous count and a weak
+negative test. The result now reports role-language participant **slots**, not
+unique humans, and the wrong-key test reaches the signature verifier rather
+than failing earlier on trust-policy key reuse. Finally, the signed statement
+was narrowed from claiming packet receipt to acknowledging the exact packet
+hash. The review verdict before these corrections was `FOUND_ISSUES`; no formal
+review-pass `CLEAN` is claimed in recovery mode.
+
+This is materially stronger than an operator-minted receipt: a later operator
+cannot create the participant signatures without the configured private keys.
+It still proves only that the corresponding key holders signed the exact
+statements. It does **not** independently prove physical delivery, distinct
+human identity, participant independence, or trustworthy acknowledgement time.
+The launch and result bounds detect internally inconsistent backdating but rely
+on self-asserted participant times. Consequently this stage changes neither an
+engine score nor the public **NO-GO** decision.
+
+The implementation passes 79 test files and 782 tests, both TypeScript checks,
+the production build, scoped Biome, and `git diff --check`. The next integrity
+step is to assign a canonical hash to the complete acknowledgement bundle and
+obtain an RFC 3161 timestamp before any authored result. The evidence-producing
+step remains a real preregistered multilingual campaign with independently
+controlled participant keys; synthetic fixtures cannot establish competitive
+performance.

@@ -12,7 +12,14 @@ import {
 	evidenceSignaturePayload,
 } from "./public-evidence-crypto.js";
 import type { SemanticAnalysisPlan } from "./semantic-analysis-plan.js";
-import type { SemanticPilotCollectionPlan } from "./semantic-pilot-collection-packet.js";
+import {
+	type SemanticPilotCollectionPlan,
+	buildSemanticPilotParticipantPacket,
+} from "./semantic-pilot-collection-packet.js";
+import type {
+	SemanticPilotDeliveryAcknowledgement,
+	SemanticPilotDeliveryAcknowledgementBundle,
+} from "./semantic-pilot-delivery-acknowledgement.js";
 import { buildSemanticPilotLaunch } from "./semantic-pilot-launch.js";
 import { validateSemanticPilotResultBinding } from "./semantic-pilot-result-binding.js";
 import type { SemanticPowerReview } from "./semantic-power-review.js";
@@ -184,6 +191,76 @@ function resignPlanReview(current: ReturnType<typeof fixture>): void {
 	resign(current);
 }
 
+function participantDeliveryEvidence(
+	current: ReturnType<typeof fixture>,
+	launchReceiptSha256: string,
+	acknowledgedAt = "2026-01-01T01:00:00.000Z",
+): {
+	deliveryAcknowledgements: SemanticPilotDeliveryAcknowledgementBundle;
+	participantTrustPolicy: {
+		authorPublicKeysByLanguage: Record<string, Record<string, string>>;
+		nativeReviewerPublicKeysByLanguage: Record<string, Record<string, string>>;
+	};
+} {
+	const planSha256 = evidenceObjectSha256(current.collectionPlan);
+	const authorPublicKeysByLanguage: Record<string, Record<string, string>> = {};
+	const nativeReviewerPublicKeysByLanguage: Record<
+		string,
+		Record<string, string>
+	> = {};
+	const acknowledgements: SemanticPilotDeliveryAcknowledgement[] = [];
+	for (const language of ["ko", "en", "ja"] as const) {
+		for (const role of ["author", "native-reviewer"] as const) {
+			const signer = `pilot-${role === "author" ? "author" : "reviewer"}-${language}`;
+			const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+			const keys =
+				role === "author"
+					? authorPublicKeysByLanguage
+					: nativeReviewerPublicKeysByLanguage;
+			keys[language] = {
+				[signer]: publicKey.export({ type: "spki", format: "pem" }).toString(),
+			};
+			const unsigned = {
+				schemaVersion:
+					"naia-memory-semantic-pilot-delivery-acknowledgement-v1" as const,
+				signer,
+				role,
+				language,
+				planSha256,
+				participantPacketSha256: buildSemanticPilotParticipantPacket(
+					current.collectionPlan,
+					role,
+					signer,
+				).participantPacketSha256,
+				launchReceiptSha256,
+				acknowledgedAt,
+				statement: "EXACT_COLLECTION_PACKET_HASH_ACKNOWLEDGED" as const,
+			};
+			acknowledgements.push({
+				...unsigned,
+				signatureBase64: sign(
+					null,
+					evidenceSignaturePayload(unsigned),
+					privateKey,
+				).toString("base64"),
+			});
+		}
+	}
+	return {
+		deliveryAcknowledgements: {
+			schemaVersion:
+				"naia-memory-semantic-pilot-delivery-acknowledgement-bundle-v1",
+			planSha256,
+			launchReceiptSha256,
+			acknowledgements,
+		},
+		participantTrustPolicy: {
+			authorPublicKeysByLanguage,
+			nativeReviewerPublicKeysByLanguage,
+		},
+	};
+}
+
 describe("semantic pilot result binding", () => {
 	it("binds a trusted prior timestamp and exact launch receipt through the result gate", () => {
 		const current = fixture();
@@ -221,10 +298,15 @@ describe("semantic pilot result binding", () => {
 			timestampTrustPolicy,
 			commandRunner: timestampCommandRunner,
 		});
+		const delivery = participantDeliveryEvidence(
+			current,
+			launch.receipt.receiptSha256,
+		);
 
 		expect(
 			validateSemanticPilotResultBinding({
 				...current,
+				...delivery,
 				timestampEvidence,
 				timestampTrustPolicy,
 				launchReceipt: launch.receipt,
@@ -235,7 +317,26 @@ describe("semantic pilot result binding", () => {
 			launchReceiptInternalConsistencyVerified: true,
 			launchReceiptSha256: launch.receipt.receiptSha256,
 			timestampedAt: "2026-01-01T00:00:00.000Z",
+			participantDeliveryAcknowledgementSignaturesVerified: true,
+			participantDeliveryChronologyClaimConsistent: true,
+			acknowledgedParticipantSlotCount: 6,
 		});
+
+		const lateDelivery = participantDeliveryEvidence(
+			current,
+			launch.receipt.receiptSha256,
+			"2026-01-03T00:00:00.000Z",
+		);
+		expect(() =>
+			validateSemanticPilotResultBinding({
+				...current,
+				...lateDelivery,
+				timestampEvidence,
+				timestampTrustPolicy,
+				launchReceipt: launch.receipt,
+				timestampCommandRunner,
+			}),
+		).toThrow("chronology claim is inconsistent");
 	});
 
 	it("binds every completed result and reviewed cause to its prior assignment", () => {
@@ -273,6 +374,19 @@ describe("semantic pilot result binding", () => {
 		expect(() => validateSemanticPilotResultBinding(current)).toThrow(
 			"evidence, verifier trust policy, and launch receipt must be supplied together",
 		);
+	});
+
+	it("requires delivery acknowledgements and participant trust as a pair", () => {
+		const current = fixture();
+		expect(() =>
+			validateSemanticPilotResultBinding({
+				...current,
+				participantTrustPolicy: {
+					authorPublicKeysByLanguage: {},
+					nativeReviewerPublicKeysByLanguage: {},
+				},
+			}),
+		).toThrow("must be supplied together");
 	});
 
 	it.each([

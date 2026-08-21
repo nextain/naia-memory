@@ -12,6 +12,10 @@ import {
 	buildSemanticPilotCollectionPacket,
 } from "./semantic-pilot-collection-packet.js";
 import {
+	type SemanticPilotDeliveryAcknowledgementBundle,
+	validateSemanticPilotDeliveryAcknowledgements,
+} from "./semantic-pilot-delivery-acknowledgement.js";
+import {
 	type SemanticPilotLaunchReceipt,
 	validateSemanticPilotLaunchReceiptInternalConsistency,
 } from "./semantic-pilot-launch.js";
@@ -20,6 +24,7 @@ import {
 	type SemanticPowerReviewTrustPolicy,
 	validateSemanticPowerReview,
 } from "./semantic-power-review.js";
+import type { SemanticPublicTrustPolicy } from "./semantic-public-attestation.js";
 import type { SemanticSampleSizeAssumptions } from "./semantic-sample-size-simulation.js";
 
 export type SemanticPilotResultBindingInput = {
@@ -36,6 +41,8 @@ export type SemanticPilotResultBindingInput = {
 	timestampTrustPolicy?: Rfc3161TimestampTrustPolicy;
 	launchReceipt?: SemanticPilotLaunchReceipt;
 	timestampCommandRunner?: Rfc3161CommandRunner;
+	deliveryAcknowledgements?: SemanticPilotDeliveryAcknowledgementBundle;
+	participantTrustPolicy?: SemanticPublicTrustPolicy;
 };
 
 function sameIdentifiers(left: string[], right: string[]): boolean {
@@ -59,6 +66,9 @@ export function validateSemanticPilotResultBinding(
 	launchReceiptInternalConsistencyVerified: boolean;
 	launchReceiptSha256?: string;
 	timestampedAt?: string;
+	participantDeliveryAcknowledgementSignaturesVerified: boolean;
+	participantDeliveryChronologyClaimConsistent: boolean;
+	acknowledgedParticipantSlotCount?: number;
 } {
 	buildSemanticPilotCollectionPacket(input.collectionPlan);
 	if (
@@ -176,11 +186,61 @@ export function validateSemanticPilotResultBinding(
 				verifiedTimestampedAt: timestamp.timestampedAt as string,
 			})
 		: { launchReceiptInternalConsistencyVerified: false as const };
+	if (
+		Boolean(input.deliveryAcknowledgements) !==
+		Boolean(input.participantTrustPolicy)
+	)
+		throw new Error(
+			"delivery acknowledgements and participant trust policy must be supplied together",
+		);
+	if (input.deliveryAcknowledgements && !input.launchReceipt)
+		throw new Error("delivery acknowledgements require a launch receipt");
+	const delivery = input.deliveryAcknowledgements
+		? validateSemanticPilotDeliveryAcknowledgements({
+				collectionPlan: input.collectionPlan,
+				launchReceipt: input.launchReceipt as SemanticPilotLaunchReceipt,
+				timestampEvidence: input.timestampEvidence as Rfc3161TimestampEvidence,
+				verifiedTimestampedAt: timestamp.timestampedAt as string,
+				bundle: input.deliveryAcknowledgements,
+				trustPolicy: input.participantTrustPolicy as SemanticPublicTrustPolicy,
+			})
+		: { participantDeliveryAcknowledgementSignaturesVerified: false as const };
+	if (input.deliveryAcknowledgements) {
+		for (const acknowledgement of input.deliveryAcknowledgements
+			.acknowledgements) {
+			const participantCases = input.pilotContract.cases.filter(
+				(item) =>
+					item.language === acknowledgement.language &&
+					(acknowledgement.role === "author"
+						? item.provenance?.authorId === acknowledgement.signer
+						: item.provenance?.reviewerId === acknowledgement.signer),
+			);
+			const deadlines = participantCases.map((item) =>
+				Date.parse(
+					acknowledgement.role === "author"
+						? (item.provenance?.authoredAt ?? "")
+						: (item.provenance?.reviewedAt ?? ""),
+				),
+			);
+			if (
+				deadlines.length === 0 ||
+				deadlines.some((deadline) => !Number.isFinite(deadline)) ||
+				Date.parse(acknowledgement.acknowledgedAt) > Math.min(...deadlines)
+			)
+				throw new Error(
+					"semantic pilot delivery acknowledgement chronology claim is inconsistent",
+				);
+		}
+	}
 	return {
 		...power,
 		pilotCollectionBindingQualified: true,
 		boundAssignmentCount: assignments.size,
 		...timestamp,
 		...launch,
+		...delivery,
+		participantDeliveryChronologyClaimConsistent: Boolean(
+			input.deliveryAcknowledgements,
+		),
 	};
 }

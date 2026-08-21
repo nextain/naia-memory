@@ -47,6 +47,17 @@ export type SemanticPilotCollectionPacket = {
 	packetSha256: string;
 };
 
+export type SemanticPilotParticipantPacket = {
+	schemaVersion: "naia-memory-semantic-pilot-participant-packet-v1";
+	planSha256: string;
+	publicContractSha256: string;
+	createdAt: string;
+	role: "author" | "native-reviewer";
+	participantId: string;
+	assignments: Array<Omit<SemanticPilotAssignment, "authorId" | "reviewerId">>;
+	participantPacketSha256: string;
+};
+
 export type SemanticPilotCollectionManifest = {
 	schemaVersion: "naia-memory-semantic-pilot-collection-manifest-v1";
 	planSha256: string;
@@ -193,6 +204,35 @@ export function buildSemanticPilotCollectionPacket(
 	// Exercise canonical serialization here so non-JSON values fail before delivery.
 	canonicalEvidenceJson(core);
 	return { ...core, packetSha256: evidenceObjectSha256(core) };
+}
+
+export function buildSemanticPilotParticipantPacket(
+	plan: SemanticPilotCollectionPlan,
+	role: "author" | "native-reviewer",
+	participantId: string,
+): SemanticPilotParticipantPacket {
+	validateSemanticPilotCollectionPlan(plan);
+	assertCanonicalIdentifier(participantId, "participant ID");
+	const packets = groupedPackets(
+		plan.assignments,
+		role === "author" ? "authorId" : "reviewerId",
+	);
+	const packet = packets.find((item) => item.participantId === participantId);
+	if (!packet) throw new Error("semantic pilot participant is not assigned");
+	const core = {
+		schemaVersion: "naia-memory-semantic-pilot-participant-packet-v1" as const,
+		planSha256: evidenceObjectSha256(plan),
+		publicContractSha256: plan.publicContractSha256,
+		createdAt: plan.createdAt,
+		role,
+		participantId,
+		assignments: packet.assignments,
+	};
+	canonicalEvidenceJson(core);
+	return {
+		...core,
+		participantPacketSha256: evidenceObjectSha256(core),
+	};
 }
 
 export function buildSemanticPilotCollectionManifest(
