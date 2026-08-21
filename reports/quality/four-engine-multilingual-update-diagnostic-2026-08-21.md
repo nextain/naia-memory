@@ -1300,3 +1300,50 @@ This closes one mechanistic trust gap but does not change the public evidence
 decision. Public competitiveness remains **NO-GO** until the frozen campaign is
 executed by independently controlled multilingual participants and engines
 with identity-bound receipts and trusted timestamps.
+
+## Local store crash-consistent replacement
+
+LocalAdapter previously wrote a fixed sibling temporary file and renamed it
+without syncing either the file or its parent directory. Atomic rename hid a
+partially written file from normal readers, but it did not establish that the
+new bytes or renamed directory entry would survive a host crash. A fixed temp
+name also allowed concurrent processes to collide, and the replacement file's
+permissions depended on the process umask.
+
+The replacement path now creates a unique same-directory file exclusively at
+mode `0600`, writes and syncs its complete contents, closes it, atomically
+renames it over the target, and on POSIX syncs the parent directory. Failures
+before rename remove the temporary file and leave the old target untouched.
+Failures while syncing or closing the directory are reported as an explicit
+post-commit error: import keeps the already-persisted store in memory instead
+of incorrectly rolling memory back behind disk. Windows retains atomic replace
+but skips the unsupported POSIX directory-sync step.
+
+Real-filesystem and injected-operation tests cover owner-only permissions,
+temporary-file cleanup, write/file-sync/rename failures, POSIX directory-sync
+and directory-close failures, Windows behavior, preservation of the old target
+before commit, and LocalAdapter's post-commit import state. The targeted suite
+passes 3 files and 26 tests. The full regression passes 88 files and 828 tests;
+both TypeScript checks, the production build,
+scoped Biome for the new files, and `git diff --check` pass. `local.ts` still
+has four pre-existing repository lint diagnostics outside this change, so no
+repository-wide Biome-clean claim is made.
+
+OpenCode's design review returned `MODIFY`, correctly requiring file and parent
+directory sync, unique same-directory temporary files, restrictive permissions,
+and platform handling. Its first implementation review returned `CLEAN` with
+one low-severity test gap for LocalAdapter's post-commit import branch. That gap
+is now covered by a disk-and-memory consistency test. The final OpenCode review
+ended in a retryable provider server error, and Claude produced no verdict
+within 120 seconds, so both final attempts are `NOT_RUN`, not approval. The
+final deterministic preflight is `PREFLIGHT_CLEAN`; its exact digest is kept in
+the issue evidence rather than embedded into its own changing review subject.
+These are ordinary review results; recovery mode and unavailable formal
+preservation artifacts still prevent a formal review-pass `CLEAN` claim.
+
+This improves LocalAdapter durability; it does not add a database transaction,
+make Windows directory entries power-loss durable, harden other adapters, or
+change retrieval, extraction, matching, multilingual behavior, benchmark
+scores, or comparative rank. Public competitiveness therefore remains
+**NO-GO**. The decisive evidence step remains execution of the frozen campaign
+under genuinely independent multilingual control.

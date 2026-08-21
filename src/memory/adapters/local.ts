@@ -1,12 +1,6 @@
-import {
-	existsSync,
-	mkdirSync,
-	readFileSync,
-	renameSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import type { EmbeddingProvider } from "../embeddings.js";
 import { createLocalEpisodeMemory } from "./local-episode.js";
 import { getLocalEpochs, upsertLocalEpoch } from "./local-epoch.js";
@@ -18,6 +12,10 @@ import type {
 	ConsolidationResult,
 	MemoryAdapter,
 } from "../types.js";
+import {
+	AtomicReplaceCommittedError,
+	atomicReplaceFileSync,
+} from "./atomic-file-replace.js";
 import { decodeLocalBackup, encodeLocalBackup } from "./local-backup.js";
 import {
 	type MemoryStore,
@@ -239,11 +237,10 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			this.saveTimer = null;
 		}
 		if (!this.dirty) return;
-		const dir = dirname(this.storePath);
-		mkdirSync(dir, { recursive: true });
-		const tmpPath = `${this.storePath}.tmp`;
-		writeFileSync(tmpPath, JSON.stringify(this.store, null, "\t"), "utf-8");
-		renameSync(tmpPath, this.storePath);
+		atomicReplaceFileSync(
+			this.storePath,
+			JSON.stringify(this.store, null, "\t"),
+		);
 		this.dirty = false;
 	}
 
@@ -454,6 +451,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			// would write later, outside this try, leaving state diverged on failure.
 			this.saveImmediate();
 		} catch (err) {
+			if (err instanceof AtomicReplaceCommittedError) throw err;
 			// Disk write failed — restore both store and KG to avoid divergence
 			this.store = previousStore;
 			this.kg = previousKg;
