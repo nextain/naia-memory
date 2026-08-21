@@ -792,3 +792,27 @@ campaign retroactively, and does not change the public **NO-GO** decision. The
 next campaign must send the frozen query to an independently trusted TSA before
 any author receives an assignment, then preserve the provider response and
 verifier-owned trust policy with the released evidence bundle.
+
+### Public TSA interoperability observation
+
+On 2026-08-21, the same CLI was exercised against
+[DigiCert's documented public RFC 3161 endpoint](https://knowledge.digicert.com/general-information/rfc3161-compliant-time-stamp-authority-server)
+using a synthetic nine-cell Korean/English/Japanese plan. The
+service granted the request and returned a nonce-bearing response for canonical
+plan SHA-256
+`7c37f5402f36ada1fe071e4607db142e1d5b129f6928cbbe83e8223d9acd79da`.
+OpenSSL reported timestamp `2026-08-21T13:55:20Z`, policy OID
+`2.16.840.1.114412.7.1`, and response SHA-256
+`19441c685769acaa1bde5084f331ac448f90654bd8abc015e6a12de0f7c79e7d`.
+Independent verification succeeded against the host public CA bundle, whose
+observed SHA-256 was
+`00411c197b16f659945fba3c2f970a26030f56eef5d445c913cb59a089c813b9`.
+The response carried the DigiCert SHA256 RSA4096 Timestamp Responder 2025 1,
+DigiCert Trusted G4 TimeStamping RSA4096 SHA256 2025 CA1, and cross-signed
+DigiCert Trusted Root G4 chain.
+
+This observation demonstrates real-provider protocol and trust-chain
+interoperability; it is not durable public evidence because the synthetic plan,
+response bytes, and verifier-owned root policy are not part of a released
+campaign bundle. It must not be cited as pilot independence, prior assignment
+timing for an existing campaign, or competitive performance.
