@@ -1007,3 +1007,40 @@ comprehension, independence, and physical delivery. Public CLI arity routing,
 the complete test suite, type checks, and production build pass; a real
 26-artifact invocation remains part of the independent campaign rather than a
 synthetic competitiveness claim.
+
+## Executable 26-artifact integration proof
+
+The complete public-gate path now has one executable integration test that
+constructs and verifies all 26 artifacts together. It generates independent
+Ed25519 keys for every Korean, English, and Japanese author/reviewer slot,
+creates the canonical participant delivery bundle, issues real RFC 3161 tokens
+from an ephemeral RSA test CA/TSA with the required policy OID, and invokes the
+same public CLI entry used by an evidence consumer. The assertions confirm the
+trusted collection-plan timestamp, pre-assignment chronology, launch-receipt
+consistency, all participant signatures, and trusted prior existence of the
+complete delivery bundle. Promotion still fails because the fixture does not
+and cannot establish independent human participation.
+
+The first implementation added this proof to an already large CLI test file.
+The deterministic adversarial preflight correctly returned
+`REFACTOR_REQUIRED`. The proof was then split into four focused files—core
+artifacts, pilot/preregistration artifacts, cryptographic delivery artifacts,
+and the test—each below 500 lines. The unchanged legacy test file is no longer
+part of the diff, and the same preflight now returns `PREFLIGHT_CLEAN`. No
+complexity waiver was used.
+
+The repository passes 80 test files and 789 tests, both TypeScript checks, the
+production build, and scoped Biome. Claude inspected the change until its
+300-second process limit but returned no verdict; OpenCode terminated on a
+retryable provider server error. Both are recorded as `NOT_RUN`, not approval,
+and no formal review-pass `CLEAN` is claimed in recovery mode.
+
+This evidence materially raises confidence that the public gate's cryptographic
+components compose correctly in one real process. It does **not** add an engine
+measurement or prove participant identity, native-language comprehension,
+organizational independence, physical packet delivery, or unbiased corpus
+construction. Therefore it changes neither the published score nor the public
+**NO-GO** decision. The remaining bottleneck is empirical rather than another
+fixture: execute the frozen protocol with independently controlled participants
+and engines, retain the externally timestamped evidence chain, and adjudicate
+the blinded multilingual outputs under the preregistered analysis plan.
