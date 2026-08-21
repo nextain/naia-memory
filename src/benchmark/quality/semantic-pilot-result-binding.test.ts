@@ -1,4 +1,7 @@
-import { generateKeyPairSync, sign } from "node:crypto";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
 	type MemoryUpdateContract,
@@ -10,6 +13,7 @@ import {
 } from "./public-evidence-crypto.js";
 import type { SemanticAnalysisPlan } from "./semantic-analysis-plan.js";
 import type { SemanticPilotCollectionPlan } from "./semantic-pilot-collection-packet.js";
+import { buildSemanticPilotLaunch } from "./semantic-pilot-launch.js";
 import { validateSemanticPilotResultBinding } from "./semantic-pilot-result-binding.js";
 import type { SemanticPowerReview } from "./semantic-power-review.js";
 import type { SemanticSampleSizeAssumptions } from "./semantic-sample-size-simulation.js";
@@ -181,6 +185,59 @@ function resignPlanReview(current: ReturnType<typeof fixture>): void {
 }
 
 describe("semantic pilot result binding", () => {
+	it("binds a trusted prior timestamp and exact launch receipt through the result gate", () => {
+		const current = fixture();
+		const directory = mkdtempSync(join(tmpdir(), "naia-result-launch-"));
+		const tokenPath = join(directory, "plan.tsr");
+		const caPath = join(directory, "tsa-ca.pem");
+		const token = Buffer.from("test timestamp response");
+		const trustedCa = Buffer.from("test CA");
+		writeFileSync(tokenPath, token);
+		writeFileSync(caPath, trustedCa);
+		const timestampEvidence = {
+			schemaVersion: "naia-memory-rfc3161-timestamp-evidence-v1" as const,
+			collectionPlanSha256: evidenceObjectSha256(current.collectionPlan),
+			tokenSha256: createHash("sha256").update(token).digest("hex"),
+			tokenPath,
+		};
+		const timestampTrustPolicy = {
+			schemaVersion: "naia-memory-rfc3161-timestamp-trust-policy-v1" as const,
+			trustedCaFilePath: caPath,
+			trustedCaFileSha256: createHash("sha256").update(trustedCa).digest("hex"),
+			requiredPolicyOid: "1.2.3.4",
+		};
+		const timestampCommandRunner = (args: string[]) =>
+			args.includes("-verify")
+				? { status: 0, stdout: "Verification: OK\n", stderr: "" }
+				: {
+						status: 0,
+						stdout:
+							"Status info:\nPolicy OID: 1.2.3.4\nTime stamp: Jan  1 00:00:00 2026 GMT\n",
+						stderr: "",
+					};
+		const launch = buildSemanticPilotLaunch({
+			collectionPlan: current.collectionPlan,
+			timestampEvidence,
+			timestampTrustPolicy,
+			commandRunner: timestampCommandRunner,
+		});
+
+		expect(
+			validateSemanticPilotResultBinding({
+				...current,
+				timestampEvidence,
+				timestampTrustPolicy,
+				launchReceipt: launch.receipt,
+				timestampCommandRunner,
+			}),
+		).toMatchObject({
+			priorAssignmentTimingVerified: true,
+			launchReceiptInternalConsistencyVerified: true,
+			launchReceiptSha256: launch.receipt.receiptSha256,
+			timestampedAt: "2026-01-01T00:00:00.000Z",
+		});
+	});
+
 	it("binds every completed result and reviewed cause to its prior assignment", () => {
 		const current = fixture();
 		expect(validateSemanticPilotResultBinding(current)).toMatchObject({
@@ -189,6 +246,7 @@ describe("semantic pilot result binding", () => {
 			boundAssignmentCount: 9,
 			constructionCauseIndependenceVerified: false,
 			priorAssignmentTimingVerified: false,
+			launchReceiptInternalConsistencyVerified: false,
 		});
 	});
 
@@ -202,7 +260,7 @@ describe("semantic pilot result binding", () => {
 		);
 	});
 
-	it("requires timestamp evidence and verifier trust policy together", () => {
+	it("requires timestamp evidence, verifier trust policy, and receipt together", () => {
 		const current = {
 			...fixture(),
 			timestampEvidence: {
@@ -213,7 +271,7 @@ describe("semantic pilot result binding", () => {
 			},
 		};
 		expect(() => validateSemanticPilotResultBinding(current)).toThrow(
-			"evidence and verifier trust policy must be supplied together",
+			"evidence, verifier trust policy, and launch receipt must be supplied together",
 		);
 	});
 

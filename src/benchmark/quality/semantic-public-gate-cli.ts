@@ -29,6 +29,7 @@ import {
 	validateSemanticExecutionEvidence,
 } from "./semantic-execution-evidence.js";
 import type { SemanticPilotCollectionPlan } from "./semantic-pilot-collection-packet.js";
+import type { SemanticPilotLaunchReceipt } from "./semantic-pilot-launch.js";
 import { validateSemanticPilotResultBinding } from "./semantic-pilot-result-binding.js";
 import {
 	isSemanticPowerReview,
@@ -55,12 +56,12 @@ async function runSemanticEvidenceGateCli(
 			args.length !== 12 &&
 			args.length !== 14 &&
 			args.length !== 19 &&
-			args.length !== 21)
+			args.length !== 22)
 	) {
 		process.stderr.write(
 			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>${
 				mode === "public"
-					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-collection-plan.json> <pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json> [<rfc3161-timestamp-evidence.json> <rfc3161-timestamp-trust-policy.json>]]]]]"
+					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-collection-plan.json> <pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json> [<rfc3161-timestamp-evidence.json> <rfc3161-timestamp-trust-policy.json> <pilot-launch-receipt.json>]]]]]"
 					: ""
 			}\n`,
 		);
@@ -312,18 +313,25 @@ async function runSemanticEvidenceGateCli(
 								"semantic power review trust policy shape is invalid",
 							);
 						const timestampEvidence =
-							args.length === 21
+							args.length === 22
 								? ((await readJson(
 										args[19],
 										"RFC 3161 timestamp evidence",
 									)) as Rfc3161TimestampEvidence)
 								: undefined;
 						const timestampTrustPolicy =
-							args.length === 21
+							args.length === 22
 								? ((await readJson(
 										args[20],
 										"RFC 3161 timestamp verifier trust policy",
 									)) as Rfc3161TimestampTrustPolicy)
+								: undefined;
+						const launchReceipt =
+							args.length === 22
+								? ((await readJson(
+										args[21],
+										"semantic pilot launch receipt",
+									)) as SemanticPilotLaunchReceipt)
 								: undefined;
 						analysisPlan = {
 							...analysisPlan,
@@ -337,6 +345,7 @@ async function runSemanticEvidenceGateCli(
 								trustPolicy: powerTrust,
 								timestampEvidence,
 								timestampTrustPolicy,
+								launchReceipt,
 								forbiddenTrustIdentities: [
 									...Object.values(
 										trustPolicy.authorPublicKeysByLanguage,
@@ -404,8 +413,8 @@ async function runSemanticEvidenceGateCli(
 						failure:
 							args.length >= 14
 								? args.length >= 19
-									? args.length === 21
-										? "pilot review and prior-assignment timing are verified but construction-cause independence is not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+									? args.length === 22
+										? "pilot review and prior-assignment timing are verified, and the operator-created launch receipt is internally consistent with the plan and timestamp token; actual delivery causality and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 										: "pilot review is attested but construction-cause independence and prior-assignment timing are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 									: "an independent pilot power review, competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 								: "a preregistered analysis plan, competitive thresholds, uncertainty, latency, and released-commit evidence are not evaluated by this gate",

@@ -6,7 +6,10 @@ import { describe, expect, it } from "vitest";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import type { Rfc3161CommandRunner } from "./rfc3161-timestamp.js";
 import type { SemanticPilotCollectionPlan } from "./semantic-pilot-collection-packet.js";
-import { buildSemanticPilotLaunch } from "./semantic-pilot-launch.js";
+import {
+	buildSemanticPilotLaunch,
+	validateSemanticPilotLaunchReceiptInternalConsistency,
+} from "./semantic-pilot-launch.js";
 
 function fixture() {
 	const directory = mkdtempSync(join(tmpdir(), "naia-pilot-launch-"));
@@ -106,4 +109,83 @@ describe("semantic pilot launch gate", () => {
 			}),
 		).toThrow("collection plan hash mismatch");
 	});
+
+	it("validates only exact internal consistency of the launch receipt", () => {
+		const current = fixture();
+		const launch = buildSemanticPilotLaunch({
+			collectionPlan: current.plan,
+			timestampEvidence: current.timestampEvidence,
+			timestampTrustPolicy: current.timestampTrustPolicy,
+			commandRunner: current.commandRunner,
+		});
+		expect(
+			validateSemanticPilotLaunchReceiptInternalConsistency({
+				collectionPlan: current.plan,
+				receipt: launch.receipt,
+				timestampEvidence: current.timestampEvidence,
+				verifiedTimestampedAt: "2026-08-21T00:00:00.000Z",
+			}),
+		).toEqual({
+			launchReceiptInternalConsistencyVerified: true,
+			launchReceiptSha256: launch.receipt.receiptSha256,
+		});
+	});
+
+	it("rejects unknown receipt fields", () => {
+		const current = fixture();
+		const launch = buildSemanticPilotLaunch({
+			collectionPlan: current.plan,
+			timestampEvidence: current.timestampEvidence,
+			timestampTrustPolicy: current.timestampTrustPolicy,
+			commandRunner: current.commandRunner,
+		});
+		const validate = (receipt: typeof launch.receipt) =>
+			validateSemanticPilotLaunchReceiptInternalConsistency({
+				collectionPlan: current.plan,
+				receipt,
+				timestampEvidence: current.timestampEvidence,
+				verifiedTimestampedAt: "2026-08-21T00:00:00.000Z",
+			});
+		expect(() =>
+			validate({
+				...launch.receipt,
+				extra: "ambiguous",
+			} as typeof launch.receipt),
+		).toThrow("receipt shape is invalid");
+	});
+
+	it.each([
+		["planSha256", "semantic pilot launch plan hash mismatch"],
+		["packetSha256", "semantic pilot launch packet hash mismatch"],
+		[
+			"timestampTokenSha256",
+			"semantic pilot launch timestamp token hash mismatch",
+		],
+		["timestampedAt", "semantic pilot launch timestamp time mismatch"],
+	] as const)(
+		"rejects a self-consistent receipt with replaced %s",
+		(field, error) => {
+			const current = fixture();
+			const launch = buildSemanticPilotLaunch({
+				collectionPlan: current.plan,
+				timestampEvidence: current.timestampEvidence,
+				timestampTrustPolicy: current.timestampTrustPolicy,
+				commandRunner: current.commandRunner,
+			});
+			const { receiptSha256: _receiptSha256, ...receiptCore } = launch.receipt;
+			const changedCore = { ...receiptCore, [field]: `changed-${field}` };
+			const changedReceipt = {
+				...changedCore,
+				receiptSha256: evidenceObjectSha256(changedCore),
+			};
+			expect(() =>
+				validateSemanticPilotLaunchReceiptInternalConsistency({
+					collectionPlan: current.plan,
+					receipt: changedReceipt,
+					timestampEvidence: current.timestampEvidence,
+					verifiedTimestampedAt: "2026-08-21T00:00:00.000Z",
+				}),
+			).toThrow(error);
+		},
+	);
 });

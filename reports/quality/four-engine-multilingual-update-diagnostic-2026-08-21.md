@@ -860,3 +860,34 @@ new independent human observation. Public competitiveness remains **NO-GO**.
 The next evidence-producing step is to freeze a real campaign plan, obtain its
 public TSA token, use the launch receipt to distribute packets to independent
 native participants, and bind their signed outputs back to that receipt.
+
+## Result-gate receipt consistency and adversarial correction
+
+The timestamp-qualified result path now requires the RFC 3161 evidence, its
+verifier trust policy, and the launch receipt as one inseparable input set. The
+result gate re-verifies prior existence and checks that the receipt's canonical
+hash, plan hash, packet hash, token hash, and timestamp are internally
+consistent. A full success-path test exercises the trusted timestamp and exact
+receipt through result binding; additional tests recompute a valid receipt hash
+after individually replacing the plan, packet, token, or time and confirm that
+every cross-artifact substitution is rejected.
+
+OpenCode judged the original wording honest about missing delivery causality but
+identified thin integration coverage. Claude's independent adversarial review
+found a stronger semantic defect: because the operator-created receipt is an
+unsigned deterministic function of artifacts already held by the operator, it
+can be reconstructed after the campaign and adds no independent proof of
+delivery. That finding was accepted. The API and result field were renamed from
+`launchReceiptBindingVerified` to
+`launchReceiptInternalConsistencyVerified`, and the public gate now says only
+that the operator-created receipt is internally consistent. It explicitly
+continues to deny actual delivery causality and construction-cause independence.
+No formal review-pass `CLEAN` is claimed in recovery mode.
+
+This stage closes an artifact-substitution and overclaiming risk; it does not
+improve a memory-engine score or change the public **NO-GO** decision. A
+publishable causal claim requires evidence the operator cannot mint later: for
+example, participant-signed delivery acknowledgements bound to packet and
+receipt hashes, or an independently operated append-only transparency log at
+delivery time. Only a real preregistered multilingual campaign using that
+mechanism can produce new competitive evidence.

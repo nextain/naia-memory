@@ -1,6 +1,7 @@
 import type { MemoryUpdateContract } from "./memory-update-contract.js";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import {
+	type Rfc3161CommandRunner,
 	type Rfc3161TimestampEvidence,
 	type Rfc3161TimestampTrustPolicy,
 	validateRfc3161PriorExistence,
@@ -10,6 +11,10 @@ import {
 	type SemanticPilotCollectionPlan,
 	buildSemanticPilotCollectionPacket,
 } from "./semantic-pilot-collection-packet.js";
+import {
+	type SemanticPilotLaunchReceipt,
+	validateSemanticPilotLaunchReceiptInternalConsistency,
+} from "./semantic-pilot-launch.js";
 import {
 	type SemanticPowerReview,
 	type SemanticPowerReviewTrustPolicy,
@@ -29,6 +34,8 @@ export type SemanticPilotResultBindingInput = {
 	forbiddenTrustPublicKeys?: Iterable<string>;
 	timestampEvidence?: Rfc3161TimestampEvidence;
 	timestampTrustPolicy?: Rfc3161TimestampTrustPolicy;
+	launchReceipt?: SemanticPilotLaunchReceipt;
+	timestampCommandRunner?: Rfc3161CommandRunner;
 };
 
 function sameIdentifiers(left: string[], right: string[]): boolean {
@@ -49,6 +56,8 @@ export function validateSemanticPilotResultBinding(
 	reviewedConstructionClusterCount: number;
 	constructionCauseIndependenceVerified: false;
 	priorAssignmentTimingVerified: boolean;
+	launchReceiptInternalConsistencyVerified: boolean;
+	launchReceiptSha256?: string;
 	timestampedAt?: string;
 } {
 	buildSemanticPilotCollectionPacket(input.collectionPlan);
@@ -134,9 +143,15 @@ export function validateSemanticPilotResultBinding(
 				`semantic pilot planned construction causes mismatch: ${assignment.constructionClusterId}`,
 			);
 	}
-	if (Boolean(input.timestampEvidence) !== Boolean(input.timestampTrustPolicy))
+	if (
+		new Set([
+			Boolean(input.timestampEvidence),
+			Boolean(input.timestampTrustPolicy),
+			Boolean(input.launchReceipt),
+		]).size !== 1
+	)
 		throw new Error(
-			"RFC 3161 timestamp evidence and verifier trust policy must be supplied together",
+			"RFC 3161 timestamp evidence, verifier trust policy, and launch receipt must be supplied together",
 		);
 	const timestamp = input.timestampEvidence
 		? validateRfc3161PriorExistence({
@@ -150,12 +165,22 @@ export function validateSemanticPilotResultBinding(
 						),
 					),
 				).toISOString(),
+				commandRunner: input.timestampCommandRunner,
 			})
 		: { priorAssignmentTimingVerified: false as const };
+	const launch = input.launchReceipt
+		? validateSemanticPilotLaunchReceiptInternalConsistency({
+				collectionPlan: input.collectionPlan,
+				receipt: input.launchReceipt,
+				timestampEvidence: input.timestampEvidence as Rfc3161TimestampEvidence,
+				verifiedTimestampedAt: timestamp.timestampedAt as string,
+			})
+		: { launchReceiptInternalConsistencyVerified: false as const };
 	return {
 		...power,
 		pilotCollectionBindingQualified: true,
 		boundAssignmentCount: assignments.size,
 		...timestamp,
+		...launch,
 	};
 }
