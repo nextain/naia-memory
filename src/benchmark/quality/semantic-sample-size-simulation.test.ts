@@ -8,7 +8,7 @@ import {
 } from "./semantic-sample-size-simulation.js";
 
 const assumptions: SemanticSampleSizeAssumptions = {
-	schemaVersion: "naia-memory-semantic-sample-size-assumptions-v1",
+	schemaVersion: "naia-memory-semantic-sample-size-assumptions-v2",
 	languages: ["en", "ko"],
 	competitors: ["mem0"],
 	nullFamilyExceedanceProbability: 0.5,
@@ -16,7 +16,11 @@ const assumptions: SemanticSampleSizeAssumptions = {
 		en: { mem0: 0.9 },
 		ko: { mem0: 0.9 },
 	},
-	dependencyModel: "independent-language-competitor-family-bernoulli",
+	dependencyModel: "shared-uniform-within-cell-family-shock-mixture",
+	dependencyScenarios: [
+		{ id: "independent", sharedCellShockProbability: 0 },
+		{ id: "moderate-positive", sharedCellShockProbability: 0.35 },
+	],
 	candidateIndependentFamiliesByLanguage: [
 		{ en: 6, ko: 6 },
 		{ en: 24, ko: 24 },
@@ -53,15 +57,23 @@ function planFor(value = assumptions): SemanticAnalysisPlan {
 }
 
 describe("semantic sample-size simulation", () => {
-	it("runs the complete Holm decision deterministically and selects a powered candidate", () => {
+	it("runs every dependency scenario and validates the signed-plan target", () => {
 		expect(isSemanticSampleSizeAssumptions(assumptions)).toBe(true);
 		const first = simulateSemanticSampleSize({ assumptions, plan: planFor() });
 		const second = simulateSemanticSampleSize({ assumptions, plan: planFor() });
 		expect(first).toEqual(second);
 		expect(
-			first.candidates[0]?.alternativeCompleteDecisionPower.lower95,
+			first.candidates[0]?.scenarios[0]?.alternativeCompleteDecisionPower
+				.lower95,
 		).toBeLessThan(0.8);
-		expect(first.planTargetSatisfiedUnderAssumptions).toBe(true);
+		expect(first.plannedCandidate.scenarios).toHaveLength(2);
+		expect(
+			first.plannedCandidate.scenarios[0]?.nullAnyHypothesisRejection.upper95,
+		).toBeLessThanOrEqual(0.05);
+		expect(
+			first.plannedCandidate.scenarios[1]?.nullAnyHypothesisRejection.upper95,
+		).toBeGreaterThan(0.05);
+		expect(first.planTargetSatisfiedUnderAssumptions).toBe(false);
 		expect(first.plannedIndependentFamiliesByLanguage).toEqual({
 			en: 24,
 			ko: 24,
@@ -71,7 +83,10 @@ describe("semantic sample-size simulation", () => {
 
 	it("fails closed on a mutated assumptions artifact or incomplete cell matrix", () => {
 		const mutated = structuredClone(assumptions);
-		mutated.seed++;
+		mutated.dependencyScenarios[1] = {
+			id: "moderate-positive",
+			sharedCellShockProbability: 0.36,
+		};
 		expect(() =>
 			simulateSemanticSampleSize({ assumptions: mutated, plan: planFor() }),
 		).toThrow("hash mismatch");
@@ -81,6 +96,12 @@ describe("semantic sample-size simulation", () => {
 		>;
 		invalid.alternativeFamilyExceedanceProbability = { en: { mem0: 0.9 } };
 		expect(isSemanticSampleSizeAssumptions(invalid)).toBe(false);
+		const noIndependence = structuredClone(assumptions);
+		noIndependence.dependencyScenarios = [
+			{ id: "moderate", sharedCellShockProbability: 0.35 },
+			{ id: "strong", sharedCellShockProbability: 1 },
+		];
+		expect(isSemanticSampleSizeAssumptions(noIndependence)).toBe(false);
 
 		const missingTarget = structuredClone(assumptions);
 		missingTarget.candidateIndependentFamiliesByLanguage = [{ en: 6, ko: 6 }];

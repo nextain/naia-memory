@@ -472,7 +472,7 @@ The repository now has a fail-closed schema and deterministic simulator for the
 sample-size assumptions referenced by the signed analysis plan. The artifact
 must enumerate every language and competitor cell, an alternative probability
 that an independent family exceeds the MPID, candidate language-specific family
-counts, a fixed seed and iteration count, and the explicit independence model.
+counts, a fixed seed and iteration count, and explicit dependency scenarios.
 Its canonical SHA-256 must equal the hash frozen in the signed plan.
 
 For each candidate, the simulator generates both global-null and planned-effect
@@ -484,21 +484,35 @@ A signed plan target passes only when that exact language-specific count vector
 is present in the frozen simulations, the null-any upper bound is at most the
 family-wise alpha, and the complete-power lower bound reaches target power.
 This prevents choosing a favorable candidate after simulation. The command is
-`pnpm benchmark:semantic-sample-size <assumptions.json>
-<analysis-plan.json>`.
+`pnpm benchmark:semantic-sample-size <assumptions.json> <analysis-plan.json>`.
+
+The v2 assumptions contract also requires at least two predeclared dependency
+scenarios: an independent baseline and one or more positive within-cell family
+shock mixtures. Each family outcome keeps the declared marginal exceedance
+probability; with the configured probability, every family in the same language
+× competitor cell shares one Bernoulli outcome, otherwise all are independent.
+The resulting pairwise covariance is `q × p × (1 - p)`, so it is nonnegative
+for every permitted shock probability `q`. This deliberately violates the nominal
+independent-family assumption and exposes residual clustering: the signed plan
+passes only if the null-any upper interval remains within family-wise alpha and
+the complete-power lower interval reaches target power in **every** scenario.
+The deterministic fixture demonstrates the intended failure mode: its
+independent scenario is null-calibrated, while a 0.35 shared-cell shock makes
+the null-any upper interval exceed 0.05, so the overall target fails. This is a
+simulator diagnostic, not an estimate of real campaign dependence.
 
 This closes a reproducibility gap but does not yet establish adequate sample
 size. In particular, the repository does not currently contain a defensible,
 pre-campaign estimate for each cell's probability of exceeding the MPID, and
-the v1 dependency model assumes independence across language/competitor/family
-cells. Choosing those probabilities after seeing the held-out campaign would
-be outcome-peeking; choosing optimistic values now would merely manufacture a
-small target. Therefore every simulation output remains
+the sensitivity grid does not estimate how much residual family dependence the
+real corpus contains. Choosing those values or probabilities after seeing the
+held-out campaign would be outcome-peeking; choosing optimistic values now
+would merely manufacture a small target. Therefore every simulation output remains
 `sampleSizeAdequacyVerified: false` and `claimEligible: false`, even if a frozen
-synthetic fixture reaches target power. Before the public campaign, those cell
-probabilities need external statistical justification from disjoint pilot data
-or a conservative sensitivity grid, and correlated dependency scenarios need
-to be added and reviewed. Public status remains **NO-GO**.
+synthetic fixture reaches target power. Before the public campaign, the cell
+probabilities and dependency-grid limits need external statistical justification
+from disjoint pilot data or published domain evidence. Public status remains
+**NO-GO**.
 
 The final changed tree passes 72 test files and 719 tests, TypeScript build and
 typecheck, Biome, and staged-diff checks. The synthetic positive case only

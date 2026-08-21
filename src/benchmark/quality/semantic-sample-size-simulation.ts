@@ -7,7 +7,7 @@ import {
 } from "./semantic-sign-test.js";
 
 export type SemanticSampleSizeAssumptions = {
-	schemaVersion: "naia-memory-semantic-sample-size-assumptions-v1";
+	schemaVersion: "naia-memory-semantic-sample-size-assumptions-v2";
 	languages: string[];
 	competitors: string[];
 	nullFamilyExceedanceProbability: 0.5;
@@ -15,7 +15,11 @@ export type SemanticSampleSizeAssumptions = {
 		string,
 		Record<string, number>
 	>;
-	dependencyModel: "independent-language-competitor-family-bernoulli";
+	dependencyModel: "shared-uniform-within-cell-family-shock-mixture";
+	dependencyScenarios: {
+		id: string;
+		sharedCellShockProbability: number;
+	}[];
 	candidateIndependentFamiliesByLanguage: Record<string, number>[];
 	simulationIterations: number;
 	seed: number;
@@ -40,14 +44,17 @@ export function isSemanticSampleSizeAssumptions(
 		return false;
 	const item = value as Record<string, unknown>;
 	if (
-		item.schemaVersion !== "naia-memory-semantic-sample-size-assumptions-v1" ||
+		item.schemaVersion !== "naia-memory-semantic-sample-size-assumptions-v2" ||
 		!uniqueNonemptyStrings(item.languages) ||
 		item.languages.length > 64 ||
 		!uniqueNonemptyStrings(item.competitors) ||
 		item.competitors.length > 64 ||
 		item.nullFamilyExceedanceProbability !== 0.5 ||
 		item.dependencyModel !==
-			"independent-language-competitor-family-bernoulli" ||
+			"shared-uniform-within-cell-family-shock-mixture" ||
+		!Array.isArray(item.dependencyScenarios) ||
+		item.dependencyScenarios.length < 2 ||
+		item.dependencyScenarios.length > 20 ||
 		!Number.isInteger(item.simulationIterations) ||
 		Number(item.simulationIterations) < 1_000 ||
 		Number(item.simulationIterations) > 1_000_000 ||
@@ -63,6 +70,34 @@ export function isSemanticSampleSizeAssumptions(
 		item.candidateIndependentFamiliesByLanguage.length > 100
 	)
 		return false;
+	const scenarioIds = new Set<string>();
+	let hasIndependentScenario = false;
+	for (const rawScenario of item.dependencyScenarios) {
+		if (
+			typeof rawScenario !== "object" ||
+			rawScenario === null ||
+			Array.isArray(rawScenario)
+		)
+			return false;
+		const scenario = rawScenario as Record<string, unknown>;
+		if (
+			Object.keys(scenario).sort().join("\0") !==
+				["id", "sharedCellShockProbability"].sort().join("\0") ||
+			typeof scenario.id !== "string" ||
+			scenario.id.trim().length === 0 ||
+			scenario.id.length > 64 ||
+			scenarioIds.has(scenario.id) ||
+			typeof scenario.sharedCellShockProbability !== "number" ||
+			!Number.isFinite(scenario.sharedCellShockProbability) ||
+			scenario.sharedCellShockProbability < 0 ||
+			scenario.sharedCellShockProbability > 1
+		)
+			return false;
+		scenarioIds.add(scenario.id);
+		if (scenario.sharedCellShockProbability === 0)
+			hasIndependentScenario = true;
+	}
+	if (!hasIndependentScenario) return false;
 	const probabilities = item.alternativeFamilyExceedanceProbability as Record<
 		string,
 		unknown
@@ -139,7 +174,40 @@ function seededRandom(seed: number): () => number {
 	};
 }
 
+function streamSeed(input: {
+	base: number;
+	candidateIndex: number;
+	scenarioIndex: number;
+	arm: "null" | "alternative";
+}) {
+	let value = input.base >>> 0;
+	value ^= Math.imul(input.candidateIndex + 1, 0x9e37_79b1);
+	value ^= Math.imul(input.scenarioIndex + 1, 0x85eb_ca77);
+	value ^= Math.imul(input.arm === "null" ? 1 : 2, 0xc2b2_ae3d);
+	return value >>> 0 || 1;
+}
+
+function cellSuccesses(input: {
+	families: number;
+	probability: number;
+	sharedCellShockProbability: number;
+	random: () => number;
+}): number {
+	// With probability q the whole cell shares one Bernoulli outcome; otherwise
+	// families are independent. Marginals stay p and pairwise covariance is
+	// q * p * (1 - p), so every declared q >= 0 is nonnegative dependence.
+	if (input.sharedCellShockProbability > 0) {
+		const shocked = input.random() < input.sharedCellShockProbability;
+		if (shocked) return input.random() < input.probability ? input.families : 0;
+	}
+	let successes = 0;
+	for (let family = 0; family < input.families; family++)
+		if (input.random() < input.probability) successes++;
+	return successes;
+}
+
 function wilson(successes: number, trials: number) {
+	// Standard two-sided 95% Wilson score interval, z = Phi^-1(0.975).
 	const z = 1.959963984540054;
 	const estimate = successes / trials;
 	const denominator = 1 + (z * z) / trials;
@@ -177,66 +245,97 @@ export function simulateSemanticSampleSize(input: {
 
 	const candidates = assumptions.candidateIndependentFamiliesByLanguage.map(
 		(counts, candidateIndex) => {
-			const nullRandom = seededRandom(
-				(assumptions.seed + candidateIndex * 2) >>> 0 || 1,
-			);
-			const alternativeRandom = seededRandom(
-				(assumptions.seed + candidateIndex * 2 + 1) >>> 0 || 1,
-			);
-			let nullAny = 0;
-			let nullAll = 0;
-			let alternativeAll = 0;
-			for (
-				let iteration = 0;
-				iteration < assumptions.simulationIterations;
-				iteration++
-			) {
-				const nullPValues: number[] = [];
-				const alternativePValues: number[] = [];
-				for (const competitor of assumptions.competitors) {
-					for (const language of assumptions.languages) {
-						const families = counts[language];
-						const alternativeProbability =
-							assumptions.alternativeFamilyExceedanceProbability[language]?.[
-								competitor
-							];
-						if (families === undefined || alternativeProbability === undefined)
-							throw new Error("semantic sample-size cell is missing");
-						let nullSuccesses = 0;
-						let alternativeSuccesses = 0;
-						for (let family = 0; family < families; family++) {
-							if (nullRandom() < assumptions.nullFamilyExceedanceProbability)
-								nullSuccesses++;
-							if (alternativeRandom() < alternativeProbability)
-								alternativeSuccesses++;
+			const scenarios = assumptions.dependencyScenarios.map(
+				(scenario, scenarioIndex) => {
+					const nullRandom = seededRandom(
+						streamSeed({
+							base: assumptions.seed,
+							candidateIndex,
+							scenarioIndex,
+							arm: "null",
+						}),
+					);
+					const alternativeRandom = seededRandom(
+						streamSeed({
+							base: assumptions.seed,
+							candidateIndex,
+							scenarioIndex,
+							arm: "alternative",
+						}),
+					);
+					let nullAny = 0;
+					let nullAll = 0;
+					let alternativeAll = 0;
+					for (
+						let iteration = 0;
+						iteration < assumptions.simulationIterations;
+						iteration++
+					) {
+						const nullPValues: number[] = [];
+						const alternativePValues: number[] = [];
+						for (const competitor of assumptions.competitors) {
+							for (const language of assumptions.languages) {
+								const families = counts[language];
+								const alternativeProbability =
+									assumptions.alternativeFamilyExceedanceProbability[
+										language
+									]?.[competitor];
+								if (
+									families === undefined ||
+									alternativeProbability === undefined
+								)
+									throw new Error("semantic sample-size cell is missing");
+								const nullSuccesses = cellSuccesses({
+									families,
+									probability: assumptions.nullFamilyExceedanceProbability,
+									sharedCellShockProbability:
+										scenario.sharedCellShockProbability,
+									random: nullRandom,
+								});
+								const alternativeSuccesses = cellSuccesses({
+									families,
+									probability: alternativeProbability,
+									sharedCellShockProbability:
+										scenario.sharedCellShockProbability,
+									random: alternativeRandom,
+								});
+								nullPValues.push(
+									exactBinomialUpperTail(nullSuccesses, families),
+								);
+								alternativePValues.push(
+									exactBinomialUpperTail(alternativeSuccesses, families),
+								);
+							}
 						}
-						nullPValues.push(exactBinomialUpperTail(nullSuccesses, families));
-						alternativePValues.push(
-							exactBinomialUpperTail(alternativeSuccesses, families),
+						const nullDecision = holmDecision(
+							nullPValues,
+							plan.familyWiseAlpha,
 						);
+						if (nullDecision.anyRejected) nullAny++;
+						if (nullDecision.allRejected) nullAll++;
+						if (
+							holmDecision(alternativePValues, plan.familyWiseAlpha).allRejected
+						)
+							alternativeAll++;
 					}
-				}
-				const nullDecision = holmDecision(nullPValues, plan.familyWiseAlpha);
-				if (nullDecision.anyRejected) nullAny++;
-				if (nullDecision.allRejected) nullAll++;
-				if (holmDecision(alternativePValues, plan.familyWiseAlpha).allRejected)
-					alternativeAll++;
-			}
-			return {
-				independentFamiliesByLanguage: counts,
-				nullAnyHypothesisRejection: wilson(
-					nullAny,
-					assumptions.simulationIterations,
-				),
-				nullAllHypothesesRejection: wilson(
-					nullAll,
-					assumptions.simulationIterations,
-				),
-				alternativeCompleteDecisionPower: wilson(
-					alternativeAll,
-					assumptions.simulationIterations,
-				),
-			};
+					return {
+						dependencyScenario: scenario,
+						nullAnyHypothesisRejection: wilson(
+							nullAny,
+							assumptions.simulationIterations,
+						),
+						nullAllHypothesesRejection: wilson(
+							nullAll,
+							assumptions.simulationIterations,
+						),
+						alternativeCompleteDecisionPower: wilson(
+							alternativeAll,
+							assumptions.simulationIterations,
+						),
+					};
+				},
+			);
+			return { independentFamiliesByLanguage: counts, scenarios };
 		},
 	);
 	const targetKey = JSON.stringify(
@@ -254,15 +353,16 @@ export function simulateSemanticSampleSize(input: {
 	);
 	if (!plannedCandidate)
 		throw new Error("semantic sample-size signed plan target is not simulated");
-	const planTargetSatisfiedUnderAssumptions =
-		plannedCandidate.nullAnyHypothesisRejection.upper95 <=
-			plan.familyWiseAlpha &&
-		plannedCandidate.alternativeCompleteDecisionPower.lower95 >=
-			plan.targetPower;
+	const planTargetSatisfiedUnderAssumptions = plannedCandidate.scenarios.every(
+		(scenario) =>
+			scenario.nullAnyHypothesisRejection.upper95 <= plan.familyWiseAlpha &&
+			scenario.alternativeCompleteDecisionPower.lower95 >= plan.targetPower,
+	);
 	return {
-		schemaVersion: "naia-memory-semantic-sample-size-simulation-v1" as const,
+		schemaVersion: "naia-memory-semantic-sample-size-simulation-v2" as const,
 		assumptionsSha256: evidenceObjectSha256(assumptions),
-		method: "seeded-monte-carlo-complete-exact-sign-test-holm-rule" as const,
+		method:
+			"seeded-monte-carlo-complete-exact-sign-test-holm-dependency-sensitivity-rule" as const,
 		iterations: assumptions.simulationIterations,
 		seed: assumptions.seed,
 		candidates,
@@ -273,6 +373,6 @@ export function simulateSemanticSampleSize(input: {
 		sampleSizeAdequacyVerified: false as const,
 		claimEligible: false as const,
 		caveat:
-			"Power is conditional on preregistered Bernoulli probabilities and independence. It does not establish empirical effect sizes, cross-cell dependence, corpus validity, or public-claim eligibility.",
+			"Power and null calibration are conditional on preregistered Bernoulli probabilities and the enumerated within-cell family-shock sensitivity scenarios. A positive shock scenario intentionally violates family independence to expose effective-sample-size risk; it does not estimate actual dependence, exhaust all structures, establish corpus validity, or permit public claims.",
 	};
 }
