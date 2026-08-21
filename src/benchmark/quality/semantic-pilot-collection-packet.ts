@@ -47,6 +47,21 @@ export type SemanticPilotCollectionPacket = {
 	packetSha256: string;
 };
 
+export type SemanticPilotCollectionManifest = {
+	schemaVersion: "naia-memory-semantic-pilot-collection-manifest-v1";
+	planSha256: string;
+	publicContractSha256: string;
+	assignmentCount: number;
+	coverage: Array<{
+		language: "ko" | "en" | "ja";
+		decision: "update" | "delete" | "no-update";
+		count: number;
+	}>;
+	deliveryState: "BLOCKED_PENDING_TRUSTED_TIMESTAMP";
+	containsAssignmentContent: false;
+	manifestSha256: string;
+};
+
 const SHA256 = /^[a-f0-9]{64}$/;
 
 function assertUnique(values: string[], label: string): void {
@@ -94,9 +109,9 @@ function groupedPackets<T extends "authorId" | "reviewerId">(
 		}));
 }
 
-export function buildSemanticPilotCollectionPacket(
+export function validateSemanticPilotCollectionPlan(
 	plan: SemanticPilotCollectionPlan,
-): SemanticPilotCollectionPacket {
+): void {
 	if (plan === null || typeof plan !== "object" || Array.isArray(plan))
 		throw new Error("semantic pilot plan root is invalid");
 	if (plan.schemaVersion !== "naia-memory-semantic-pilot-collection-plan-v1")
@@ -157,6 +172,13 @@ export function buildSemanticPilotCollectionPacket(
 				throw new Error(
 					`semantic pilot assignments require ${language}/${decision}`,
 				);
+	canonicalEvidenceJson(plan);
+}
+
+export function buildSemanticPilotCollectionPacket(
+	plan: SemanticPilotCollectionPlan,
+): SemanticPilotCollectionPacket {
+	validateSemanticPilotCollectionPlan(plan);
 	const planSha256 = evidenceObjectSha256(plan);
 	const core = {
 		schemaVersion: "naia-memory-semantic-pilot-collection-packet-v1" as const,
@@ -171,4 +193,28 @@ export function buildSemanticPilotCollectionPacket(
 	// Exercise canonical serialization here so non-JSON values fail before delivery.
 	canonicalEvidenceJson(core);
 	return { ...core, packetSha256: evidenceObjectSha256(core) };
+}
+
+export function buildSemanticPilotCollectionManifest(
+	plan: SemanticPilotCollectionPlan,
+): SemanticPilotCollectionManifest {
+	validateSemanticPilotCollectionPlan(plan);
+	const core = {
+		schemaVersion: "naia-memory-semantic-pilot-collection-manifest-v1" as const,
+		planSha256: evidenceObjectSha256(plan),
+		publicContractSha256: plan.publicContractSha256,
+		assignmentCount: plan.assignments.length,
+		coverage: MEMORY_UPDATE_LANGUAGES.flatMap((language) =>
+			SEMANTIC_DIAGNOSTIC_DECISIONS.map((decision) => ({
+				language,
+				decision,
+				count: plan.assignments.filter(
+					(item) => item.language === language && item.decision === decision,
+				).length,
+			})),
+		),
+		deliveryState: "BLOCKED_PENDING_TRUSTED_TIMESTAMP" as const,
+		containsAssignmentContent: false as const,
+	};
+	return { ...core, manifestSha256: evidenceObjectSha256(core) };
 }

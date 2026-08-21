@@ -9,7 +9,7 @@ import {
 } from "./public-evidence-file-io.js";
 import {
 	type SemanticPilotCollectionPlan,
-	buildSemanticPilotCollectionPacket,
+	buildSemanticPilotCollectionManifest,
 } from "./semantic-pilot-collection-packet.js";
 
 const MAX_PLAN_BYTES = 4 * 1024 * 1024;
@@ -70,7 +70,7 @@ export async function runSemanticPilotCollectionPacketCli(
 		)
 			throw new Error("pilot collection plan public contract hash mismatch");
 		process.stdout.write(
-			`${JSON.stringify(buildSemanticPilotCollectionPacket(parsed as SemanticPilotCollectionPlan))}\n`,
+			`${JSON.stringify(buildSemanticPilotCollectionManifest(parsed as SemanticPilotCollectionPlan))}\n`,
 		);
 		return 0;
 	} catch (error) {

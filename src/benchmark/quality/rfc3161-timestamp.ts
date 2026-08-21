@@ -26,7 +26,7 @@ type CommandResult = {
 	error?: Error;
 };
 
-type CommandRunner = (
+export type Rfc3161CommandRunner = (
 	args: string[],
 	token: Buffer,
 	trustedCa: Buffer,
@@ -119,10 +119,44 @@ export function validateRfc3161PriorExistence(input: {
 	evidence: Rfc3161TimestampEvidence;
 	trustPolicy: Rfc3161TimestampTrustPolicy;
 	earliestAuthoredAt: string;
-	commandRunner?: CommandRunner;
+	commandRunner?: Rfc3161CommandRunner;
 }): {
 	trustedTimestampVerified: true;
 	priorAssignmentTimingVerified: true;
+	timestampedAt: string;
+} {
+	const timestamp = validateRfc3161TimestampBinding(input);
+	const timestampedAt = Date.parse(timestamp.timestampedAt);
+	const earliestAuthoredAt = UTC_RFC3339_TIME.test(input.earliestAuthoredAt)
+		? Date.parse(input.earliestAuthoredAt)
+		: Number.NaN;
+	const normalizedAuthoredAt = Number.isFinite(earliestAuthoredAt)
+		? new Date(earliestAuthoredAt).toISOString()
+		: "";
+	const expectedAuthoredAt = input.earliestAuthoredAt.includes(".")
+		? input.earliestAuthoredAt
+		: input.earliestAuthoredAt.replace("Z", ".000Z");
+	if (!Number.isFinite(earliestAuthoredAt))
+		throw new Error("RFC 3161 timestamp chronology is invalid");
+	if (normalizedAuthoredAt !== expectedAuthoredAt)
+		throw new Error("RFC 3161 timestamp chronology is invalid");
+	if (timestampedAt + 1000 > earliestAuthoredAt)
+		throw new Error(
+			"RFC 3161 collection plan was not timestamped before authorship",
+		);
+	return {
+		...timestamp,
+		priorAssignmentTimingVerified: true,
+	};
+}
+
+export function validateRfc3161TimestampBinding(input: {
+	collectionPlan: unknown;
+	evidence: Rfc3161TimestampEvidence;
+	trustPolicy: Rfc3161TimestampTrustPolicy;
+	commandRunner?: Rfc3161CommandRunner;
+}): {
+	trustedTimestampVerified: true;
 	timestampedAt: string;
 } {
 	assertEvidenceShape(input.evidence);
@@ -196,26 +230,10 @@ export function validateRfc3161PriorExistence(input: {
 				Number(parts[5]),
 			)
 		: Number.NaN;
-	const earliestAuthoredAt = UTC_RFC3339_TIME.test(input.earliestAuthoredAt)
-		? Date.parse(input.earliestAuthoredAt)
-		: Number.NaN;
-	const normalizedAuthoredAt = Number.isFinite(earliestAuthoredAt)
-		? new Date(earliestAuthoredAt).toISOString()
-		: "";
-	const expectedAuthoredAt = input.earliestAuthoredAt.includes(".")
-		? input.earliestAuthoredAt
-		: input.earliestAuthoredAt.replace("Z", ".000Z");
-	if (!Number.isFinite(timestampedAt) || !Number.isFinite(earliestAuthoredAt))
+	if (!Number.isFinite(timestampedAt))
 		throw new Error("RFC 3161 timestamp chronology is invalid");
-	if (normalizedAuthoredAt !== expectedAuthoredAt)
-		throw new Error("RFC 3161 timestamp chronology is invalid");
-	if (timestampedAt + 1000 > earliestAuthoredAt)
-		throw new Error(
-			"RFC 3161 collection plan was not timestamped before authorship",
-		);
 	return {
 		trustedTimestampVerified: true,
-		priorAssignmentTimingVerified: true,
 		timestampedAt: new Date(timestampedAt).toISOString(),
 	};
 }

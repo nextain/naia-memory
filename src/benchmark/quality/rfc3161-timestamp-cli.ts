@@ -11,7 +11,7 @@ import {
 import type { Rfc3161TimestampEvidence } from "./rfc3161-timestamp.js";
 import {
 	type SemanticPilotCollectionPlan,
-	buildSemanticPilotCollectionPacket,
+	validateSemanticPilotCollectionPlan,
 } from "./semantic-pilot-collection-packet.js";
 
 type OpenSslResult = {
@@ -55,7 +55,7 @@ async function readPlan(path: string): Promise<SemanticPilotCollectionPlan> {
 	} catch {
 		throw new Error("pilot collection plan is not valid JSON");
 	}
-	buildSemanticPilotCollectionPacket(parsed as SemanticPilotCollectionPlan);
+	validateSemanticPilotCollectionPlan(parsed as SemanticPilotCollectionPlan);
 	return parsed as SemanticPilotCollectionPlan;
 }
 

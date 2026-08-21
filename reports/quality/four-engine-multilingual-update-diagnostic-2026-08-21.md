@@ -816,3 +816,47 @@ interoperability; it is not durable public evidence because the synthetic plan,
 response bytes, and verifier-owned root policy are not part of a released
 campaign bundle. It must not be cited as pilot independence, prior assignment
 timing for an existing campaign, or competitive performance.
+
+## Timestamp-before-assignment launch enforcement
+
+The supported pilot workflow now withholds assignment content until the exact
+collection plan has passed RFC 3161 verification. The existing
+`benchmark:semantic-pilot-packet` command emits only a content-addressed
+`BLOCKED_PENDING_TRUSTED_TIMESTAMP` manifest containing aggregate nine-cell
+coverage counts. It contains no author, reviewer, construction-cluster, or cause
+assignment. The new `benchmark:semantic-pilot-launch` command verifies the plan
+hash, token hash, verifier-pinned CA hash, OpenSSL signature and message imprint,
+and authorized policy OID before constructing and emitting role packets. Its
+content-addressed receipt records the token hash, verified timestamp, packet
+hash, and the explicit trust model
+`RFC3161_TOKEN_VERIFIED_AGAINST_OPERATOR_CONFIGURED_CA`.
+
+An internal call-site audit found that the first draft still constructed a role
+packet in memory while validating the preflight manifest and timestamp request.
+Plan validation was therefore separated from packet construction, and launch
+ordering was changed so packet construction occurs only after trusted timestamp
+verification succeeds. The receipt deliberately labels the stronger claim as
+`COMMAND_ENFORCED_NOT_OUT_OF_BAND_PROOF`: this proves the supported command's
+ordering, not that an operator could not disclose the raw plan through another
+channel.
+
+The independent OpenCode review concluded that the supported CLI is fail-closed
+and cannot emit or construct assignments before exact-plan verification. It
+raised three medium observations. The TSA/CA trust dependency was accepted and
+made explicit in the receipt. The public-contract observation was dispositioned
+as inapplicable because the CLI already hashes and validates the separately
+supplied contract body before launch, while the plan intentionally contains only
+its digest. The token-path observation was dispositioned as non-exfiltrating:
+the selected bytes must match the sealed token hash and are copied to a private
+temporary file without being returned. Earlier Claude and OpenCode attempts
+that inspected source but failed to return a verdict are recorded as `NOT_RUN`;
+an Azure review attempt failed with provider rate limiting. No formal
+review-pass `CLEAN` is claimed in this recovery-mode session.
+
+The integrated repository passes 78 test files and 769 tests, both TypeScript
+checks, production build, changed-file Biome, and `git diff --check`. This stage
+improves preregistration integrity but changes no benchmark score and provides no
+new independent human observation. Public competitiveness remains **NO-GO**.
+The next evidence-producing step is to freeze a real campaign plan, obtain its
+public TSA token, use the launch receipt to distribute packets to independent
+native participants, and bind their signed outputs back to that receipt.

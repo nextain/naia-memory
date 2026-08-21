@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	type SemanticPilotCollectionPlan,
+	buildSemanticPilotCollectionManifest,
 	buildSemanticPilotCollectionPacket,
 } from "./semantic-pilot-collection-packet.js";
 
@@ -35,6 +36,20 @@ function assignmentAt(
 }
 
 describe("semantic pilot collection packet", () => {
+	it("emits a blocked manifest without assignment or participant content", () => {
+		const manifest = buildSemanticPilotCollectionManifest(plan());
+		expect(manifest).toMatchObject({
+			assignmentCount: 9,
+			deliveryState: "BLOCKED_PENDING_TRUSTED_TIMESTAMP",
+			containsAssignmentContent: false,
+		});
+		expect(JSON.stringify(manifest)).not.toContain("author-ko");
+		expect(JSON.stringify(manifest)).not.toContain("reviewer-ko");
+		expect(JSON.stringify(manifest)).not.toContain("cause-update");
+		expect(manifest.coverage).toHaveLength(9);
+		expect(manifest.coverage.every((item) => item.count === 1)).toBe(true);
+	});
+
 	it("builds deterministic role-separated packets bound to the public contract", () => {
 		const current = plan();
 		const packet = buildSemanticPilotCollectionPacket(current);
