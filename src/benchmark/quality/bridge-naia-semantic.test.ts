@@ -4,6 +4,10 @@ import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import type { Fact, MemoryAdapter } from "../../memory/types.js";
 import {
+	recordDeleteOutcome,
+	resetUsage,
+} from "../../memory/usage-tracker.js";
+import {
 	NaiaSemanticBridge,
 	type NaiaSemanticProvider,
 } from "./bridge-naia-semantic.js";
@@ -45,9 +49,13 @@ function mocks(facts: Fact[]) {
 
 describe("Naia semantic bridge", () => {
 	it("commits each natural-language turn through production encode and consolidation", async () => {
+		resetUsage();
 		const { provider, adapter } = mocks([activeFact()]);
+		vi.mocked(provider.consolidate).mockImplementation(async () => {
+			recordDeleteOutcome("authorized");
+		});
 		const bridge = new NaiaSemanticBridge(provider, adapter);
-		await bridge.ingestTurn({
+		const receipt = await bridge.ingestTurn({
 			content: "이제 부산으로 이사했어.",
 		});
 		expect(provider.encode).toHaveBeenCalledWith(
@@ -58,6 +66,15 @@ describe("Naia semantic bridge", () => {
 			{ project: "semantic-memory-evaluation" },
 		);
 		expect(provider.consolidate).toHaveBeenCalledOnce();
+		expect(receipt).toEqual({
+			outcome: "opaque",
+			deleteOutcomeDelta: {
+				authorized: 1,
+				denied: 0,
+				verifier_failed: 0,
+				oversized: 0,
+			},
+		});
 	});
 
 	it("preserves inactive native facts so stale retrieval remains measurable", async () => {

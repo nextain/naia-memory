@@ -51,6 +51,33 @@ Naia deletion leakage by language was EN 0/12, KO 1/12, JA 0/12. An isolated
 pre-campaign check reached 12/12, but the complete campaign is the canonical
 result because it exposed the remaining stochastic Korean miss.
 
+## Follow-up failure localization
+
+The Naia bridge now emits per-turn, privacy-safe delete outcome deltas. These
+contain only bounded lifecycle counters (`authorized`, `denied`,
+`verifier_failed`, and `oversized`), not episode content, candidate content,
+expected labels, or target IDs. The current runner awaits every ingest and
+aborts on an ingest exception, so process-global counter deltas are attributable
+within this execution contract; they are not a concurrency-safe general tracing
+mechanism.
+
+Four fresh runs of the same frozen contract produced 12/12 successful deletion
+cases: EN 4/4, KO 4/4, JA 4/4. Every deletion turn recorded exactly one
+authorization, zero denials/verifier failures/oversized candidate sets, and zero
+retrieved memories afterward. Combined with the canonical campaign, the direct
+observations are 23/24 successful deletion repetitions. This narrows the
+remaining symptom to a low-frequency model-path variation, but does not identify
+whether the earlier miss was extraction omission or another pre-authorization
+variation because the canonical artifact predates the counters. It is not a
+confidence bound and the repetitions are not independent authored cases.
+
+Follow-up raw artifact SHA-256 values:
+
+- `163785f318d65226983bd0e62ee598230258aedb95db26a8e73b3c2b4a2bb34b`
+- `ddf9f74f081fe25f1f9a7511c592c66236c49eb95e1558eab375b167c5188a6a`
+- `94f0fb08defd18971977bffda985f1f1a9eb276a2be3f7c5d45a80e855c8bb0e`
+- `285467e6ace27708440adf608e92e90779edc575510c8a9d48b3c112e850ee89`
+
 ## Comparison with the preceding campaign
 
 The preceding run used the same 4-engine × 4-repetition shape. Naia changed
@@ -74,6 +101,15 @@ does not establish out-of-distribution generalization.
   adjudication. Model-judge bias has not been ruled out.
 - Two fresh Claude headless review attempts timed out without a verdict. They
   are recorded as failed review attempts, not independent approval.
+- A subsequent OpenCode headless review returned commit NO-GO and public-claim
+  NO-GO. Its benchmark-overlap premise compared the prompt against unrelated
+  editor update fixtures; the frozen deletion targets here are hobby, plan, and
+  food, while the prompt's deletion examples are editor, music, and beverage.
+  Its exception carry-over premise also does not apply to this abort-on-error,
+  sequential runner. The valid warning about silently remapping
+  `verifier_failed` was fixed by using the tracker key type directly. The public
+  NO-GO remains accepted for the independent sample-size and comparability
+  reasons above.
 
 ## Verification
 

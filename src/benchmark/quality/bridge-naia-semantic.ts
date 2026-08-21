@@ -11,6 +11,7 @@ import type {
 } from "../../memory/memory-system-api.js";
 import { NaiaMemoryProvider } from "../../memory/provider.js";
 import type { Fact, MemoryAdapter } from "../../memory/types.js";
+import { getUsage } from "../../memory/usage-tracker.js";
 import type {
 	SemanticEngineBridge,
 	SemanticIngestReceipt,
@@ -71,12 +72,22 @@ export class NaiaSemanticBridge implements SemanticEngineBridge {
 	) {}
 
 	async ingestTurn(turn: { content: string }): Promise<SemanticIngestReceipt> {
+		const before = deleteOutcomeCounters();
 		await this.provider.encode(
 			{ content: turn.content, role: "user" },
 			{ project: ISOLATED_PROJECT },
 		);
 		await this.provider.consolidate();
-		return { outcome: "opaque" };
+		const after = deleteOutcomeCounters();
+		return {
+			outcome: "opaque",
+			deleteOutcomeDelta: {
+				authorized: after.authorized - before.authorized,
+				denied: after.denied - before.denied,
+				verifier_failed: after.verifier_failed - before.verifier_failed,
+				oversized: after.oversized - before.oversized,
+			},
+		};
 	}
 
 	async search(query: string, topK: number): Promise<SemanticNativeMemory[]> {
@@ -104,6 +115,16 @@ export class NaiaSemanticBridge implements SemanticEngineBridge {
 			}
 		}
 	}
+}
+
+function deleteOutcomeCounters() {
+	const outcomes = getUsage().deleteOutcomes;
+	return {
+		authorized: outcomes?.authorized ?? 0,
+		denied: outcomes?.denied ?? 0,
+		verifier_failed: outcomes?.verifier_failed ?? 0,
+		oversized: outcomes?.oversized ?? 0,
+	};
 }
 
 function toNativeMemory(fact: Fact): SemanticNativeMemory {

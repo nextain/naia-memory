@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { DeleteOutcome } from "../../memory/usage-tracker.js";
 import {
 	type MemoryUpdateCase,
 	type MemoryUpdateContract,
@@ -13,6 +14,8 @@ export type SemanticNativeMemory = {
 export type SemanticIngestReceipt = {
 	outcome: "opaque" | "native-operations";
 	nativeOperationCount?: number;
+	/** Privacy-safe lifecycle counters; no memory content or benchmark labels. */
+	deleteOutcomeDelta?: Record<DeleteOutcome, number>;
 };
 
 export type SemanticEngineBridge = {
