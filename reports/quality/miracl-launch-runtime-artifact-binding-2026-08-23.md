@@ -33,4 +33,4 @@ This hardening increases the integrity and auditability of a locally operated be
 
 ## Follow-up
 
-The first adversarial review identified two non-bypass, fail-closed robustness improvements for a later change: parse `/proc/<pid>/stat` with the existing command-safe parser in the launch receipt producer, and canonicalize artifact paths at production and consumption boundaries. These do not invalidate this result but should be resolved before packaging the independent-runner protocol.
+The first adversarial review identified two non-bypass, fail-closed robustness improvements. The launch receipt producer now parses `/proc/<pid>/stat` with the existing command-safe parser. Canonicalizing artifact paths at production and consumption boundaries remains follow-up work before packaging the independent-runner protocol; it does not invalidate this result.

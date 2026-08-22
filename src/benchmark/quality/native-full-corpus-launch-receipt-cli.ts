@@ -2,6 +2,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { sha256Bytes } from "./native-full-corpus-evidence.js";
+import { parseProcStartTicks } from "./native-full-corpus-runtime-observation.js";
 
 const pid = Number(process.env.MIRACL_FULL_PID);
 const output =
@@ -36,7 +37,9 @@ const receipt = {
 	schemaVersion: 1,
 	pid,
 	capturedAt: new Date().toISOString(),
-	procStartTicks: readFileSync(`/proc/${pid}/stat`, "utf8").split(" ")[21],
+	procStartTicks: parseProcStartTicks(
+		readFileSync(`/proc/${pid}/stat`, "utf8"),
+	),
 	bootId: readFileSync("/proc/sys/kernel/random/boot_id", "utf8").trim(),
 	cmdline,
 	cudaVisibleDevices: environment.get("CUDA_VISIBLE_DEVICES"),
