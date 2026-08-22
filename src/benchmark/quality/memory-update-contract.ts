@@ -90,6 +90,24 @@ export function validateSemanticPublicEvidenceCoverage(
 		throw new Error(
 			`public semantic gate requires at least ${SEMANTIC_PUBLIC_MINIMUM_FAMILIES} distinct test families`,
 		);
+	const constructionClusterFamilies = new Map<string, Set<string>>();
+	for (const current of testCases) {
+		const constructionClusterId = current.provenance?.constructionClusterId;
+		if (!constructionClusterId) continue;
+		const families =
+			constructionClusterFamilies.get(constructionClusterId) ??
+			new Set<string>();
+		families.add(current.familyId);
+		constructionClusterFamilies.set(constructionClusterId, families);
+	}
+	if (
+		[...constructionClusterFamilies.values()].some(
+			(families) => families.size > 1,
+		)
+	)
+		throw new Error(
+			"public semantic gate forbids construction clusters shared across test families",
+		);
 	if (testCases.some((current) => current.expectedDecision === "create"))
 		throw new Error(
 			"public semantic update gate does not admit create decisions",
@@ -170,11 +188,12 @@ export function validateSemanticDiagnosticCoverage(
 }
 
 export function computeFamilySplitDigest(cases: MemoryUpdateCase[]): string {
-	const assignments = [
-		...new Map(cases.map((item) => [item.familyId, item.split])),
-	]
-		.sort(([left], [right]) => left.localeCompare(right))
-		.map(([familyId, split]) => `${familyId}\u0000${split}`)
+	const assignments = cases
+		.map(
+			(item) =>
+				`${item.id}\u0000${item.familyId}\u0000${item.provenance?.constructionClusterId ?? ""}\u0000${item.split}`,
+		)
+		.sort((left, right) => left.localeCompare(right))
 		.join("\n");
 	return `sha256:${createHash("sha256").update(assignments).digest("hex")}`;
 }
@@ -211,6 +230,10 @@ export function validateMemoryUpdateContract(
 	const ids = new Set<string>();
 	const queries = new Set<string>();
 	const familySplits = new Map<string, MemoryUpdateCase["split"]>();
+	const constructionClusterSplits = new Map<
+		string,
+		MemoryUpdateCase["split"]
+	>();
 	for (const current of contract.cases) {
 		if (!current.id.trim() || ids.has(current.id))
 			throw new Error(`invalid or duplicate case ID: ${current.id}`);
@@ -244,10 +267,31 @@ export function validateMemoryUpdateContract(
 				!provenance.reviewerId.trim()
 			)
 				throw new Error(`${current.id}: independent case requires provenance`);
+			if (
+				provenance.constructionClusterId !==
+				provenance.constructionClusterId.normalize("NFKC").trim()
+			)
+				throw new Error(
+					`${current.id}: constructionClusterId must use canonical form`,
+				);
 			if (provenance.authorId === provenance.reviewerId)
 				throw new Error(
 					`${current.id}: author and reviewer must be independent`,
 				);
+			const existingConstructionSplit = constructionClusterSplits.get(
+				provenance.constructionClusterId,
+			);
+			if (
+				existingConstructionSplit !== undefined &&
+				existingConstructionSplit !== current.split
+			)
+				throw new Error(
+					`${current.id}: construction cluster crosses evaluation splits`,
+				);
+			constructionClusterSplits.set(
+				provenance.constructionClusterId,
+				current.split,
+			);
 			if (!provenance.authorNativeLanguages.includes(current.language))
 				throw new Error(
 					`${current.id}: author must be native in case language`,

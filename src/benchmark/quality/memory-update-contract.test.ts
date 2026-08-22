@@ -146,6 +146,19 @@ describe("memory update contract", () => {
 		contract.familySplitFreeze.digest = computeFamilySplitDigest(
 			cases,
 		) as `sha256:${string}`;
+		for (const current of cases)
+			current.provenance.constructionClusterId = "one-construction-template";
+		contract.familySplitFreeze.digest = computeFamilySplitDigest(
+			cases,
+		) as `sha256:${string}`;
+		expect(() => validateSemanticPublicEvidenceCoverage(contract)).toThrow(
+			"construction clusters shared across test families",
+		);
+		for (const [index, current] of cases.entries())
+			current.provenance.constructionClusterId = `construction-public-${index}`;
+		contract.familySplitFreeze.digest = computeFamilySplitDigest(
+			cases,
+		) as `sha256:${string}`;
 		const [firstPublicCase] = cases;
 		if (!firstPublicCase) throw new Error("fixture requires a first case");
 		firstPublicCase.expectedDecision = "create";
@@ -175,6 +188,71 @@ describe("memory update contract", () => {
 		firstCase.provenance.reviewerId = "reviewer-ko";
 		expect(() => validateMemoryUpdateContract(contract)).toThrow(
 			"freeze digest does not match",
+		);
+		contract.familySplitFreeze.digest = computeFamilySplitDigest(
+			cases,
+		) as `sha256:${string}`;
+		firstCase.provenance.constructionClusterId = "post-freeze-cluster-swap";
+		expect(() => validateMemoryUpdateContract(contract)).toThrow(
+			"freeze digest does not match",
+		);
+	});
+
+	it("binds each case to its frozen construction cluster", () => {
+		const firstCase = reviewedCase("ko", "shared-family");
+		const secondCase = reviewedCase("ko", "shared-family");
+		secondCase.id = "semantic-ko-shared-family-second";
+		secondCase.query = "두 번째 고유 질의";
+		secondCase.provenance.constructionClusterId = "construction-second";
+		const cases = [firstCase, secondCase];
+		const frozenDigest = computeFamilySplitDigest(cases);
+		const firstCluster = firstCase.provenance.constructionClusterId;
+		firstCase.provenance.constructionClusterId =
+			secondCase.provenance.constructionClusterId;
+		secondCase.provenance.constructionClusterId = firstCluster;
+		expect(computeFamilySplitDigest(cases)).not.toBe(frozenDigest);
+	});
+
+	it("rejects non-canonical construction cluster identifiers", () => {
+		const cases = [reviewedCase("ko"), reviewedCase("en"), reviewedCase("ja")];
+		const [firstCase] = cases;
+		if (!firstCase) throw new Error("fixture requires a first case");
+		firstCase.provenance.constructionClusterId += " ";
+		const contract: MemoryUpdateContract = {
+			schemaVersion: "naia-memory-update-contract-v1",
+			tier: "semantic-update-interpretation",
+			construction: "independent-native-reviewed",
+			familySplitFreeze: {
+				frozenAt: "2026-01-04T00:00:00Z",
+				digest: computeFamilySplitDigest(cases) as `sha256:${string}`,
+			},
+			cases,
+		};
+		expect(() => validateMemoryUpdateContract(contract)).toThrow(
+			"constructionClusterId must use canonical form",
+		);
+	});
+
+	it("keeps construction clusters isolated from held-out splits", () => {
+		const developmentCase = reviewedCase("ko", "development-cluster");
+		developmentCase.split = "development";
+		const testCase = reviewedCase("en", "test-cluster");
+		testCase.provenance.constructionClusterId =
+			developmentCase.provenance.constructionClusterId;
+		const japaneseCase = reviewedCase("ja", "japanese-cluster");
+		const cases = [developmentCase, testCase, japaneseCase];
+		const contract: MemoryUpdateContract = {
+			schemaVersion: "naia-memory-update-contract-v1",
+			tier: "semantic-update-interpretation",
+			construction: "independent-native-reviewed",
+			familySplitFreeze: {
+				frozenAt: "2026-01-04T00:00:00Z",
+				digest: computeFamilySplitDigest(cases) as `sha256:${string}`,
+			},
+			cases,
+		};
+		expect(() => validateMemoryUpdateContract(contract)).toThrow(
+			"construction cluster crosses evaluation splits",
 		);
 	});
 
