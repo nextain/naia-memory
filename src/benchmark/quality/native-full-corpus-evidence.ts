@@ -1,0 +1,189 @@
+import { createHash } from "node:crypto";
+
+export const MIRACL_FULL_BENCHMARK =
+	"miracl-ko-full-corpus-naia-vector-exact-v1";
+export const TREC_EVAL_COMMIT = "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c";
+export const TREC_EVAL_VERSION = "10.0-rc3";
+export const EXPECTED_TREC_EVAL_BINARY_SHA256 =
+	"e4b251b339db6ec556dc18e6b14d45fbdcfdb5166f7fb9dce6bb2e4ca6084987";
+export const EXPECTED_EVALUATION_SOURCE_SHA256 =
+	"d2bb8406d342aba307d254a8aef57b32353246ce06527a3bd4d13a4f9d2ff15b";
+export const EXPECTED_QDRANT_COMMIT =
+	"48203e414e4e7f639a6d394fb6e4df695f808e51";
+export const EXPECTED_QDRANT_VERSION = "1.15.5";
+export const METRIC_TOLERANCE = 1e-6;
+
+export function sha256Bytes(value: string | Uint8Array): string {
+	return createHash("sha256").update(value).digest("hex");
+}
+
+export function parseTrecEvalAll(stdout: string): Map<string, number> {
+	const metrics = new Map<string, number>();
+	for (const [index, line] of stdout.trim().split(/\r?\n/).entries()) {
+		const columns = line.trim().split(/\s+/);
+		if (columns.length !== 3 || columns[1] !== "all")
+			throw new Error(`invalid trec_eval row ${index + 1}`);
+		const value = Number(columns[2]);
+		if (!columns[0] || !Number.isFinite(value))
+			throw new Error(`invalid trec_eval value at row ${index + 1}`);
+		if (metrics.has(columns[0]))
+			throw new Error(`duplicate trec_eval metric: ${columns[0]}`);
+		metrics.set(columns[0], value);
+	}
+	return metrics;
+}
+
+export interface FullCorpusResult {
+	benchmark: string;
+	inputs: {
+		qrelsSha256: string;
+		documentCount: number;
+		queryCount: number;
+	};
+	configuration: {
+		vectorStore: string;
+		distance: string;
+		exactSearch: boolean;
+		topK: number;
+		cpuOnly: boolean;
+		collectionName: string;
+	};
+	metrics: { ndcgAt10: number; recallAt100: number };
+	trecSha256: string;
+}
+
+export function createFullCorpusEvidenceReceipt(input: {
+	result: FullCorpusResult;
+	resultSha256: string;
+	trecSha256: string;
+	qrelsSha256: string;
+	trecEvalStdout: string;
+	trecEvalBinarySha256: string;
+	trecEvalSourceCommit: string;
+	trecEvalPath: string;
+	qrelsPath: string;
+	trecPath: string;
+	launchReceipt: {
+		pid: number;
+		capturedAt: string;
+		cmdline: string[];
+		cudaVisibleDevices: string;
+		qdrantUrl: string;
+		outputPath: string;
+		evaluationSourceSha256: string;
+	};
+	qdrant: {
+		version: string;
+		commit: string;
+		pointsCount: number;
+		status: string;
+		vectorSize: number;
+		distance: string;
+		hnswM: number;
+		indexingThreshold: number;
+	};
+}) {
+	const { result } = input;
+	if (result.benchmark !== MIRACL_FULL_BENCHMARK)
+		throw new Error("benchmark identity mismatch");
+	if (
+		result.inputs.documentCount !== 1_486_752 ||
+		result.inputs.queryCount !== 213
+	)
+		throw new Error("benchmark cardinality mismatch");
+	if (
+		result.configuration.vectorStore !== "Qdrant" ||
+		result.configuration.distance !== "Cosine" ||
+		result.configuration.exactSearch !== true ||
+		result.configuration.topK !== 100 ||
+		result.configuration.cpuOnly !== true
+	)
+		throw new Error("benchmark execution policy mismatch");
+	if (result.trecSha256 !== input.trecSha256)
+		throw new Error("TREC hash mismatch");
+	if (result.inputs.qrelsSha256 !== input.qrelsSha256)
+		throw new Error("qrels hash mismatch");
+	if (input.trecEvalBinarySha256 !== EXPECTED_TREC_EVAL_BINARY_SHA256)
+		throw new Error("trec_eval binary hash mismatch");
+	if (input.trecEvalSourceCommit !== TREC_EVAL_COMMIT)
+		throw new Error("trec_eval source commit mismatch");
+	if (
+		input.launchReceipt.cudaVisibleDevices !== "" ||
+		input.launchReceipt.evaluationSourceSha256 !==
+			EXPECTED_EVALUATION_SOURCE_SHA256 ||
+		!input.launchReceipt.cmdline.some((argument) =>
+			argument.endsWith("native-full-corpus-evaluation-cli.ts"),
+		) ||
+		input.launchReceipt.outputPath !== input.trecPath.replace(/\.trec$/, "")
+	)
+		throw new Error("benchmark launch evidence mismatch");
+	if (
+		input.qdrant.version !== EXPECTED_QDRANT_VERSION ||
+		input.qdrant.commit !== EXPECTED_QDRANT_COMMIT ||
+		input.qdrant.pointsCount !== result.inputs.documentCount ||
+		input.qdrant.status !== "green" ||
+		input.qdrant.vectorSize !== 1024 ||
+		input.qdrant.distance !== "Cosine" ||
+		input.qdrant.hnswM !== 0 ||
+		input.qdrant.indexingThreshold !== 0
+	)
+		throw new Error("Qdrant runtime evidence mismatch");
+	const independentlyMeasured = parseTrecEvalAll(input.trecEvalStdout);
+	const ndcgAt10 = independentlyMeasured.get("ndcg_cut_10");
+	const recallAt100 = independentlyMeasured.get("recall_100");
+	if (ndcgAt10 === undefined || recallAt100 === undefined)
+		throw new Error("required trec_eval metrics are missing");
+	const deltas = {
+		ndcgAt10: Math.abs(result.metrics.ndcgAt10 - ndcgAt10),
+		recallAt100: Math.abs(result.metrics.recallAt100 - recallAt100),
+	};
+	if (
+		deltas.ndcgAt10 > METRIC_TOLERANCE ||
+		deltas.recallAt100 > METRIC_TOLERANCE
+	)
+		throw new Error("independent metric reproduction mismatch");
+	return {
+		schemaVersion: 1,
+		verdict: "PASS",
+		benchmark: MIRACL_FULL_BENCHMARK,
+		artifacts: {
+			result: {
+				path: input.trecPath.replace(/\.trec$/, ""),
+				sha256: input.resultSha256,
+			},
+			trec: { path: input.trecPath, sha256: input.trecSha256 },
+			qrels: { path: input.qrelsPath, sha256: input.qrelsSha256 },
+		},
+		independentEvaluator: {
+			name: "usnistgov/trec_eval",
+			version: TREC_EVAL_VERSION,
+			commit: TREC_EVAL_COMMIT,
+			binaryPath: input.trecEvalPath,
+			binarySha256: input.trecEvalBinarySha256,
+			sourceCommit: input.trecEvalSourceCommit,
+			argv: [
+				"-m",
+				"ndcg_cut.10",
+				"-m",
+				"recall.100",
+				input.qrelsPath,
+				input.trecPath,
+			],
+			stdout: input.trecEvalStdout,
+			stdoutSha256: sha256Bytes(input.trecEvalStdout),
+		},
+		metrics: {
+			inProcess: result.metrics,
+			independent: { ndcgAt10, recallAt100 },
+			deltas,
+			tolerance: METRIC_TOLERANCE,
+		},
+		runtime: {
+			cpuOnly: true,
+			launchReceipt: input.launchReceipt,
+			qdrant: input.qdrant,
+			collectionName: result.configuration.collectionName,
+			latencySemantics: "query-embedding-plus-exact-qdrant-search",
+		},
+	};
+}

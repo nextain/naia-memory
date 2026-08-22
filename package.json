@@ -65,6 +65,8 @@
 		"benchmark:miracl-native-candidates": "tsx src/benchmark/quality/native-candidate-pool-cli.ts",
 		"benchmark:miracl-native-evaluation": "tsx src/benchmark/quality/native-evaluation-cli.ts",
 		"benchmark:miracl-full-corpus": "tsx src/benchmark/quality/native-full-corpus-evaluation-cli.ts",
+		"benchmark:miracl-full-corpus-launch-receipt": "tsx src/benchmark/quality/native-full-corpus-launch-receipt-cli.ts",
+		"benchmark:miracl-full-corpus-evidence": "tsx src/benchmark/quality/native-full-corpus-evidence-cli.ts",
 		"check": "biome check --write ."
 	},
 	"peerDependencies": {
