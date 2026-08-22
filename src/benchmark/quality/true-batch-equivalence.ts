@@ -14,6 +14,8 @@ export const TRUE_BATCH_EQUIVALENCE_TEXTS = [
 	"서로 다른 길이의 입력을 함께 패딩해도 각 문장의 의미 벡터가 개별 추론 결과와 같아야 한다. 이 문장은 패딩 경계와 어텐션 마스크 처리를 확인하기 위해 의도적으로 더 길게 작성되었다.",
 	"영어와 한국어가 섞인 memory update 요청도 안정적으로 처리해야 한다.",
 	"가격은 12,500원에서 13,000원으로 수정되었다.",
+	"",
+	"기억 갱신 경계 확인 ".repeat(700),
 ] as const;
 
 export interface EquivalenceObservation {
