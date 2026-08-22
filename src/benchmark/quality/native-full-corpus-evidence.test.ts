@@ -74,7 +74,7 @@ const result = {
 		qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
 		documentCount: 1_486_752,
 		queryCount: 213,
-		corpusDocidsSha256: "corpus-docids",
+		corpusDocidsSha256: "a".repeat(64),
 	},
 	configuration: {
 		passageComposition: MIRACL_PASSAGE_COMPOSITION,
@@ -175,7 +175,7 @@ function evidence(overrides = {}) {
 			directory: "/checkpoints/vectors",
 			chunkCount: 2_904,
 			documentCount: 1_486_752,
-			docidsSha256: "corpus-docids",
+			docidsSha256: "a".repeat(64),
 			lastChunkReceiptSha256: "last-receipt",
 		},
 		launchReceiptPath,
@@ -914,6 +914,17 @@ describe("full-corpus independent evidence", () => {
 			);
 			const comparisonPath = join(root, "local-comparison.json");
 			const publishedComparisonPath = join(root, "published-comparison.json");
+			expect(
+				JSON.parse(receiptText).attestationBinding.manifests.dataset,
+			).toMatchObject({
+				sourceLockSha256: EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
+				topicsSha256: EXPECTED_MIRACL_TOPICS_SHA256,
+				qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
+				corpusDocidsSha256: "a".repeat(64),
+				documentCount: 1_486_752,
+				queryCount: 213,
+				passageComposition: MIRACL_PASSAGE_COMPOSITION,
+			});
 			writeFileSync(
 				comparisonPath,
 				`${JSON.stringify(createMiraclGlobalComparison(receiptText), null, 2)}\n`,

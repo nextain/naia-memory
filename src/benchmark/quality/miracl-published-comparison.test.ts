@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 import { createMiraclGlobalComparison } from "./miracl-global-comparison.js";
 import { createMiraclPublishedComparison } from "./miracl-published-comparison.js";
 import {
+	EXPECTED_MIRACL_QRELS_SHA256,
+	EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
+	EXPECTED_MIRACL_TOPICS_SHA256,
 	EXPECTED_TREC_EVAL_BINARY_SHA256,
 	METRIC_TOLERANCE,
 	MIRACL_EMBEDDING_POLICY,
+	MIRACL_PASSAGE_COMPOSITION,
 	TREC_EVAL_COMMIT,
 	TREC_EVAL_VERSION,
 	sha256Bytes,
@@ -14,11 +18,37 @@ import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 function fixture() {
 	const stdout = "ndcg_cut_10 all 0.61\nrecall_100 all 0.901\n";
 	const manifests = {
-		dataset: { identity: "fixture" },
-		protocol: { topK: 100 },
+		dataset: {
+			benchmark: "miracl-ko-full-corpus-naia-vector-exact-v1",
+			documentCount: 1_486_752,
+			queryCount: 213,
+			sourceLockSha256: EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
+			topicsSha256: EXPECTED_MIRACL_TOPICS_SHA256,
+			qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
+			corpusDocidsSha256: "a".repeat(64),
+			passageComposition: MIRACL_PASSAGE_COMPOSITION,
+		},
+		protocol: {
+			benchmark: "miracl-ko-full-corpus-naia-vector-exact-v1",
+			exactSearch: true,
+			topK: 100,
+			metrics: ["ndcg_cut.10", "recall.100"],
+			metricTolerance: METRIC_TOLERANCE,
+		},
 		implementation: { source: "fixture" },
-		configuration: { exactSearch: true, embedding: MIRACL_EMBEDDING_POLICY },
-		executionEvidence: { resultSha256: "fixture" },
+		configuration: {
+			passageComposition: MIRACL_PASSAGE_COMPOSITION,
+			embedding: MIRACL_EMBEDDING_POLICY,
+			vectorStore: "Qdrant",
+			distance: "Cosine",
+			exactSearch: true,
+			topK: 100,
+			cpuOnly: true,
+		},
+		executionEvidence: {
+			resultSha256: "fixture",
+			checkpointChain: { docidsSha256: "a".repeat(64) },
+		},
 	};
 	const receiptText = JSON.stringify({
 		schemaVersion: 3,
@@ -107,8 +137,14 @@ describe("MIRACL published historical comparison", () => {
 			current.comparison.interpretationThreshold,
 		);
 		expect(result.baseRetriever).toEqual(current.comparison.baseRetriever);
+		expect(result.retrievalProtocol).toEqual(
+			current.comparison.retrievalProtocol,
+		);
 		expect(result.knownLimitations).toEqual(
 			current.comparison.knownLimitations,
+		);
+		expect(result.provenanceBoundary).toBe(
+			current.comparison.provenanceBoundary,
 		);
 		expect(result.comparisonSha256).toBe(
 			sha256Bytes(JSON.stringify(current.comparison)),
@@ -126,24 +162,28 @@ describe("MIRACL published historical comparison", () => {
 		expect(result.comparisonSha256).toBe(sha256Bytes(comparisonText));
 	});
 
-	it.each(["metrics", "hybridTier", "rows", "knownLimitations"])(
-		"rejects a comparison with edited %s",
-		(field) => {
-			const current = fixture();
-			const edited = structuredClone(current.comparison) as Record<
-				string,
-				unknown
-			>;
-			edited[field] = field === "hybridTier" ? "BELOW_BOTH" : {};
-			expect(() =>
-				createMiraclPublishedComparison({
-					receiptText: current.receiptText,
-					comparisonText: JSON.stringify(edited),
-					verifiedPublishedVerdict: current.verdict,
-				}),
-			).toThrow("does not match receipt recomputation");
-		},
-	);
+	it.each([
+		"metrics",
+		"hybridTier",
+		"rows",
+		"retrievalProtocol",
+		"provenanceBoundary",
+		"knownLimitations",
+	])("rejects a comparison with edited %s", (field) => {
+		const current = fixture();
+		const edited = structuredClone(current.comparison) as Record<
+			string,
+			unknown
+		>;
+		edited[field] = field === "hybridTier" ? "BELOW_BOTH" : {};
+		expect(() =>
+			createMiraclPublishedComparison({
+				receiptText: current.receiptText,
+				comparisonText: JSON.stringify(edited),
+				verifiedPublishedVerdict: current.verdict,
+			}),
+		).toThrow("does not match receipt recomputation");
+	});
 
 	it("rejects receipt byte drift even when the JSON meaning is unchanged", () => {
 		const current = fixture();

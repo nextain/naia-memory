@@ -1,7 +1,11 @@
 import {
+	EXPECTED_MIRACL_QRELS_SHA256,
+	EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
+	EXPECTED_MIRACL_TOPICS_SHA256,
 	EXPECTED_TREC_EVAL_BINARY_SHA256,
 	METRIC_TOLERANCE,
 	MIRACL_EMBEDDING_POLICY,
+	MIRACL_PASSAGE_COMPOSITION,
 	TREC_EVAL_COMMIT,
 	TREC_EVAL_VERSION,
 	parseTrecEvalAll,
@@ -105,6 +109,35 @@ function validateReceiptProvenance(receipt: ComparisonReceipt) {
 		)
 			throw new Error(`attestation binding mismatch: ${manifestField}`);
 	}
+	const dataset = manifests.dataset as Record<string, unknown>;
+	const protocol = manifests.protocol as Record<string, unknown>;
+	if (
+		dataset === null ||
+		typeof dataset !== "object" ||
+		Array.isArray(dataset) ||
+		dataset.benchmark !== BENCHMARK ||
+		dataset.documentCount !== 1_486_752 ||
+		dataset.queryCount !== 213 ||
+		dataset.sourceLockSha256 !== EXPECTED_MIRACL_SOURCE_LOCK_SHA256 ||
+		dataset.topicsSha256 !== EXPECTED_MIRACL_TOPICS_SHA256 ||
+		dataset.qrelsSha256 !== EXPECTED_MIRACL_QRELS_SHA256 ||
+		typeof dataset.corpusDocidsSha256 !== "string" ||
+		!/^[0-9a-f]{64}$/.test(dataset.corpusDocidsSha256) ||
+		dataset.passageComposition !== MIRACL_PASSAGE_COMPOSITION
+	)
+		throw new Error("comparison dataset semantics mismatch");
+	if (
+		protocol === null ||
+		typeof protocol !== "object" ||
+		Array.isArray(protocol) ||
+		protocol.benchmark !== BENCHMARK ||
+		protocol.exactSearch !== true ||
+		protocol.topK !== 100 ||
+		evidenceObjectSha256(protocol.metrics) !==
+			evidenceObjectSha256(["ndcg_cut.10", "recall.100"]) ||
+		protocol.metricTolerance !== METRIC_TOLERANCE
+	)
+		throw new Error("comparison protocol semantics mismatch");
 	if (
 		manifests.configuration === null ||
 		typeof manifests.configuration !== "object" ||
@@ -113,13 +146,33 @@ function validateReceiptProvenance(receipt: ComparisonReceipt) {
 		throw new Error("comparison configuration must be an object");
 	const configuration = manifests.configuration as {
 		embedding?: unknown;
+		passageComposition?: unknown;
+		vectorStore?: unknown;
+		distance?: unknown;
+		exactSearch?: unknown;
+		topK?: unknown;
+		cpuOnly?: unknown;
+	};
+	const executionEvidence = manifests.executionEvidence as {
+		checkpointChain?: { docidsSha256?: unknown };
 	};
 	if (
 		configuration.embedding === undefined ||
 		evidenceObjectSha256(configuration.embedding) !==
-			evidenceObjectSha256(MIRACL_EMBEDDING_POLICY)
+			evidenceObjectSha256(MIRACL_EMBEDDING_POLICY) ||
+		configuration.passageComposition !== MIRACL_PASSAGE_COMPOSITION ||
+		configuration.vectorStore !== "Qdrant" ||
+		configuration.distance !== "Cosine" ||
+		configuration.exactSearch !== true ||
+		configuration.topK !== 100 ||
+		configuration.cpuOnly !== true
 	)
-		throw new Error("comparison embedding policy mismatch");
+		throw new Error("comparison retrieval policy mismatch");
+	if (
+		executionEvidence?.checkpointChain?.docidsSha256 !==
+		dataset.corpusDocidsSha256
+	)
+		throw new Error("comparison corpus execution binding mismatch");
 	const tool = receipt.independentEvaluatorTool;
 	if (
 		tool?.name !== "usnistgov/trec_eval" ||
@@ -133,7 +186,10 @@ function validateReceiptProvenance(receipt: ComparisonReceipt) {
 		tool.stdoutSha256 !== sha256Bytes(tool.stdout)
 	)
 		throw new Error("independent evaluator stdout mismatch");
-	return parseTrecEvalAll(tool.stdout);
+	return {
+		metrics: parseTrecEvalAll(tool.stdout),
+		corpusDocidsSha256: dataset.corpusDocidsSha256,
+	};
 }
 
 export function createMiraclGlobalComparison(receiptText: string) {
@@ -147,7 +203,8 @@ export function createMiraclGlobalComparison(receiptText: string) {
 		throw new Error(
 			"local comparison receipt must not be public-claim eligible",
 		);
-	const reproduced = validateReceiptProvenance(receipt);
+	const provenance = validateReceiptProvenance(receipt);
+	const reproduced = provenance.metrics;
 	const ndcgAt10 = finiteMetric(
 		receipt.metrics?.reproducedByIndependentTool?.ndcgAt10,
 		"independently reproduced nDCG@10",
@@ -225,7 +282,26 @@ export function createMiraclGlobalComparison(receiptText: string) {
 			passagePrefix: MIRACL_EMBEDDING_POLICY.passagePrefix,
 			pooling: MIRACL_EMBEDDING_POLICY.pooling,
 			normalize: MIRACL_EMBEDDING_POLICY.normalize,
+			tokenizerMaxLength: MIRACL_EMBEDDING_POLICY.tokenizerMaxLength,
+			truncation: MIRACL_EMBEDDING_POLICY.truncation,
+			titleConcatenation: MIRACL_EMBEDDING_POLICY.titleConcatenation,
 		},
+		retrievalProtocol: {
+			sourceLockSha256: EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
+			topicsSha256: EXPECTED_MIRACL_TOPICS_SHA256,
+			qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
+			corpusDocidsSha256: provenance.corpusDocidsSha256,
+			passageComposition: MIRACL_PASSAGE_COMPOSITION,
+			vectorStore: "Qdrant",
+			distance: "Cosine",
+			exactSearch: true,
+			topK: 100,
+			cpuOnly: true,
+			documentCount: 1_486_752,
+			queryCount: 213,
+		},
+		provenanceBoundary:
+			"Canonical source bytes and index membership are established by the source-lock, checkpoint chain, runtime evidence, and signed attestation bundle; this projection verifies their bound identities but does not independently re-read the corpus.",
 		knownLimitations: [DATASET_FAMILY_TRAINING_OVERLAP],
 		notEstablished: [
 			"receipt authenticity outside the local operator trust boundary",

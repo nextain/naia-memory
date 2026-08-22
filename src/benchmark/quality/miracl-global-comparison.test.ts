@@ -8,9 +8,13 @@ import {
 	createMiraclGlobalComparison,
 } from "./miracl-global-comparison.js";
 import {
+	EXPECTED_MIRACL_QRELS_SHA256,
+	EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
+	EXPECTED_MIRACL_TOPICS_SHA256,
 	EXPECTED_TREC_EVAL_BINARY_SHA256,
 	METRIC_TOLERANCE,
 	MIRACL_EMBEDDING_POLICY,
+	MIRACL_PASSAGE_COMPOSITION,
 	TREC_EVAL_COMMIT,
 	TREC_EVAL_VERSION,
 	sha256Bytes,
@@ -20,11 +24,37 @@ import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 function receipt(ndcgAt10 = 0.61, recallAt100 = 0.901) {
 	const stdout = `ndcg_cut_10 all ${ndcgAt10}\nrecall_100 all ${recallAt100}\n`;
 	const manifests = {
-		dataset: { identity: "fixture" },
-		protocol: { topK: 100 },
+		dataset: {
+			benchmark: "miracl-ko-full-corpus-naia-vector-exact-v1",
+			documentCount: 1_486_752,
+			queryCount: 213,
+			sourceLockSha256: EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
+			topicsSha256: EXPECTED_MIRACL_TOPICS_SHA256,
+			qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
+			corpusDocidsSha256: "a".repeat(64),
+			passageComposition: MIRACL_PASSAGE_COMPOSITION,
+		},
+		protocol: {
+			benchmark: "miracl-ko-full-corpus-naia-vector-exact-v1",
+			exactSearch: true,
+			topK: 100,
+			metrics: ["ndcg_cut.10", "recall.100"],
+			metricTolerance: METRIC_TOLERANCE,
+		},
 		implementation: { source: "fixture" },
-		configuration: { exactSearch: true, embedding: MIRACL_EMBEDDING_POLICY },
-		executionEvidence: { resultSha256: "fixture" },
+		configuration: {
+			passageComposition: MIRACL_PASSAGE_COMPOSITION,
+			embedding: MIRACL_EMBEDDING_POLICY,
+			vectorStore: "Qdrant",
+			distance: "Cosine",
+			exactSearch: true,
+			topK: 100,
+			cpuOnly: true,
+		},
+		executionEvidence: {
+			resultSha256: "fixture",
+			checkpointChain: { docidsSha256: "a".repeat(64) },
+		},
 	};
 	return JSON.stringify({
 		schemaVersion: 3,
@@ -74,6 +104,11 @@ describe("MIRACL global comparison", () => {
 		expect(comparison.baseRetriever).toMatchObject({
 			model: "Xenova/multilingual-e5-large",
 			dtype: "q8",
+		});
+		expect(comparison.retrievalProtocol).toMatchObject({
+			exactSearch: true,
+			documentCount: 1_486_752,
+			queryCount: 213,
 		});
 		expect(comparison.knownLimitations).toContainEqual(
 			expect.objectContaining({ id: "MIRACL_TRAIN_SPLIT_MODEL_OVERLAP" }),
@@ -156,7 +191,68 @@ describe("MIRACL global comparison", () => {
 		changed.attestationBinding.hashes.configurationSha256 =
 			evidenceObjectSha256(changed.attestationBinding.manifests.configuration);
 		expect(() => createMiraclGlobalComparison(JSON.stringify(changed))).toThrow(
-			"embedding policy mismatch",
+			"retrieval policy mismatch",
+		);
+	});
+
+	it("rejects a self-consistent receipt using a different retrieval protocol", () => {
+		const changed = JSON.parse(receipt());
+		changed.attestationBinding.manifests.protocol.exactSearch = false;
+		changed.attestationBinding.hashes.protocolSha256 = evidenceObjectSha256(
+			changed.attestationBinding.manifests.protocol,
+		);
+		expect(() => createMiraclGlobalComparison(JSON.stringify(changed))).toThrow(
+			"comparison protocol semantics mismatch",
+		);
+	});
+
+	it.each([
+		["benchmark", "other"],
+		["documentCount", 1_486_751],
+		["queryCount", 212],
+		["sourceLockSha256", "0".repeat(64)],
+		["topicsSha256", "0".repeat(64)],
+		["qrelsSha256", "0".repeat(64)],
+		["corpusDocidsSha256", "not-a-sha256"],
+		["passageComposition", "text only"],
+	])("rejects self-consistent alternate dataset %s", (field, value) => {
+		const changed = JSON.parse(receipt());
+		changed.attestationBinding.manifests.dataset[field] = value;
+		changed.attestationBinding.hashes.datasetSha256 = evidenceObjectSha256(
+			changed.attestationBinding.manifests.dataset,
+		);
+		expect(() => createMiraclGlobalComparison(JSON.stringify(changed))).toThrow(
+			"comparison dataset semantics mismatch",
+		);
+	});
+
+	it.each([
+		["passageComposition", "text only"],
+		["vectorStore", "Other"],
+		["distance", "Dot"],
+		["exactSearch", false],
+		["topK", 99],
+		["cpuOnly", false],
+	])("rejects self-consistent alternate configuration %s", (field, value) => {
+		const changed = JSON.parse(receipt());
+		changed.attestationBinding.manifests.configuration[field] = value;
+		changed.attestationBinding.hashes.configurationSha256 =
+			evidenceObjectSha256(changed.attestationBinding.manifests.configuration);
+		expect(() => createMiraclGlobalComparison(JSON.stringify(changed))).toThrow(
+			"comparison retrieval policy mismatch",
+		);
+	});
+
+	it("rejects a corpus identity not bound to executed checkpoint membership", () => {
+		const changed = JSON.parse(receipt());
+		changed.attestationBinding.manifests.executionEvidence.checkpointChain.docidsSha256 =
+			"b".repeat(64);
+		changed.attestationBinding.hashes.executionEvidenceSha256 =
+			evidenceObjectSha256(
+				changed.attestationBinding.manifests.executionEvidence,
+			);
+		expect(() => createMiraclGlobalComparison(JSON.stringify(changed))).toThrow(
+			"comparison corpus execution binding mismatch",
 		);
 	});
 

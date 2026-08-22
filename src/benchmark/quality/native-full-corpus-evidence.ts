@@ -352,7 +352,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 			documentCount: result.inputs.documentCount,
 			queryCount: result.inputs.queryCount,
 			corpusDocidsSha256: result.inputs.corpusDocidsSha256,
-			passageComposition: expectedPolicy.passageComposition,
+			passageComposition: MIRACL_PASSAGE_COMPOSITION,
 		},
 		protocol: {
 			benchmark: MIRACL_FULL_BENCHMARK,
