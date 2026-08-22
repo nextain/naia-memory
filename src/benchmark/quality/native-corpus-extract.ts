@@ -9,6 +9,66 @@ export interface NativeCorpusDocument {
 	text: string;
 }
 
+export interface NativeCorpusScanReceipt {
+	documentCount: number;
+	docidsSha256: string;
+}
+
+/**
+ * Scan every document without retaining corpus text in memory. The callback is
+ * awaited to provide backpressure for embedding/index writers. Duplicate IDs
+ * fail closed because a resume cursor based on corpus position is otherwise
+ * ambiguous.
+ */
+export async function scanNativeCorpusDocuments(
+	shards: readonly string[],
+	consumeDocument: (
+		document: NativeCorpusDocument,
+		ordinal: number,
+	) => Promise<void> | void,
+): Promise<NativeCorpusScanReceipt> {
+	const seen = new Set<string>();
+	const docidsHash = createHash("sha256");
+	let documentCount = 0;
+	for (const shard of shards) {
+		let lineNumber = 0;
+		let pending = "";
+		const decoder = new StringDecoder("utf8");
+		const consume = async (rawLine: string) => {
+			lineNumber++;
+			const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+			if (line.length === 0)
+				throw new Error(`${shard}:${lineNumber}: blank JSONL row`);
+			let parsed: unknown;
+			try {
+				parsed = JSON.parse(line);
+			} catch {
+				throw new Error(`${shard}:${lineNumber}: invalid JSON`);
+			}
+			if (!isNativeCorpusDocument(parsed))
+				throw new Error(`${shard}:${lineNumber}: invalid MIRACL document`);
+			if (seen.has(parsed.docid))
+				throw new Error(`duplicate corpus document: ${parsed.docid}`);
+			seen.add(parsed.docid);
+			docidsHash.update(`${parsed.docid}\n`);
+			await consumeDocument(parsed, documentCount);
+			documentCount++;
+		};
+		for await (const chunk of createReadStream(shard).pipe(createGunzip())) {
+			pending += decoder.write(chunk);
+			let separator = pending.indexOf("\n");
+			while (separator >= 0) {
+				await consume(pending.slice(0, separator));
+				pending = pending.slice(separator + 1);
+				separator = pending.indexOf("\n");
+			}
+		}
+		pending += decoder.end();
+		if (pending.length > 0) await consume(pending);
+	}
+	return { documentCount, docidsSha256: docidsHash.digest("hex") };
+}
+
 export async function extractNativeCorpusDocuments(
 	shards: readonly string[],
 	requiredDocumentIds: ReadonlySet<string>,

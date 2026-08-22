@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
 	canonicalNativeCorpusJsonl,
 	extractNativeCorpusDocuments,
+	scanNativeCorpusDocuments,
 } from "./native-corpus-extract.js";
 
 describe("native MIRACL corpus extraction", () => {
@@ -57,5 +58,54 @@ describe("native MIRACL corpus extraction", () => {
 			new Set(["ko"]),
 		);
 		expect(result?.text).toBe(text);
+	});
+
+	it("streams the complete corpus with stable ordinals and backpressure", async () => {
+		const directory = await mkdtemp(join(tmpdir(), "naia-native-corpus-"));
+		const shard = join(directory, "docs.jsonl.gz");
+		await writeFile(
+			shard,
+			gzipSync(
+				[
+					JSON.stringify({ docid: "a", title: "A", text: "첫 번째" }),
+					JSON.stringify({ docid: "b", title: "B", text: "두 번째" }),
+				].join("\n"),
+			),
+		);
+		const observed: string[] = [];
+		let callbackActive = false;
+		const receipt = await scanNativeCorpusDocuments(
+			[shard],
+			async (document, ordinal) => {
+				expect(callbackActive).toBe(false);
+				callbackActive = true;
+				await Promise.resolve();
+				observed.push(`${ordinal}:${document.docid}`);
+				callbackActive = false;
+			},
+		);
+		expect(observed).toEqual(["0:a", "1:b"]);
+		expect(receipt).toEqual({
+			documentCount: 2,
+			docidsSha256:
+				"911169ddaaf146aff539f58c26c489af3b892dff0fe283c1c264c65ae5aa59a2",
+		});
+	});
+
+	it("fails closed on duplicate IDs during a full scan", async () => {
+		const directory = await mkdtemp(join(tmpdir(), "naia-native-corpus-"));
+		const shard = join(directory, "docs.jsonl.gz");
+		await writeFile(
+			shard,
+			gzipSync(
+				[
+					JSON.stringify({ docid: "same", title: "A", text: "one" }),
+					JSON.stringify({ docid: "same", title: "B", text: "two" }),
+				].join("\n"),
+			),
+		);
+		await expect(
+			scanNativeCorpusDocuments([shard], () => undefined),
+		).rejects.toThrow("duplicate corpus document: same");
 	});
 });
