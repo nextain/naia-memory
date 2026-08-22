@@ -7,6 +7,7 @@ import {
 	evidenceObjectSha256,
 	evidenceSignaturePayload,
 } from "./public-evidence-crypto.js";
+import { createEncryptedQueryIdentityOracle } from "./query-identity-encrypted-oracle.js";
 import {
 	createQueryIdentityLaunchArtifacts,
 	scoreEscrowAttestedQueryIdentityRun,
@@ -95,8 +96,61 @@ function timestampFixture(
 }
 
 describe("query identity launch evidence", () => {
+	it("binds one encrypted oracle envelope and rejects substitution", () => {
+		const currentOracle = oracle();
+		const timestamp = timestampFixture(evidenceObjectSha256(currentOracle));
+		const encrypted = createEncryptedQueryIdentityOracle({
+			oracle: currentOracle,
+		});
+		const launchInput = {
+			oracle: currentOracle,
+			...timestamp,
+			engine: "naia-memory",
+			model: "closed-vocabulary-v1",
+			launchedAt: "2026-08-22T01:01:00.000Z",
+			launchNonce: "0123456789abcdef0123456789abcdef",
+		};
+		const launch = createQueryIdentityLaunchArtifacts({
+			...launchInput,
+			encryptedOracleEnvelope: encrypted.envelope,
+		});
+		expect(launch.receipt.encryptedOracleEnvelopeSha256).toBe(
+			encrypted.releaseKey.envelopeSha256,
+		);
+		const substituted = createEncryptedQueryIdentityOracle({
+			oracle: currentOracle,
+		});
+		expect(
+			createQueryIdentityLaunchArtifacts({
+				...launchInput,
+				encryptedOracleEnvelope: substituted.envelope,
+			}).receipt.encryptedOracleEnvelopeSha256,
+		).not.toBe(launch.receipt.encryptedOracleEnvelopeSha256);
+		const wrongOracleEnvelope = createEncryptedQueryIdentityOracle({
+			oracle: { ...currentOracle, cases: [] },
+		});
+		expect(() =>
+			createQueryIdentityLaunchArtifacts({
+				...launchInput,
+				encryptedOracleEnvelope: wrongOracleEnvelope.envelope,
+			}),
+		).toThrow("does not match launch oracle");
+		expect(() =>
+			createQueryIdentityLaunchArtifacts({
+				...launchInput,
+				encryptedOracleEnvelope: {
+					...encrypted.envelope,
+					ivBase64: "not-base64",
+				},
+			}),
+		).toThrow("canonical base64");
+	});
+
 	it("binds a trusted prior timestamp, launch receipt, and later predictions", () => {
 		const currentOracle = oracle();
+		const encryptedOracle = createEncryptedQueryIdentityOracle({
+			oracle: currentOracle,
+		});
 		const oracleSha256 = evidenceObjectSha256(currentOracle);
 		const timestamp = timestampFixture(oracleSha256);
 		const keys = generateKeyPairSync("ed25519");
@@ -130,6 +184,7 @@ describe("query identity launch evidence", () => {
 			launchNonce: "0123456789abcdef0123456789abcdef",
 			runnerTrustPolicy,
 			escrowTrustPolicy,
+			encryptedOracleEnvelope: encryptedOracle.envelope,
 		});
 		const predictions: QueryIdentityPredictionArtifact = {
 			schemaVersion: "naia-memory-query-identity-predictions-v1",
@@ -159,6 +214,7 @@ describe("query identity launch evidence", () => {
 				...timestamp,
 				runnerTrustPolicy,
 				escrowTrustPolicy,
+				encryptedOracleEnvelope: encryptedOracle.envelope,
 			}),
 		).toMatchObject({
 			gate: "pass",
@@ -169,6 +225,16 @@ describe("query identity launch evidence", () => {
 			},
 			launchEvidence: { oraclePriorExistenceTimestampVerified: true },
 		});
+		expect(() =>
+			scorePublicQueryIdentityRun({
+				oracle: currentOracle,
+				predictions,
+				launchReceipt: launch.receipt,
+				...timestamp,
+				runnerTrustPolicy,
+				escrowTrustPolicy,
+			}),
+		).toThrow("query identity launch receipt mismatch");
 		const signed = <T extends object>(value: T) => ({
 			...value,
 			signatureBase64: sign(
@@ -213,6 +279,7 @@ describe("query identity launch evidence", () => {
 				resultSeal,
 				runnerTrustPolicy,
 				escrowTrustPolicy,
+				encryptedOracleEnvelope: encryptedOracle.envelope,
 			}),
 		).toMatchObject({
 			evidenceAssurance: {
@@ -240,6 +307,7 @@ describe("query identity launch evidence", () => {
 				resultSeal,
 				runnerTrustPolicy,
 				escrowTrustPolicy,
+				encryptedOracleEnvelope: encryptedOracle.envelope,
 				predictionTimestampEvidence: predictionTimestamp.timestampEvidence,
 				predictionTimestampTrustPolicy:
 					predictionTimestamp.timestampTrustPolicy,
@@ -298,6 +366,7 @@ describe("query identity launch evidence", () => {
 			oracle: currentOracle,
 			predictions,
 			launchReceipt: launch.receipt,
+			encryptedOracleEnvelope: encryptedOracle.envelope,
 			...timestamp,
 			acknowledgement,
 			resultSeal,
@@ -393,6 +462,7 @@ describe("query identity launch evidence", () => {
 				...timestamp,
 				runnerTrustPolicy,
 				escrowTrustPolicy,
+				encryptedOracleEnvelope: encryptedOracle.envelope,
 			}),
 		).toThrow("not created after launch");
 	});

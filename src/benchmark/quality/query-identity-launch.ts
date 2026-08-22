@@ -1,6 +1,10 @@
 import { randomBytes } from "node:crypto";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import {
+	type QueryIdentityEncryptedOracleEnvelope,
+	validateEncryptedQueryIdentityOracleEnvelope,
+} from "./query-identity-encrypted-oracle.js";
+import {
 	type QueryIdentityEscrowTrustPolicy,
 	type QueryIdentityOracleRevealReceipt,
 	validateQueryIdentityEscrowEvidence,
@@ -34,6 +38,7 @@ export interface QueryIdentityLaunchReceipt {
 	launchedAt: string;
 	runnerTrustPolicySha256?: string;
 	escrowTrustPolicySha256?: string;
+	encryptedOracleEnvelopeSha256?: string;
 	engine: string;
 	model: string;
 }
@@ -60,11 +65,19 @@ export function createQueryIdentityLaunchArtifacts(input: {
 	launchNonce?: string;
 	runnerTrustPolicy?: QueryIdentityRunnerTrustPolicy;
 	escrowTrustPolicy?: QueryIdentityEscrowTrustPolicy;
+	encryptedOracleEnvelope?: QueryIdentityEncryptedOracleEnvelope;
 	commandRunner?: Rfc3161CommandRunner;
 }) {
 	if (!input.engine?.trim() || !input.model?.trim())
 		throw new Error("query identity launch engine and model are required");
 	const oraclePacket = buildQueryIdentityBlindPacket(input.oracle);
+	if (input.encryptedOracleEnvelope)
+		validateEncryptedQueryIdentityOracleEnvelope(input.encryptedOracleEnvelope);
+	if (
+		input.encryptedOracleEnvelope &&
+		input.encryptedOracleEnvelope.oracleSha256 !== oraclePacket.oracleSha256
+	)
+		throw new Error("encrypted oracle envelope does not match launch oracle");
 	const launchNonce = input.launchNonce ?? randomBytes(16).toString("hex");
 	if (!/^[a-f0-9]{32,128}$/.test(launchNonce))
 		throw new Error("query identity launch nonce is invalid");
@@ -106,6 +119,13 @@ export function createQueryIdentityLaunchArtifacts(input: {
 					),
 				}
 			: {}),
+		...(input.encryptedOracleEnvelope
+			? {
+					encryptedOracleEnvelopeSha256: evidenceObjectSha256(
+						input.encryptedOracleEnvelope,
+					),
+				}
+			: {}),
 		engine: input.engine,
 		model: input.model,
 	};
@@ -120,6 +140,7 @@ export function scorePublicQueryIdentityRun(input: {
 	timestampTrustPolicy: Rfc3161TimestampTrustPolicy;
 	runnerTrustPolicy?: QueryIdentityRunnerTrustPolicy;
 	escrowTrustPolicy?: QueryIdentityEscrowTrustPolicy;
+	encryptedOracleEnvelope?: QueryIdentityEncryptedOracleEnvelope;
 	commandRunner?: Rfc3161CommandRunner;
 }) {
 	const score = scoreQueryIdentityArtifact(input.oracle, input.predictions);
@@ -138,6 +159,10 @@ export function scorePublicQueryIdentityRun(input: {
 		escrowTrustPolicy:
 			input.launchReceipt?.escrowTrustPolicySha256 !== undefined
 				? input.escrowTrustPolicy
+				: undefined,
+		encryptedOracleEnvelope:
+			input.launchReceipt?.encryptedOracleEnvelopeSha256 !== undefined
+				? input.encryptedOracleEnvelope
 				: undefined,
 		commandRunner: input.commandRunner,
 	});
@@ -192,6 +217,7 @@ export function scoreRunnerSignedQueryIdentityRun(input: {
 	resultSeal: QueryIdentityRunnerResultSeal;
 	runnerTrustPolicy: QueryIdentityRunnerTrustPolicy;
 	escrowTrustPolicy?: QueryIdentityEscrowTrustPolicy;
+	encryptedOracleEnvelope?: QueryIdentityEncryptedOracleEnvelope;
 	commandRunner?: Rfc3161CommandRunner;
 }) {
 	if (
@@ -229,6 +255,7 @@ export function scoreRunnerSignedQueryIdentityRun(input: {
 
 export function scoreTimestampedRunnerQueryIdentityRun(input: {
 	oracle: QueryIdentityOracle;
+	encryptedOracleEnvelope?: QueryIdentityEncryptedOracleEnvelope;
 	predictions: QueryIdentityPredictionArtifact;
 	launchReceipt: QueryIdentityLaunchReceipt;
 	timestampEvidence: Rfc3161DigestTimestampEvidence;
