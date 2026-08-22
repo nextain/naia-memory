@@ -1,12 +1,16 @@
-import { createHash } from "node:crypto";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
+import {
+	evidenceObjectSha256,
+	evidenceSignaturePayload,
+} from "./public-evidence-crypto.js";
 import {
 	createQueryIdentityLaunchArtifacts,
 	scorePublicQueryIdentityRun,
+	scoreRunnerSignedQueryIdentityRun,
 } from "./query-identity-launch.js";
 import {
 	QUERY_IDENTITY_PROPERTY_IDS,
@@ -89,12 +93,25 @@ describe("query identity launch evidence", () => {
 		const currentOracle = oracle();
 		const oracleSha256 = evidenceObjectSha256(currentOracle);
 		const timestamp = timestampFixture(oracleSha256);
+		const keys = generateKeyPairSync("ed25519");
+		const runner = "independent-runner-01";
+		const runnerTrustPolicy = {
+			schemaVersion:
+				"naia-memory-query-identity-runner-trust-policy-v1" as const,
+			runners: {
+				[runner]: keys.publicKey
+					.export({ type: "spki", format: "pem" })
+					.toString(),
+			},
+		};
 		const launch = createQueryIdentityLaunchArtifacts({
 			oracle: currentOracle,
 			...timestamp,
 			engine: "naia-memory",
 			model: "closed-vocabulary-v1",
 			launchedAt: "2026-08-22T01:01:00.000Z",
+			launchNonce: "0123456789abcdef0123456789abcdef",
+			runnerTrustPolicy,
 		});
 		const predictions: QueryIdentityPredictionArtifact = {
 			schemaVersion: "naia-memory-query-identity-predictions-v1",
@@ -122,6 +139,7 @@ describe("query identity launch evidence", () => {
 				predictions,
 				launchReceipt: launch.receipt,
 				...timestamp,
+				runnerTrustPolicy,
 			}),
 		).toMatchObject({
 			gate: "pass",
@@ -132,6 +150,62 @@ describe("query identity launch evidence", () => {
 			},
 			launchEvidence: { oraclePriorExistenceTimestampVerified: true },
 		});
+		const signed = <T extends object>(value: T) => ({
+			...value,
+			signatureBase64: sign(
+				null,
+				evidenceSignaturePayload(value),
+				keys.privateKey,
+			).toString("base64"),
+		});
+		const acknowledgement = signed({
+			schemaVersion:
+				"naia-memory-query-identity-runner-acknowledgement-v1" as const,
+			runner,
+			launchNonce: launch.receipt.launchNonce,
+			oracleSha256,
+			blindPacketSha256: launch.receipt.blindPacketSha256,
+			launchReceiptSha256: evidenceObjectSha256(launch.receipt),
+			runnerTrustPolicySha256: evidenceObjectSha256(runnerTrustPolicy),
+			engine: launch.receipt.engine,
+			model: launch.receipt.model,
+			acknowledgedAt: "2026-08-22T01:01:30.000Z",
+			statement: "EXACT_BLIND_PACKET_RECEIVED_BEFORE_EXECUTION" as const,
+		});
+		const resultSeal = signed({
+			schemaVersion:
+				"naia-memory-query-identity-runner-result-seal-v1" as const,
+			runner,
+			launchNonce: acknowledgement.launchNonce,
+			launchReceiptSha256: acknowledgement.launchReceiptSha256,
+			runnerTrustPolicySha256: acknowledgement.runnerTrustPolicySha256,
+			acknowledgementSha256: evidenceObjectSha256(acknowledgement),
+			predictionSha256: evidenceObjectSha256(predictions),
+			finishedAt: "2026-08-22T01:03:00.000Z",
+			statement: "EXACT_PREDICTION_ARTIFACT_SEALED_AFTER_EXECUTION" as const,
+		});
+		expect(
+			scoreRunnerSignedQueryIdentityRun({
+				oracle: currentOracle,
+				predictions,
+				launchReceipt: launch.receipt,
+				...timestamp,
+				acknowledgement,
+				resultSeal,
+				runnerTrustPolicy,
+			}),
+		).toMatchObject({
+			evidenceAssurance: {
+				level: "runner-signed-delivery-and-result-claims",
+				trustedRunnerDeliverySignatureVerified: true,
+				predictionArtifactSealSignatureVerified: true,
+				runnerTrustPolicyPrecommitExternallyVerified: false,
+				organizationalIndependenceVerified: false,
+				predictionChronologyVerified: false,
+				predictionPrecommitTimestampVerified: false,
+				oracleWithheldUntilPredictionCommitVerified: false,
+			},
+		});
 
 		predictions.run.createdAt = launch.receipt.launchedAt;
 		expect(() =>
@@ -140,6 +214,7 @@ describe("query identity launch evidence", () => {
 				predictions,
 				launchReceipt: launch.receipt,
 				...timestamp,
+				runnerTrustPolicy,
 			}),
 		).toThrow("not created after launch");
 	});

@@ -13,6 +13,7 @@ import {
 	type QueryIdentityLaunchReceipt,
 	createQueryIdentityLaunchArtifacts,
 	scorePublicQueryIdentityRun,
+	scoreRunnerSignedQueryIdentityRun,
 } from "./query-identity-launch.js";
 import {
 	type QueryIdentityOracle,
@@ -20,6 +21,11 @@ import {
 	buildQueryIdentityBlindPacket,
 	scoreQueryIdentityArtifact,
 } from "./query-identity-oracle.js";
+import type {
+	QueryIdentityRunnerAcknowledgement,
+	QueryIdentityRunnerResultSeal,
+	QueryIdentityRunnerTrustPolicy,
+} from "./query-identity-runner-evidence.js";
 import type {
 	Rfc3161DigestTimestampEvidence,
 	Rfc3161TimestampTrustPolicy,
@@ -105,6 +111,25 @@ export function runQueryIdentityEvidenceCli(args: string[]): void {
 		);
 		return;
 	}
+	if (command === "launch-runner") {
+		if (rest.length !== 7)
+			throw new Error(
+				"usage: launch-runner <oracle.json> <timestamp-evidence.json> <timestamp-trust-policy.json> <runner-trust-policy.json> <engine> <model> <output-directory>",
+			);
+		writeLaunchDirectory(
+			rest[6],
+			createQueryIdentityLaunchArtifacts({
+				oracle: readJson<QueryIdentityOracle>(rest[0]),
+				timestampEvidence: readJson<Rfc3161DigestTimestampEvidence>(rest[1]),
+				timestampTrustPolicy: readJson<Rfc3161TimestampTrustPolicy>(rest[2]),
+				runnerTrustPolicy: readJson<QueryIdentityRunnerTrustPolicy>(rest[3]),
+				engine: rest[4],
+				model: rest[5],
+				launchedAt: new Date().toISOString(),
+			}),
+		);
+		return;
+	}
 	if (command === "score-public") {
 		if (rest.length !== 6)
 			throw new Error(
@@ -122,7 +147,29 @@ export function runQueryIdentityEvidenceCli(args: string[]): void {
 		);
 		return;
 	}
-	throw new Error("command must be blind, score, launch, or score-public");
+	if (command === "score-runner-signed") {
+		if (rest.length !== 9)
+			throw new Error(
+				"usage: score-runner-signed <oracle.json> <predictions.json> <launch-receipt.json> <timestamp-evidence.json> <timestamp-trust-policy.json> <runner-acknowledgement.json> <runner-result-seal.json> <runner-trust-policy.json> <score.json>",
+			);
+		writeExclusive(
+			rest[8],
+			scoreRunnerSignedQueryIdentityRun({
+				oracle: readJson<QueryIdentityOracle>(rest[0]),
+				predictions: readJson<QueryIdentityPredictionArtifact>(rest[1]),
+				launchReceipt: readJson<QueryIdentityLaunchReceipt>(rest[2]),
+				timestampEvidence: readJson<Rfc3161DigestTimestampEvidence>(rest[3]),
+				timestampTrustPolicy: readJson<Rfc3161TimestampTrustPolicy>(rest[4]),
+				acknowledgement: readJson<QueryIdentityRunnerAcknowledgement>(rest[5]),
+				resultSeal: readJson<QueryIdentityRunnerResultSeal>(rest[6]),
+				runnerTrustPolicy: readJson<QueryIdentityRunnerTrustPolicy>(rest[7]),
+			}),
+		);
+		return;
+	}
+	throw new Error(
+		"command must be blind, score, launch, launch-runner, score-public, or score-runner-signed",
+	);
 }
 
 const invokedPath = process.argv[1]
