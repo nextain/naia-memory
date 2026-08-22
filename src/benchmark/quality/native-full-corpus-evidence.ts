@@ -103,7 +103,7 @@ export interface FullCorpusResult {
 }
 
 export function createFullCorpusEvidenceReceipt(input: {
-	result: FullCorpusResult;
+	resultText: string;
 	resultSha256: string;
 	trecSha256: string;
 	trecRunText: string;
@@ -176,7 +176,9 @@ export function createFullCorpusEvidenceReceipt(input: {
 		indexingThreshold: number;
 	};
 }) {
-	const { result } = input;
+	if (sha256Bytes(input.resultText) !== input.resultSha256)
+		throw new Error("result content hash mismatch");
+	const result = JSON.parse(input.resultText) as FullCorpusResult;
 	if (result.benchmark !== MIRACL_FULL_BENCHMARK)
 		throw new Error("benchmark identity mismatch");
 	if (

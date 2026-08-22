@@ -128,7 +128,7 @@ async function main() {
 		).trim(),
 	};
 	const receipt = createFullCorpusEvidenceReceipt({
-		result,
+		resultText,
 		resultSha256: sha256Bytes(resultText),
 		trecSha256: sha256Bytes(trec),
 		trecRunText: trec.toString("utf8"),

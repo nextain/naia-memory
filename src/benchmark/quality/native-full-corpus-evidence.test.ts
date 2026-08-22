@@ -64,9 +64,15 @@ const result = {
 };
 
 function evidence(overrides = {}) {
+	const { result: resultOverride = result, ...remainingOverrides } =
+		overrides as {
+			result?: typeof result;
+			[key: string]: unknown;
+		};
+	const resultText = JSON.stringify(resultOverride);
 	return {
-		result,
-		resultSha256: "result",
+		resultText,
+		resultSha256: sha256Bytes(resultText),
 		trecSha256,
 		trecRunText,
 		topicsSha256: EXPECTED_MIRACL_TOPICS_SHA256,
@@ -130,7 +136,10 @@ function evidence(overrides = {}) {
 				samples: 2,
 				peakRssBytes: 4096,
 			},
-			result: { path: "/outputs/result.json", sha256: "result" },
+			result: {
+				path: "/outputs/result.json",
+				sha256: sha256Bytes(resultText),
+			},
 		},
 		qdrant: {
 			version: EXPECTED_QDRANT_VERSION,
@@ -142,7 +151,7 @@ function evidence(overrides = {}) {
 			hnswM: 0,
 			indexingThreshold: 0,
 		},
-		...overrides,
+		...remainingOverrides,
 	};
 }
 
@@ -248,6 +257,14 @@ describe("full-corpus independent evidence", () => {
 				}),
 			),
 		).toThrow("embedding identity");
+	});
+
+	it("rejects a result hash that does not bind the parsed result content", () => {
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({ resultSha256: "forged-result-hash" }),
+			),
+		).toThrow("result content hash");
 	});
 
 	it("rejects incomplete TREC query coverage even when its hash is consistent", () => {
