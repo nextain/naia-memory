@@ -7,6 +7,10 @@ import {
 } from "./native-full-corpus-attestation-bundle.js";
 import { buildFullCorpusChallengeSigningPacket } from "./native-full-corpus-attestation-packet.js";
 import {
+	type FullCorpusBundleSignerTrustPolicy,
+	validateFullCorpusBundlePublication,
+} from "./native-full-corpus-bundle-publication.js";
+import {
 	evaluateFullCorpusPublicAttestation,
 	evaluateTimestampQualifiedFullCorpusPublicAttestation,
 } from "./native-full-corpus-public-attestation.js";
@@ -22,7 +26,11 @@ import {
 	isRfc3161DigestTimestampEvidence,
 	isRfc3161TimestampTrustPolicy,
 } from "./rfc3161-timestamp.js";
-import type { Rfc3161CommandRunner } from "./rfc3161-timestamp.js";
+import type {
+	Rfc3161CommandRunner,
+	Rfc3161DigestTimestampEvidence,
+	Rfc3161TimestampTrustPolicy,
+} from "./rfc3161-timestamp.js";
 
 const MAX_BYTES = 16 * 1024 * 1024;
 
@@ -69,7 +77,66 @@ export async function runFullCorpusAttestationCli(
 	let verificationBundle:
 		| Awaited<ReturnType<typeof loadFullCorpusAttestationBundle>>
 		| undefined;
+	let bundlePublication:
+		| ReturnType<typeof validateFullCorpusBundlePublication>
+		| undefined;
 	try {
+		if (command === "verify-published-bundle") {
+			if (values.length !== 7) {
+				process.stderr.write(
+					"Usage: pnpm benchmark:miracl-full-corpus-attestation verify-published-bundle <bundle.json> <publication-receipt.json> <external-signer-policy.json> <receipt-timestamp.json> <external-timestamp-policy.json> <timestamp-token.tsr> <trusted-ca.pem>\n",
+				);
+				return 2;
+			}
+			const [
+				bundlePath,
+				publicationReceiptPath,
+				signerPolicyPath,
+				timestampEvidencePath,
+				timestampPolicyPath,
+				timestampTokenPath,
+				trustedCaPath,
+			] = values as [string, string, string, string, string, string, string];
+			verificationBundle = await loadFullCorpusAttestationBundle(bundlePath);
+			const [
+				publicationReceiptBytes,
+				signerTrustPolicy,
+				timestampEvidence,
+				timestampTrustPolicy,
+				tokenBytes,
+				trustedCaBytes,
+			] = await Promise.all([
+				bounded(publicationReceiptPath, "bundle publication receipt"),
+				json(signerPolicyPath, "external bundle signer policy"),
+				json(timestampEvidencePath, "bundle receipt timestamp evidence"),
+				json(timestampPolicyPath, "external bundle timestamp policy"),
+				bounded(timestampTokenPath, "bundle receipt timestamp token"),
+				bounded(trustedCaPath, "external bundle timestamp trusted CA"),
+			]);
+			bundlePublication = validateFullCorpusBundlePublication({
+				expectedManifestSha256: verificationBundle.manifestSha256,
+				receiptBytes: publicationReceiptBytes,
+				signerTrustPolicy:
+					signerTrustPolicy as FullCorpusBundleSignerTrustPolicy,
+				timestampEvidence: timestampEvidence as Rfc3161DigestTimestampEvidence,
+				timestampTrustPolicy:
+					timestampTrustPolicy as Rfc3161TimestampTrustPolicy,
+				commandRunner: dependencies.timestampCommandRunner,
+				tokenBytes,
+				trustedCaBytes,
+			});
+			command = "verify-timestamped";
+			values = FULL_CORPUS_ATTESTATION_JSON_ARTIFACT_NAMES.map((name) => {
+				const artifact = verificationBundle?.artifacts.find(
+					(candidate) => candidate.name === name,
+				);
+				if (!artifact)
+					throw new Error(
+						`full-corpus attestation artifact ${name} is missing after bundle validation`,
+					);
+				return artifact.path;
+			});
+		}
 		if (command === "verify-bundle") {
 			if (values.length !== 1) {
 				process.stderr.write(
@@ -280,6 +347,7 @@ export async function runFullCorpusAttestationCli(
 										]),
 									),
 								},
+								...(bundlePublication ? { bundlePublication } : {}),
 							}
 						: verdict,
 				)}\n`,
@@ -287,7 +355,7 @@ export async function runFullCorpusAttestationCli(
 			return verdict.publicClaimEligible ? 0 : 1;
 		}
 		process.stderr.write(
-			"Usage: pnpm benchmark:miracl-full-corpus-attestation <challenge|verify|verify-timestamped|verify-bundle> ...\n",
+			"Usage: pnpm benchmark:miracl-full-corpus-attestation <challenge|verify|verify-timestamped|verify-bundle|verify-published-bundle> ...\n",
 		);
 		return 2;
 	} catch (error) {

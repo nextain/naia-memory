@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
@@ -8,6 +8,10 @@ import {
 	loadFullCorpusAttestationBundle,
 } from "./native-full-corpus-attestation-bundle.js";
 import { runFullCorpusAttestationCli } from "./native-full-corpus-attestation-cli.js";
+import {
+	buildFullCorpusBundleSigningPacket,
+	collectFullCorpusBundleSignature,
+} from "./native-full-corpus-bundle-publication.js";
 
 const roots: string[] = [];
 
@@ -82,6 +86,117 @@ describe("full-corpus attestation bundle", () => {
 					"verify-bundle",
 					current.manifestPath,
 				]),
+			).toBe(1);
+			expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+				"challenge shape is invalid",
+			);
+		} finally {
+			vi.restoreAllMocks();
+		}
+	});
+
+	it("requires and verifies external publication trust before bundle contents", async () => {
+		const current = await fixture();
+		const loaded = await loadFullCorpusAttestationBundle(current.manifestPath);
+		const keys = generateKeyPairSync("ed25519");
+		const trustPolicy = {
+			schemaVersion:
+				"naia-memory-full-corpus-bundle-signer-trust-policy-v1" as const,
+			signers: {
+				publisher: {
+					publicKey: keys.publicKey
+						.export({ type: "spki", format: "pem" })
+						.toString(),
+					notBefore: "2026-08-01T00:00:00.000Z",
+					notAfter: "2026-09-01T00:00:00.000Z",
+				},
+			},
+		};
+		const packet = buildFullCorpusBundleSigningPacket({
+			manifestSha256: loaded.manifestSha256,
+			signerId: "publisher",
+			trustPolicy,
+		});
+		const receipt = collectFullCorpusBundleSignature({
+			packet,
+			detachedSignature: {
+				schemaVersion: "naia-memory-full-corpus-bundle-detached-signature-v1",
+				packetSha256: packet.packetSha256,
+				signatureBase64: sign(
+					null,
+					Buffer.from(packet.signingPayloadBase64, "base64"),
+					keys.privateKey,
+				).toString("base64"),
+			},
+			trustPolicy,
+		});
+		const receiptBytes = Buffer.from(`${JSON.stringify(receipt)}\n`);
+		const token = Buffer.from("publication timestamp token");
+		const ca = Buffer.from("external publication tsa ca");
+		const paths = {
+			receipt: join(current.root, "publication-receipt.json"),
+			signerPolicy: join(current.root, "external-signer-policy.json"),
+			timestamp: join(current.root, "publication-timestamp.json"),
+			timestampPolicy: join(current.root, "external-timestamp-policy.json"),
+			token: join(current.root, "publication-token.tsr"),
+			ca: join(current.root, "external-publication-ca.pem"),
+		};
+		await Promise.all([
+			writeFile(paths.receipt, receiptBytes),
+			writeFile(paths.signerPolicy, JSON.stringify(trustPolicy)),
+			writeFile(
+				paths.timestamp,
+				JSON.stringify({
+					schemaVersion: "naia-memory-rfc3161-digest-timestamp-evidence-v1",
+					artifactSha256: createHash("sha256")
+						.update(receiptBytes)
+						.digest("hex"),
+					tokenSha256: createHash("sha256").update(token).digest("hex"),
+					tokenPath: "/producer/path/not-present.tsr",
+				}),
+			),
+			writeFile(
+				paths.timestampPolicy,
+				JSON.stringify({
+					schemaVersion: "naia-memory-rfc3161-timestamp-trust-policy-v1",
+					trustedCaFilePath: "/producer/path/not-present.pem",
+					trustedCaFileSha256: createHash("sha256").update(ca).digest("hex"),
+					requiredPolicyOid: "1.2.3.4",
+				}),
+			),
+			writeFile(paths.token, token),
+			writeFile(paths.ca, ca),
+		]);
+		const output: string[] = [];
+		vi.spyOn(process.stdout, "write").mockImplementation((value) => {
+			output.push(String(value));
+			return true;
+		});
+		try {
+			expect(
+				await runFullCorpusAttestationCli(
+					[
+						"verify-published-bundle",
+						current.manifestPath,
+						paths.receipt,
+						paths.signerPolicy,
+						paths.timestamp,
+						paths.timestampPolicy,
+						paths.token,
+						paths.ca,
+					],
+					{
+						timestampCommandRunner: (args) =>
+							args.includes("-verify")
+								? { status: 0, stdout: "Verification: OK", stderr: "" }
+								: {
+										status: 0,
+										stdout:
+											"Policy OID: 1.2.3.4\nTime stamp: Aug 22 12:00:00 2026 GMT\n",
+										stderr: "",
+									},
+					},
+				),
 			).toBe(1);
 			expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
 				"challenge shape is invalid",
