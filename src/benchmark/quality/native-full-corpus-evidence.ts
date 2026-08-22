@@ -4,6 +4,7 @@ import type {
 	OfflineEmbeddingPolicyReceipt,
 } from "../../memory/embeddings.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
+import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
 
 export const MIRACL_FULL_BENCHMARK =
 	"miracl-ko-full-corpus-naia-vector-exact-v1";
@@ -17,6 +18,9 @@ export const EXPECTED_TRUE_BATCH_EVALUATION_SOURCE_SHA256 =
 	"4f6191926c7e645d95b2023bbd17a0212ed4d80b5cfb48c37cf3b2807f59a7b5";
 export const EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256 =
 	"65a79853e511cd46a4ce83779b36c34151f21c4fb071312c19a0a2558e7d93f0";
+export const EXPECTED_MIRACL_SOURCE_LOCK_SHA256 =
+	"742952715d6e31eaf9718f04c2bad0509c9d7c754210aa81d793a14430fbb69c";
+export const EXPECTED_MIRACL_QRELS_SHA256 = MIRACL_KO_LOCK.files[1].sha256;
 export const EXPECTED_QDRANT_COMMIT =
 	"48203e414e4e7f639a6d394fb6e4df695f808e51";
 export const EXPECTED_QDRANT_VERSION = "1.15.5";
@@ -128,6 +132,13 @@ export function createFullCorpusEvidenceReceipt(input: {
 		result.inputs.queryCount !== 213
 	)
 		throw new Error("benchmark cardinality mismatch");
+	if (result.inputs.sourceLockSha256 !== EXPECTED_MIRACL_SOURCE_LOCK_SHA256)
+		throw new Error("benchmark source lock mismatch");
+	if (
+		sha256Bytes(`${JSON.stringify(MIRACL_KO_LOCK, null, 2)}\n`) !==
+		EXPECTED_MIRACL_SOURCE_LOCK_SHA256
+	)
+		throw new Error("pinned benchmark source lock is stale");
 	if (
 		result.configuration.vectorStore !== "Qdrant" ||
 		result.configuration.distance !== "Cosine" ||
@@ -140,6 +151,8 @@ export function createFullCorpusEvidenceReceipt(input: {
 		throw new Error("TREC hash mismatch");
 	if (result.inputs.qrelsSha256 !== input.qrelsSha256)
 		throw new Error("qrels hash mismatch");
+	if (input.qrelsSha256 !== EXPECTED_MIRACL_QRELS_SHA256)
+		throw new Error("canonical qrels hash mismatch");
 	if (input.trecEvalBinarySha256 !== EXPECTED_TREC_EVAL_BINARY_SHA256)
 		throw new Error("trec_eval binary hash mismatch");
 	if (input.trecEvalSourceCommit !== TREC_EVAL_COMMIT)
@@ -236,8 +249,12 @@ export function createFullCorpusEvidenceReceipt(input: {
 	)
 		throw new Error("independent metric reproduction mismatch");
 	return {
-		schemaVersion: 1,
-		verdict: "PASS",
+		schemaVersion: 2,
+		verdict: "LOCAL_PASS",
+		assurance: "self-observed-local",
+		publicClaimEligible: false,
+		publicClaimRequirement:
+			"independent signed execution attestation from a runner outside the benchmark operator trust boundary",
 		benchmark: MIRACL_FULL_BENCHMARK,
 		artifacts: {
 			result: {
@@ -247,7 +264,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 			trec: { path: input.trecPath, sha256: input.trecSha256 },
 			qrels: { path: input.qrelsPath, sha256: input.qrelsSha256 },
 		},
-		independentEvaluator: {
+		independentEvaluatorTool: {
 			name: "usnistgov/trec_eval",
 			version: TREC_EVAL_VERSION,
 			commit: TREC_EVAL_COMMIT,
@@ -267,7 +284,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 		},
 		metrics: {
 			inProcess: result.metrics,
-			independent: { ndcgAt10, recallAt100 },
+			reproducedByIndependentTool: { ndcgAt10, recallAt100 },
 			deltas,
 			tolerance: METRIC_TOLERANCE,
 		},

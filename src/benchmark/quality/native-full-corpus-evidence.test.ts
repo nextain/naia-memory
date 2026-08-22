@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
 	EXPECTED_EVALUATION_SOURCE_SHA256,
+	EXPECTED_MIRACL_QRELS_SHA256,
+	EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
 	EXPECTED_QDRANT_COMMIT,
 	EXPECTED_QDRANT_VERSION,
 	EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256,
@@ -12,12 +14,13 @@ import {
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
+import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
 
 const result = {
 	benchmark: MIRACL_FULL_BENCHMARK,
 	inputs: {
-		sourceLockSha256: "source-lock",
-		qrelsSha256: "qrels",
+		sourceLockSha256: EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
+		qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
 		documentCount: 1_486_752,
 		queryCount: 213,
 	},
@@ -38,7 +41,7 @@ function evidence(overrides = {}) {
 		result,
 		resultSha256: "result",
 		trecSha256: "trec",
-		qrelsSha256: "qrels",
+		qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
 		trecEvalStdout: "ndcg_cut_10 all 0.412345\nrecall_100 all 0.765432\n",
 		trecEvalBinarySha256: EXPECTED_TREC_EVAL_BINARY_SHA256,
 		trecEvalSourceCommit: "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c",
@@ -106,7 +109,21 @@ describe("full-corpus independent evidence", () => {
 
 	it("binds independent metrics, artifacts, runtime, and latency semantics", () => {
 		const receipt = createFullCorpusEvidenceReceipt(evidence());
-		expect(receipt.verdict).toBe("PASS");
+		expect(receipt.schemaVersion).toBe(2);
+		expect(receipt.verdict).toBe("LOCAL_PASS");
+		expect(receipt).toMatchObject({
+			assurance: "self-observed-local",
+			publicClaimEligible: false,
+			publicClaimRequirement:
+				"independent signed execution attestation from a runner outside the benchmark operator trust boundary",
+		});
+		expect(sha256Bytes(`${JSON.stringify(MIRACL_KO_LOCK, null, 2)}\n`)).toBe(
+			EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
+		);
+		expect(receipt).toHaveProperty("independentEvaluatorTool");
+		expect(receipt).not.toHaveProperty("independentEvaluator");
+		expect(receipt.metrics).toHaveProperty("reproducedByIndependentTool");
+		expect(receipt.metrics).not.toHaveProperty("independent");
 		expect(receipt.metrics.deltas.ndcgAt10).toBeLessThanOrEqual(1e-6);
 		expect(receipt.runtime.latencySemantics).toContain("query-embedding");
 		expect(receipt.runtime.attachmentDelayMilliseconds).toBe(300_000);
@@ -140,7 +157,7 @@ describe("full-corpus independent evidence", () => {
 				embedding,
 				embeddingInferenceMode: "padded-array-batch-v1" as const,
 				embeddingExecutionPolicySha256: policy.embeddingPolicySha256,
-				collectionName: `naia_miracl_ko_source-l_${policy.embeddingPolicySha256.slice(0, 8)}`,
+				collectionName: `naia_miracl_ko_${EXPECTED_MIRACL_SOURCE_LOCK_SHA256.slice(0, 8)}_${policy.embeddingPolicySha256.slice(0, 8)}`,
 			},
 		};
 		const launchReceipt = {
@@ -167,6 +184,27 @@ describe("full-corpus independent evidence", () => {
 	});
 
 	it("fails closed on metric, artifact, policy, and runtime drift", () => {
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					result: {
+						...result,
+						inputs: { ...result.inputs, sourceLockSha256: "changed" },
+					},
+				}),
+			),
+		).toThrow("source lock");
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					qrelsSha256: "changed",
+					result: {
+						...result,
+						inputs: { ...result.inputs, qrelsSha256: "changed" },
+					},
+				}),
+			),
+		).toThrow("canonical qrels hash");
 		expect(() =>
 			createFullCorpusEvidenceReceipt(evidence({ trecSha256: "changed" })),
 		).toThrow("TREC hash");
