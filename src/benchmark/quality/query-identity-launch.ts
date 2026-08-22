@@ -1,6 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import {
+	type QueryIdentityEscrowTrustPolicy,
+	type QueryIdentityOracleRevealReceipt,
+	validateQueryIdentityEscrowEvidence,
+} from "./query-identity-escrow-evidence.js";
+import {
 	type QueryIdentityOracle,
 	type QueryIdentityPredictionArtifact,
 	buildQueryIdentityBlindPacket,
@@ -28,6 +33,7 @@ export interface QueryIdentityLaunchReceipt {
 	timestampedAt: string;
 	launchedAt: string;
 	runnerTrustPolicySha256?: string;
+	escrowTrustPolicySha256?: string;
 	engine: string;
 	model: string;
 }
@@ -53,6 +59,7 @@ export function createQueryIdentityLaunchArtifacts(input: {
 	launchedAt: string;
 	launchNonce?: string;
 	runnerTrustPolicy?: QueryIdentityRunnerTrustPolicy;
+	escrowTrustPolicy?: QueryIdentityEscrowTrustPolicy;
 	commandRunner?: Rfc3161CommandRunner;
 }) {
 	if (!input.engine?.trim() || !input.model?.trim())
@@ -92,6 +99,13 @@ export function createQueryIdentityLaunchArtifacts(input: {
 					),
 				}
 			: {}),
+		...(input.escrowTrustPolicy
+			? {
+					escrowTrustPolicySha256: evidenceObjectSha256(
+						input.escrowTrustPolicy,
+					),
+				}
+			: {}),
 		engine: input.engine,
 		model: input.model,
 	};
@@ -105,6 +119,7 @@ export function scorePublicQueryIdentityRun(input: {
 	timestampEvidence: Rfc3161DigestTimestampEvidence;
 	timestampTrustPolicy: Rfc3161TimestampTrustPolicy;
 	runnerTrustPolicy?: QueryIdentityRunnerTrustPolicy;
+	escrowTrustPolicy?: QueryIdentityEscrowTrustPolicy;
 	commandRunner?: Rfc3161CommandRunner;
 }) {
 	const score = scoreQueryIdentityArtifact(input.oracle, input.predictions);
@@ -119,6 +134,10 @@ export function scorePublicQueryIdentityRun(input: {
 		runnerTrustPolicy:
 			input.launchReceipt?.runnerTrustPolicySha256 !== undefined
 				? input.runnerTrustPolicy
+				: undefined,
+		escrowTrustPolicy:
+			input.launchReceipt?.escrowTrustPolicySha256 !== undefined
+				? input.escrowTrustPolicy
 				: undefined,
 		commandRunner: input.commandRunner,
 	});
@@ -172,6 +191,7 @@ export function scoreRunnerSignedQueryIdentityRun(input: {
 	acknowledgement: QueryIdentityRunnerAcknowledgement;
 	resultSeal: QueryIdentityRunnerResultSeal;
 	runnerTrustPolicy: QueryIdentityRunnerTrustPolicy;
+	escrowTrustPolicy?: QueryIdentityEscrowTrustPolicy;
 	commandRunner?: Rfc3161CommandRunner;
 }) {
 	if (
@@ -216,6 +236,7 @@ export function scoreTimestampedRunnerQueryIdentityRun(input: {
 	acknowledgement: QueryIdentityRunnerAcknowledgement;
 	resultSeal: QueryIdentityRunnerResultSeal;
 	runnerTrustPolicy: QueryIdentityRunnerTrustPolicy;
+	escrowTrustPolicy?: QueryIdentityEscrowTrustPolicy;
 	predictionTimestampEvidence: Rfc3161DigestTimestampEvidence;
 	predictionTimestampTrustPolicy: Rfc3161TimestampTrustPolicy;
 	commandRunner?: Rfc3161CommandRunner;
@@ -255,5 +276,61 @@ export function scoreTimestampedRunnerQueryIdentityRun(input: {
 			timestampedAt: predictionTimestamp.timestampedAt,
 			trustedTimestampVerified: true as const,
 		},
+	};
+}
+
+export function scoreEscrowAttestedQueryIdentityRun(
+	input: Parameters<typeof scoreTimestampedRunnerQueryIdentityRun>[0] & {
+		escrowTrustPolicy: QueryIdentityEscrowTrustPolicy;
+		escrowPolicyTimestampEvidence: Rfc3161DigestTimestampEvidence;
+		escrowPolicyTimestampTrustPolicy: Rfc3161TimestampTrustPolicy;
+		revealReceipt: QueryIdentityOracleRevealReceipt;
+		revealTimestampEvidence: Rfc3161DigestTimestampEvidence;
+		revealTimestampTrustPolicy: Rfc3161TimestampTrustPolicy;
+		escrowPolicyTimestampCommandRunner?: Rfc3161CommandRunner;
+		revealTimestampCommandRunner?: Rfc3161CommandRunner;
+	},
+) {
+	if (
+		input.launchReceipt?.escrowTrustPolicySha256 !==
+		evidenceObjectSha256(input.escrowTrustPolicy)
+	)
+		throw new Error("escrow trust policy does not match launch receipt");
+	const timestampedScore = scoreTimestampedRunnerQueryIdentityRun(input);
+	const escrowEvidence = validateQueryIdentityEscrowEvidence({
+		launchReceipt: input.launchReceipt,
+		predictions: input.predictions,
+		predictionTimestampEvidence: input.predictionTimestampEvidence,
+		predictionTimestampTrustPolicy: input.predictionTimestampTrustPolicy,
+		escrowTrustPolicy: input.escrowTrustPolicy,
+		escrowPolicyTimestampEvidence: input.escrowPolicyTimestampEvidence,
+		escrowPolicyTimestampTrustPolicy: input.escrowPolicyTimestampTrustPolicy,
+		revealReceipt: input.revealReceipt,
+		revealTimestampEvidence: input.revealTimestampEvidence,
+		revealTimestampTrustPolicy: input.revealTimestampTrustPolicy,
+		predictionTimestampCommandRunner: input.predictionTimestampCommandRunner,
+		escrowPolicyTimestampCommandRunner:
+			input.escrowPolicyTimestampCommandRunner,
+		revealTimestampCommandRunner: input.revealTimestampCommandRunner,
+	});
+	return {
+		...timestampedScore,
+		evidenceAssurance: {
+			...timestampedScore.evidenceAssurance,
+			level:
+				"launch-bound-prior-timestamped-escrow-release-attestation" as const,
+			escrowTrustPolicyPriorExistenceRfc3161Verified:
+				escrowEvidence.escrowTrustPolicyPriorExistenceRfc3161Verified,
+			escrowTrustPolicyLaunchBindingVerified: true as const,
+			trustedEscrowReleaseSignatureVerified:
+				escrowEvidence.trustedEscrowReleaseSignatureVerified,
+			trustedEscrowReleaseTimestampVerified:
+				escrowEvidence.trustedEscrowReleaseTimestampVerified,
+			oracleWithholdingAttestedByTrustedEscrow:
+				escrowEvidence.oracleWithholdingAttestedByTrustedEscrow,
+			oracleWithheldUntilPredictionCommitVerified: false as const,
+			organizationalIndependenceVerified: false as const,
+		},
+		escrowEvidence,
 	};
 }

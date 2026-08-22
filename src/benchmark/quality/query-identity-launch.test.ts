@@ -9,6 +9,7 @@ import {
 } from "./public-evidence-crypto.js";
 import {
 	createQueryIdentityLaunchArtifacts,
+	scoreEscrowAttestedQueryIdentityRun,
 	scorePublicQueryIdentityRun,
 	scoreRunnerSignedQueryIdentityRun,
 	scoreTimestampedRunnerQueryIdentityRun,
@@ -60,7 +61,9 @@ function timestampFixture(
 	timestampText = "Aug 22 01:00:00 2026 GMT",
 ) {
 	const directory = mkdtempSync(join(tmpdir(), "query-identity-launch-"));
-	const token = Buffer.from("timestamp token");
+	const token = Buffer.from(
+		`timestamp token:${artifactSha256}:${timestampText}`,
+	);
 	const ca = Buffer.from("trusted tsa ca");
 	const tokenPath = join(directory, "oracle.tsr");
 	const caPath = join(directory, "tsa-ca.pem");
@@ -107,6 +110,17 @@ describe("query identity launch evidence", () => {
 					.toString(),
 			},
 		};
+		const escrowKeys = generateKeyPairSync("ed25519");
+		const escrow = "independent-escrow-01";
+		const escrowTrustPolicy = {
+			schemaVersion:
+				"naia-memory-query-identity-escrow-trust-policy-v1" as const,
+			escrows: {
+				[escrow]: escrowKeys.publicKey
+					.export({ type: "spki", format: "pem" })
+					.toString(),
+			},
+		};
 		const launch = createQueryIdentityLaunchArtifacts({
 			oracle: currentOracle,
 			...timestamp,
@@ -115,6 +129,7 @@ describe("query identity launch evidence", () => {
 			launchedAt: "2026-08-22T01:01:00.000Z",
 			launchNonce: "0123456789abcdef0123456789abcdef",
 			runnerTrustPolicy,
+			escrowTrustPolicy,
 		});
 		const predictions: QueryIdentityPredictionArtifact = {
 			schemaVersion: "naia-memory-query-identity-predictions-v1",
@@ -143,6 +158,7 @@ describe("query identity launch evidence", () => {
 				launchReceipt: launch.receipt,
 				...timestamp,
 				runnerTrustPolicy,
+				escrowTrustPolicy,
 			}),
 		).toMatchObject({
 			gate: "pass",
@@ -196,6 +212,7 @@ describe("query identity launch evidence", () => {
 				acknowledgement,
 				resultSeal,
 				runnerTrustPolicy,
+				escrowTrustPolicy,
 			}),
 		).toMatchObject({
 			evidenceAssurance: {
@@ -222,6 +239,7 @@ describe("query identity launch evidence", () => {
 				acknowledgement,
 				resultSeal,
 				runnerTrustPolicy,
+				escrowTrustPolicy,
 				predictionTimestampEvidence: predictionTimestamp.timestampEvidence,
 				predictionTimestampTrustPolicy:
 					predictionTimestamp.timestampTrustPolicy,
@@ -237,6 +255,134 @@ describe("query identity launch evidence", () => {
 			},
 			predictionTimestampEvidence: { trustedTimestampVerified: true },
 		});
+		const escrowPolicyTimestamp = timestampFixture(
+			evidenceObjectSha256(escrowTrustPolicy),
+			"Aug 22 00:59:00 2026 GMT",
+		);
+		const unsignedRevealReceipt = {
+			schemaVersion:
+				"naia-memory-query-identity-oracle-reveal-receipt-v1" as const,
+			escrow,
+			oracleSha256,
+			predictionSha256: evidenceObjectSha256(predictions),
+			predictionTimestampTokenSha256:
+				predictionTimestamp.timestampEvidence.tokenSha256,
+			predictionTimestampTrustPolicySha256: evidenceObjectSha256(
+				predictionTimestamp.timestampTrustPolicy,
+			),
+			launchReceiptSha256: evidenceObjectSha256(launch.receipt),
+			escrowTrustPolicySha256: evidenceObjectSha256(escrowTrustPolicy),
+			escrowPolicyTimestampTrustPolicySha256: evidenceObjectSha256(
+				escrowPolicyTimestamp.timestampTrustPolicy,
+			),
+			revealTimestampTrustPolicySha256: evidenceObjectSha256(
+				predictionTimestamp.timestampTrustPolicy,
+			),
+			revealedAt: "2026-08-22T01:05:00.000Z",
+			statement:
+				"ORACLE_WITHHELD_UNTIL_BOUND_PREDICTION_TIMESTAMP_WAS_VERIFIED" as const,
+		};
+		const revealReceipt = {
+			...unsignedRevealReceipt,
+			signatureBase64: sign(
+				null,
+				evidenceSignaturePayload(unsignedRevealReceipt),
+				escrowKeys.privateKey,
+			).toString("base64"),
+		};
+		const revealTimestamp = timestampFixture(
+			evidenceObjectSha256(revealReceipt),
+			"Aug 22 01:06:00 2026 GMT",
+		);
+		const escrowInput = {
+			oracle: currentOracle,
+			predictions,
+			launchReceipt: launch.receipt,
+			...timestamp,
+			acknowledgement,
+			resultSeal,
+			runnerTrustPolicy,
+			predictionTimestampEvidence: predictionTimestamp.timestampEvidence,
+			predictionTimestampTrustPolicy: predictionTimestamp.timestampTrustPolicy,
+			predictionTimestampCommandRunner: predictionTimestamp.commandRunner,
+			escrowTrustPolicy,
+			escrowPolicyTimestampEvidence: escrowPolicyTimestamp.timestampEvidence,
+			escrowPolicyTimestampTrustPolicy:
+				escrowPolicyTimestamp.timestampTrustPolicy,
+			escrowPolicyTimestampCommandRunner: escrowPolicyTimestamp.commandRunner,
+			revealReceipt,
+			revealTimestampEvidence: revealTimestamp.timestampEvidence,
+			revealTimestampTrustPolicy: predictionTimestamp.timestampTrustPolicy,
+			revealTimestampCommandRunner: revealTimestamp.commandRunner,
+		};
+		expect(scoreEscrowAttestedQueryIdentityRun(escrowInput)).toMatchObject({
+			evidenceAssurance: {
+				level: "launch-bound-prior-timestamped-escrow-release-attestation",
+				escrowTrustPolicyPriorExistenceRfc3161Verified: true,
+				escrowTrustPolicyLaunchBindingVerified: true,
+				trustedEscrowReleaseSignatureVerified: true,
+				trustedEscrowReleaseTimestampVerified: true,
+				oracleWithholdingAttestedByTrustedEscrow: true,
+				oracleWithheldUntilPredictionCommitVerified: false,
+				organizationalIndependenceVerified: false,
+			},
+			escrowEvidence: { technicalOracleWithholdingVerified: false },
+		});
+		const earlyRevealTimestamp = timestampFixture(
+			evidenceObjectSha256(revealReceipt),
+			"Aug 22 01:03:00 2026 GMT",
+		);
+		expect(() =>
+			scoreEscrowAttestedQueryIdentityRun({
+				...escrowInput,
+				revealTimestampEvidence: earlyRevealTimestamp.timestampEvidence,
+				revealTimestampTrustPolicy: predictionTimestamp.timestampTrustPolicy,
+				revealTimestampCommandRunner: earlyRevealTimestamp.commandRunner,
+			}),
+		).toThrow("reveal receipt was not timestamped after prediction");
+		const latePolicyTimestamp = timestampFixture(
+			evidenceObjectSha256(escrowTrustPolicy),
+			"Aug 22 01:02:00 2026 GMT",
+		);
+		expect(() =>
+			scoreEscrowAttestedQueryIdentityRun({
+				...escrowInput,
+				escrowPolicyTimestampEvidence: latePolicyTimestamp.timestampEvidence,
+				escrowPolicyTimestampTrustPolicy:
+					escrowPolicyTimestamp.timestampTrustPolicy,
+				escrowPolicyTimestampCommandRunner: latePolicyTimestamp.commandRunner,
+			}),
+		).toThrow("escrow trust policy was not timestamped before launch");
+		expect(() =>
+			scoreEscrowAttestedQueryIdentityRun({
+				...escrowInput,
+				revealReceipt: {
+					...revealReceipt,
+					predictionTimestampTokenSha256: "f".repeat(64),
+				},
+			}),
+		).toThrow("oracle reveal receipt is invalid");
+		const substitutedEscrowKeys = generateKeyPairSync("ed25519");
+		expect(() =>
+			scoreEscrowAttestedQueryIdentityRun({
+				...escrowInput,
+				escrowTrustPolicy: {
+					schemaVersion: "naia-memory-query-identity-escrow-trust-policy-v1",
+					escrows: {
+						[escrow]: substitutedEscrowKeys.publicKey
+							.export({ type: "spki", format: "pem" })
+							.toString(),
+					},
+				},
+			}),
+		).toThrow("escrow trust policy does not match launch receipt");
+		expect(() =>
+			scoreEscrowAttestedQueryIdentityRun({
+				...escrowInput,
+				predictionTimestampTrustPolicy:
+					escrowPolicyTimestamp.timestampTrustPolicy,
+			}),
+		).toThrow("oracle reveal receipt is invalid");
 
 		predictions.run.createdAt = launch.receipt.launchedAt;
 		expect(() =>
@@ -246,6 +392,7 @@ describe("query identity launch evidence", () => {
 				launchReceipt: launch.receipt,
 				...timestamp,
 				runnerTrustPolicy,
+				escrowTrustPolicy,
 			}),
 		).toThrow("not created after launch");
 	});
