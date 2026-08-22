@@ -1,6 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
-import { constants } from "node:fs";
-import { link, open, unlink } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
@@ -23,6 +21,7 @@ import { canonicalEvidenceJson } from "./public-evidence-crypto.js";
 import {
 	PublicEvidenceFileTooLargeError,
 	readBoundedEvidenceFile,
+	writeExclusiveEvidenceFile,
 } from "./public-evidence-file-io.js";
 import {
 	isExecutionAttestation,
@@ -40,31 +39,6 @@ import type {
 
 const MAX_BYTES = 16 * 1024 * 1024;
 const MAX_SIGNING_INPUT_BYTES = 64 * 1024;
-
-async function writeExclusive(path: string, bytes: Buffer): Promise<void> {
-	const temporary = `${path}.tmp-${randomBytes(12).toString("hex")}`;
-	let created = false;
-	try {
-		const handle = await open(
-			temporary,
-			constants.O_WRONLY |
-				constants.O_CREAT |
-				constants.O_EXCL |
-				constants.O_NOFOLLOW,
-			0o600,
-		);
-		created = true;
-		try {
-			await handle.writeFile(bytes);
-			await handle.sync();
-		} finally {
-			await handle.close();
-		}
-		await link(temporary, path);
-	} finally {
-		if (created) await unlink(temporary).catch(() => undefined);
-	}
-}
 
 async function bounded(path: string, label: string): Promise<Buffer> {
 	try {
@@ -175,7 +149,7 @@ export async function runFullCorpusAttestationCli(
 			});
 			const receiptBytes = Buffer.from(`${canonicalEvidenceJson(receipt)}\n`);
 			try {
-				await writeExclusive(resolve(receiptPath), receiptBytes);
+				await writeExclusiveEvidenceFile(resolve(receiptPath), receiptBytes);
 			} catch (error) {
 				if ((error as NodeJS.ErrnoException).code === "EEXIST")
 					throw new Error("bundle publication receipt output already exists");

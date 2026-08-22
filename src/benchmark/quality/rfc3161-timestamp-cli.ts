@@ -1,8 +1,7 @@
 import { spawnSync } from "node:child_process";
-import { createHash, randomBytes } from "node:crypto";
-import { constants, writeFileSync } from "node:fs";
-import { link, open, unlink } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
 	canonicalEvidenceJson,
@@ -11,6 +10,7 @@ import {
 import {
 	PublicEvidenceFileTooLargeError,
 	readBoundedEvidenceFile,
+	writeExclusiveEvidenceFile,
 } from "./public-evidence-file-io.js";
 import type {
 	Rfc3161DigestTimestampEvidence,
@@ -78,40 +78,6 @@ async function exactArtifactSha256(path: string): Promise<string> {
 		throw new Error("RFC 3161 artifact is unreadable");
 	}
 	return createHash("sha256").update(bytes).digest("hex");
-}
-
-async function writeExclusiveDurable(
-	path: string,
-	bytes: Buffer,
-): Promise<void> {
-	const temporary = `${path}.tmp-${randomBytes(12).toString("hex")}`;
-	let created = false;
-	try {
-		const handle = await open(
-			temporary,
-			constants.O_WRONLY |
-				constants.O_CREAT |
-				constants.O_EXCL |
-				constants.O_NOFOLLOW,
-			0o600,
-		);
-		created = true;
-		try {
-			await handle.writeFile(bytes);
-			await handle.sync();
-		} finally {
-			await handle.close();
-		}
-		await link(temporary, path);
-		const directory = await open(dirname(path), constants.O_RDONLY);
-		try {
-			await directory.sync();
-		} finally {
-			await directory.close();
-		}
-	} finally {
-		if (created) await unlink(temporary).catch(() => undefined);
-	}
 }
 
 export async function runRfc3161TimestampCli(
@@ -190,7 +156,7 @@ export async function runRfc3161TimestampCli(
 		if (sealFileOutput) {
 			const evidenceBytes = Buffer.from(`${canonicalEvidenceJson(evidence)}\n`);
 			try {
-				await writeExclusiveDurable(resolve(args[3]), evidenceBytes);
+				await writeExclusiveEvidenceFile(resolve(args[3]), evidenceBytes);
 			} catch (error) {
 				if ((error as NodeJS.ErrnoException).code === "EEXIST")
 					throw new Error("RFC 3161 timestamp evidence output already exists");
