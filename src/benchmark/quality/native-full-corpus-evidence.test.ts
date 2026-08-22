@@ -51,8 +51,10 @@ function evidence(overrides = {}) {
 		},
 		launchReceiptSha256: "launch-hash",
 		runtimeObservation: {
+			schemaVersion: 1,
 			monitor: {
-				source: "/sources/runtime-monitor.ts",
+				source:
+					"/repo/src/benchmark/quality/native-full-corpus-runtime-monitor-cli.ts",
 				sourceSha256: EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256,
 			},
 			launchReceipt: { path: "/outputs/launch.json", sha256: "launch-hash" },
@@ -64,7 +66,13 @@ function evidence(overrides = {}) {
 					["node", "native-full-corpus-evaluation-cli.ts"].join("\0"),
 				),
 			},
-			observation: { samples: 2, peakRssBytes: 4096 },
+			observation: {
+				startedAt: "2026-08-22T00:05:00.000Z",
+				completedAt: "2026-08-22T00:10:00.000Z",
+				pollMilliseconds: 5_000,
+				samples: 2,
+				peakRssBytes: 4096,
+			},
 			result: { path: "/outputs/result.json", sha256: "result" },
 		},
 		qdrant: {
@@ -94,6 +102,8 @@ describe("full-corpus independent evidence", () => {
 		expect(receipt.verdict).toBe("PASS");
 		expect(receipt.metrics.deltas.ndcgAt10).toBeLessThanOrEqual(1e-6);
 		expect(receipt.runtime.latencySemantics).toContain("query-embedding");
+		expect(receipt.runtime.attachmentDelayMilliseconds).toBe(300_000);
+		expect(receipt.runtime.observationBoundary).toContain("after-launch");
 	});
 
 	it("fails closed on metric, artifact, policy, and runtime drift", () => {
@@ -146,6 +156,32 @@ describe("full-corpus independent evidence", () => {
 					runtimeObservation: {
 						...evidence().runtimeObservation,
 						result: { path: "/outputs/result.json", sha256: "changed" },
+					},
+				}),
+			),
+		).toThrow("runtime observation");
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					runtimeObservation: {
+						...evidence().runtimeObservation,
+						observation: {
+							...evidence().runtimeObservation.observation,
+							samples: 1.5,
+						},
+					},
+				}),
+			),
+		).toThrow("runtime observation");
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					runtimeObservation: {
+						...evidence().runtimeObservation,
+						observation: {
+							...evidence().runtimeObservation.observation,
+							startedAt: "2026-08-21T23:59:59.000Z",
+						},
 					},
 				}),
 			),

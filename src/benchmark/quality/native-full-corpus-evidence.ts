@@ -78,6 +78,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 	};
 	launchReceiptSha256: string;
 	runtimeObservation: {
+		schemaVersion: number;
 		monitor: { source: string; sourceSha256: string };
 		launchReceipt: { path: string; sha256: string };
 		process: {
@@ -86,7 +87,13 @@ export function createFullCorpusEvidenceReceipt(input: {
 			procStartTicks: string;
 			cmdlineSha256: string;
 		};
-		observation: { samples: number; peakRssBytes: number };
+		observation: {
+			startedAt: string;
+			completedAt: string;
+			pollMilliseconds: number;
+			samples: number;
+			peakRssBytes: number;
+		};
 		result: { path: string; sha256: string };
 	};
 	qdrant: {
@@ -135,7 +142,14 @@ export function createFullCorpusEvidenceReceipt(input: {
 	)
 		throw new Error("benchmark launch evidence mismatch");
 	const runtime = input.runtimeObservation;
+	const launchCapturedAt = Date.parse(input.launchReceipt.capturedAt);
+	const observationStartedAt = Date.parse(runtime.observation.startedAt);
+	const observationCompletedAt = Date.parse(runtime.observation.completedAt);
 	if (
+		runtime.schemaVersion !== 1 ||
+		!runtime.monitor.source.endsWith(
+			"/src/benchmark/quality/native-full-corpus-runtime-monitor-cli.ts",
+		) ||
 		runtime.monitor.sourceSha256 !== EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256 ||
 		runtime.launchReceipt.sha256 !== input.launchReceiptSha256 ||
 		runtime.process.pid !== input.launchReceipt.pid ||
@@ -143,6 +157,13 @@ export function createFullCorpusEvidenceReceipt(input: {
 		runtime.process.procStartTicks !== input.launchReceipt.procStartTicks ||
 		runtime.process.cmdlineSha256 !==
 			sha256Bytes(input.launchReceipt.cmdline.join("\0")) ||
+		!Number.isFinite(launchCapturedAt) ||
+		!Number.isFinite(observationStartedAt) ||
+		!Number.isFinite(observationCompletedAt) ||
+		observationStartedAt < launchCapturedAt ||
+		observationCompletedAt < observationStartedAt ||
+		runtime.observation.pollMilliseconds !== 5_000 ||
+		!Number.isSafeInteger(runtime.observation.samples) ||
 		runtime.observation.samples < 1 ||
 		!Number.isSafeInteger(runtime.observation.peakRssBytes) ||
 		runtime.observation.peakRssBytes <= 0 ||
@@ -150,6 +171,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 		runtime.result.sha256 !== input.resultSha256
 	)
 		throw new Error("benchmark runtime observation mismatch");
+	const attachmentDelayMilliseconds = observationStartedAt - launchCapturedAt;
 	if (
 		input.qdrant.version !== EXPECTED_QDRANT_VERSION ||
 		input.qdrant.commit !== EXPECTED_QDRANT_COMMIT ||
@@ -215,6 +237,9 @@ export function createFullCorpusEvidenceReceipt(input: {
 			cpuOnly: true,
 			launchReceipt: input.launchReceipt,
 			observation: runtime,
+			attachmentDelayMilliseconds,
+			observationBoundary:
+				"monitor-attached-after-launch; Linux VmHWM is cumulative for the observed process lifetime",
 			qdrant: input.qdrant,
 			collectionName: result.configuration.collectionName,
 			latencySemantics: "query-embedding-plus-exact-qdrant-search",

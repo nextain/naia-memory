@@ -69,3 +69,25 @@ overlap disclosure, embedding prefix/pooling/quantization policy, and the
 Naia-favoring claim restrictions are internally consistent. Its final verdict
 remains `CONDITIONAL` until the completed result is independently reproduced.
 This is the correct current state, not a failed effectiveness result.
+
+## Runtime-evidence adversarial follow-up
+
+A deterministic follow-up found that the evidence verifier accepted a runtime
+observation without validating its schema version, monitor path, polling
+contract, integral sample count, or chronology. It also risked letting a final
+reader mistake a monitor attached after launch for launch-to-exit observation.
+
+The verifier now fails closed unless the receipt is schema version 1, names the
+pinned monitor source path and hash, uses the fixed 5,000 ms polling interval,
+contains a positive safe-integer sample count and peak RSS, and has an
+observation interval ordered after the launch capture time. The final receipt
+also publishes the attachment delay and the exact boundary: monitoring began
+after launch, while Linux `VmHWM` remains cumulative over the observed process
+lifetime. This strengthens provenance but does not convert local observation
+into independent-lab evidence.
+
+The active monitor source was deliberately left unchanged while it is running;
+editing a loaded source file would make its exit-time source hash ambiguous.
+Formal `review-pass` convergence remains `REVIEW_ONLY` because the repository's
+user-owned untracked `.cache/tools/trec_eval-ba38899/` path fails the complete
+changed-tree preflight. The cache was preserved and no CLEAN claim is made.
