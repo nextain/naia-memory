@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "upstream": "https://github.com/getzep/graphiti",
+  "revision": "993e081a6d7948a0d8851c12a5fbdbeb49fed862",
+  "servicePackage": "server/graph_service",
+  "databaseBackend": "neo4j",
+  "currentFactRule": "expired_at-is-null",
+  "networkPolicy": "loopback-isolated",
+  "registration": "from graphiti_benchmark_sidecar import router as benchmark_router; app.include_router(benchmark_router)"
+}

@@ -22,8 +22,9 @@ than a vector store alone.
 - Score state against all currently valid native entity edges in the group. Do not
   substitute raw episodes, the query's top-k results, or an unbounded synthetic
   query for complete state.
-- Exclude invalidated or expired edges from current state, while retaining their
-  native lifecycle evidence in the raw engine receipt when the sidecar is added.
+- Exclude edges whose native `expired_at` is set. `invalid_at` is temporal interval
+  metadata and is not an independent state-deletion rule. Retain both fields in
+  raw engine receipts when lifecycle evidence capture is added.
 - Pin the Graphiti revision, graph backend, LLM, embedder, reranker, prompts/defaults,
   and dependency lock. Report ingestion/search latency and provider cost separately.
 
@@ -31,10 +32,11 @@ than a vector store alone.
 
 The stock graph-service exposes fact search and episode listing, but no complete
 group fact-list route. Graphiti core does expose group-scoped entity-edge listing.
-The benchmark therefore requires a revision-pinned, read-only companion sidecar
-that maps that native core operation without changing extraction, invalidation, or
-ranking. Until its isolation and current-edge filtering are tested against the
-pinned backend, Graphiti execution is `NOT_RUN`; it must not be approximated.
+The benchmark therefore uses a revision-pinned, read-only companion sidecar that
+maps that native core operation without changing extraction, invalidation, or
+ranking. Source compatibility is now implemented, but until isolation and
+current-edge filtering are tested against the running pinned backend, Graphiti
+execution is `NOT_RUN`; it must not be approximated.
 
 ## Adversarial risks and gates
 
@@ -56,15 +58,21 @@ pinned backend, Graphiti execution is `NOT_RUN`; it must not be approximated.
 - The independent TypeScript bridge enforces random group isolation, sequential
   commit polling, native fact UUID preservation, native current-state listing, and
   isolated cleanup.
-- Four focused unit tests and the semantic-runner regression tests pass; project
-  TypeScript typechecking passes.
+- The concrete REST client maps stock ingestion/search/delete plus companion
+  commit/current-state routes, validates native fact identity, and rejects the
+  unauthenticated service on non-loopback hosts by default.
+- The companion is pinned to Graphiti commit
+  `993e081a6d7948a0d8851c12a5fbdbeb49fed862` with Neo4j and pages native
+  `EntityEdge.get_by_group_ids`, filtering current state by `expired_at is None`.
+- Eight focused Graphiti tests and the four semantic-runner regression tests pass;
+  project TypeScript typechecking and Python syntax compilation pass.
 - Formal external review is `NOT_RUN`: deterministic review preflight rejected an
   unrelated, user-owned untracked tool cache. No cross-validation claim is made.
 
 ## Remaining release gate
 
-Implement and pin the companion sidecar, pass backend namespace/validity smoke tests,
-wire the engine into the sealed semantic campaign, then run paired multilingual
+Pass backend namespace/validity smoke tests, wire the engine into the sealed
+semantic campaign, then run paired multilingual
 comparison with bootstrap intervals. Only those receipts can support a public claim.
 
 Primary references:
