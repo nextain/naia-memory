@@ -14,6 +14,7 @@ import {
 	OfflineEmbeddingProvider,
 } from "../../memory/embeddings.js";
 import { scanNativeCorpusDocuments } from "./native-corpus-extract.js";
+import { verifyTrueBatchLaunchAuthorizationFiles } from "./native-full-corpus-candidate-authorization.js";
 import {
 	loadFullCorpusChunk,
 	recoverIncompleteFullCorpusChunk,
@@ -150,6 +151,11 @@ async function main(): Promise<void> {
 	positiveInteger("CHUNK_SIZE", CHUNK_SIZE);
 	positiveInteger("EMBEDDING_BATCH_SIZE", EMBEDDING_BATCH_SIZE);
 	positiveInteger("UPSERT_BATCH_SIZE", UPSERT_BATCH_SIZE);
+	const batchInferenceMode = parseOfflineBatchInferenceMode(
+		process.env.MIRACL_EMBEDDING_INFERENCE_MODE,
+	);
+	if (batchInferenceMode === "padded-array-batch-v1")
+		verifyTrueBatchLaunchAuthorizationFiles(process.env);
 	if (existsSync(OUTPUT)) throw new Error("full-corpus output already exists");
 	await Promise.all(
 		MIRACL_KO_LOCK.files.map(({ path, size, sha256: expectedSha256 }) =>
@@ -161,9 +167,6 @@ async function main(): Promise<void> {
 	);
 
 	const sourceLockSha256 = sha256(canonical(MIRACL_KO_LOCK));
-	const batchInferenceMode = parseOfflineBatchInferenceMode(
-		process.env.MIRACL_EMBEDDING_INFERENCE_MODE,
-	);
 	const embedder = new OfflineEmbeddingProvider(
 		MODEL,
 		"cpu",

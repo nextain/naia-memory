@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { authorizeTrueBatchLaunch } from "./native-full-corpus-candidate-authorization.js";
+import {
+	authorizeTrueBatchLaunch,
+	verifyTrueBatchLaunchAuthorizationFiles,
+} from "./native-full-corpus-candidate-authorization.js";
 import { createTrueBatchLaunchPlan } from "./native-full-corpus-candidate-launch.js";
 import {
 	EXPECTED_EVALUATION_SOURCE_SHA256,
@@ -85,5 +88,44 @@ describe("true-batch launch authorization", () => {
 				baselineEvidenceBytes: bytes(evidence),
 			}),
 		).toThrow("true-batch plan does not match the locked launch policy");
+	});
+
+	it("requires the authorization file to match the plan and baseline", async () => {
+		const { mkdtempSync, writeFileSync } = await import("node:fs");
+		const { join } = await import("node:path");
+		const { tmpdir } = await import("node:os");
+		const directory = mkdtempSync(join(tmpdir(), "naia-true-batch-auth-"));
+		const plan = createTrueBatchLaunchPlan({ exists: () => false });
+		const evidence = baselineEvidence();
+		const authorization = authorizeTrueBatchLaunch({
+			plan,
+			planBytes: bytes(plan),
+			baselineEvidence: evidence,
+			baselineEvidenceBytes: bytes(evidence),
+		});
+		const planPath = join(directory, "plan.json");
+		const evidencePath = join(directory, "evidence.json");
+		const authorizationPath = join(directory, "authorization.json");
+		writeFileSync(planPath, bytes(plan));
+		writeFileSync(evidencePath, bytes(evidence));
+		writeFileSync(authorizationPath, bytes(authorization));
+		expect(() =>
+			verifyTrueBatchLaunchAuthorizationFiles({
+				MIRACL_TRUE_BATCH_PLAN: planPath,
+				MIRACL_BASELINE_EVIDENCE: evidencePath,
+				MIRACL_TRUE_BATCH_AUTHORIZATION: authorizationPath,
+			}),
+		).not.toThrow();
+		writeFileSync(
+			authorizationPath,
+			bytes({ ...authorization, verdict: "AUTHORIZED-BY-HAND" }),
+		);
+		expect(() =>
+			verifyTrueBatchLaunchAuthorizationFiles({
+				MIRACL_TRUE_BATCH_PLAN: planPath,
+				MIRACL_BASELINE_EVIDENCE: evidencePath,
+				MIRACL_TRUE_BATCH_AUTHORIZATION: authorizationPath,
+			}),
+		).toThrow("true-batch launch authorization mismatch");
 	});
 });

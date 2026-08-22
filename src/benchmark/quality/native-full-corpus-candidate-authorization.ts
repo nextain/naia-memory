@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import {
 	type TrueBatchLaunchPlan,
 	createTrueBatchLaunchPlan,
@@ -74,4 +75,38 @@ export function authorizeTrueBatchLaunch(input: {
 			launchPlanSha256: sha256Bytes(input.planBytes),
 		},
 	};
+}
+
+export function verifyTrueBatchLaunchAuthorizationFiles(
+	environment: NodeJS.ProcessEnv,
+): void {
+	const planPath =
+		environment.MIRACL_TRUE_BATCH_PLAN ??
+		"reports/quality/miracl-ko-full-corpus-true-batch-launch-plan.json";
+	const baselineEvidencePath =
+		environment.MIRACL_BASELINE_EVIDENCE ??
+		"reports/quality/miracl-ko-full-corpus-vector-exact.json.evidence.json";
+	const authorizationPath =
+		environment.MIRACL_TRUE_BATCH_AUTHORIZATION ??
+		"reports/quality/miracl-ko-full-corpus-true-batch-launch-authorization.json";
+	const planBytes = readFileSync(planPath);
+	const baselineEvidenceBytes = readFileSync(baselineEvidencePath);
+	const expected = authorizeTrueBatchLaunch({
+		plan: JSON.parse(planBytes.toString("utf8")) as TrueBatchLaunchPlan,
+		planBytes,
+		baselineEvidence: JSON.parse(baselineEvidenceBytes.toString("utf8")),
+		baselineEvidenceBytes,
+	});
+	const authorizationBytes = readFileSync(authorizationPath);
+	let authorization: unknown;
+	try {
+		authorization = JSON.parse(authorizationBytes.toString("utf8"));
+	} catch {
+		throw new Error("true-batch launch authorization is invalid JSON");
+	}
+	if (
+		sha256Bytes(authorizationBytes) !== sha256Bytes(canonical(authorization)) ||
+		canonical(authorization) !== canonical(expected)
+	)
+		throw new Error("true-batch launch authorization mismatch");
 }
