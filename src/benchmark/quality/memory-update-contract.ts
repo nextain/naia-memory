@@ -57,6 +57,7 @@ export const SEMANTIC_PUBLIC_MINIMUM_CASES = 100;
 export const SEMANTIC_PUBLIC_MINIMUM_FAMILIES = 100;
 export const SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_LANGUAGE = 30;
 export const SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_DECISION = 10;
+export const SEMANTIC_PUBLIC_MINIMUM_FAMILIES_PER_LANGUAGE_DECISION = 10;
 
 /**
  * Applies the sample-size floor for public semantic-update claims.
@@ -155,12 +156,24 @@ export function validateSemanticPublicEvidenceCoverage(
 				`public semantic gate requires at least ${SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_LANGUAGE} ${language} test cases`,
 			);
 		for (const decision of SEMANTIC_DIAGNOSTIC_DECISIONS) {
-			const decisionCount = languageCases.filter(
+			const decisionCases = languageCases.filter(
 				(current) => current.expectedDecision === decision,
-			).length;
-			if (decisionCount < SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_DECISION)
+			);
+			if (
+				decisionCases.length < SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_DECISION
+			)
 				throw new Error(
 					`public semantic gate requires at least ${SEMANTIC_PUBLIC_MINIMUM_TEST_CASES_PER_DECISION} ${language}/${decision} test cases`,
+				);
+			const decisionFamilyCount = new Set(
+				decisionCases.map((current) => current.familyId),
+			).size;
+			if (
+				decisionFamilyCount <
+				SEMANTIC_PUBLIC_MINIMUM_FAMILIES_PER_LANGUAGE_DECISION
+			)
+				throw new Error(
+					`public semantic gate requires at least ${SEMANTIC_PUBLIC_MINIMUM_FAMILIES_PER_LANGUAGE_DECISION} distinct ${language}/${decision} test families`,
 				);
 		}
 	}

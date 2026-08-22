@@ -167,6 +167,38 @@ describe("memory update contract", () => {
 		);
 	});
 
+	it("requires independent families in every language and decision cell", () => {
+		const languages = ["ko", "en", "ja"] as const;
+		const decisions = ["update", "delete", "no-update"] as const;
+		const cases = Array.from({ length: 120 }, (_, index) => {
+			const language = languages[index % languages.length] ?? "ko";
+			const decision =
+				decisions[Math.floor(index / languages.length) % decisions.length] ??
+				"update";
+			const current = reviewedCase(language, `public-independent-${index}`);
+			current.expectedDecision = decision;
+			if (decision === "delete") current.expectedDeletedIds = ["deleted"];
+			if (decision === "no-update") current.noUpdateIds = ["unchanged"];
+			return current;
+		});
+		for (const current of cases)
+			if (current.language === "ko" && current.expectedDecision === "delete")
+				current.familyId = "repeated-ko-delete-family";
+		const contract: MemoryUpdateContract = {
+			schemaVersion: "naia-memory-update-contract-v1",
+			tier: "semantic-update-interpretation",
+			construction: "independent-native-reviewed",
+			familySplitFreeze: {
+				frozenAt: "2026-01-04T00:00:00Z",
+				digest: computeFamilySplitDigest(cases) as `sha256:${string}`,
+			},
+			cases,
+		};
+		expect(() => validateSemanticPublicEvidenceCoverage(contract)).toThrow(
+			"at least 10 distinct ko/delete test families",
+		);
+	});
+
 	it("rejects self-reviewed evidence and a stale family split freeze", () => {
 		const cases = [reviewedCase("ko"), reviewedCase("en"), reviewedCase("ja")];
 		const [firstCase] = cases;
