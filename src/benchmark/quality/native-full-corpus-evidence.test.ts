@@ -1,8 +1,9 @@
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { FULL_CORPUS_ATTESTATION_ARTIFACT_NAMES } from "./native-full-corpus-attestation-bundle.js";
 import { runFullCorpusAttestationCli } from "./native-full-corpus-attestation-cli.js";
 import { buildFullCorpusChallengeSigningPacket } from "./native-full-corpus-attestation-packet.js";
 import {
@@ -684,6 +685,108 @@ describe("full-corpus independent evidence", () => {
 			).toBe(1);
 			expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
 				"challenge timestamp evidence shape is invalid",
+			);
+
+			const token = Buffer.from("timestamp token");
+			const ca = Buffer.from("timestamp CA");
+			const tokenPath = join(root, "timestamp.tsr");
+			const caPath = join(root, "tsa-ca.pem");
+			writeFileSync(tokenPath, token);
+			writeFileSync(caPath, ca);
+			const timestampEvidenceFor = (artifact: unknown) => ({
+				schemaVersion:
+					"naia-memory-rfc3161-digest-timestamp-evidence-v1" as const,
+				artifactSha256: evidenceObjectSha256(artifact),
+				tokenSha256: createHash("sha256").update(token).digest("hex"),
+				tokenPath: join(root, "must-not-be-read", "timestamp.tsr"),
+			});
+			const timestampTrust = {
+				schemaVersion: "naia-memory-rfc3161-timestamp-trust-policy-v1" as const,
+				trustedCaFilePath: join(root, "must-not-be-read", "tsa-ca.pem"),
+				trustedCaFileSha256: createHash("sha256").update(ca).digest("hex"),
+				requiredPolicyOid: "1.2.3.4",
+			};
+			for (const [path, value] of timestampPaths.map(
+				(path, index) =>
+					[
+						path,
+						[
+							timestampEvidenceFor(challenge),
+							timestampTrust,
+							timestampEvidenceFor(attestation),
+							timestampTrust,
+						][index],
+					] as const,
+			))
+				writeFileSync(path, JSON.stringify(value));
+
+			const artifactPaths = [
+				...paths,
+				...timestampPaths,
+				tokenPath,
+				caPath,
+				tokenPath,
+				caPath,
+			];
+			const artifactSha256 = Object.fromEntries(
+				FULL_CORPUS_ATTESTATION_ARTIFACT_NAMES.map((name, index) => [
+					name,
+					createHash("sha256")
+						.update(readFileSync(artifactPaths[index] as string))
+						.digest("hex"),
+				]),
+			);
+			const bundle = {
+				schemaVersion: "naia-memory-full-corpus-attestation-bundle-v1",
+				artifacts: Object.fromEntries(
+					FULL_CORPUS_ATTESTATION_ARTIFACT_NAMES.map((name, index) => [
+						name,
+						{
+							path: basename(artifactPaths[index] as string),
+							sha256: artifactSha256[name],
+						},
+					]),
+				),
+			};
+			const bundlePath = join(root, "bundle.json");
+			const bundleText = JSON.stringify(bundle);
+			writeFileSync(bundlePath, bundleText);
+			let inspection = 0;
+			const timestampCommandRunner = (
+				args: string[],
+				actualToken: Buffer,
+				actualCa: Buffer,
+			) => {
+				expect(actualToken).toEqual(token);
+				expect(actualCa).toEqual(ca);
+				if (args.includes("-verify"))
+					return { status: 0, stdout: "OK", stderr: "" };
+				inspection += 1;
+				return {
+					status: 0,
+					stdout: `Policy OID: 1.2.3.4\nTime stamp: ${
+						inspection === 1
+							? "Aug 21 23:59:00 2026 GMT"
+							: "Aug 22 00:11:00 2026 GMT"
+					}\n`,
+					stderr: "",
+				};
+			};
+			expect(
+				await runFullCorpusAttestationCli(["verify-bundle", bundlePath], {
+					timestampCommandRunner,
+				}),
+			).toBe(0);
+			const bundledVerdict = JSON.parse(output.pop() ?? "{}");
+			expect(bundledVerdict.verdict).toBe(
+				"TIMESTAMP_QUALIFIED_PUBLIC_ATTESTATION_PASS",
+			);
+			expect(bundledVerdict.publicClaimEligible).toBe(true);
+			expect(bundledVerdict.verificationBundle.manifestSha256).toBe(
+				createHash("sha256").update(bundleText).digest("hex"),
+			);
+			expect(bundledVerdict.verificationBundle.artifactSha256).toEqual(
+				artifactSha256,
 			);
 		} finally {
 			vi.restoreAllMocks();

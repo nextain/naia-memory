@@ -1,5 +1,10 @@
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import {
+	FULL_CORPUS_ATTESTATION_ARTIFACT_NAMES,
+	FULL_CORPUS_ATTESTATION_JSON_ARTIFACT_NAMES,
+	loadFullCorpusAttestationBundle,
+} from "./native-full-corpus-attestation-bundle.js";
 import { buildFullCorpusChallengeSigningPacket } from "./native-full-corpus-attestation-packet.js";
 import {
 	evaluateFullCorpusPublicAttestation,
@@ -17,6 +22,7 @@ import {
 	isRfc3161DigestTimestampEvidence,
 	isRfc3161TimestampTrustPolicy,
 } from "./rfc3161-timestamp.js";
+import type { Rfc3161CommandRunner } from "./rfc3161-timestamp.js";
 
 const MAX_BYTES = 16 * 1024 * 1024;
 
@@ -57,9 +63,35 @@ function stringMap(value: unknown): value is Record<string, string> {
 
 export async function runFullCorpusAttestationCli(
 	args: string[],
+	dependencies: { timestampCommandRunner?: Rfc3161CommandRunner } = {},
 ): Promise<number> {
-	const [command, ...values] = args;
+	let [command, ...values] = args;
+	let verificationBundle:
+		| Awaited<ReturnType<typeof loadFullCorpusAttestationBundle>>
+		| undefined;
 	try {
+		if (command === "verify-bundle") {
+			if (values.length !== 1) {
+				process.stderr.write(
+					"Usage: pnpm benchmark:miracl-full-corpus-attestation verify-bundle <bundle.json>\n",
+				);
+				return 2;
+			}
+			verificationBundle = await loadFullCorpusAttestationBundle(
+				values[0] as string,
+			);
+			command = "verify-timestamped";
+			values = FULL_CORPUS_ATTESTATION_JSON_ARTIFACT_NAMES.map((name) => {
+				const artifact = verificationBundle?.artifacts.find(
+					(candidate) => candidate.name === name,
+				);
+				if (!artifact)
+					throw new Error(
+						`full-corpus attestation artifact ${name} is missing after bundle validation`,
+					);
+				return artifact.path;
+			});
+		}
 		if (command === "challenge") {
 			if (values.length !== 6) {
 				process.stderr.write(
@@ -155,19 +187,35 @@ export async function runFullCorpusAttestationCli(
 				challengeTimestampTrustPolicy,
 				attestationTimestampEvidence,
 				attestationTimestampTrustPolicy,
-			] = await Promise.all([
-				bounded(receiptPath, "receipt"),
-				json(challengePath, "challenge"),
-				json(attestationPath, "attestation"),
-				json(trustPath, "trust policy"),
-				json(challengeTimestampPath, "challenge timestamp evidence"),
-				json(challengeTimestampTrustPath, "challenge timestamp trust policy"),
-				json(attestationTimestampPath, "attestation timestamp evidence"),
-				json(
-					attestationTimestampTrustPath,
-					"attestation timestamp trust policy",
-				),
-			]);
+			] = verificationBundle
+				? FULL_CORPUS_ATTESTATION_JSON_ARTIFACT_NAMES.map((name) => {
+						const artifact = verificationBundle.artifacts.find(
+							(candidate) => candidate.name === name,
+						);
+						if (!artifact)
+							throw new Error(
+								`full-corpus attestation artifact ${name} is missing after bundle validation`,
+							);
+						return name === "receipt"
+							? artifact.bytes
+							: JSON.parse(artifact.bytes.toString("utf8"));
+					})
+				: await Promise.all([
+						bounded(receiptPath, "receipt"),
+						json(challengePath, "challenge"),
+						json(attestationPath, "attestation"),
+						json(trustPath, "trust policy"),
+						json(challengeTimestampPath, "challenge timestamp evidence"),
+						json(
+							challengeTimestampTrustPath,
+							"challenge timestamp trust policy",
+						),
+						json(attestationTimestampPath, "attestation timestamp evidence"),
+						json(
+							attestationTimestampTrustPath,
+							"attestation timestamp trust policy",
+						),
+					]);
 			if (trust === null || typeof trust !== "object" || Array.isArray(trust))
 				throw new Error("trust policy root must be an object");
 			const policy = trust as Record<string, unknown>;
@@ -203,12 +251,43 @@ export async function runFullCorpusAttestationCli(
 				challengeTimestampTrustPolicy,
 				attestationTimestampEvidence,
 				attestationTimestampTrustPolicy,
+				timestampCommandRunner: dependencies.timestampCommandRunner,
+				challengeTimestampTokenBytes: verificationBundle?.artifacts.find(
+					(artifact) => artifact.name === "challengeTimestampToken",
+				)?.bytes,
+				challengeTimestampTrustedCaBytes: verificationBundle?.artifacts.find(
+					(artifact) => artifact.name === "challengeTimestampTrustedCa",
+				)?.bytes,
+				attestationTimestampTokenBytes: verificationBundle?.artifacts.find(
+					(artifact) => artifact.name === "attestationTimestampToken",
+				)?.bytes,
+				attestationTimestampTrustedCaBytes: verificationBundle?.artifacts.find(
+					(artifact) => artifact.name === "attestationTimestampTrustedCa",
+				)?.bytes,
 			});
-			process.stdout.write(`${JSON.stringify(verdict)}\n`);
+			process.stdout.write(
+				`${JSON.stringify(
+					verificationBundle
+						? {
+								...verdict,
+								verificationBundle: {
+									schemaVersion: verificationBundle.manifest.schemaVersion,
+									manifestSha256: verificationBundle.manifestSha256,
+									artifactSha256: Object.fromEntries(
+										verificationBundle.artifacts.map((artifact) => [
+											artifact.name,
+											artifact.sha256,
+										]),
+									),
+								},
+							}
+						: verdict,
+				)}\n`,
+			);
 			return verdict.publicClaimEligible ? 0 : 1;
 		}
 		process.stderr.write(
-			"Usage: pnpm benchmark:miracl-full-corpus-attestation <challenge|verify|verify-timestamped> ...\n",
+			"Usage: pnpm benchmark:miracl-full-corpus-attestation <challenge|verify|verify-timestamped|verify-bundle> ...\n",
 		);
 		return 2;
 	} catch (error) {

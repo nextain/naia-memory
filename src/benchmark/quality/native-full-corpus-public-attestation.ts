@@ -178,6 +178,10 @@ export function evaluateTimestampQualifiedFullCorpusPublicAttestation(input: {
 	attestationTimestampEvidence: Rfc3161DigestTimestampEvidence;
 	attestationTimestampTrustPolicy: Rfc3161TimestampTrustPolicy;
 	timestampCommandRunner?: Rfc3161CommandRunner;
+	challengeTimestampTokenBytes?: Buffer;
+	challengeTimestampTrustedCaBytes?: Buffer;
+	attestationTimestampTokenBytes?: Buffer;
+	attestationTimestampTrustedCaBytes?: Buffer;
 }) {
 	const base = evaluateFullCorpusPublicAttestation(input);
 	const failures = [...base.failures];
@@ -189,12 +193,16 @@ export function evaluateTimestampQualifiedFullCorpusPublicAttestation(input: {
 			evidence: input.challengeTimestampEvidence,
 			trustPolicy: input.challengeTimestampTrustPolicy,
 			commandRunner: input.timestampCommandRunner,
+			tokenBytes: input.challengeTimestampTokenBytes,
+			trustedCaBytes: input.challengeTimestampTrustedCaBytes,
 		}).timestampedAt;
 		attestationTimestampedAt = validateRfc3161DigestTimestampBinding({
 			expectedArtifactSha256: evidenceObjectSha256(input.attestation),
 			evidence: input.attestationTimestampEvidence,
 			trustPolicy: input.attestationTimestampTrustPolicy,
 			commandRunner: input.timestampCommandRunner,
+			tokenBytes: input.attestationTimestampTokenBytes,
+			trustedCaBytes: input.attestationTimestampTrustedCaBytes,
 		}).timestampedAt;
 	} catch (error) {
 		failures.push(

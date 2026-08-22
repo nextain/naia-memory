@@ -1,6 +1,15 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	constants,
+	closeSync,
+	fstatSync,
+	mkdtempSync,
+	openSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
@@ -40,6 +49,7 @@ export type Rfc3161CommandRunner = (
 ) => CommandResult;
 
 const SHA256 = /^[a-f0-9]{64}$/;
+const MAX_TIMESTAMP_INPUT_BYTES = 16 * 1024 * 1024;
 const GEN_TIME = /^Time stamp:\s*(.+)$/m;
 const POLICY_OID = /^Policy OID:\s*(\S+)$/m;
 const OPENSSL_GMT_TIME =
@@ -228,16 +238,33 @@ export function validateRfc3161TimestampBinding(input: {
 	});
 }
 
+function readBoundedTimestampInput(path: string): Buffer {
+	const descriptor = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+	try {
+		const metadata = fstatSync(descriptor);
+		if (!metadata.isFile() || metadata.size > MAX_TIMESTAMP_INPUT_BYTES)
+			throw new Error("RFC 3161 input is not a bounded regular file");
+		const bytes = readFileSync(descriptor);
+		if (bytes.length > MAX_TIMESTAMP_INPUT_BYTES)
+			throw new Error("RFC 3161 input exceeds the intake limit");
+		return bytes;
+	} finally {
+		closeSync(descriptor);
+	}
+}
+
 function validateDigestTimestampCore(input: {
 	artifactSha256: string;
 	tokenSha256: string;
 	tokenPath: string;
 	trustPolicy: Rfc3161TimestampTrustPolicy;
 	commandRunner?: Rfc3161CommandRunner;
+	tokenBytes?: Buffer;
+	trustedCaBytes?: Buffer;
 }): { trustedTimestampVerified: true; timestampedAt: string } {
 	let token: Buffer;
 	try {
-		token = readFileSync(input.tokenPath);
+		token = input.tokenBytes ?? readBoundedTimestampInput(input.tokenPath);
 	} catch {
 		throw new Error("RFC 3161 timestamp token is unreadable");
 	}
@@ -245,7 +272,9 @@ function validateDigestTimestampCore(input: {
 		throw new Error("RFC 3161 timestamp token hash mismatch");
 	let trustedCa: Buffer;
 	try {
-		trustedCa = readFileSync(input.trustPolicy.trustedCaFilePath);
+		trustedCa =
+			input.trustedCaBytes ??
+			readBoundedTimestampInput(input.trustPolicy.trustedCaFilePath);
 	} catch {
 		throw new Error("RFC 3161 trusted CA file is unreadable");
 	}
@@ -311,6 +340,8 @@ export function validateRfc3161DigestTimestampBinding(input: {
 	evidence: Rfc3161DigestTimestampEvidence;
 	trustPolicy: Rfc3161TimestampTrustPolicy;
 	commandRunner?: Rfc3161CommandRunner;
+	tokenBytes?: Buffer;
+	trustedCaBytes?: Buffer;
 }): {
 	trustedTimestampVerified: true;
 	timestampedAt: string;
@@ -328,5 +359,7 @@ export function validateRfc3161DigestTimestampBinding(input: {
 		tokenPath: input.evidence.tokenPath,
 		trustPolicy: input.trustPolicy,
 		commandRunner: input.commandRunner,
+		tokenBytes: input.tokenBytes,
+		trustedCaBytes: input.trustedCaBytes,
 	});
 }
