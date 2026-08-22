@@ -42,6 +42,16 @@ describe("semantic raw CLI", () => {
 		).toMatchObject({ engine: "hindsight" });
 	});
 
+	it("accepts Graphiti as a temporal graph memory engine", () => {
+		expect(
+			parseSemanticRawCliArgs([
+				"--engine=graphiti",
+				"--contract=contract.json",
+				"--output=receipt.json",
+			]),
+		).toMatchObject({ engine: "graphiti" });
+	});
+
 	it("accepts Letta as an agent-managed memory engine", () => {
 		expect(
 			parseSemanticRawCliArgs([

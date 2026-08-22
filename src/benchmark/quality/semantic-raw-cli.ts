@@ -14,17 +14,24 @@ import { OpenAICompatEmbeddingProvider } from "../../memory/embeddings.js";
 import { buildLLMDeleteVerifier } from "../../memory/llm-delete-verifier.js";
 import { buildLLMFactExtractor } from "../../memory/llm-fact-extractor.js";
 import { benchmarkReceipt } from "../provenance.js";
+import { createGraphitiSemanticBridge } from "./bridge-graphiti-semantic.js";
 import { createHindsightSemanticBridge } from "./bridge-hindsight-semantic.js";
 import { createLettaSemanticBridge } from "./bridge-letta-semantic.js";
 import { createMem0SemanticBridge } from "./bridge-mem0-semantic.js";
 import { createNaiaSemanticBridge } from "./bridge-naia-semantic.js";
+import { GraphitiRestSemanticClient } from "./graphiti-rest-semantic-client.js";
 import { runSemanticRawContract } from "./memory-semantic-runner.js";
 import {
 	type MemoryUpdateContract,
 	validateMemoryUpdateContract,
 } from "./memory-update-contract.js";
 
-export type SemanticEngine = "hindsight" | "letta" | "mem0" | "naia";
+export type SemanticEngine =
+	| "graphiti"
+	| "hindsight"
+	| "letta"
+	| "mem0"
+	| "naia";
 export type SemanticRawCliArgs = {
 	engine: SemanticEngine;
 	contractPath: string;
@@ -48,12 +55,15 @@ export function parseSemanticRawCliArgs(args: string[]): SemanticRawCliArgs {
 	}
 	const engine = values.get("engine");
 	if (
+		engine !== "graphiti" &&
 		engine !== "hindsight" &&
 		engine !== "letta" &&
 		engine !== "mem0" &&
 		engine !== "naia"
 	)
-		throw new Error("--engine must be hindsight, letta, mem0, or naia");
+		throw new Error(
+			"--engine must be graphiti, hindsight, letta, mem0, or naia",
+		);
 	const contractPath = values.get("contract");
 	const outputPath = values.get("output");
 	if (!contractPath || !outputPath)
@@ -150,7 +160,9 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 	) as MemoryUpdateContract;
 	validateMemoryUpdateContract(contract);
 	const provider =
-		parsed.engine === "hindsight" || parsed.engine === "letta"
+		parsed.engine === "graphiti" ||
+		parsed.engine === "hindsight" ||
+		parsed.engine === "letta"
 			? undefined
 			: providerConfig();
 	const requireProvider = () => {
@@ -194,68 +206,97 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 						}),
 					});
 				}
-			: parsed.engine === "mem0"
-				? async () => {
-						const configuredProvider = requireProvider();
-						return createMem0SemanticBridge({
-							userIdPrefix: `semantic-${runId}`,
-							mem0Config: {
-								embedder: {
-									provider: "openai",
-									config: {
-										apiKey: configuredProvider.apiKey,
-										baseURL: configuredProvider.baseURL,
-										model: configuredProvider.embeddingModel,
+			: parsed.engine === "graphiti"
+				? async () =>
+						createGraphitiSemanticBridge(
+							new GraphitiRestSemanticClient({
+								baseUrl: process.env.GRAPHITI_URL ?? "http://127.0.0.1:8000",
+							}),
+							`semantic-${runId}`,
+						)
+				: parsed.engine === "mem0"
+					? async () => {
+							const configuredProvider = requireProvider();
+							return createMem0SemanticBridge({
+								userIdPrefix: `semantic-${runId}`,
+								mem0Config: {
+									embedder: {
+										provider: "openai",
+										config: {
+											apiKey: configuredProvider.apiKey,
+											baseURL: configuredProvider.baseURL,
+											model: configuredProvider.embeddingModel,
+										},
 									},
-								},
-								vectorStore: {
-									provider: "memory",
-									config: {
-										collectionName: `semantic-${runId}`,
-										dimension: configuredProvider.embeddingDimensions,
-										dbPath: `${workPrefix}-mem0-vector.db`,
+									vectorStore: {
+										provider: "memory",
+										config: {
+											collectionName: `semantic-${runId}`,
+											dimension: configuredProvider.embeddingDimensions,
+											dbPath: `${workPrefix}-mem0-vector.db`,
+										},
 									},
-								},
-								llm: {
-									provider: "openai",
-									config: {
-										apiKey: configuredProvider.apiKey,
-										baseURL: configuredProvider.baseURL,
-										model: configuredProvider.llmModel,
+									llm: {
+										provider: "openai",
+										config: {
+											apiKey: configuredProvider.apiKey,
+											baseURL: configuredProvider.baseURL,
+											model: configuredProvider.llmModel,
+										},
 									},
+									historyDbPath: `${workPrefix}-mem0-history.db`,
 								},
-								historyDbPath: `${workPrefix}-mem0-history.db`,
-							},
-						});
-					}
-				: parsed.engine === "letta"
-					? async () =>
-							createLettaSemanticBridge({
-								baseUrl: process.env.LETTA_URL ?? "http://127.0.0.1:8283",
-								apiKey: process.env.LETTA_API_KEY,
-								model: process.env.LETTA_LLM_MODEL ?? "openai/gpt-4.1-mini",
-								embeddingModel:
-									process.env.LETTA_EMBEDDING_MODEL ?? "text-embedding-3-small",
-								embeddingDimensions: Number(
-									process.env.LETTA_EMBEDDING_DIMENSIONS ?? "1536",
-								),
-								embeddingEndpoint: process.env.LETTA_EMBEDDING_ENDPOINT,
-							})
-					: async () =>
-							createHindsightSemanticBridge({
-								baseUrl: process.env.HINDSIGHT_URL ?? "http://127.0.0.1:18888",
-								bankIdPrefix: `semantic-${runId}`,
-								apiKey: process.env.HINDSIGHT_API_KEY,
 							});
-	const receipts = await runSemanticRawContract(
-		contract,
-		createBridge,
-		parsed.topK,
-		executionSeed,
-	);
+						}
+					: parsed.engine === "letta"
+						? async () =>
+								createLettaSemanticBridge({
+									baseUrl: process.env.LETTA_URL ?? "http://127.0.0.1:8283",
+									apiKey: process.env.LETTA_API_KEY,
+									model: process.env.LETTA_LLM_MODEL ?? "openai/gpt-4.1-mini",
+									embeddingModel:
+										process.env.LETTA_EMBEDDING_MODEL ??
+										"text-embedding-3-small",
+									embeddingDimensions: Number(
+										process.env.LETTA_EMBEDDING_DIMENSIONS ?? "1536",
+									),
+									embeddingEndpoint: process.env.LETTA_EMBEDDING_ENDPOINT,
+								})
+						: async () =>
+								createHindsightSemanticBridge({
+									baseUrl:
+										process.env.HINDSIGHT_URL ?? "http://127.0.0.1:18888",
+									bankIdPrefix: `semantic-${runId}`,
+									apiKey: process.env.HINDSIGHT_API_KEY,
+								});
 	const hindsightEndpoint =
 		process.env.HINDSIGHT_URL ?? "http://127.0.0.1:18888";
 	const lettaEndpoint = process.env.LETTA_URL ?? "http://127.0.0.1:8283";
+	const graphitiEndpoint = process.env.GRAPHITI_URL ?? "http://127.0.0.1:8000";
+	const graphitiRuntime = () => {
+		const revision = process.env.GRAPHITI_REVISION?.trim();
+		const imageDigest = process.env.GRAPHITI_IMAGE_DIGEST?.trim();
+		const coreVersion = process.env.GRAPHITI_CORE_VERSION?.trim();
+		const llmModel = process.env.GRAPHITI_LLM_MODEL?.trim();
+		const embeddingModel = process.env.GRAPHITI_EMBEDDING_MODEL?.trim();
+		if (
+			!revision ||
+			!imageDigest ||
+			!coreVersion ||
+			!llmModel ||
+			!embeddingModel
+		)
+			throw new Error(
+				"Graphiti runs require GRAPHITI_REVISION, GRAPHITI_IMAGE_DIGEST, GRAPHITI_CORE_VERSION, GRAPHITI_LLM_MODEL, and GRAPHITI_EMBEDDING_MODEL",
+			);
+		if (!/^[a-f0-9]{40}$/.test(revision))
+			throw new Error("GRAPHITI_REVISION must be an immutable Git commit");
+		if (!/^sha256:[a-f0-9]{64}$/.test(imageDigest))
+			throw new Error(
+				"GRAPHITI_IMAGE_DIGEST must be an immutable sha256 digest",
+			);
+		return { revision, imageDigest, coreVersion, llmModel, embeddingModel };
+	};
 	const hindsightRuntime = () => {
 		const version = process.env.HINDSIGHT_ENGINE_VERSION?.trim();
 		const imageDigest = process.env.HINDSIGHT_IMAGE_DIGEST?.trim();
@@ -298,6 +339,18 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 			embeddingDimensions,
 		};
 	};
+	const graphitiRuntimeReceipt =
+		parsed.engine === "graphiti" ? graphitiRuntime() : undefined;
+	const hindsightRuntimeReceipt =
+		parsed.engine === "hindsight" ? hindsightRuntime() : undefined;
+	const lettaRuntimeReceipt =
+		parsed.engine === "letta" ? lettaRuntime() : undefined;
+	const receipts = await runSemanticRawContract(
+		contract,
+		createBridge,
+		parsed.topK,
+		executionSeed,
+	);
 	const disclosure = {
 		engine: parsed.engine,
 		topK: parsed.topK,
@@ -315,20 +368,30 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 					authScheme: provider.auth,
 					endpoint: discloseEndpoint(provider.baseURL),
 				}
-			: parsed.engine === "letta"
+			: parsed.engine === "graphiti"
 				? {
 						providerPolicy: "engine-server-native-configuration-v1",
-						ingestionSurface: "agent-user-message-v1",
-						stateObservationPolicy:
-							"full-nonpersona-core-state-no-query-ranking-v1",
-						endpoint: discloseEndpoint(lettaEndpoint),
-						lettaRuntime: lettaRuntime(),
+						ingestionSurface: "synchronous-native-episode-v1",
+						stateObservationPolicy: "complete-current-native-edges-v1",
+						searchValidityPolicy:
+							"native-search-intersect-current-native-edges-v1",
+						endpoint: discloseEndpoint(graphitiEndpoint),
+						graphitiRuntime: graphitiRuntimeReceipt,
 					}
-				: {
-						providerPolicy: "engine-server-native-configuration-v1",
-						endpoint: discloseEndpoint(hindsightEndpoint),
-						hindsightRuntime: hindsightRuntime(),
-					}),
+				: parsed.engine === "letta"
+					? {
+							providerPolicy: "engine-server-native-configuration-v1",
+							ingestionSurface: "agent-user-message-v1",
+							stateObservationPolicy:
+								"full-nonpersona-core-state-no-query-ranking-v1",
+							endpoint: discloseEndpoint(lettaEndpoint),
+							lettaRuntime: lettaRuntimeReceipt,
+						}
+					: {
+							providerPolicy: "engine-server-native-configuration-v1",
+							endpoint: discloseEndpoint(hindsightEndpoint),
+							hindsightRuntime: hindsightRuntimeReceipt,
+						}),
 	};
 	const output = {
 		schemaVersion: "naia-memory-semantic-raw-artifact-v2",

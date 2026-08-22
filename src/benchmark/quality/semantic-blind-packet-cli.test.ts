@@ -120,7 +120,7 @@ describe("semantic blind packet CLI", () => {
 					...current.campaign,
 					disclosure: {
 						...current.campaign.disclosure,
-						engines: ["naia", "graphiti"],
+						engines: ["naia", "unknown"],
 					},
 				},
 				{
