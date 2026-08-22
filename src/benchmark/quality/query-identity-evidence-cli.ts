@@ -14,6 +14,7 @@ import {
 	createQueryIdentityLaunchArtifacts,
 	scorePublicQueryIdentityRun,
 	scoreRunnerSignedQueryIdentityRun,
+	scoreTimestampedRunnerQueryIdentityRun,
 } from "./query-identity-launch.js";
 import {
 	type QueryIdentityOracle,
@@ -167,8 +168,34 @@ export function runQueryIdentityEvidenceCli(args: string[]): void {
 		);
 		return;
 	}
+	if (command === "score-runner-timestamped") {
+		if (rest.length !== 11)
+			throw new Error(
+				"usage: score-runner-timestamped <oracle.json> <predictions.json> <launch-receipt.json> <oracle-timestamp-evidence.json> <oracle-timestamp-trust-policy.json> <runner-acknowledgement.json> <runner-result-seal.json> <runner-trust-policy.json> <prediction-timestamp-evidence.json> <prediction-timestamp-trust-policy.json> <score.json>",
+			);
+		writeExclusive(
+			rest[10],
+			scoreTimestampedRunnerQueryIdentityRun({
+				oracle: readJson<QueryIdentityOracle>(rest[0]),
+				predictions: readJson<QueryIdentityPredictionArtifact>(rest[1]),
+				launchReceipt: readJson<QueryIdentityLaunchReceipt>(rest[2]),
+				timestampEvidence: readJson<Rfc3161DigestTimestampEvidence>(rest[3]),
+				timestampTrustPolicy: readJson<Rfc3161TimestampTrustPolicy>(rest[4]),
+				acknowledgement: readJson<QueryIdentityRunnerAcknowledgement>(rest[5]),
+				resultSeal: readJson<QueryIdentityRunnerResultSeal>(rest[6]),
+				runnerTrustPolicy: readJson<QueryIdentityRunnerTrustPolicy>(rest[7]),
+				predictionTimestampEvidence: readJson<Rfc3161DigestTimestampEvidence>(
+					rest[8],
+				),
+				predictionTimestampTrustPolicy: readJson<Rfc3161TimestampTrustPolicy>(
+					rest[9],
+				),
+			}),
+		);
+		return;
+	}
 	throw new Error(
-		"command must be blind, score, launch, launch-runner, score-public, or score-runner-signed",
+		"command must be blind, score, launch, launch-runner, score-public, score-runner-signed, or score-runner-timestamped",
 	);
 }
 

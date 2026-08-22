@@ -206,3 +206,54 @@ export function scoreRunnerSignedQueryIdentityRun(input: {
 		runnerEvidence,
 	};
 }
+
+export function scoreTimestampedRunnerQueryIdentityRun(input: {
+	oracle: QueryIdentityOracle;
+	predictions: QueryIdentityPredictionArtifact;
+	launchReceipt: QueryIdentityLaunchReceipt;
+	timestampEvidence: Rfc3161DigestTimestampEvidence;
+	timestampTrustPolicy: Rfc3161TimestampTrustPolicy;
+	acknowledgement: QueryIdentityRunnerAcknowledgement;
+	resultSeal: QueryIdentityRunnerResultSeal;
+	runnerTrustPolicy: QueryIdentityRunnerTrustPolicy;
+	predictionTimestampEvidence: Rfc3161DigestTimestampEvidence;
+	predictionTimestampTrustPolicy: Rfc3161TimestampTrustPolicy;
+	commandRunner?: Rfc3161CommandRunner;
+	predictionTimestampCommandRunner?: Rfc3161CommandRunner;
+}) {
+	const signedScore = scoreRunnerSignedQueryIdentityRun(input);
+	const predictionTimestamp = validateRfc3161DigestTimestampBinding({
+		expectedArtifactSha256: evidenceObjectSha256(input.predictions),
+		evidence: input.predictionTimestampEvidence,
+		trustPolicy: input.predictionTimestampTrustPolicy,
+		commandRunner: input.predictionTimestampCommandRunner,
+	});
+	const timestampedAt = exactUtc(
+		predictionTimestamp.timestampedAt,
+		"prediction timestampedAt",
+	);
+	if (timestampedAt <= exactUtc(input.launchReceipt.launchedAt, "launchedAt"))
+		throw new Error("prediction commitment was not timestamped after launch");
+	if (
+		exactUtc(input.predictions.run.createdAt, "prediction createdAt") >
+		timestampedAt
+	)
+		throw new Error("prediction creation claim is after its trusted timestamp");
+	return {
+		...signedScore,
+		evidenceAssurance: {
+			...signedScore.evidenceAssurance,
+			level: "runner-signed-result-with-rfc3161-prediction-timestamp" as const,
+			predictionChronologyVerified: true as const,
+			predictionArtifactTrustedTimestampVerified: true as const,
+			predictionPrecommitTimestampVerified: false as const,
+			oracleWithheldUntilPredictionCommitVerified: false as const,
+		},
+		predictionTimestampEvidence: {
+			predictionSha256: evidenceObjectSha256(input.predictions),
+			timestampTokenSha256: input.predictionTimestampEvidence.tokenSha256,
+			timestampedAt: predictionTimestamp.timestampedAt,
+			trustedTimestampVerified: true as const,
+		},
+	};
+}

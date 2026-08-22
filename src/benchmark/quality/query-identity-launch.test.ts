@@ -11,6 +11,7 @@ import {
 	createQueryIdentityLaunchArtifacts,
 	scorePublicQueryIdentityRun,
 	scoreRunnerSignedQueryIdentityRun,
+	scoreTimestampedRunnerQueryIdentityRun,
 } from "./query-identity-launch.js";
 import {
 	QUERY_IDENTITY_PROPERTY_IDS,
@@ -54,7 +55,10 @@ function oracle(): QueryIdentityOracle {
 	};
 }
 
-function timestampFixture(artifactSha256: string) {
+function timestampFixture(
+	artifactSha256: string,
+	timestampText = "Aug 22 01:00:00 2026 GMT",
+) {
 	const directory = mkdtempSync(join(tmpdir(), "query-identity-launch-"));
 	const token = Buffer.from("timestamp token");
 	const ca = Buffer.from("trusted tsa ca");
@@ -81,8 +85,7 @@ function timestampFixture(artifactSha256: string) {
 				? { status: 0, stdout: "Verification: OK\n", stderr: "" }
 				: {
 						status: 0,
-						stdout:
-							"Status info:\nPolicy OID: 1.2.3.4\nTime stamp: Aug 22 01:00:00 2026 GMT\n",
+						stdout: `Status info:\nPolicy OID: 1.2.3.4\nTime stamp: ${timestampText}\n`,
 						stderr: "",
 					},
 	};
@@ -205,6 +208,34 @@ describe("query identity launch evidence", () => {
 				predictionPrecommitTimestampVerified: false,
 				oracleWithheldUntilPredictionCommitVerified: false,
 			},
+		});
+		const predictionTimestamp = timestampFixture(
+			evidenceObjectSha256(predictions),
+			"Aug 22 01:04:00 2026 GMT",
+		);
+		expect(
+			scoreTimestampedRunnerQueryIdentityRun({
+				oracle: currentOracle,
+				predictions,
+				launchReceipt: launch.receipt,
+				...timestamp,
+				acknowledgement,
+				resultSeal,
+				runnerTrustPolicy,
+				predictionTimestampEvidence: predictionTimestamp.timestampEvidence,
+				predictionTimestampTrustPolicy:
+					predictionTimestamp.timestampTrustPolicy,
+				predictionTimestampCommandRunner: predictionTimestamp.commandRunner,
+			}),
+		).toMatchObject({
+			evidenceAssurance: {
+				level: "runner-signed-result-with-rfc3161-prediction-timestamp",
+				predictionChronologyVerified: true,
+				predictionArtifactTrustedTimestampVerified: true,
+				predictionPrecommitTimestampVerified: false,
+				oracleWithheldUntilPredictionCommitVerified: false,
+			},
+			predictionTimestampEvidence: { trustedTimestampVerified: true },
 		});
 
 		predictions.run.createdAt = launch.receipt.launchedAt;
