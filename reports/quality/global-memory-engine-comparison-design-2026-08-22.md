@@ -13,7 +13,7 @@ interfaces.
 | A: direct lifecycle-memory competitor | Mem0 OSS | LLM-inferred extraction/update plus semantic search | Primary same-input comparator |
 | A: direct lifecycle-memory competitor | Hindsight | retain/recall over world, experience, and observation memories | Primary same-input comparator |
 | A: direct temporal-memory competitor | Graphiti | incremental temporal graph construction and hybrid temporal/semantic retrieval | Required comparator before a broad update-correctness claim |
-| B: agent-managed memory | Letta | an agent decides how to rewrite core/archival memory | Separate agent-policy comparison; not rank-equivalent to retrieval engines |
+| B: agent-managed memory | Letta | an agent decides how to rewrite always-active core memory and archival memory; archival retrieval is query-dependent | Separate agent-policy plus archival-search comparison; not component-equivalent to direct retrieval engines |
 | C: architecture reference | MemGPT | virtual context management across memory tiers | Cite as architectural ancestry unless an equivalent runnable surface is fixed |
 
 ## Evidence for the classification
@@ -37,10 +37,15 @@ interfaces.
 
 ## Adversarial findings against the current harness
 
-1. The current Letta semantic bridge ignores the search query and returns the
-   first `topK` non-persona core-memory blocks. That surface can test whether the
-   agent maintained useful compact state, but it cannot support a claim that
-   Letta has weaker semantic retrieval than Naia.
+1. The original Letta semantic bridge ignored the search query and returned the
+   first `topK` non-persona core-memory blocks. The bridge was updated to expose
+   always-active non-persona core state first and fill remaining slots with the
+   version-pinned backend's native query-ranked archival search. The mixed
+   surface is explicit in every artifact and still cannot support a
+   component-level claim that Letta retrieval is weaker than Naia. Each run is
+   required to bind `LETTA_ENGINE_VERSION` and an immutable image digest in its
+   raw execution receipt; the bridge itself does not claim compatibility with a
+   floating Letta version.
 2. Mem0 and Hindsight use native query-dependent search/recall, so they remain
    suitable primary comparators when model, embedding, input order, isolation,
    and query budgets are disclosed.
@@ -63,9 +68,10 @@ interfaces.
 2. Add a Graphiti bridge using its native episode ingestion and query-dependent
    hybrid search. Pin the revision, graph database, LLM, embedding model, and
    temporal fields.
-3. Reclassify Letta results under an agent-managed-state section. Only restore
-   it to a retrieval leaderboard if its native archival search result is exposed
-   and scored with the same query and budget.
+3. Keep Letta results under an agent-managed-state section. Its native archival
+   search is now exposed with the same query and bounded top-k budget, but the
+   always-active core-first semantics remain a distinct engine surface rather
+   than a direct-retrieval leaderboard row.
 4. Run pre-registered, sealed same-input lifecycle campaigns for ko/en/ja. Keep
    contradiction, supersession, deletion, temporal ordering, multi-hop, and
    ordinary semantic recall as separate strata.
@@ -81,5 +87,8 @@ interfaces.
 
 Until those gates pass, the defensible statement is limited to: Naia has a
 reproducible local benchmark program aimed at multilingual retrieval and memory
-supersession, with direct adapters for Mem0 and Hindsight and an agent-policy
-adapter for Letta. It is not yet evidence of global superiority or global SOTA.
+supersession, with direct adapters for Mem0, Hindsight, and Graphiti and an
+agent-managed core-plus-archive adapter for Letta. Graphiti has passed backend
+eligibility but not the sealed campaign, and Letta's mixed surface is not a
+component-equivalent leaderboard row. This is not yet evidence of global
+superiority or global SOTA.
