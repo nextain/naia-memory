@@ -92,7 +92,7 @@ function evidence(overrides = {}) {
 			sourceCommitAfter: "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c",
 		},
 		topicsPath: "/inputs/miracl-v1.0-ko/topics/topics.miracl-v1.0-ko-dev.tsv",
-		qrelsPath: "/inputs/qrels.tsv",
+		qrelsPath: "/inputs/miracl-v1.0-ko/qrels/qrels.miracl-v1.0-ko-dev.tsv",
 		trecPath: "/outputs/result.json.trec",
 		checkpointChain: {
 			directory: "/checkpoints/vectors",
@@ -183,6 +183,10 @@ describe("full-corpus independent evidence", () => {
 		expect(receipt.artifacts.topics).toEqual({
 			path: "/inputs/miracl-v1.0-ko/topics/topics.miracl-v1.0-ko-dev.tsv",
 			sha256: EXPECTED_MIRACL_TOPICS_SHA256,
+		});
+		expect(receipt.artifacts.qrels).toEqual({
+			path: "/inputs/miracl-v1.0-ko/qrels/qrels.miracl-v1.0-ko-dev.tsv",
+			sha256: EXPECTED_MIRACL_QRELS_SHA256,
 		});
 		expect(receipt).not.toHaveProperty("independentEvaluator");
 		expect(receipt.metrics).toHaveProperty("reproducedByIndependentTool");
@@ -364,13 +368,18 @@ describe("full-corpus independent evidence", () => {
 					},
 				}),
 			),
-		).toThrow("canonical qrels hash");
+		).toThrow("canonical qrels provenance");
 		expect(() =>
 			createFullCorpusEvidenceReceipt(evidence({ trecSha256: "changed" })),
 		).toThrow("TREC hash");
 		expect(() =>
 			createFullCorpusEvidenceReceipt(evidence({ qrelsSha256: "changed" })),
 		).toThrow("qrels hash");
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({ qrelsPath: "/inputs/substituted-qrels.tsv" }),
+			),
+		).toThrow("canonical qrels provenance");
 		expect(() =>
 			createFullCorpusEvidenceReceipt(
 				evidence({ trecEvalBinarySha256: "changed" }),

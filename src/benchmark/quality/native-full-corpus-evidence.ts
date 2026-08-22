@@ -230,8 +230,11 @@ export function createFullCorpusEvidenceReceipt(input: {
 	);
 	if (result.inputs.qrelsSha256 !== input.qrelsSha256)
 		throw new Error("qrels hash mismatch");
-	if (input.qrelsSha256 !== EXPECTED_MIRACL_QRELS_SHA256)
-		throw new Error("canonical qrels hash mismatch");
+	if (
+		input.qrelsSha256 !== EXPECTED_MIRACL_QRELS_SHA256 ||
+		!input.qrelsPath.endsWith(MIRACL_KO_LOCK.files[1].path)
+	)
+		throw new Error("canonical qrels provenance mismatch");
 	if (input.trecEvalBinarySha256 !== EXPECTED_TREC_EVAL_BINARY_SHA256)
 		throw new Error("trec_eval binary hash mismatch");
 	if (input.trecEvalSourceCommit !== TREC_EVAL_COMMIT)
