@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
 
 export interface CandidatePoolReceipt {
-	version: 2;
+	version: 3;
 	poolKind: "label-conditioned-hard-negative-diagnostic";
 	seed: string;
 	targetSize: number;
+	targetSizeMode: "fixed" | "required-only";
 	sourceCorpusSize: number;
 	retainedFraction: number;
 	minimumHardNegativesPerQuery: number;
@@ -14,6 +15,10 @@ export interface CandidatePoolReceipt {
 	hardNegativeCount: number;
 	hardNegativeAssignments: number;
 	hardNegativeCountByQuery: Record<string, number>;
+	hardNegativeCountBySourceAndQuery: Record<
+		"lexical" | "dense",
+		Record<string, number>
+	>;
 	uniqueHardNegativeRatio: number;
 	randomFillerCount: number;
 	duplicateInputCount: number;
@@ -22,8 +27,10 @@ export interface CandidatePoolReceipt {
 	queriesWithoutAnyPositive: string[];
 	corpusSha256: string;
 	labelsSha256: string;
-	hardNegativeRunSha256: string;
-	hardNegativeSource: string;
+	hardNegativeRuns: Record<
+		"lexical" | "dense",
+		{ source: string; sha256: string }
+	>;
 	poolSha256: string;
 }
 
@@ -55,15 +62,23 @@ function canonicalEntries(
 export function buildNativeCandidatePool(options: {
 	corpusDocumentIds: readonly string[];
 	relevantByQuery: ReadonlyMap<string, readonly string[]>;
-	hardNegativeRunByQuery: ReadonlyMap<string, readonly string[]>;
-	targetSize: number;
+	hardNegativeRuns: Record<
+		"lexical" | "dense",
+		{
+			source: string;
+			byQuery: ReadonlyMap<string, readonly string[]>;
+		}
+	>;
+	targetSize: number | "required-only";
 	minimumHardNegativesPerQuery: number;
 	minimumUniqueHardNegativeRatio: number;
 	maximumRandomFillerFraction: number;
-	hardNegativeSource: string;
 	seed: string;
 }): CandidatePool {
-	if (!Number.isSafeInteger(options.targetSize) || options.targetSize < 1) {
+	if (
+		options.targetSize !== "required-only" &&
+		(!Number.isSafeInteger(options.targetSize) || options.targetSize < 1)
+	) {
 		throw new Error("targetSize must be a positive safe integer");
 	}
 	if (
@@ -79,10 +94,18 @@ export function buildNativeCandidatePool(options: {
 	) {
 		throw new Error("minimumUniqueHardNegativeRatio must be in (0, 1]");
 	}
-	if (options.hardNegativeSource.trim().length === 0) {
-		throw new Error(
-			"hardNegativeSource must identify the independent full-corpus run",
-		);
+	for (const kind of ["lexical", "dense"] as const) {
+		if (options.hardNegativeRuns[kind].source.trim().length === 0) {
+			throw new Error(
+				`${kind} hard-negative source must identify an independent full-corpus run`,
+			);
+		}
+	}
+	if (
+		options.hardNegativeRuns.lexical.source ===
+		options.hardNegativeRuns.dense.source
+	) {
+		throw new Error("lexical and dense hard-negative sources must be distinct");
 	}
 	if (
 		!Number.isFinite(options.maximumRandomFillerFraction) ||
@@ -116,21 +139,32 @@ export function buildNativeCandidatePool(options: {
 		);
 	}
 	const hardNegativeCountByQuery: Record<string, number> = {};
+	const hardNegativeCountBySourceAndQuery = {
+		lexical: {} as Record<string, number>,
+		dense: {} as Record<string, number>,
+	};
 	let hardNegativeAssignments = 0;
 	for (const [queryId] of options.relevantByQuery) {
 		const accepted = new Set<string>();
-		for (const id of options.hardNegativeRunByQuery.get(queryId) ?? []) {
-			if (!corpus.has(id) || positiveIds.has(id)) continue;
-			if (accepted.has(id)) continue;
-			accepted.add(id);
-			hardNegativeIds.add(id);
-			if (accepted.size >= options.minimumHardNegativesPerQuery) break;
+		for (const kind of ["lexical", "dense"] as const) {
+			let sourceAccepted = 0;
+			for (const id of options.hardNegativeRuns[kind].byQuery.get(queryId) ??
+				[]) {
+				if (!corpus.has(id) || positiveIds.has(id)) continue;
+				if (!accepted.has(id)) {
+					accepted.add(id);
+					hardNegativeIds.add(id);
+					sourceAccepted++;
+				}
+				if (sourceAccepted >= options.minimumHardNegativesPerQuery) break;
+			}
+			hardNegativeCountBySourceAndQuery[kind][queryId] = sourceAccepted;
+			if (sourceAccepted < options.minimumHardNegativesPerQuery) {
+				queriesWithoutMinimumHardNegatives.push(`${kind}:${queryId}`);
+			}
 		}
 		hardNegativeCountByQuery[queryId] = accepted.size;
 		hardNegativeAssignments += accepted.size;
-		if (accepted.size < options.minimumHardNegativesPerQuery) {
-			queriesWithoutMinimumHardNegatives.push(queryId);
-		}
 	}
 	if (queriesWithoutMinimumHardNegatives.length > 0) {
 		throw new Error(
@@ -145,9 +179,11 @@ export function buildNativeCandidatePool(options: {
 		);
 	}
 	const required = new Set([...positiveIds, ...hardNegativeIds]);
-	if (required.size > options.targetSize) {
+	const targetSize =
+		options.targetSize === "required-only" ? required.size : options.targetSize;
+	if (required.size > targetSize) {
 		throw new Error(
-			`required positives and hard negatives (${required.size}) exceed targetSize (${options.targetSize})`,
+			`required positives and hard negatives (${required.size}) exceed targetSize (${targetSize})`,
 		);
 	}
 	const fillers = [...corpus]
@@ -157,11 +193,11 @@ export function buildNativeCandidatePool(options: {
 			a.rank < b.rank ? -1 : a.rank > b.rank ? 1 : a.id < b.id ? -1 : 1,
 		)
 		.map(({ id }) => id)
-		.slice(0, options.targetSize - required.size);
+		.slice(0, targetSize - required.size);
 	const documentIds = [...required, ...fillers].sort();
-	if (documentIds.length !== options.targetSize) {
+	if (documentIds.length !== targetSize) {
 		throw new Error(
-			`corpus only supplied ${documentIds.length}/${options.targetSize} unique candidates`,
+			`corpus only supplied ${documentIds.length}/${targetSize} unique candidates`,
 		);
 	}
 	if (
@@ -175,10 +211,12 @@ export function buildNativeCandidatePool(options: {
 	return {
 		documentIds,
 		receipt: {
-			version: 2,
+			version: 3,
 			poolKind: "label-conditioned-hard-negative-diagnostic",
 			seed: options.seed,
-			targetSize: options.targetSize,
+			targetSize,
+			targetSizeMode:
+				options.targetSize === "required-only" ? "required-only" : "fixed",
 			sourceCorpusSize: corpus.size,
 			retainedFraction: documentIds.length / corpus.size,
 			minimumHardNegativesPerQuery: options.minimumHardNegativesPerQuery,
@@ -188,6 +226,7 @@ export function buildNativeCandidatePool(options: {
 			hardNegativeCount: hardNegativeIds.size,
 			hardNegativeAssignments,
 			hardNegativeCountByQuery,
+			hardNegativeCountBySourceAndQuery,
 			uniqueHardNegativeRatio,
 			randomFillerCount: fillers.length,
 			duplicateInputCount,
@@ -200,12 +239,21 @@ export function buildNativeCandidatePool(options: {
 			labelsSha256: createHash("sha256")
 				.update(JSON.stringify(canonicalEntries(options.relevantByQuery)))
 				.digest("hex"),
-			hardNegativeRunSha256: createHash("sha256")
-				.update(
-					JSON.stringify(canonicalEntries(options.hardNegativeRunByQuery)),
-				)
-				.digest("hex"),
-			hardNegativeSource: options.hardNegativeSource,
+			hardNegativeRuns: Object.fromEntries(
+				(["lexical", "dense"] as const).map((kind) => [
+					kind,
+					{
+						source: options.hardNegativeRuns[kind].source,
+						sha256: createHash("sha256")
+							.update(
+								JSON.stringify(
+									canonicalEntries(options.hardNegativeRuns[kind].byQuery),
+								),
+							)
+							.digest("hex"),
+					},
+				]),
+			) as CandidatePoolReceipt["hardNegativeRuns"],
 			poolSha256: createHash("sha256")
 				.update(`${documentIds.join("\n")}\n`)
 				.digest("hex"),
