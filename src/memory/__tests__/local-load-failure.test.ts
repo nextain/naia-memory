@@ -36,6 +36,38 @@ describe("LocalAdapter load failures", () => {
 		expect(JSON.parse(await readFile(storePath, "utf8")).version).toBe(1);
 	});
 
+	it("normalizes legacy facts without a lifecycle status", async () => {
+		const storePath = await temporaryStore("legacy.json");
+		await writeFile(
+			storePath,
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [
+					{
+						id: "legacy-fact",
+						content: "legacy",
+						entities: [],
+						topics: [],
+						createdAt: 1,
+						updatedAt: 1,
+						importance: 0.5,
+						recallCount: 0,
+						lastAccessed: 1,
+						strength: 0.5,
+						sourceEpisodes: [],
+					},
+				],
+				skills: [],
+				reflections: [],
+				associations: {},
+			}),
+		);
+
+		const adapter = new LocalAdapter(storePath);
+		expect(adapter.getStore().facts[0]?.status).toBe("active");
+	});
+
 	it.each([
 		["invalid JSON", "{not-json"],
 		[
@@ -58,6 +90,76 @@ describe("LocalAdapter load failures", () => {
 				skills: [],
 				reflections: [],
 				associations: {},
+			}),
+		],
+		[
+			"invalid nested embedding map",
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [],
+				skills: [],
+				reflections: [],
+				associations: {},
+				factEmbeddings: { broken: 123 },
+			}),
+		],
+		[
+			"invalid episode embedding component",
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [],
+				skills: [],
+				reflections: [],
+				associations: {},
+				episodeEmbeddings: { broken: [Number.NaN] },
+			}),
+		],
+		[
+			"invalid association score",
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [],
+				skills: [],
+				reflections: [],
+				associations: { broken: "not-a-number" },
+			}),
+		],
+		[
+			"invalid epoch element",
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [],
+				epochs: [null],
+				skills: [],
+				reflections: [],
+				associations: {},
+			}),
+		],
+		[
+			"invalid fact element",
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [null],
+				skills: [],
+				reflections: [],
+				associations: {},
+			}),
+		],
+		[
+			"invalid nested knowledge graph",
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [],
+				skills: [],
+				reflections: [],
+				associations: {},
+				knowledgeGraph: "corrupted",
 			}),
 		],
 	])(

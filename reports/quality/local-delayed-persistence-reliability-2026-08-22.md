@@ -69,3 +69,38 @@ The follow-on OpenCode adversarial gate returned `PASS`. It noted that store
 validation remains intentionally top-level, matching encrypted-backup
 validation; deep field validation is a separate hardening opportunity rather
 than a regression in this fix.
+
+## Nested-store integrity follow-on
+
+That hardening opportunity is now implemented. Direct JSON loads and encrypted
+backup restores share one runtime validator for episodes, facts, epochs,
+skills, reflections, associations, knowledge-graph state, embedding maps, and
+embedding-space identity. Invalid nested values fail closed before adapter
+state is installed; rejected direct files remain byte-for-byte untouched.
+
+The first adversarial review rejected array-only validation because malformed
+elements could still be narrowed to product types and crash downstream. After
+element validation and corruption tests were added, the second review found a
+high-severity compatibility regression: pre-lifecycle v1 facts without
+`status` were rejected before the existing `active` migration could run. Both
+direct load and backup restore now use the same normalize-then-validate path.
+Empty embedding vectors are also rejected.
+
+The final adversarial review returned `PASS` after challenging two proposed
+findings that were not supported by the declared contracts: empty strings in a
+`string[]` and empty keys in a `Record<string, number[]>` cause neither a
+runtime failure, security issue, nor compatibility break. No stronger semantic
+invariant was introduced without evidence.
+
+Verification after the follow-on:
+
+- Focused load/backup suite: 2 files, 31 tests passed.
+- Full suite: 103 files, 905 tests passed.
+- Build and typecheck: passed (`tsc`).
+- Formal `review-pass` CLEAN remains unclaimed for the recovery-mode/preflight
+  reason recorded above; OpenCode review evidence is advisory, not a formal
+  signed gate.
+
+This remains reliability and data-integrity evidence, not retrieval-quality
+evidence. The independent full-corpus MIRACL run continues separately and was
+not restarted or altered by this change.

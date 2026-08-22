@@ -8,6 +8,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { LocalAdapter } from "../adapters/local.js";
+import {
+	decodeLocalBackup,
+	encodeLocalBackup,
+} from "../adapters/local-backup.js";
+import type { MemoryStore } from "../adapters/local-model.js";
 import { MemorySystem } from "../index.js";
 import type { BackupCapable, Episode, Fact } from "../index.js";
 
@@ -32,22 +37,22 @@ function makeEpisode(content: string): Episode {
 	};
 }
 
-	function makeFact(content: string): Fact {
-		return {
-			id: randomUUID(),
-			content,
-			entities: ["test"],
-			topics: ["testing"],
-			createdAt: Date.now(),
-			updatedAt: Date.now(),
-			importance: 0.8,
-			recallCount: 0,
-			lastAccessed: Date.now(),
-			strength: 0.8,
-			status: "active",
-			sourceEpisodes: [],
-		};
-	}
+function makeFact(content: string): Fact {
+	return {
+		id: randomUUID(),
+		content,
+		entities: ["test"],
+		topics: ["testing"],
+		createdAt: Date.now(),
+		updatedAt: Date.now(),
+		importance: 0.8,
+		recallCount: 0,
+		lastAccessed: Date.now(),
+		strength: 0.8,
+		status: "active",
+		sourceEpisodes: [],
+	};
+}
 
 describe("LocalAdapter backup", () => {
 	it("export/import round-trips all data", async () => {
@@ -203,6 +208,44 @@ describe("LocalAdapter backup", () => {
 		);
 	});
 
+	it("rejects decrypted backups with corrupted nested store data", async () => {
+		const malformed = {
+			version: 1,
+			episodes: [],
+			facts: [null],
+			skills: [],
+			reflections: [],
+			associations: {},
+		} as unknown as MemoryStore;
+		const blob = await encodeLocalBackup(malformed, "password");
+
+		await expect(decodeLocalBackup(blob, "password")).rejects.toThrow(
+			"Invalid backup: store shape mismatch",
+		);
+	});
+
+	it("normalizes legacy facts restored from backup", async () => {
+		const legacyFact = makeFact("legacy backup fact") as Omit<
+			Fact,
+			"status"
+		> & {
+			status?: Fact["status"];
+		};
+		delete legacyFact.status;
+		const store = {
+			version: 1,
+			episodes: [],
+			facts: [legacyFact],
+			skills: [],
+			reflections: [],
+			associations: {},
+		} as unknown as MemoryStore;
+		const blob = await encodeLocalBackup(store, "password");
+
+		const decoded = await decodeLocalBackup(blob, "password");
+		expect(decoded.facts[0]?.status).toBe("active");
+	});
+
 	it("satisfies BackupCapable interface (compile-time type check)", () => {
 		// Ensures LocalAdapter continues to satisfy BackupCapable contract.
 		// If export/import signatures drift from the interface, this assignment fails.
@@ -214,10 +257,7 @@ describe("LocalAdapter backup", () => {
 
 describe("MemorySystem backup delegation", () => {
 	function makeTmpSystem(): MemorySystem {
-		const path = join(
-			tmpdir(),
-			`naia-memory-system-test-${randomUUID()}.json`,
-		);
+		const path = join(tmpdir(), `naia-memory-system-test-${randomUUID()}.json`);
 		return new MemorySystem({ adapter: new LocalAdapter(path) });
 	}
 

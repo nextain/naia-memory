@@ -22,6 +22,7 @@ import {
 	emptyStore,
 	factsInTimeRange,
 	factsValidAtTime,
+	normalizeMemoryStore,
 } from "./local-model.js";
 import { createLocalProceduralMemory } from "./local-procedural.js";
 import {
@@ -64,7 +65,9 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		this.reranker =
 			typeof options === "object" ? (options?.reranker ?? null) : null;
 		this.onPersistenceError =
-			typeof options === "object" ? (options?.onPersistenceError ?? null) : null;
+			typeof options === "object"
+				? (options?.onPersistenceError ?? null)
+				: null;
 		this.storePath =
 			storePath ?? join(homedir(), ".naia", "memory", "naia-memory.json");
 		this.store = this.load();
@@ -216,25 +219,20 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private load(): MemoryStore {
 		try {
 			const raw = readFileSync(this.storePath, "utf-8");
-			const parsed = JSON.parse(raw) as MemoryStore;
-			if (parsed.version !== 1) {
+			const parsed: unknown = JSON.parse(raw);
+			if (
+				typeof parsed === "object" &&
+				parsed !== null &&
+				"version" in parsed &&
+				parsed.version !== 1
+			) {
 				throw new Error(`Unsupported store version: ${parsed.version}`);
 			}
-			if (
-				!Array.isArray(parsed.episodes) ||
-				!Array.isArray(parsed.facts) ||
-				!Array.isArray(parsed.skills) ||
-				!Array.isArray(parsed.reflections) ||
-				typeof parsed.associations !== "object" ||
-				Array.isArray(parsed.associations) ||
-				parsed.associations === null
-			) {
+			const store = normalizeMemoryStore(parsed);
+			if (!store) {
 				throw new Error("Store shape mismatch");
 			}
-			for (const fact of parsed.facts) {
-				if (!fact.status) fact.status = "active";
-			}
-			return parsed;
+			return store;
 		} catch (error) {
 			if ((error as NodeJS.ErrnoException).code === "ENOENT") {
 				return emptyStore();
@@ -264,10 +262,9 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 						// the host from a timer callback.
 					}
 				} else {
-					process.emitWarning(
-						error instanceof Error ? error : String(error),
-						{ code: "NAIA_MEMORY_DELAYED_SAVE_FAILED" },
-					);
+					process.emitWarning(error instanceof Error ? error : String(error), {
+						code: "NAIA_MEMORY_DELAYED_SAVE_FAILED",
+					});
 				}
 			}
 		}, this.SAVE_DEBOUNCE_MS);

@@ -5,7 +5,7 @@ import {
 	randomBytes,
 } from "node:crypto";
 import { promisify } from "node:util";
-import type { MemoryStore } from "./local-model.js";
+import { type MemoryStore, normalizeMemoryStore } from "./local-model.js";
 
 const pbkdf2Async = promisify(pbkdf2);
 const HEADER_SIZE = 4 + 1 + 16 + 12 + 16;
@@ -39,7 +39,8 @@ export async function decodeLocalBackup(
 ): Promise<MemoryStore> {
 	if (!password) throw new Error("Password must not be empty");
 	const buf = Buffer.from(blob);
-	if (buf.length <= HEADER_SIZE) throw new Error("Invalid backup blob: too short");
+	if (buf.length <= HEADER_SIZE)
+		throw new Error("Invalid backup blob: too short");
 	if (buf.subarray(0, 4).toString("ascii") !== "NAIA") {
 		throw new Error("Invalid backup blob: bad magic");
 	}
@@ -54,9 +55,14 @@ export async function decodeLocalBackup(
 	);
 	let plaintext: Buffer;
 	try {
-		const decipher = createDecipheriv("aes-256-gcm", key, buf.subarray(21, 33), {
-			authTagLength: 16,
-		});
+		const decipher = createDecipheriv(
+			"aes-256-gcm",
+			key,
+			buf.subarray(21, 33),
+			{
+				authTagLength: 16,
+			},
+		);
 		decipher.setAuthTag(buf.subarray(33, 49));
 		plaintext = Buffer.concat([
 			decipher.update(buf.subarray(HEADER_SIZE)),
@@ -66,25 +72,23 @@ export async function decodeLocalBackup(
 		throw new Error("Decryption failed: wrong password or corrupted blob");
 	}
 
-	let parsed: MemoryStore;
+	let parsed: unknown;
 	try {
-		parsed = JSON.parse(plaintext.toString("utf-8")) as MemoryStore;
+		parsed = JSON.parse(plaintext.toString("utf-8"));
 	} catch {
 		throw new Error("Invalid backup: JSON parse failed");
 	}
-	if (parsed.version !== 1) {
+	if (
+		typeof parsed === "object" &&
+		parsed !== null &&
+		"version" in parsed &&
+		parsed.version !== 1
+	) {
 		throw new Error(`Unsupported store version: ${parsed.version}`);
 	}
-	if (
-		!Array.isArray(parsed.episodes) ||
-		!Array.isArray(parsed.facts) ||
-		!Array.isArray(parsed.skills) ||
-		!Array.isArray(parsed.reflections) ||
-		typeof parsed.associations !== "object" ||
-		Array.isArray(parsed.associations) ||
-		parsed.associations === null
-	) {
+	const store = normalizeMemoryStore(parsed);
+	if (!store) {
 		throw new Error("Invalid backup: store shape mismatch");
 	}
-	return parsed;
+	return store;
 }
