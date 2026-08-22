@@ -61,6 +61,7 @@
 		"benchmark:semantic-pilot-timestamp": "tsx src/benchmark/quality/rfc3161-timestamp-cli.ts",
 		"benchmark:semantic-collect-signatures": "tsx src/benchmark/quality/semantic-attestation-collector-cli.ts",
 		"benchmark:public-evidence": "tsx src/benchmark/quality/public-evidence-cli.ts",
+		"benchmark:miracl-source": "tsx src/benchmark/quality/public-miracl-source-cli.ts",
 		"check": "biome check --write ."
 	},
 	"peerDependencies": {

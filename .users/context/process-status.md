@@ -33,10 +33,10 @@ _(신규 이슈 시작 시 업데이트)_
 | P01 사용자시나리오 | done | `docs/user-scenarios.md` |
 | P02 테스트시나리오 | done | `docs/user-scenarios.md` Test Coverage Map |
 | P03 요구사항 | done | `docs/requirements.md` |
-| P04 통합테스트 | done | model-free protocol v6 + SQLite/HNSW 100k evidence + native retrieval publication-contract hardening; 857 tests; OpenCode FOUND_ISSUES 조치 기록, Claude NOT_RUN (recovery mode, no formal CLEAN) |
-| P05 완료 | pending | 고정된 MIRACL 한국어/영어/아랍어 원어 측정, 봉인된 튜닝/검증 분리, 자원 영수증 및 동일 입력 글로벌 엔진 영수증 필요 |
+| P04 통합테스트 | done | model-free protocol v6 + SQLite/HNSW 100k evidence + native retrieval contract + MIRACL 한국어 원천 검증; 859 tests; OpenCode CONDITIONAL PASS 지적 수정 (recovery mode, no formal CLEAN) |
+| P05 완료 | pending | MIRACL 한국어 원천 1,486,752문서/213 dev 질의 검증 완료; 한국어/영어/아랍어 원어 실측, 봉인된 튜닝/검증 분리, 자원 및 동일 입력 글로벌 엔진 영수증 필요 |
 
-마지막 업데이트: 2026-08-22 11:04 KST
+마지막 업데이트: 2026-08-22 11:12 KST
 
 ---
 

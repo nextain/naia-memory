@@ -1,55 +1,80 @@
 {
-  "schema_version": "1.0",
-  "description": "프로세스 현황 SoT. 세션 시작/종료 시 반드시 업데이트. 구조명세·이슈·리소스를 유기적으로 링크.",
+	"schema_version": "1.0",
+	"description": "프로세스 현황 SoT. 세션 시작/종료 시 반드시 업데이트. 구조명세·이슈·리소스를 유기적으로 링크.",
 
-  "refs": {
-    "project_structure": "docs/project-structure.md",
-    "agents_rules": ".agents/context/agents-rules.json",
-    "issue_docs_dir": ".agents/progress/"
-  },
+	"refs": {
+		"project_structure": "docs/project-structure.md",
+		"agents_rules": ".agents/context/agents-rules.json",
+		"issue_docs_dir": ".agents/progress/"
+	},
 
-  "current_work": {
-    "issue": "#39",
-    "title": "Conflict-aware structured facts with multilingual-safe retrieval",
-    "issue_doc": "https://github.com/nextain/naia-memory/issues/39",
-    "github_issue": "https://github.com/nextain/naia-memory/issues/39",
-    "started": "2026-08-13T06:37:43Z",
-    "last_updated": "2026-08-22T02:04:05Z",
-    "status": "in_progress"
-  },
+	"current_work": {
+		"issue": "#39",
+		"title": "Conflict-aware structured facts with multilingual-safe retrieval",
+		"issue_doc": "https://github.com/nextain/naia-memory/issues/39",
+		"github_issue": "https://github.com/nextain/naia-memory/issues/39",
+		"started": "2026-08-13T06:37:43Z",
+		"last_updated": "2026-08-22T02:12:00Z",
+		"status": "in_progress"
+	},
 
-  "sdlc_gates": {
-    "P01": { "status": "done", "name": "user_scenarios", "deliverable": "docs/user-scenarios.md", "ref": "UC-MEM-01, UC-MEM-02 (#39)" },
-    "P02": { "status": "done", "name": "test_scenarios", "deliverable": "docs/user-scenarios.md", "ref": "Test Coverage Map: memory-system.test.ts (#39)" },
-    "P03": { "status": "done", "name": "requirements", "deliverable": "docs/requirements.md", "ref": "MEM-FR-01..03, MEM-NFR-01 (#39)" },
-    "P04": { "status": "done", "name": "integration_test", "deliverable": "CPU-only structured-fact regression, storage round-trip, public-evidence adversarial review, provenance gate, bounded file intake, model-free protocol v6 verification, SQLite 100k scale evidence, geometry-qualified HNSW 100k multilingual diagnostics, and native retrieval publication-contract hardening", "ref": "reports/quality/public-model-free-protocol-v6-2026-08-18.md; reports/perf/sqlite-concurrent-upsert-2026-08-22.md; reports/quality/hnsw-100k-multilingual-qualification-2026-08-22.md; reports/quality/native-retrieval-publication-contract-2026-08-22.md; 857 tests pass; OpenCode FOUND_ISSUES disposition recorded; Claude NOT_RUN; recovery mode, no formal CLEAN" },
-    "P05": { "status": "pending", "name": "requirements_complete", "deliverable": "Pinned native MIRACL KO/EN/AR corpus run, sealed tuning/validation split, resource receipts, and same-input global-engine receipts", "ref": "#39; contract and fail-closed harness are hardened, but native-corpus measurements and public competitiveness evidence remain absent" }
-  },
+	"sdlc_gates": {
+		"P01": {
+			"status": "done",
+			"name": "user_scenarios",
+			"deliverable": "docs/user-scenarios.md",
+			"ref": "UC-MEM-01, UC-MEM-02 (#39)"
+		},
+		"P02": {
+			"status": "done",
+			"name": "test_scenarios",
+			"deliverable": "docs/user-scenarios.md",
+			"ref": "Test Coverage Map: memory-system.test.ts (#39)"
+		},
+		"P03": {
+			"status": "done",
+			"name": "requirements",
+			"deliverable": "docs/requirements.md",
+			"ref": "MEM-FR-01..03, MEM-NFR-01 (#39)"
+		},
+		"P04": {
+			"status": "done",
+			"name": "integration_test",
+			"deliverable": "CPU-only structured-fact regression, storage round-trip, public-evidence adversarial review, provenance gate, bounded file intake, model-free protocol v6 verification, SQLite 100k scale evidence, geometry-qualified HNSW 100k multilingual diagnostics, native retrieval publication-contract hardening, and pinned MIRACL Korean source qualification",
+			"ref": "reports/quality/public-model-free-protocol-v6-2026-08-18.md; reports/perf/sqlite-concurrent-upsert-2026-08-22.md; reports/quality/hnsw-100k-multilingual-qualification-2026-08-22.md; reports/quality/native-retrieval-publication-contract-2026-08-22.md; reports/quality/miracl-ko-source-qualification-2026-08-22.md; 859 tests pass; OpenCode source review CONDITIONAL PASS findings fixed; recovery mode, no formal CLEAN"
+		},
+		"P05": {
+			"status": "pending",
+			"name": "requirements_complete",
+			"deliverable": "Pinned native MIRACL KO/EN/AR corpus run, sealed tuning/validation split, resource receipts, and same-input global-engine receipts",
+			"ref": "#39; reports/quality/miracl-ko-source-qualification-2026-08-22.md; Korean source qualified at 1,486,752 documents / 213 dev queries, but retrieval measurements and public competitiveness evidence remain absent"
+		}
+	},
 
-  "resource_registry": {
-    "last_enforce_run": null,
-    "violations": []
-  },
+	"resource_registry": {
+		"last_enforce_run": null,
+		"violations": []
+	},
 
-  "_usage": {
-    "session_start": [
-      "1. 이 파일 읽기",
-      "2. current_work 확인",
-      "3. last_updated를 현재 시각으로 갱신",
-      "4. sdlc_gates 상태 확인 후 작업 시작"
-    ],
-    "session_end": [
-      "1. 완료된 게이트 status → done",
-      "2. deliverable 경로 기재",
-      "3. last_updated 갱신",
-      "4. .users/context/process-status.md 동기화",
-      "5. 이 파일을 커밋에 포함"
-    ],
-    "new_issue": [
-      "1. current_work 필드 업데이트",
-      "2. .agents/progress/issue-{N}-{slug}.md 신규 생성",
-      "3. sdlc_gates 전체 status → pending으로 리셋",
-      "4. resource_registry.violations 초기화"
-    ]
-  }
+	"_usage": {
+		"session_start": [
+			"1. 이 파일 읽기",
+			"2. current_work 확인",
+			"3. last_updated를 현재 시각으로 갱신",
+			"4. sdlc_gates 상태 확인 후 작업 시작"
+		],
+		"session_end": [
+			"1. 완료된 게이트 status → done",
+			"2. deliverable 경로 기재",
+			"3. last_updated 갱신",
+			"4. .users/context/process-status.md 동기화",
+			"5. 이 파일을 커밋에 포함"
+		],
+		"new_issue": [
+			"1. current_work 필드 업데이트",
+			"2. .agents/progress/issue-{N}-{slug}.md 신규 생성",
+			"3. sdlc_gates 전체 status → pending으로 리셋",
+			"4. resource_registry.violations 초기화"
+		]
+	}
 }
