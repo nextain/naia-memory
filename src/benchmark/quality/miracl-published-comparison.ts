@@ -102,6 +102,8 @@ export function createMiraclPublishedComparison(input: {
 		),
 		interpretationThreshold: expectedComparison.interpretationThreshold,
 		evidenceIdentity: expectedComparison.evidenceIdentity,
+		baseRetriever: expectedComparison.baseRetriever,
+		knownLimitations: expectedComparison.knownLimitations,
 		sourceReceiptSha256: receiptSha256,
 		comparisonSha256: sha256Bytes(input.comparisonText),
 		attestation: {

@@ -1,6 +1,7 @@
 import {
 	EXPECTED_TREC_EVAL_BINARY_SHA256,
 	METRIC_TOLERANCE,
+	MIRACL_EMBEDDING_POLICY,
 	TREC_EVAL_COMMIT,
 	TREC_EVAL_VERSION,
 	parseTrecEvalAll,
@@ -40,6 +41,11 @@ export const MIRACL_KO_HISTORICAL_ROWS = [
 const BENCHMARK = "miracl-ko-full-corpus-naia-vector-exact-v1";
 const HYBRID = MIRACL_KO_HISTORICAL_ROWS[2];
 const HISTORICAL_ROW_RESOLUTION = 0.001;
+const DATASET_FAMILY_TRAINING_OVERLAP = {
+	id: "MIRACL_TRAIN_SPLIT_MODEL_OVERLAP",
+	statement:
+		"The base multilingual-e5-large retriever reports MIRACL training-split use; this development run is label-free at execution time, not dataset-family zero-shot.",
+} as const;
 
 interface ComparisonReceipt {
 	schemaVersion?: unknown;
@@ -99,6 +105,21 @@ function validateReceiptProvenance(receipt: ComparisonReceipt) {
 		)
 			throw new Error(`attestation binding mismatch: ${manifestField}`);
 	}
+	if (
+		manifests.configuration === null ||
+		typeof manifests.configuration !== "object" ||
+		Array.isArray(manifests.configuration)
+	)
+		throw new Error("comparison configuration must be an object");
+	const configuration = manifests.configuration as {
+		embedding?: unknown;
+	};
+	if (
+		configuration.embedding === undefined ||
+		evidenceObjectSha256(configuration.embedding) !==
+			evidenceObjectSha256(MIRACL_EMBEDDING_POLICY)
+	)
+		throw new Error("comparison embedding policy mismatch");
 	const tool = receipt.independentEvaluatorTool;
 	if (
 		tool?.name !== "usnistgov/trec_eval" ||
@@ -195,6 +216,17 @@ export function createMiraclGlobalComparison(receiptText: string) {
 			executionEvidenceSha256:
 				receipt.attestationBinding?.hashes?.executionEvidenceSha256,
 		},
+		baseRetriever: {
+			model: MIRACL_EMBEDDING_POLICY.model,
+			revision: MIRACL_EMBEDDING_POLICY.revision,
+			dtype: MIRACL_EMBEDDING_POLICY.dtype,
+			dimensions: MIRACL_EMBEDDING_POLICY.dimensions,
+			queryPrefix: MIRACL_EMBEDDING_POLICY.queryPrefix,
+			passagePrefix: MIRACL_EMBEDDING_POLICY.passagePrefix,
+			pooling: MIRACL_EMBEDDING_POLICY.pooling,
+			normalize: MIRACL_EMBEDDING_POLICY.normalize,
+		},
+		knownLimitations: [DATASET_FAMILY_TRAINING_OVERLAP],
 		notEstablished: [
 			"receipt authenticity outside the local operator trust boundary",
 			"current state of the art",

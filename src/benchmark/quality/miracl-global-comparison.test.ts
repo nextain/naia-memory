@@ -10,6 +10,7 @@ import {
 import {
 	EXPECTED_TREC_EVAL_BINARY_SHA256,
 	METRIC_TOLERANCE,
+	MIRACL_EMBEDDING_POLICY,
 	TREC_EVAL_COMMIT,
 	TREC_EVAL_VERSION,
 	sha256Bytes,
@@ -22,7 +23,7 @@ function receipt(ndcgAt10 = 0.61, recallAt100 = 0.901) {
 		dataset: { identity: "fixture" },
 		protocol: { topK: 100 },
 		implementation: { source: "fixture" },
-		configuration: { exactSearch: true },
+		configuration: { exactSearch: true, embedding: MIRACL_EMBEDDING_POLICY },
 		executionEvidence: { resultSha256: "fixture" },
 	};
 	return JSON.stringify({
@@ -70,6 +71,13 @@ describe("MIRACL global comparison", () => {
 		expect(comparison.rows[2]?.deltas.recallAt100).toBeCloseTo(0.001, 12);
 		expect(comparison.publicClaimEligible).toBe(false);
 		expect(comparison.notEstablished).toContain("memory-engine superiority");
+		expect(comparison.baseRetriever).toMatchObject({
+			model: "Xenova/multilingual-e5-large",
+			dtype: "q8",
+		});
+		expect(comparison.knownLimitations).toContainEqual(
+			expect.objectContaining({ id: "MIRACL_TRAIN_SPLIT_MODEL_OVERLAP" }),
+		);
 	});
 
 	it("represents mixed and both-below outcomes without cherry-picking", () => {
@@ -139,6 +147,27 @@ describe("MIRACL global comparison", () => {
 		expect(() =>
 			createMiraclGlobalComparison(JSON.stringify(substitutedTool)),
 		).toThrow("evaluator identity mismatch");
+	});
+
+	it("rejects a receipt whose bound embedding policy cannot support the disclosure", () => {
+		const changed = JSON.parse(receipt());
+		changed.attestationBinding.manifests.configuration.embedding.model =
+			"substituted-model";
+		changed.attestationBinding.hashes.configurationSha256 =
+			evidenceObjectSha256(changed.attestationBinding.manifests.configuration);
+		expect(() => createMiraclGlobalComparison(JSON.stringify(changed))).toThrow(
+			"embedding policy mismatch",
+		);
+	});
+
+	it("rejects a non-object bound configuration without crashing", () => {
+		const changed = JSON.parse(receipt());
+		changed.attestationBinding.manifests.configuration = null;
+		changed.attestationBinding.hashes.configurationSha256 =
+			evidenceObjectSha256(null);
+		expect(() => createMiraclGlobalComparison(JSON.stringify(changed))).toThrow(
+			"comparison configuration must be an object",
+		);
 	});
 
 	it("never overwrites an existing comparison artifact", async () => {

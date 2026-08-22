@@ -4,6 +4,7 @@ import { createMiraclPublishedComparison } from "./miracl-published-comparison.j
 import {
 	EXPECTED_TREC_EVAL_BINARY_SHA256,
 	METRIC_TOLERANCE,
+	MIRACL_EMBEDDING_POLICY,
 	TREC_EVAL_COMMIT,
 	TREC_EVAL_VERSION,
 	sha256Bytes,
@@ -16,7 +17,7 @@ function fixture() {
 		dataset: { identity: "fixture" },
 		protocol: { topK: 100 },
 		implementation: { source: "fixture" },
-		configuration: { exactSearch: true },
+		configuration: { exactSearch: true, embedding: MIRACL_EMBEDDING_POLICY },
 		executionEvidence: { resultSha256: "fixture" },
 	};
 	const receiptText = JSON.stringify({
@@ -105,6 +106,10 @@ describe("MIRACL published historical comparison", () => {
 		expect(result.interpretationThreshold).toBe(
 			current.comparison.interpretationThreshold,
 		);
+		expect(result.baseRetriever).toEqual(current.comparison.baseRetriever);
+		expect(result.knownLimitations).toEqual(
+			current.comparison.knownLimitations,
+		);
 		expect(result.comparisonSha256).toBe(
 			sha256Bytes(JSON.stringify(current.comparison)),
 		);
@@ -121,7 +126,7 @@ describe("MIRACL published historical comparison", () => {
 		expect(result.comparisonSha256).toBe(sha256Bytes(comparisonText));
 	});
 
-	it.each(["metrics", "hybridTier", "rows"])(
+	it.each(["metrics", "hybridTier", "rows", "knownLimitations"])(
 		"rejects a comparison with edited %s",
 		(field) => {
 			const current = fixture();
