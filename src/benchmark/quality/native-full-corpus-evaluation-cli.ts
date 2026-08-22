@@ -31,6 +31,7 @@ import {
 	verifyLockedFile,
 } from "./public-miracl-source.js";
 import { summarizeRetrievalMetrics } from "./retrieval-metrics.js";
+import { verifyTrueBatchEquivalenceEvidenceFiles } from "./true-batch-equivalence.js";
 
 const MODEL = "multilingual-e5-large";
 const MODEL_REVISION = OFFLINE_MODEL_REVISIONS[MODEL];
@@ -154,8 +155,10 @@ async function main(): Promise<void> {
 	const batchInferenceMode = parseOfflineBatchInferenceMode(
 		process.env.MIRACL_EMBEDDING_INFERENCE_MODE,
 	);
-	if (batchInferenceMode === "padded-array-batch-v1")
+	if (batchInferenceMode === "padded-array-batch-v1") {
 		verifyTrueBatchLaunchAuthorizationFiles(process.env);
+		verifyTrueBatchEquivalenceEvidenceFiles(process.env);
+	}
 	if (existsSync(OUTPUT)) throw new Error("full-corpus output already exists");
 	await Promise.all(
 		MIRACL_KO_LOCK.files.map(({ path, size, sha256: expectedSha256 }) =>
