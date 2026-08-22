@@ -33,6 +33,46 @@ fusion. All three modes ran through the same product retrieval implementation.
 | Equal-weight RRF | 0.6010 | 0.6476 | 0.8920 | **0.9851** | 1,166.9 ms | 1,306.9 ms |
 | BM25 only | 0.3799 | 0.4132 | 0.6009 | 0.8919 | 1,060.8 ms | 1,178.8 ms |
 
+## Preregistered vector-head / RRF-tail result
+
+The fixed composition policy protected the vector-only top ten and filled
+ranks 11–100 from equal-weight RRF without a weight sweep. It passed its bounded
+decision rule on the identical 20,015-document pool and all 213 queries.
+
+| Metric | Vector only | Composed policy | Absolute delta |
+|---|---:|---:|---:|
+| nDCG@10 | 0.6703793 | 0.6703793 | 0 |
+| Success@1 | 0.6103286 | 0.6103286 | 0 |
+| Success@5 | 0.8826291 | 0.8826291 | 0 |
+| Success@10 | 0.9389671 | 0.9389671 | 0 |
+| Recall@10 | 0.7722961 | 0.7722961 | 0 |
+| MRR | 0.7379104 | 0.7385718 | +0.0006614 |
+| Recall@100 | 0.9726917 | **0.9851330** | **+0.0124413** |
+
+All 213 query heads were rank-identical through position 10. Every query
+returned exactly 100 unique IDs. Median latency was 1,181.1 ms and p95 was
+1,316.5 ms on the same unoptimized CPU path; this policy retains the current
+per-query BM25 cost.
+
+The preregistration mistakenly required untruncated MRR equality on the premise
+that MRR was determined by the top ten. MRR can change when the first relevant
+document lies below rank 10. The error was recorded after result inspection;
+MRR is therefore only descriptive and did not decide acceptance. The actual
+predeclared empirical criterion—strictly higher Recall@100 with an unchanged
+top ten—passed.
+
+The preregistration file was written before implementation and result
+inspection in this working session, but it was not independently timestamped or
+committed before execution. It is therefore a contemporaneous protocol record,
+not cryptographic proof of preregistration. That process weakness is another
+reason this run cannot support a confirmatory or public competitive claim.
+
+This is meaningful engineering evidence that the two same-pool signals can be
+composed without sacrificing the measured head. It is still not public
+competitive evidence: the candidate pool is label-conditioned, the policy was
+motivated by earlier results on these same queries, and no full-corpus or
+cross-language replication has run.
+
 Vector-only improved nDCG@10 by 0.0693 and MRR by 0.0903 absolute over
 equal-weight RRF. At query level it won 87, tied 73, and lost 53 of 213 nDCG@10
 comparisons. A deterministic 10,000-resample query bootstrap gave a descriptive
@@ -77,9 +117,11 @@ No public “global-level” or “best Korean engine” claim is justified yet.
 - TREC run SHA-256: `45f9517ef243034319a14b2156aac1aa587b19d353b17a9732631ca1b5a3ad76`
 - Vector-only TREC SHA-256: `05c0f110358b28158f1b882ad6d2960044b65254d9c7d263dadb0abb6e08a925`
 - BM25-only TREC SHA-256: `c81c199a7e2f51ce5f9ce08738c247806c7533967903989598352c91eb449f41`
+- Composed-policy TREC SHA-256: `adf8616ccb3f707cfba53a561886df3bff042222a5bb056e839dcf1554ec6621`
 - RRF result SHA-256: `d0801dfd0a2ea82e9f295bfbd72124f43846c4673e74a60910599076a05a1e7c`
 - Vector-only result SHA-256: `fedb268c7f78bbeb25a23c885c77fdceb3e4b6910f40f1a3367a982f160d0de6`
 - BM25-only result SHA-256: `6732ec5781013c57b519b111a0d1f814c8edfa85bab5c2d038e214339e293981`
+- Composed-policy result SHA-256: `f2463e17dda5179447b2f8f5b3216fdd642fd0d5021c50a62627d7600849ba14`
 - Model: `Xenova/multilingual-e5-large`, revision
   `00fc3aeb3dbb95842de2ac1961d33c6319acf57b`, q8, normalized, 1024 dimensions
 - Execution configuration: `device=cpu`, `CUDA_VISIBLE_DEVICES=""`

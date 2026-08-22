@@ -26,7 +26,12 @@ const MODEL_REVISION = OFFLINE_MODEL_REVISIONS[MODEL];
 const TOP_K = 100;
 const BATCH_SIZE = 8;
 const FIXED_NOW = 1_720_000_000_000;
-const SEARCH_MODES = ["rrf", "vector-only", "bm25-only"] as const;
+const SEARCH_MODES = [
+	"rrf",
+	"vector-only",
+	"bm25-only",
+	"vector-head-rrf-tail",
+] as const;
 type SearchMode = (typeof SEARCH_MODES)[number];
 
 interface VectorCacheReceipt {

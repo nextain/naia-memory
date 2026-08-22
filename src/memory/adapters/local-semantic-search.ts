@@ -39,8 +39,23 @@ export async function searchLocalSemanticMemory(
 			const now = Date.now();
 		        const BROAD_FACTOR = 3;
 			const searchMode = process.env.NAIA_SEARCH_MODE ?? (host.embedder && host.embedder.dims >= 2000 ? "vector-only" : "rrf");
-			if (!["rrf", "vector-only", "bm25-only"].includes(searchMode)) {
+			if (!["rrf", "vector-only", "bm25-only", "vector-head-rrf-tail"].includes(searchMode)) {
 				throw new Error(`unsupported NAIA_SEARCH_MODE: ${searchMode}`);
+			}
+			if (searchMode === "vector-head-rrf-tail") {
+				const queryIntent = (context as { queryIntent?: unknown } | undefined)?.queryIntent;
+				if (
+					!deepRecall ||
+					host.reranker !== null ||
+					process.env.NAIA_MMR !== "off" ||
+					(context?.minConfidence ?? 0) !== 0 ||
+					queryIntent !== undefined ||
+					(context?.mode ?? "latest") !== "latest"
+				) {
+					throw new Error(
+						"vector-head-rrf-tail requires deepRecall, no reranker, NAIA_MMR=off, minConfidence=0, no queryIntent, and mode=latest",
+					);
+				}
 			}
 
 			// #27 HyDE — caller 가 queryHint 주면 그것으로 embedding (가상 답 →
@@ -188,6 +203,25 @@ export async function searchLocalSemanticMemory(
 			        for (let i = 0; i < byBM25.length; i++) bm25Rank.set(byBM25[i].id, i + 1);
 			        }
 
+				const rrfScore = (factId: string) =>
+					1 / (RRF_K + (vectorRank.get(factId) ?? allFacts.length)) +
+					1 / (RRF_K + (bm25Rank?.get(factId) ?? allFacts.length));
+				let compositeRank: Map<string, number> | null = null;
+				if (searchMode === "vector-head-rrf-tail") {
+					const protectedHead = byVector.slice(0, Math.min(10, topK));
+					const byRrf = [...allFacts].sort(
+						(a, b) => rrfScore(b.id) - rrfScore(a.id),
+					);
+					const ordered: Fact[] = [];
+					const included = new Set<string>();
+					for (const fact of [...protectedHead, ...byRrf, ...byVector]) {
+						if (included.has(fact.id)) continue;
+						included.add(fact.id);
+						ordered.push(fact);
+					}
+					compositeRank = new Map(ordered.map((fact, index) => [fact.id, index + 1]));
+				}
+
 			        const candidates = allFacts
 			        .map((fact) => {
 			                const vs = vectorScores.get(fact.id) ?? 0;
@@ -206,7 +240,10 @@ export async function searchLocalSemanticMemory(
 			                const isRelevant = vs >= relevanceThreshold || bs > 0 || eb > 0 || isFlashbulb;
 
 			                if (!isRelevant && !deepRecall) return null;					let relevanceScore: number;
-					if (searchMode === "vector-only") {
+					if (searchMode === "vector-head-rrf-tail") {
+						relevanceScore =
+							1 / (compositeRank?.get(fact.id) ?? allFacts.length + 1);
+					} else if (searchMode === "vector-only") {
 				        relevanceScore = vs + eb;
 					} else if (searchMode === "bm25-only") {
 						relevanceScore =
@@ -225,10 +262,17 @@ export async function searchLocalSemanticMemory(
 					                1 / (RRF_K + (bm25Rank!.get(fact.id) ?? allFacts.length)) +
 					                eb;
 					}
-					if (structuredQuery && fact.structured && sameStructuredIdentity(structuredQuery, fact.structured)) relevanceScore += 1;
+					if (
+						searchMode !== "vector-head-rrf-tail" &&
+						structuredQuery &&
+						fact.structured &&
+						sameStructuredIdentity(structuredQuery, fact.structured)
+					)
+						relevanceScore += 1;
 
 					// Apply boost to Flashbulb memories to ensure they survive slice(0, broadK)
-					if (isFlashbulb) relevanceScore += 0.5;
+					if (isFlashbulb && searchMode !== "vector-head-rrf-tail")
+						relevanceScore += 0.5;
 
 					return { fact, relevanceScore, vectorScore: vs };
 					})				.filter((x): x is NonNullable<typeof x> => x !== null)
