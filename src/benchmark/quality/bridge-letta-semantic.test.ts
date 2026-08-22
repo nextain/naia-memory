@@ -14,6 +14,12 @@ describe("Letta semantic bridge", () => {
 				{ id: "block-persona", label: "persona", value: "Agent policy" },
 				{ id: "block-human", label: "human", value: "User lives in Busan" },
 			]),
+			searchArchivalMemory: vi.fn(async () => [
+				{ id: "passage-busan", content: "Busan is near the sea" },
+			]),
+			listArchivalMemory: vi.fn(async () => [
+				{ id: "passage-busan", content: "Busan is near the sea" },
+			]),
 			deleteAgent: vi.fn(async () => undefined),
 		};
 		const bridge = new LettaSemanticBridge(client, "agent-isolated");
@@ -31,10 +37,41 @@ describe("Letta semantic bridge", () => {
 		);
 		expect(await bridge.search("Where do I live?", 3)).toEqual([
 			{ nativeId: "block-human", content: "User lives in Busan" },
+			{ nativeId: "passage-busan", content: "Busan is near the sea" },
 		]);
 		expect(await bridge.getNativeState()).toEqual([
 			{ nativeId: "block-human", content: "User lives in Busan" },
+			{ nativeId: "passage-busan", content: "Busan is near the sea" },
 		]);
+		expect(client.searchArchivalMemory).toHaveBeenCalledWith(
+			"agent-isolated",
+			"Where do I live?",
+			2,
+		);
+	});
+
+	it("keeps always-active core state first and does not over-fetch archival results", async () => {
+		const searchArchivalMemory = vi.fn(async () => [
+			{ id: "passage-ignored", content: "Should not be fetched" },
+		]);
+		const client: LettaSemanticClient = {
+			createAgent: vi.fn(async () => ({ id: "unused" })),
+			sendUserMessage: vi.fn(async () => 0),
+			listMemoryBlocks: vi.fn(async () => [
+				{ id: "block-human", label: "human", value: "Always active" },
+			]),
+			searchArchivalMemory,
+			listArchivalMemory: vi.fn(async () => []),
+			deleteAgent: vi.fn(async () => undefined),
+		};
+
+		expect(
+			await new LettaSemanticBridge(client, "agent-isolated").search(
+				"query",
+				1,
+			),
+		).toEqual([{ nativeId: "block-human", content: "Always active" }]);
+		expect(searchArchivalMemory).not.toHaveBeenCalled();
 	});
 
 	it("deletes only its isolated agent during cleanup", async () => {
@@ -43,6 +80,8 @@ describe("Letta semantic bridge", () => {
 			createAgent: vi.fn(async () => ({ id: "unused" })),
 			sendUserMessage: vi.fn(async () => 0),
 			listMemoryBlocks: vi.fn(async () => []),
+			searchArchivalMemory: vi.fn(async () => []),
+			listArchivalMemory: vi.fn(async () => []),
 			deleteAgent,
 		};
 		await new LettaSemanticBridge(client, "agent-isolated").close();
@@ -57,6 +96,8 @@ describe("Letta semantic bridge", () => {
 				{ id: "block-persona", label: "persona", value: "Agent policy" },
 				{ id: "block-human", label: "human", value: "   " },
 			]),
+			searchArchivalMemory: vi.fn(async () => []),
+			listArchivalMemory: vi.fn(async () => []),
 			deleteAgent: vi.fn(async () => undefined),
 		};
 		const bridge = new LettaSemanticBridge(client, "agent-isolated");

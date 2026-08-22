@@ -30,7 +30,8 @@ export type SemanticEngineBridge = {
 	readonly temporalInputPolicy: "engine-default-ingest-time-v1";
 	readonly retrievalSurface:
 		| "engine-native-semantic-memory-v1"
-		| "engine-native-core-state-v1";
+		| "engine-native-core-state-v1"
+		| "engine-native-core-first-and-semantic-archive-v1";
 	ingestTurn(turn: { content: string }): Promise<SemanticIngestReceipt>;
 	search(query: string, topK: number): Promise<SemanticNativeMemory[]>;
 	getNativeState(): Promise<SemanticNativeMemory[]>;
@@ -119,7 +120,9 @@ export async function runSemanticRawContract(
 				throw new Error("semantic bridge must not receive fixture timestamps");
 			if (
 				bridge.retrievalSurface !== "engine-native-semantic-memory-v1" &&
-				bridge.retrievalSurface !== "engine-native-core-state-v1"
+				bridge.retrievalSurface !== "engine-native-core-state-v1" &&
+				bridge.retrievalSurface !==
+					"engine-native-core-first-and-semantic-archive-v1"
 			)
 				throw new Error(
 					"semantic bridge exposes an unsupported retrieval surface",

@@ -6,11 +6,18 @@ import type {
 } from "./memory-semantic-runner.js";
 
 type LettaMemoryBlock = { id: string; label: string; value: string };
+type LettaArchivalMemory = { id: string; content: string };
 
 export type LettaSemanticClient = {
 	createAgent(name: string): Promise<{ id: string }>;
 	sendUserMessage(agentId: string, content: string): Promise<number>;
 	listMemoryBlocks(agentId: string): Promise<LettaMemoryBlock[]>;
+	searchArchivalMemory(
+		agentId: string,
+		query: string,
+		topK: number,
+	): Promise<LettaArchivalMemory[]>;
+	listArchivalMemory(agentId: string): Promise<LettaArchivalMemory[]>;
 	deleteAgent(agentId: string): Promise<void>;
 };
 
@@ -38,7 +45,8 @@ export class LettaSemanticBridge implements SemanticEngineBridge {
 	readonly identityPolicy = "engine-native-memory-v1" as const;
 	readonly ingestionPolicy = "sequential-turn-commit-v1" as const;
 	readonly temporalInputPolicy = "engine-default-ingest-time-v1" as const;
-	readonly retrievalSurface = "engine-native-core-state-v1" as const;
+	readonly retrievalSurface =
+		"engine-native-core-first-and-semantic-archive-v1" as const;
 
 	constructor(
 		private readonly client: LettaSemanticClient,
@@ -55,12 +63,22 @@ export class LettaSemanticBridge implements SemanticEngineBridge {
 		return { outcome: "native-operations", nativeOperationCount };
 	}
 
-	async search(_query: string, topK: number): Promise<SemanticNativeMemory[]> {
-		return (await this.userMemoryBlocks()).slice(0, topK).map(toNativeMemory);
+	async search(query: string, topK: number): Promise<SemanticNativeMemory[]> {
+		const core = (await this.userMemoryBlocks()).map(toNativeMemory);
+		const archivalLimit = Math.max(0, topK - core.length);
+		if (archivalLimit === 0) return core.slice(0, topK);
+		const archival = (
+			await this.client.searchArchivalMemory(this.agentId, query, archivalLimit)
+		).map(toNativeArchivalMemory);
+		return [...core, ...archival].slice(0, topK);
 	}
 
 	async getNativeState(): Promise<SemanticNativeMemory[]> {
-		return (await this.userMemoryBlocks()).map(toNativeMemory);
+		const core = (await this.userMemoryBlocks()).map(toNativeMemory);
+		const archival = (await this.client.listArchivalMemory(this.agentId)).map(
+			toNativeArchivalMemory,
+		);
+		return [...core, ...archival];
 	}
 
 	async close(): Promise<void> {
@@ -146,6 +164,42 @@ class LettaRestSemanticClient implements LettaSemanticClient {
 		return parseMemoryBlocks(response);
 	}
 
+	async searchArchivalMemory(
+		agentId: string,
+		query: string,
+		topK: number,
+	): Promise<LettaArchivalMemory[]> {
+		const parameters = new URLSearchParams({ query, top_k: String(topK) });
+		const response = await this.request<unknown>(
+			"GET",
+			`/v1/agents/${encodeURIComponent(agentId)}/archival-memory/search?${parameters}`,
+		);
+		return parseArchivalSearchResponse(response);
+	}
+
+	async listArchivalMemory(agentId: string): Promise<LettaArchivalMemory[]> {
+		const memories: LettaArchivalMemory[] = [];
+		const pageSize = 100;
+		const seenCursors = new Set<string>();
+		let after: string | undefined;
+		for (;;) {
+			const parameters = new URLSearchParams({ limit: String(pageSize) });
+			if (after) parameters.set("after", after);
+			const response = await this.request<unknown>(
+				"GET",
+				`/v1/agents/${encodeURIComponent(agentId)}/archival-memory?${parameters}`,
+			);
+			const page = parseArchivalPassages(response);
+			memories.push(...page);
+			if (page.length < pageSize) return memories;
+			after = page.at(-1)?.id;
+			if (!after) throw new Error("Letta archival pagination omitted cursor");
+			if (seenCursors.has(after))
+				throw new Error("Letta archival pagination repeated its cursor");
+			seenCursors.add(after);
+		}
+	}
+
 	async deleteAgent(agentId: string): Promise<void> {
 		await this.request("DELETE", `/v1/agents/${encodeURIComponent(agentId)}`);
 	}
@@ -194,6 +248,54 @@ function parseMemoryBlocks(value: unknown): LettaMemoryBlock[] {
 	});
 }
 
+function parseArchivalSearchResponse(value: unknown): LettaArchivalMemory[] {
+	if (
+		typeof value !== "object" ||
+		value === null ||
+		!Array.isArray((value as { results?: unknown }).results)
+	)
+		throw new Error("Letta returned an invalid archival search response");
+	return parseArchivalItems(
+		(value as { results: unknown[] }).results,
+		"archival search result",
+		"content",
+	);
+}
+
+function parseArchivalPassages(value: unknown): LettaArchivalMemory[] {
+	if (!Array.isArray(value))
+		throw new Error("Letta returned invalid archival passages");
+	return parseArchivalItems(value, "archival passage", "text");
+}
+
+function parseArchivalItems(
+	items: unknown[],
+	label: string,
+	contentKey: "content" | "text",
+): LettaArchivalMemory[] {
+	return items.map((item) => {
+		if (
+			typeof item !== "object" ||
+			item === null ||
+			typeof (item as { id?: unknown }).id !== "string" ||
+			!(item as { id: string }).id.trim() ||
+			typeof (item as Record<string, unknown>)[contentKey] !== "string" ||
+			!(item as Record<string, string>)[contentKey].trim()
+		)
+			throw new Error(`Letta returned a malformed ${label}`);
+		return {
+			id: (item as { id: string }).id,
+			content: (item as Record<string, string>)[contentKey],
+		};
+	});
+}
+
 function toNativeMemory(item: LettaMemoryBlock): SemanticNativeMemory {
 	return { nativeId: item.id, content: item.value };
+}
+
+function toNativeArchivalMemory(
+	item: LettaArchivalMemory,
+): SemanticNativeMemory {
+	return { nativeId: item.id, content: item.content };
 }
