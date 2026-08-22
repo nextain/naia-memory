@@ -17,6 +17,7 @@ import {
 	MIRACL_KO_LOCK,
 	parseQrelsTsv,
 	parseTopicsTsv,
+	verifyLockedFile,
 } from "./public-miracl-source.js";
 import { summarizeRetrievalMetrics } from "./retrieval-metrics.js";
 
@@ -25,6 +26,18 @@ const MODEL_REVISION = OFFLINE_MODEL_REVISIONS[MODEL];
 const TOP_K = 100;
 const BATCH_SIZE = 8;
 const FIXED_NOW = 1_720_000_000_000;
+
+interface VectorCacheReceipt {
+	schemaVersion: 1;
+	binding: {
+		candidateDocumentIdsSha256: string;
+		corpusJsonlSha256: string;
+		modelPolicy: OfflineEmbeddingProvider["policyReceipt"];
+		dimensions: number;
+		documentCount: number;
+	};
+	vectorsSha256: string;
+}
 
 function requiredEnvironment(name: string): string {
 	const value = process.env[name];
@@ -78,6 +91,15 @@ async function main() {
 		"MIRACL_CANDIDATE_DOCUMENT_IDS",
 	);
 	const outputPrefix = requiredEnvironment("MIRACL_NATIVE_EVALUATION_PREFIX");
+	if (MIRACL_KO_LOCK.files.length !== 5)
+		throw new Error(
+			"locked MIRACL layout must contain topics, qrels, and 3 shards",
+		);
+	await Promise.all(
+		MIRACL_KO_LOCK.files.map(({ path, size, sha256 }) =>
+			verifyLockedFile(join(sourceRoot, path), { size, sha256 }),
+		),
+	);
 	const candidateIdsText = await readFile(candidateListPath, "utf8");
 	const candidateIds = candidateIdsText.trim().split(/\r?\n/);
 	if (new Set(candidateIds).size !== 20_015)
@@ -107,6 +129,7 @@ async function main() {
 		new Set(candidateIds),
 	);
 	const corpusJsonl = canonicalNativeCorpusJsonl(documents);
+	const corpusJsonlSha256 = sha256Text(corpusJsonl);
 	await atomicWrite(`${outputPrefix}.corpus.jsonl`, corpusJsonl);
 	const facts = documents.map(factForDocument);
 	console.error(
@@ -115,14 +138,35 @@ async function main() {
 
 	const embedder = new OfflineEmbeddingProvider(MODEL, "cpu", MODEL_REVISION);
 	const vectorPath = `${outputPrefix}.vectors.f32`;
+	const vectorReceiptPath = `${vectorPath}.receipt.json`;
+	const vectorBinding: VectorCacheReceipt["binding"] = {
+		candidateDocumentIdsSha256: expectedPoolHash,
+		corpusJsonlSha256,
+		modelPolicy: embedder.policyReceipt,
+		dimensions: embedder.dims,
+		documentCount: facts.length,
+	};
 	const expectedVectorBytes =
 		facts.length * embedder.dims * Float32Array.BYTES_PER_ELEMENT;
 	let vectorBytes: Uint8Array;
 	let embeddingSeconds = 0;
+	let embeddingsCached = false;
 	try {
-		vectorBytes = new Uint8Array(await readFile(vectorPath));
+		const [cachedBytes, receiptText] = await Promise.all([
+			readFile(vectorPath),
+			readFile(vectorReceiptPath, "utf8"),
+		]);
+		vectorBytes = new Uint8Array(cachedBytes);
 		if (vectorBytes.byteLength !== expectedVectorBytes)
 			throw new Error("cached vector byte length mismatch");
+		const receipt = JSON.parse(receiptText) as VectorCacheReceipt;
+		if (
+			receipt.schemaVersion !== 1 ||
+			JSON.stringify(receipt.binding) !== JSON.stringify(vectorBinding) ||
+			receipt.vectorsSha256 !== sha256Bytes(vectorBytes)
+		)
+			throw new Error("cached vector receipt does not match locked inputs");
+		embeddingsCached = true;
 		console.error(`reused ${vectorBytes.byteLength} vector bytes`);
 	} catch (error) {
 		if (
@@ -157,6 +201,15 @@ async function main() {
 		embeddingSeconds = (performance.now() - embeddingStarted) / 1000;
 		vectorBytes = new Uint8Array(vectors.buffer);
 		await atomicWrite(vectorPath, vectorBytes);
+		const receipt: VectorCacheReceipt = {
+			schemaVersion: 1,
+			binding: vectorBinding,
+			vectorsSha256: sha256Bytes(vectorBytes),
+		};
+		await atomicWrite(
+			vectorReceiptPath,
+			`${JSON.stringify(receipt, null, 2)}\n`,
+		);
 	}
 
 	const vectorFloats = new Float32Array(
@@ -171,7 +224,7 @@ async function main() {
 		);
 	const kg = new KnowledgeGraph(emptyKGState());
 	process.env.NAIA_MMR = "off";
-	process.env.NAIA_SEARCH_MODE = undefined;
+	Reflect.deleteProperty(process.env, "NAIA_SEARCH_MODE");
 	const rankings: Array<{
 		queryId: string;
 		ranking: string[];
@@ -233,7 +286,7 @@ async function main() {
 		claimBoundary: "not-full-corpus-not-leaderboard-not-global-comparison",
 		inputs: {
 			candidateDocumentIdsSha256: expectedPoolHash,
-			corpusJsonlSha256: sha256Text(corpusJsonl),
+			corpusJsonlSha256,
 			topicsSha256: sha256Text(topicsText),
 			qrelsSha256: sha256Text(qrelsText),
 			datasetRevision: MIRACL_KO_LOCK.datasetRevision,
@@ -257,7 +310,7 @@ async function main() {
 			queries: topics.size,
 			returnedPerQuery: TOP_K,
 		},
-		timing: { embeddingSeconds, retrievalSeconds },
+		timing: { embeddingSeconds, embeddingsCached, retrievalSeconds },
 		metrics: { ...metrics, recallAt100 },
 		outputs: {
 			vectorsSha256: sha256Bytes(vectorBytes),
