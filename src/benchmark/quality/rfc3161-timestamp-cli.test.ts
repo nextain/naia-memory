@@ -8,6 +8,7 @@ import {
 	canonicalEvidenceJson,
 	evidenceObjectSha256,
 } from "./public-evidence-crypto.js";
+import { PublicEvidenceDirectorySyncError } from "./public-evidence-file-io.js";
 import { runRfc3161TimestampCli } from "./rfc3161-timestamp-cli.js";
 import {
 	validateRfc3161DigestTimestampBinding,
@@ -471,6 +472,37 @@ describe("RFC 3161 timestamp campaign CLI", () => {
 		}
 		expect(readFileSync(evidencePath, "utf8")).toBe("existing evidence");
 		expect(readFileSync(evidenceTarget, "utf8")).toBe("symlink target");
+		writes.mockRestore();
+	});
+
+	it("reports already-written evidence whose crash-durability is unconfirmed", async () => {
+		const current = fixture();
+		const artifactPath = join(current.directory, "artifact.bin");
+		const tokenPath = join(current.directory, "artifact.tsr");
+		const evidencePath = join(current.directory, "artifact.timestamp.json");
+		writeFileSync(artifactPath, "artifact");
+		writeFileSync(tokenPath, "timestamp response");
+		const writes = vi
+			.spyOn(process.stdout, "write")
+			.mockImplementation(() => true);
+
+		expect(
+			await runRfc3161TimestampCli(
+				["seal-file-output", artifactPath, tokenPath, evidencePath],
+				undefined,
+				{
+					evidenceWriter: async (path) => {
+						throw new PublicEvidenceDirectorySyncError(
+							path,
+							new Error("directory fsync failed"),
+						);
+					},
+				},
+			),
+		).toBe(1);
+		expect(String(writes.mock.calls.at(-1)?.[0])).toContain(
+			"output was written but crash-durability could not be confirmed",
+		);
 		writes.mockRestore();
 	});
 

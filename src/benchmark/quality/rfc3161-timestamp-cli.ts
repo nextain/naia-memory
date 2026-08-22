@@ -8,6 +8,7 @@ import {
 	evidenceObjectSha256,
 } from "./public-evidence-crypto.js";
 import {
+	PublicEvidenceDirectorySyncError,
 	PublicEvidenceFileTooLargeError,
 	readBoundedEvidenceFile,
 	writeExclusiveEvidenceFile,
@@ -83,6 +84,7 @@ async function exactArtifactSha256(path: string): Promise<string> {
 export async function runRfc3161TimestampCli(
 	args: string[],
 	openSslRunner: OpenSslRunner = defaultOpenSslRunner,
+	dependencies: { evidenceWriter?: typeof writeExclusiveEvidenceFile } = {},
 ): Promise<number> {
 	const sealFileOutput = args[0] === "seal-file-output";
 	if (
@@ -156,8 +158,16 @@ export async function runRfc3161TimestampCli(
 		if (sealFileOutput) {
 			const evidenceBytes = Buffer.from(`${canonicalEvidenceJson(evidence)}\n`);
 			try {
-				await writeExclusiveEvidenceFile(resolve(args[3]), evidenceBytes);
+				await (dependencies.evidenceWriter ?? writeExclusiveEvidenceFile)(
+					resolve(args[3]),
+					evidenceBytes,
+				);
 			} catch (error) {
+				if (error instanceof PublicEvidenceDirectorySyncError)
+					throw new Error(
+						"RFC 3161 timestamp evidence output was written but crash-durability could not be confirmed; inspect the existing output before retry",
+						{ cause: error },
+					);
 				if ((error as NodeJS.ErrnoException).code === "EEXIST")
 					throw new Error("RFC 3161 timestamp evidence output already exists");
 				throw new Error("RFC 3161 timestamp evidence output cannot be written");

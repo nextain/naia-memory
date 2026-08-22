@@ -5,6 +5,16 @@ import { dirname } from "node:path";
 
 export class PublicEvidenceFileTooLargeError extends Error {}
 
+export class PublicEvidenceDirectorySyncError extends Error {
+	constructor(
+		readonly path: string,
+		cause: unknown,
+	) {
+		super("public evidence output directory synchronization failed", { cause });
+		this.name = "PublicEvidenceDirectorySyncError";
+	}
+}
+
 async function syncParentDirectory(path: string): Promise<void> {
 	const directory = await open(dirname(path), constants.O_RDONLY);
 	try {
@@ -48,7 +58,11 @@ export async function writeExclusiveEvidenceFile(
 			await handle.close();
 		}
 		await link(temporary, path);
-		await (dependencies.syncDirectory ?? syncParentDirectory)(path);
+		try {
+			await (dependencies.syncDirectory ?? syncParentDirectory)(path);
+		} catch (error) {
+			throw new PublicEvidenceDirectorySyncError(path, error);
+		}
 	} finally {
 		if (created) await unlink(temporary).catch(() => undefined);
 	}

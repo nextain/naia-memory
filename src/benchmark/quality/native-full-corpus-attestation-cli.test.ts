@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { runFullCorpusAttestationCli } from "./native-full-corpus-attestation-cli.js";
 import { buildFullCorpusBundleSigningPacket } from "./native-full-corpus-bundle-publication.js";
 import { canonicalEvidenceJson } from "./public-evidence-crypto.js";
+import { PublicEvidenceDirectorySyncError } from "./public-evidence-file-io.js";
 
 function fixture() {
 	const directory = mkdtempSync(join(tmpdir(), "naia-attestation-cli-"));
@@ -104,4 +105,36 @@ describe("full-corpus attestation CLI", () => {
 			writes.mockRestore();
 		},
 	);
+
+	it("reports an already-written receipt whose crash-durability is unconfirmed", async () => {
+		const current = fixture();
+		const receiptPath = join(current.directory, "publication-receipt.json");
+		const writes = vi
+			.spyOn(process.stdout, "write")
+			.mockImplementation(() => true);
+
+		expect(
+			await runFullCorpusAttestationCli(
+				[
+					"publish-collect",
+					current.packetPath,
+					current.signaturePath,
+					current.policyPath,
+					receiptPath,
+				],
+				{
+					evidenceWriter: async (path) => {
+						throw new PublicEvidenceDirectorySyncError(
+							path,
+							new Error("directory fsync failed"),
+						);
+					},
+				},
+			),
+		).toBe(1);
+		expect(String(writes.mock.calls.at(-1)?.[0])).toContain(
+			"output was written but crash-durability could not be confirmed",
+		);
+		writes.mockRestore();
+	});
 });

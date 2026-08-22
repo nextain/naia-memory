@@ -19,6 +19,7 @@ import {
 } from "./native-full-corpus-public-attestation.js";
 import { canonicalEvidenceJson } from "./public-evidence-crypto.js";
 import {
+	PublicEvidenceDirectorySyncError,
 	PublicEvidenceFileTooLargeError,
 	readBoundedEvidenceFile,
 	writeExclusiveEvidenceFile,
@@ -94,7 +95,10 @@ function stringMap(value: unknown): value is Record<string, string> {
 
 export async function runFullCorpusAttestationCli(
 	args: string[],
-	dependencies: { timestampCommandRunner?: Rfc3161CommandRunner } = {},
+	dependencies: {
+		timestampCommandRunner?: Rfc3161CommandRunner;
+		evidenceWriter?: typeof writeExclusiveEvidenceFile;
+	} = {},
 ): Promise<number> {
 	let [command, ...values] = args;
 	let verificationBundle:
@@ -149,8 +153,16 @@ export async function runFullCorpusAttestationCli(
 			});
 			const receiptBytes = Buffer.from(`${canonicalEvidenceJson(receipt)}\n`);
 			try {
-				await writeExclusiveEvidenceFile(resolve(receiptPath), receiptBytes);
+				await (dependencies.evidenceWriter ?? writeExclusiveEvidenceFile)(
+					resolve(receiptPath),
+					receiptBytes,
+				);
 			} catch (error) {
+				if (error instanceof PublicEvidenceDirectorySyncError)
+					throw new Error(
+						"bundle publication receipt output was written but crash-durability could not be confirmed; inspect the existing output before retry",
+						{ cause: error },
+					);
 				if ((error as NodeJS.ErrnoException).code === "EEXIST")
 					throw new Error("bundle publication receipt output already exists");
 				throw new Error("bundle publication receipt output cannot be written");

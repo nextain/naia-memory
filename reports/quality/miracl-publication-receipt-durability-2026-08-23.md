@@ -59,3 +59,24 @@ file synchronization and atomic linking.
 - Formal `review-pass` CLEAN evidence remains unavailable because deterministic
   preflight encounters unrelated user-owned untracked tool state under
   `.cache/tools/`; the verdicts above are ordinary read-only adversarial reviews.
+
+## Follow-up: directory-sync failure recovery
+
+The shared writer now distinguishes a parent-directory synchronization failure
+that occurs after successful final-name publication from an ordinary write
+failure. Both CLIs report that the output was written but crash-durability could
+not be confirmed, and direct the operator to inspect the existing output before
+retrying. The typed error preserves the final path and original cause.
+
+The regression proves that the exact final bytes exist after injected directory
+sync failure, a retry receives `EEXIST`, and the retry cannot replace those
+bytes. CLI-level tests cover the recovery wording for both full-corpus
+publication receipts and RFC 3161 evidence.
+
+- Focused follow-up regression: 3 files, 16 tests passed.
+- Full follow-up regression: 129 files, 1,059 tests passed.
+- Both TypeScript configurations, Biome, and `git diff --check` passed.
+- Claude headless pre-review corrected the proposed wording and returned
+  `VERDICT: PASS`; post-implementation review returned `VERDICT: PASS`.
+- At the later checkpoint, 2,149 vector receipts covered 1,100,288 of 1,486,752
+  Korean MIRACL documents (74.0%), still CPU-only.
