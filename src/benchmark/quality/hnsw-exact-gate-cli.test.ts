@@ -3,6 +3,7 @@ import {
 	rankingsAreStable,
 	resolveFactId,
 	resolveFactIds,
+	summarizeGeneratedInterference,
 } from "./hnsw-exact-gate.js";
 
 describe("HNSW exact gate labels", () => {
@@ -34,5 +35,18 @@ describe("HNSW exact gate labels", () => {
 				["F2", "F1"],
 			]),
 		).toBe(false);
+	});
+
+	it("reports exact-search intrusion by generated scale distractors", () => {
+		expect(
+			summarizeGeneratedInterference([
+				["scale-ko-1", "F1", "scale-ko-2"],
+				["F2", "F3", "F4"],
+			]),
+		).toEqual({
+			top1Rate: 0.5,
+			top10QueryRate: 0.5,
+			meanGeneratedAt10: 1,
+		});
 	});
 });

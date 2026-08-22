@@ -41,3 +41,25 @@ export function rankingsAreStable(rankings: string[][]): boolean {
 		.slice(1)
 		.every((ranking) => JSON.stringify(ranking) === first);
 }
+
+export function summarizeGeneratedInterference(rankings: string[][]): {
+	top1Rate: number;
+	top10QueryRate: number;
+	meanGeneratedAt10: number;
+} {
+	if (rankings.length === 0) {
+		return { top1Rate: 0, top10QueryRate: 0, meanGeneratedAt10: 0 };
+	}
+	const generatedCounts = rankings.map(
+		(ranking) => ranking.filter((id) => id.startsWith("scale-")).length,
+	);
+	return {
+		top1Rate:
+			rankings.filter((ranking) => ranking[0]?.startsWith("scale-")).length /
+			rankings.length,
+		top10QueryRate:
+			generatedCounts.filter((count) => count > 0).length / rankings.length,
+		meanGeneratedAt10:
+			generatedCounts.reduce((sum, count) => sum + count, 0) / rankings.length,
+	};
+}

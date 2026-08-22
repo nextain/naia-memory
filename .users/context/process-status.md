@@ -33,10 +33,10 @@ _(신규 이슈 시작 시 업데이트)_
 | P01 사용자시나리오 | done | `docs/user-scenarios.md` |
 | P02 테스트시나리오 | done | `docs/user-scenarios.md` Test Coverage Map |
 | P03 요구사항 | done | `docs/requirements.md` |
-| P04 통합테스트 | done | model-free protocol v6 + SQLite 100k scale evidence; stable 829 + SQLite smoke 19 tests |
+| P04 통합테스트 | done | model-free protocol v6 + SQLite/HNSW 100k evidence; 843 tests; headless evidence review PASS (recovery mode, no formal CLEAN) |
 | P05 완료 | pending | 독립 보유셋 및 동일 입력 글로벌 엔진 영수증 필요 |
 
-마지막 업데이트: 2026-08-22 04:08 KST
+마지막 업데이트: 2026-08-22 09:21 KST
 
 ---
 

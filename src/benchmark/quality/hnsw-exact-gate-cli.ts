@@ -8,29 +8,35 @@ import {
 	meanTopKOverlap,
 } from "./binary-quantization-gate.js";
 import {
-	rankingsAreStable,
-	resolveFactIds,
-	top1Agreement,
-} from "./hnsw-exact-gate.js";
-import {
-	type ContaminationReceipt,
-	buildScaleCorpus,
-} from "./hnsw-scale-corpus.js";
-import {
 	type CorpusGeometryReceipt,
 	GEOMETRY_PAIR_COUNT,
 	GEOMETRY_SEED,
 	PROVISIONAL_GEOMETRY_LIMITS,
 	qualifyCorpusGeometry,
 } from "./hnsw-corpus-geometry.js";
+import {
+	rankingsAreStable,
+	resolveFactIds,
+	summarizeGeneratedInterference,
+	top1Agreement,
+} from "./hnsw-exact-gate.js";
+import {
+	type ContaminationReceipt,
+	buildScaleCorpus,
+} from "./hnsw-scale-corpus.js";
 import { loadVectorCache, saveVectorCache } from "./hnsw-vector-cache.js";
 
 const MODEL = "multilingual-e5-large";
 const QDRANT_URL = process.env.QDRANT_URL ?? "http://127.0.0.1:6334";
 const TOP_K = 10;
-const HNSW_EF_VALUES = [16, 32, 64, 128, 256, 512] as const;
+const HNSW_EF_VALUES = (process.env.BENCH_HNSW_EF_VALUES ?? "16,32,64,128,256,512")
+	.split(",")
+	.map((value) => Number(value.trim()))
+	.filter((value) => Number.isInteger(value) && value > 0);
 const REPEATS = 3;
-const BUILD_REPEATS = 3;
+const BUILD_REPEATS = Number(process.env.BENCH_BUILD_REPEATS ?? 3);
+const HNSW_M = Number(process.env.BENCH_HNSW_M ?? 16);
+const HNSW_EF_CONSTRUCT = Number(process.env.BENCH_HNSW_EF_CONSTRUCT ?? 100);
 const TARGET_CORPUS_SIZE = Number(process.env.BENCH_CORPUS_SIZE ?? 100_000);
 const EMBEDDING_BATCH_SIZE = Number(process.env.BENCH_EMBED_BATCH_SIZE ?? 32);
 const UPSERT_BATCH_SIZE = Number(process.env.BENCH_UPSERT_BATCH_SIZE ?? 500);
@@ -38,6 +44,11 @@ const INDEX_TIMEOUT_MS = Number(process.env.BENCH_INDEX_TIMEOUT_MS ?? 600_000);
 const INDEX_STABLE_POLLS = Number(process.env.BENCH_INDEX_STABLE_POLLS ?? 5);
 const VECTOR_CACHE_DIR =
 	process.env.BENCH_VECTOR_CACHE_DIR ?? "/tmp/naia-memory-hnsw-vector-cache";
+if (HNSW_EF_VALUES.length === 0)
+	throw new Error("BENCH_HNSW_EF_VALUES must contain a positive integer");
+if (!Number.isInteger(BUILD_REPEATS) || BUILD_REPEATS < 1)
+	throw new Error("BENCH_BUILD_REPEATS must be a positive integer");
+const RUN_ID = `${TARGET_CORPUS_SIZE}-m${HNSW_M}-efc${HNSW_EF_CONSTRUCT}-ef${HNSW_EF_VALUES.at(-1)}`;
 const MIN_OVERLAP = 0.98;
 const MIN_TOP1_AGREEMENT = 0.99;
 const MAX_RECALL_LOSS = 0.01;
@@ -99,7 +110,9 @@ class CorpusGeometryRejectedError extends Error {
 		readonly geometryReceipt: CorpusGeometryReceipt,
 		readonly contaminationReceipt: ContaminationReceipt,
 	) {
-		super(`${language}: synthetic corpus geometry rejected before HNSW evaluation`);
+		super(
+			`${language}: synthetic corpus geometry rejected before HNSW evaluation`,
+		);
 	}
 }
 
@@ -391,7 +404,11 @@ async function evaluateLanguage(
 		);
 	}
 	await client.update(collection, {
-		hnsw_config: { m: 16, ef_construct: 100, full_scan_threshold: 10 },
+		hnsw_config: {
+			m: HNSW_M,
+			ef_construct: HNSW_EF_CONSTRUCT,
+			full_scan_threshold: 10,
+		},
 		optimizers_config: { indexing_threshold: 1, default_segment_number: 1 },
 	});
 	const indexInfo = await waitForIndex(client, collection, facts.length);
@@ -498,6 +515,7 @@ async function evaluateLanguage(
 		},
 		baseline: {
 			metrics: baselineMetrics,
+			generatedInterference: summarizeGeneratedInterference(exactRankings),
 			latencyMs: {
 				p50: percentile(exactLatencies, 0.5),
 				p95: percentile(exactLatencies, 0.95),
@@ -543,8 +561,7 @@ async function main() {
 				);
 			} catch (error) {
 				if (!(error instanceof CorpusGeometryRejectedError)) throw error;
-				const output =
-					"reports/quality/hnsw-exact-scale-gate-geometry-rejected.json";
+				const output = `reports/quality/hnsw-exact-scale-gate-geometry-rejected-${RUN_ID}.json`;
 				const artifact = {
 					benchmark: "qdrant-hnsw-exact-quality-gate",
 					status: "corpus_geometry_rejected",
@@ -588,7 +605,9 @@ async function main() {
 					join(process.cwd(), output),
 					`${JSON.stringify(artifact, null, 2)}\n`,
 				);
-				console.log(JSON.stringify({ output, status: artifact.status }, null, 2));
+				console.log(
+					JSON.stringify({ output, status: artifact.status }, null, 2),
+				);
 				return;
 			}
 		}
@@ -619,6 +638,8 @@ async function main() {
 			geometryMaxAllowedDelta: PROVISIONAL_GEOMETRY_LIMITS,
 			geometryPairCount: GEOMETRY_PAIR_COUNT,
 			geometrySeed: GEOMETRY_SEED,
+			hnswM: HNSW_M,
+			hnswEfConstruct: HNSW_EF_CONSTRUCT,
 		},
 		service: { engine: "Qdrant", version: service.version, url: QDRANT_URL },
 		model: {
@@ -643,6 +664,8 @@ async function main() {
 				qdrantVersion: service.version,
 				topK: TOP_K,
 				hnswEfValues: HNSW_EF_VALUES,
+				hnswM: HNSW_M,
+				hnswEfConstruct: HNSW_EF_CONSTRUCT,
 				repeats: REPEATS,
 				buildRepeats: BUILD_REPEATS,
 				targetCorpusSize: TARGET_CORPUS_SIZE,
@@ -667,8 +690,7 @@ async function main() {
 			],
 		),
 	};
-	const output =
-		"reports/quality/hnsw-exact-scale-gate-staged-indexing-2026-08-22.json";
+	const output = `reports/quality/hnsw-exact-scale-gate-${RUN_ID}-2026-08-22.json`;
 	mkdirSync(join(process.cwd(), "reports/quality"), { recursive: true });
 	writeFileSync(
 		join(process.cwd(), output),

@@ -22,6 +22,26 @@ describe("HNSW scale corpus", () => {
 		expect(first.receipt.generatedStatementCollisions).toBe(0);
 		expect(first.receipt.exactReferenceCollisions).toBe(0);
 		expect(first.receipt.referenceSubstringCollisions).toBe(0);
+		expect(first.receipt.domainCount).toBe(32);
+		expect(first.receipt.templateFamilyCount).toBe(32);
+		expect(first.receipt.construction).toBe(
+			"deterministic-multi-domain-diagnostic",
+		);
+		const generated = first.facts
+			.slice(1, 4097)
+			.map(({ statement }) => statement);
+		for (const marker of [
+			"관측소",
+			"완료되었다",
+			"배정했다",
+			"화물",
+			"교육 과정",
+			"계약",
+		]) {
+			expect(generated.some((statement) => statement.includes(marker))).toBe(
+				true,
+			);
+		}
 	});
 
 	it("normalizes punctuation, width, case, and whitespace", () => {
