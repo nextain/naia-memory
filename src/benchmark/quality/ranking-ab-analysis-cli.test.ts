@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	validateBoundRankingResult,
+	validateReportedRankingMetrics,
 	validateSharedRankingProtocol,
 } from "./ranking-ab-analysis.js";
 
@@ -25,7 +26,23 @@ describe("ranking A/B result binding", () => {
 			cpuOnly: true,
 			collectionName: "baseline-only",
 		},
+		metrics: { ndcgAt10: 0.5, recallAt100: 0.75 },
 		trecSha256: "trec",
+	});
+
+	it("requires reported metrics to reproduce from the bound TREC run", () => {
+		expect(() =>
+			validateReportedRankingMetrics(valid, {
+				ndcgAt10: 0.5,
+				recallAt100: 0.75,
+			}),
+		).not.toThrow();
+		expect(() =>
+			validateReportedRankingMetrics(valid, {
+				ndcgAt10: 0.49,
+				recallAt100: 0.75,
+			}),
+		).toThrow("do not match");
 	});
 
 	it("accepts the exact bound protocol", () => {

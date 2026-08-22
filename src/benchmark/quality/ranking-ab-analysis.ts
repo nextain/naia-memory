@@ -59,6 +59,7 @@ export interface BoundRankingResult {
 		topK?: number;
 		cpuOnly?: boolean;
 	};
+	metrics?: { ndcgAt10?: number; recallAt100?: number };
 	trecSha256?: string;
 }
 
@@ -123,6 +124,26 @@ export function validateSharedRankingProtocol(
 		JSON.stringify(sharedProtocol(candidate))
 	)
 		throw new Error("A/B results do not share the same ranking protocol");
+}
+
+export function validateReportedRankingMetrics(
+	resultText: string,
+	recomputed: { ndcgAt10: number; recallAt100: number },
+	tolerance = 1e-6,
+): void {
+	const result = JSON.parse(resultText) as BoundRankingResult;
+	const reportedNdcg = result.metrics?.ndcgAt10;
+	const reportedRecall = result.metrics?.recallAt100;
+	if (
+		!Number.isFinite(reportedNdcg) ||
+		!Number.isFinite(reportedRecall) ||
+		!Number.isFinite(tolerance) ||
+		tolerance < 0 ||
+		Math.abs((reportedNdcg ?? Number.NaN) - recomputed.ndcgAt10) > tolerance ||
+		Math.abs((reportedRecall ?? Number.NaN) - recomputed.recallAt100) >
+			tolerance
+	)
+		throw new Error("reported ranking metrics do not match TREC recomputation");
 }
 
 function mean(values: readonly number[]): number {

@@ -82,10 +82,12 @@ qrels가 실제 기준선 결과에 결합됐는지 확인하는 실행 도구�
   qrels 해시, 213질의, 1,486,752문서, exact search, top-100 설정을 결합한다.
 - A/B의 MIRACL 소스·topics·코퍼스 docid·모델/전처리 정책·passage 조합·벡터 저장소
   설정이 모두 같은지 비교하고, 격리를 위해 달라야 하는 collection 이름만 제외한다.
+- 각 결과 JSON의 nDCG@10과 Recall@100을 TREC 순위에서 다시 계산한 값과
+  `1e-6` 허용오차로 대조해 오래되거나 변조된 요약 지표를 거부한다.
 - 분석 영수증의 `passed`는 순위 비열등성만 뜻한다. 처리량과 정책 정체성은 별도
   증거가 없으면 채택 판정에 사용할 수 없다.
 
-검증 결과는 전용 테스트 8개, 전체 테스트 932개, benchmark 포함 TypeScript
+검증 결과는 전용 테스트 9개, 전체 테스트 933개, benchmark 포함 TypeScript
 typecheck 통과다.
 
 ## 적대 검토 상태

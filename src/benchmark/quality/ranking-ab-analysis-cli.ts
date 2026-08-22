@@ -11,6 +11,7 @@ import {
 import {
 	analyzeRankingAb,
 	validateBoundRankingResult,
+	validateReportedRankingMetrics,
 	validateSharedRankingProtocol,
 } from "./ranking-ab-analysis.js";
 
@@ -98,6 +99,14 @@ async function main(): Promise<void> {
 		relevantByQuery,
 		bootstrapRepetitions: BOOTSTRAP_REPETITIONS,
 		bootstrapSeed: BOOTSTRAP_SEED,
+	});
+	validateReportedRankingMetrics(baselineResultText, {
+		ndcgAt10: analysis.metrics.ndcgAt10.baseline,
+		recallAt100: analysis.metrics.recallAt100.baseline,
+	});
+	validateReportedRankingMetrics(candidateResultText, {
+		ndcgAt10: analysis.metrics.ndcgAt10.candidate,
+		recallAt100: analysis.metrics.recallAt100.candidate,
 	});
 	const checks = {
 		ndcgMeanNoninferior: analysis.metrics.ndcgAt10.delta >= -MAX_QUALITY_LOSS,
