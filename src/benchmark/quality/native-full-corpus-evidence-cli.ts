@@ -41,8 +41,8 @@ async function main() {
 	const topics = readFileSync(topicsPath);
 	const qrels = readFileSync(qrelsPath);
 	const result = JSON.parse(resultText) as FullCorpusResult;
-	const launchReceiptBytes = readFileSync(launchReceiptPath);
-	const launchReceipt = JSON.parse(launchReceiptBytes.toString("utf8")) as {
+	const launchReceiptText = readFileSync(launchReceiptPath, "utf8");
+	const launchReceipt = JSON.parse(launchReceiptText) as {
 		pid: number;
 		capturedAt: string;
 		procStartTicks: string;
@@ -54,9 +54,7 @@ async function main() {
 		evaluationSourceSha256: string;
 		embeddingInferenceMode?: "per-item-v1" | "padded-array-batch-v1";
 	};
-	const runtimeObservation = JSON.parse(
-		readFileSync(runtimeObservationPath, "utf8"),
-	);
+	const runtimeObservationText = readFileSync(runtimeObservationPath, "utf8");
 	const embedding = result.configuration.embedding;
 	const inferenceMode = result.configuration.embeddingInferenceMode;
 	if (!embedding || !inferenceMode)
@@ -143,9 +141,10 @@ async function main() {
 		qrelsPath,
 		trecPath,
 		checkpointChain,
-		launchReceipt,
-		launchReceiptSha256: sha256Bytes(launchReceiptBytes),
-		runtimeObservation,
+		launchReceiptPath,
+		launchReceiptText,
+		runtimeObservationPath,
+		runtimeObservationText,
 		qdrant: {
 			version: identity.version,
 			commit: identity.commit,

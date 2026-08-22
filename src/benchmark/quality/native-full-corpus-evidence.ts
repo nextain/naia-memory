@@ -102,6 +102,39 @@ export interface FullCorpusResult {
 	trecSha256: string;
 }
 
+interface FullCorpusLaunchReceipt {
+	pid: number;
+	capturedAt: string;
+	procStartTicks: string;
+	bootId: string;
+	cmdline: string[];
+	cudaVisibleDevices: string;
+	qdrantUrl: string;
+	outputPath: string;
+	evaluationSourceSha256: string;
+	embeddingInferenceMode?: OfflineBatchInferenceMode;
+}
+
+interface FullCorpusRuntimeObservation {
+	schemaVersion: number;
+	monitor: { source: string; sourceSha256: string };
+	launchReceipt: { path: string; sha256: string };
+	process: {
+		pid: number;
+		bootId: string;
+		procStartTicks: string;
+		cmdlineSha256: string;
+	};
+	observation: {
+		startedAt: string;
+		completedAt: string;
+		pollMilliseconds: number;
+		samples: number;
+		peakRssBytes: number;
+	};
+	result: { path: string; sha256: string };
+}
+
 export function createFullCorpusEvidenceReceipt(input: {
 	resultText: string;
 	resultSha256: string;
@@ -133,38 +166,10 @@ export function createFullCorpusEvidenceReceipt(input: {
 		docidsSha256: string;
 		lastChunkReceiptSha256: string;
 	};
-	launchReceipt: {
-		pid: number;
-		capturedAt: string;
-		procStartTicks: string;
-		bootId: string;
-		cmdline: string[];
-		cudaVisibleDevices: string;
-		qdrantUrl: string;
-		outputPath: string;
-		evaluationSourceSha256: string;
-		embeddingInferenceMode?: OfflineBatchInferenceMode;
-	};
-	launchReceiptSha256: string;
-	runtimeObservation: {
-		schemaVersion: number;
-		monitor: { source: string; sourceSha256: string };
-		launchReceipt: { path: string; sha256: string };
-		process: {
-			pid: number;
-			bootId: string;
-			procStartTicks: string;
-			cmdlineSha256: string;
-		};
-		observation: {
-			startedAt: string;
-			completedAt: string;
-			pollMilliseconds: number;
-			samples: number;
-			peakRssBytes: number;
-		};
-		result: { path: string; sha256: string };
-	};
+	launchReceiptPath: string;
+	launchReceiptText: string;
+	runtimeObservationPath: string;
+	runtimeObservationText: string;
 	qdrant: {
 		version: string;
 		commit: string;
@@ -179,6 +184,14 @@ export function createFullCorpusEvidenceReceipt(input: {
 	if (sha256Bytes(input.resultText) !== input.resultSha256)
 		throw new Error("result content hash mismatch");
 	const result = JSON.parse(input.resultText) as FullCorpusResult;
+	const launchReceipt = JSON.parse(
+		input.launchReceiptText,
+	) as FullCorpusLaunchReceipt;
+	const launchReceiptSha256 = sha256Bytes(input.launchReceiptText);
+	const runtime = JSON.parse(
+		input.runtimeObservationText,
+	) as FullCorpusRuntimeObservation;
+	const runtimeObservationSha256 = sha256Bytes(input.runtimeObservationText);
 	if (result.benchmark !== MIRACL_FULL_BENCHMARK)
 		throw new Error("benchmark identity mismatch");
 	if (
@@ -277,19 +290,17 @@ export function createFullCorpusEvidenceReceipt(input: {
 			? EXPECTED_EVALUATION_SOURCE_SHA256
 			: EXPECTED_TRUE_BATCH_EVALUATION_SOURCE_SHA256;
 	if (
-		input.launchReceipt.cudaVisibleDevices !== "" ||
-		input.launchReceipt.evaluationSourceSha256 !==
-			expectedEvaluationSourceSha256 ||
-		!input.launchReceipt.cmdline.some((argument) =>
+		launchReceipt.cudaVisibleDevices !== "" ||
+		launchReceipt.evaluationSourceSha256 !== expectedEvaluationSourceSha256 ||
+		!launchReceipt.cmdline.some((argument) =>
 			argument.endsWith("native-full-corpus-evaluation-cli.ts"),
 		) ||
-		input.launchReceipt.outputPath !== input.trecPath.replace(/\.trec$/, "") ||
+		launchReceipt.outputPath !== input.trecPath.replace(/\.trec$/, "") ||
 		(inferenceMode === "padded-array-batch-v1" &&
-			input.launchReceipt.embeddingInferenceMode !== inferenceMode)
+			launchReceipt.embeddingInferenceMode !== inferenceMode)
 	)
 		throw new Error("benchmark launch evidence mismatch");
-	const runtime = input.runtimeObservation;
-	const launchCapturedAt = Date.parse(input.launchReceipt.capturedAt);
+	const launchCapturedAt = Date.parse(launchReceipt.capturedAt);
 	const observationStartedAt = Date.parse(runtime.observation.startedAt);
 	const observationCompletedAt = Date.parse(runtime.observation.completedAt);
 	if (
@@ -298,12 +309,13 @@ export function createFullCorpusEvidenceReceipt(input: {
 			"/src/benchmark/quality/native-full-corpus-runtime-monitor-cli.ts",
 		) ||
 		runtime.monitor.sourceSha256 !== EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256 ||
-		runtime.launchReceipt.sha256 !== input.launchReceiptSha256 ||
-		runtime.process.pid !== input.launchReceipt.pid ||
-		runtime.process.bootId !== input.launchReceipt.bootId ||
-		runtime.process.procStartTicks !== input.launchReceipt.procStartTicks ||
+		runtime.launchReceipt.path !== input.launchReceiptPath ||
+		runtime.launchReceipt.sha256 !== launchReceiptSha256 ||
+		runtime.process.pid !== launchReceipt.pid ||
+		runtime.process.bootId !== launchReceipt.bootId ||
+		runtime.process.procStartTicks !== launchReceipt.procStartTicks ||
 		runtime.process.cmdlineSha256 !==
-			sha256Bytes(input.launchReceipt.cmdline.join("\0")) ||
+			sha256Bytes(launchReceipt.cmdline.join("\0")) ||
 		!Number.isFinite(launchCapturedAt) ||
 		!Number.isFinite(observationStartedAt) ||
 		!Number.isFinite(observationCompletedAt) ||
@@ -314,7 +326,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 		runtime.observation.samples < 1 ||
 		!Number.isSafeInteger(runtime.observation.peakRssBytes) ||
 		runtime.observation.peakRssBytes <= 0 ||
-		runtime.result.path !== input.launchReceipt.outputPath ||
+		runtime.result.path !== launchReceipt.outputPath ||
 		runtime.result.sha256 !== input.resultSha256
 	)
 		throw new Error("benchmark runtime observation mismatch");
@@ -345,7 +357,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 	)
 		throw new Error("independent metric reproduction mismatch");
 	return {
-		schemaVersion: 2,
+		schemaVersion: 3,
 		verdict: "LOCAL_PASS",
 		assurance: "self-observed-local",
 		publicClaimEligible: false,
@@ -360,6 +372,14 @@ export function createFullCorpusEvidenceReceipt(input: {
 			trec: { path: input.trecPath, sha256: input.trecSha256 },
 			topics: { path: input.topicsPath, sha256: input.topicsSha256 },
 			qrels: { path: input.qrelsPath, sha256: input.qrelsSha256 },
+			launchReceipt: {
+				path: input.launchReceiptPath,
+				sha256: launchReceiptSha256,
+			},
+			runtimeObservation: {
+				path: input.runtimeObservationPath,
+				sha256: runtimeObservationSha256,
+			},
 			checkpointChain: input.checkpointChain,
 		},
 		independentEvaluatorTool: {
@@ -389,7 +409,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 		},
 		runtime: {
 			cpuOnly: true,
-			launchReceipt: input.launchReceipt,
+			launchReceipt,
 			observation: runtime,
 			attachmentDelayMilliseconds,
 			observationBoundary:

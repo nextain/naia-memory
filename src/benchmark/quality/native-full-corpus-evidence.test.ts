@@ -64,12 +64,59 @@ const result = {
 };
 
 function evidence(overrides = {}) {
-	const { result: resultOverride = result, ...remainingOverrides } =
-		overrides as {
-			result?: typeof result;
-			[key: string]: unknown;
-		};
+	const {
+		result: resultOverride = result,
+		launchReceipt: launchReceiptOverride,
+		runtimeObservation: runtimeObservationOverride,
+		...remainingOverrides
+	} = overrides as {
+		result?: typeof result;
+		launchReceipt?: Record<string, unknown>;
+		runtimeObservation?: Record<string, unknown>;
+		[key: string]: unknown;
+	};
 	const resultText = JSON.stringify(resultOverride);
+	const launchReceipt = launchReceiptOverride ?? {
+		pid: 123,
+		capturedAt: "2026-08-22T00:00:00.000Z",
+		procStartTicks: "12345",
+		bootId: "boot-a",
+		cmdline: ["node", "native-full-corpus-evaluation-cli.ts"],
+		cudaVisibleDevices: "",
+		qdrantUrl: "http://127.0.0.1:6334",
+		outputPath: "/outputs/result.json",
+		evaluationSourceSha256: EXPECTED_EVALUATION_SOURCE_SHA256,
+	};
+	const launchReceiptPath = "/outputs/launch.json";
+	const launchReceiptText = JSON.stringify(launchReceipt);
+	const runtimeObservation = runtimeObservationOverride ?? {
+		schemaVersion: 1,
+		monitor: {
+			source:
+				"/repo/src/benchmark/quality/native-full-corpus-runtime-monitor-cli.ts",
+			sourceSha256: EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256,
+		},
+		launchReceipt: {
+			path: launchReceiptPath,
+			sha256: sha256Bytes(launchReceiptText),
+		},
+		process: {
+			pid: 123,
+			bootId: "boot-a",
+			procStartTicks: "12345",
+			cmdlineSha256: sha256Bytes(
+				["node", "native-full-corpus-evaluation-cli.ts"].join("\0"),
+			),
+		},
+		observation: {
+			startedAt: "2026-08-22T00:05:00.000Z",
+			completedAt: "2026-08-22T00:10:00.000Z",
+			pollMilliseconds: 5_000,
+			samples: 2,
+			peakRssBytes: 4096,
+		},
+		result: { path: "/outputs/result.json", sha256: sha256Bytes(resultText) },
+	};
 	return {
 		resultText,
 		resultSha256: sha256Bytes(resultText),
@@ -101,46 +148,10 @@ function evidence(overrides = {}) {
 			docidsSha256: "corpus-docids",
 			lastChunkReceiptSha256: "last-receipt",
 		},
-		launchReceipt: {
-			pid: 123,
-			capturedAt: "2026-08-22T00:00:00.000Z",
-			procStartTicks: "12345",
-			bootId: "boot-a",
-			cmdline: ["node", "native-full-corpus-evaluation-cli.ts"],
-			cudaVisibleDevices: "",
-			qdrantUrl: "http://127.0.0.1:6334",
-			outputPath: "/outputs/result.json",
-			evaluationSourceSha256: EXPECTED_EVALUATION_SOURCE_SHA256,
-		},
-		launchReceiptSha256: "launch-hash",
-		runtimeObservation: {
-			schemaVersion: 1,
-			monitor: {
-				source:
-					"/repo/src/benchmark/quality/native-full-corpus-runtime-monitor-cli.ts",
-				sourceSha256: EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256,
-			},
-			launchReceipt: { path: "/outputs/launch.json", sha256: "launch-hash" },
-			process: {
-				pid: 123,
-				bootId: "boot-a",
-				procStartTicks: "12345",
-				cmdlineSha256: sha256Bytes(
-					["node", "native-full-corpus-evaluation-cli.ts"].join("\0"),
-				),
-			},
-			observation: {
-				startedAt: "2026-08-22T00:05:00.000Z",
-				completedAt: "2026-08-22T00:10:00.000Z",
-				pollMilliseconds: 5_000,
-				samples: 2,
-				peakRssBytes: 4096,
-			},
-			result: {
-				path: "/outputs/result.json",
-				sha256: sha256Bytes(resultText),
-			},
-		},
+		launchReceiptPath,
+		launchReceiptText,
+		runtimeObservationPath: "/outputs/runtime.json",
+		runtimeObservationText: JSON.stringify(runtimeObservation),
 		qdrant: {
 			version: EXPECTED_QDRANT_VERSION,
 			commit: EXPECTED_QDRANT_COMMIT,
@@ -155,6 +166,14 @@ function evidence(overrides = {}) {
 	};
 }
 
+function parsedLaunchReceipt() {
+	return JSON.parse(evidence().launchReceiptText);
+}
+
+function parsedRuntimeObservation() {
+	return JSON.parse(evidence().runtimeObservationText);
+}
+
 describe("full-corpus independent evidence", () => {
 	it("parses only aggregate trec_eval rows", () => {
 		expect(parseTrecEvalAll("ndcg_cut_10 all 0.5\n").get("ndcg_cut_10")).toBe(
@@ -165,7 +184,7 @@ describe("full-corpus independent evidence", () => {
 
 	it("binds independent metrics, artifacts, runtime, and latency semantics", () => {
 		const receipt = createFullCorpusEvidenceReceipt(evidence());
-		expect(receipt.schemaVersion).toBe(2);
+		expect(receipt.schemaVersion).toBe(3);
 		expect(receipt.verdict).toBe("LOCAL_PASS");
 		expect(receipt).toMatchObject({
 			assurance: "self-observed-local",
@@ -187,6 +206,14 @@ describe("full-corpus independent evidence", () => {
 		expect(receipt.artifacts.qrels).toEqual({
 			path: "/inputs/miracl-v1.0-ko/qrels/qrels.miracl-v1.0-ko-dev.tsv",
 			sha256: EXPECTED_MIRACL_QRELS_SHA256,
+		});
+		expect(receipt.artifacts.launchReceipt).toEqual({
+			path: evidence().launchReceiptPath,
+			sha256: sha256Bytes(evidence().launchReceiptText),
+		});
+		expect(receipt.artifacts.runtimeObservation).toEqual({
+			path: evidence().runtimeObservationPath,
+			sha256: sha256Bytes(evidence().runtimeObservationText),
 		});
 		expect(receipt).not.toHaveProperty("independentEvaluator");
 		expect(receipt.metrics).toHaveProperty("reproducedByIndependentTool");
@@ -215,7 +242,7 @@ describe("full-corpus independent evidence", () => {
 			},
 		};
 		const launchReceipt = {
-			...evidence().launchReceipt,
+			...parsedLaunchReceipt(),
 			evaluationSourceSha256: EXPECTED_TRUE_BATCH_EVALUATION_SOURCE_SHA256,
 			embeddingInferenceMode: "padded-array-batch-v1" as const,
 		};
@@ -269,6 +296,36 @@ describe("full-corpus independent evidence", () => {
 				evidence({ resultSha256: "forged-result-hash" }),
 			),
 		).toThrow("result content hash");
+	});
+
+	it("rejects launch artifact substitution against the observed raw hash", () => {
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					launchReceipt: {
+						...parsedLaunchReceipt(),
+						capturedAt: "2026-08-22T00:00:01.000Z",
+					},
+					runtimeObservation: parsedRuntimeObservation(),
+				}),
+			),
+		).toThrow("runtime observation");
+	});
+
+	it("rejects a runtime observation that names a different launch artifact", () => {
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					runtimeObservation: {
+						...parsedRuntimeObservation(),
+						launchReceipt: {
+							...parsedRuntimeObservation().launchReceipt,
+							path: "/outputs/substituted-launch.json",
+						},
+					},
+				}),
+			),
+		).toThrow("runtime observation");
 	});
 
 	it("rejects incomplete TREC query coverage even when its hash is consistent", () => {
@@ -421,7 +478,7 @@ describe("full-corpus independent evidence", () => {
 			createFullCorpusEvidenceReceipt(
 				evidence({
 					launchReceipt: {
-						...evidence().launchReceipt,
+						...parsedLaunchReceipt(),
 						cudaVisibleDevices: "1",
 					},
 				}),
@@ -431,7 +488,7 @@ describe("full-corpus independent evidence", () => {
 			createFullCorpusEvidenceReceipt(
 				evidence({
 					runtimeObservation: {
-						...evidence().runtimeObservation,
+						...parsedRuntimeObservation(),
 						result: { path: "/outputs/result.json", sha256: "changed" },
 					},
 				}),
@@ -441,9 +498,9 @@ describe("full-corpus independent evidence", () => {
 			createFullCorpusEvidenceReceipt(
 				evidence({
 					runtimeObservation: {
-						...evidence().runtimeObservation,
+						...parsedRuntimeObservation(),
 						observation: {
-							...evidence().runtimeObservation.observation,
+							...parsedRuntimeObservation().observation,
 							samples: 1.5,
 						},
 					},
@@ -454,9 +511,9 @@ describe("full-corpus independent evidence", () => {
 			createFullCorpusEvidenceReceipt(
 				evidence({
 					runtimeObservation: {
-						...evidence().runtimeObservation,
+						...parsedRuntimeObservation(),
 						observation: {
-							...evidence().runtimeObservation.observation,
+							...parsedRuntimeObservation().observation,
 							startedAt: "2026-08-21T23:59:59.000Z",
 						},
 					},
