@@ -17,6 +17,7 @@ const resultPath =
 const trecPath = `${resultPath}.trec`;
 const sourceRoot =
 	process.env.MIRACL_SOURCE_DIR ?? ".cache/benchmark-sources/miracl-ko-v1.0";
+const topicsPath = join(sourceRoot, MIRACL_KO_LOCK.files[0].path);
 const qrelsPath = join(sourceRoot, MIRACL_KO_LOCK.files[1].path);
 const evaluatorPath =
 	process.env.TREC_EVAL_PATH ?? ".cache/tools/trec_eval-ba38899/trec_eval";
@@ -37,6 +38,7 @@ async function main() {
 	if (existsSync(outputPath)) throw new Error("evidence output already exists");
 	const resultText = readFileSync(resultPath, "utf8");
 	const trec = readFileSync(trecPath);
+	const topics = readFileSync(topicsPath);
 	const qrels = readFileSync(qrelsPath);
 	const result = JSON.parse(resultText) as FullCorpusResult;
 	const launchReceiptBytes = readFileSync(launchReceiptPath);
@@ -110,6 +112,7 @@ async function main() {
 		resultSha256: sha256Bytes(resultText),
 		trecSha256: sha256Bytes(trec),
 		trecRunText: trec.toString("utf8"),
+		topicsSha256: sha256Bytes(topics),
 		qrelsSha256: sha256Bytes(qrels),
 		trecEvalStdout: stdout,
 		trecEvalBinarySha256: sha256Bytes(readFileSync(evaluatorPath)),
@@ -119,6 +122,7 @@ async function main() {
 			{ encoding: "utf8" },
 		).trim(),
 		trecEvalPath: evaluatorPath,
+		topicsPath,
 		qrelsPath,
 		trecPath,
 		checkpointChain,

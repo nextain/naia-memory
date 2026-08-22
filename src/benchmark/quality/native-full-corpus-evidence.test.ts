@@ -69,11 +69,13 @@ function evidence(overrides = {}) {
 		resultSha256: "result",
 		trecSha256,
 		trecRunText,
+		topicsSha256: EXPECTED_MIRACL_TOPICS_SHA256,
 		qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
 		trecEvalStdout: "ndcg_cut_10 all 0.412345\nrecall_100 all 0.765432\n",
 		trecEvalBinarySha256: EXPECTED_TREC_EVAL_BINARY_SHA256,
 		trecEvalSourceCommit: "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c",
 		trecEvalPath: "/tools/trec_eval",
+		topicsPath: "/inputs/miracl-v1.0-ko/topics/topics.miracl-v1.0-ko-dev.tsv",
 		qrelsPath: "/inputs/qrels.tsv",
 		trecPath: "/outputs/result.json.trec",
 		checkpointChain: {
@@ -156,6 +158,10 @@ describe("full-corpus independent evidence", () => {
 			EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
 		);
 		expect(receipt).toHaveProperty("independentEvaluatorTool");
+		expect(receipt.artifacts.topics).toEqual({
+			path: "/inputs/miracl-v1.0-ko/topics/topics.miracl-v1.0-ko-dev.tsv",
+			sha256: EXPECTED_MIRACL_TOPICS_SHA256,
+		});
 		expect(receipt).not.toHaveProperty("independentEvaluator");
 		expect(receipt.metrics).toHaveProperty("reproducedByIndependentTool");
 		expect(receipt.metrics).not.toHaveProperty("independent");
@@ -289,6 +295,25 @@ describe("full-corpus independent evidence", () => {
 	});
 
 	it("fails closed on metric, artifact, policy, and runtime drift", () => {
+		expect(() =>
+			createFullCorpusEvidenceReceipt(evidence({ topicsSha256: "changed" })),
+		).toThrow("canonical topics hash");
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					topicsSha256: "changed",
+					result: {
+						...result,
+						inputs: { ...result.inputs, topicsSha256: "changed" },
+					},
+				}),
+			),
+		).toThrow("canonical topics hash");
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({ topicsPath: "/inputs/substituted-topics.tsv" }),
+			),
+		).toThrow("canonical topics hash");
 		expect(() =>
 			createFullCorpusEvidenceReceipt(
 				evidence({

@@ -107,11 +107,13 @@ export function createFullCorpusEvidenceReceipt(input: {
 	resultSha256: string;
 	trecSha256: string;
 	trecRunText: string;
+	topicsSha256: string;
 	qrelsSha256: string;
 	trecEvalStdout: string;
 	trecEvalBinarySha256: string;
 	trecEvalSourceCommit: string;
 	trecEvalPath: string;
+	topicsPath: string;
 	qrelsPath: string;
 	trecPath: string;
 	checkpointChain: {
@@ -200,7 +202,11 @@ export function createFullCorpusEvidenceReceipt(input: {
 		throw new Error("TREC hash mismatch");
 	if (sha256Bytes(input.trecRunText) !== input.trecSha256)
 		throw new Error("TREC content hash mismatch");
-	if (result.inputs.topicsSha256 !== EXPECTED_MIRACL_TOPICS_SHA256)
+	if (
+		result.inputs.topicsSha256 !== input.topicsSha256 ||
+		input.topicsSha256 !== EXPECTED_MIRACL_TOPICS_SHA256 ||
+		!input.topicsPath.endsWith(MIRACL_KO_LOCK.files[0].path)
+	)
 		throw new Error("canonical topics hash mismatch");
 	const run = parseTrecRun(input.trecRunText);
 	if (run.size !== result.inputs.queryCount)
@@ -325,6 +331,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 				sha256: input.resultSha256,
 			},
 			trec: { path: input.trecPath, sha256: input.trecSha256 },
+			topics: { path: input.topicsPath, sha256: input.topicsSha256 },
 			qrels: { path: input.qrelsPath, sha256: input.qrelsSha256 },
 			checkpointChain: input.checkpointChain,
 		},
