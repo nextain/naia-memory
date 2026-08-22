@@ -127,7 +127,7 @@ export type {
 	TemporalCapableProvider,
 	CompactableCapableProvider,
 } from "./provider-types.js";
-export { LocalAdapter } from "./adapters/local.js";
+export { LocalAdapter, LocalStoreLoadError } from "./adapters/local.js";
 export { QdrantAdapter } from "./adapters/qdrant.js";
 export { SqliteAdapter } from "./adapters/sqlite.js";
 export type {

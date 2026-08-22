@@ -61,7 +61,9 @@ copy without warning.
 wrapped in `LocalStoreLoadError` and fails construction before any write can be
 scheduled. Existing version-1 status migration remains intact. Tests cover a
 missing store, malformed JSON, unsupported version, invalid shape, a read error,
-and byte-for-byte preservation of rejected files.
+and byte-for-byte preservation of rejected files. `LocalStoreLoadError` is
+re-exported from the package entry point so hosts can distinguish this fail-safe
+condition without relying on message parsing or a deep import.
 
 The follow-on OpenCode adversarial gate returned `PASS`. It noted that store
 validation remains intentionally top-level, matching encrypted-backup
