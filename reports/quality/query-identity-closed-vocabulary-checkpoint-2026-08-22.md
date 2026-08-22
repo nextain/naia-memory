@@ -30,3 +30,9 @@ Promotion requires a separately frozen native-language oracle with Korean, Engli
 ## Next experiment
 
 Define and validate the independent oracle schema before collecting model outputs. Pre-register scoring so abstention, wrong in-vocabulary IDs, partial pairs, and unsupported properties are counted separately. Keep the long-running CPU-only MIRACL full-corpus run isolated as global retrieval evidence.
+
+## Oracle contract implementation
+
+The repository now contains a data-free oracle validator and scorer. It does not contain self-authored benchmark answers. Runtime validation requires independent native author/reviewer provenance, prevents family leakage across development and test, and gates public evidence at 100 test cases with at least 30 per language. Each language must cover identity and abstention, all three abstention reasons, and at least ten distinct ontology properties.
+
+An OpenCode adversarial review returned FINDINGS. Accepted findings split valid-but-wrong identity errors from false positives on abstention, classify malformed output and partial pairs explicitly, validate runtime JSON rather than trusting TypeScript types, and strengthen per-language difficulty coverage. One finding claiming unsupported IDs could not be measured on identity cases was rejected after control-flow inspection: unsupported prediction IDs are classified before expectation branching. The ontology-range criticism remains valid; absent real-world categories must appear as `out-of-ontology` abstentions and block any claim of general personal-memory coverage.
