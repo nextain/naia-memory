@@ -56,6 +56,7 @@ type JudgmentFile = {
 	samples: Array<{
 		sampleId: string;
 		adjudicatorId: string;
+		adjudicationMethod?: "model" | "deterministic-no-retrieval";
 		judgments: Array<{
 			memoryId: string;
 			label: SemanticJudgmentLabel;
@@ -66,12 +67,25 @@ type JudgmentFile = {
 
 type ScoreCell = {
 	samples: number;
+	currentEligibleSamples: number;
 	currentAt1: number;
 	currentAtK: number;
+	staleEligibleSamples: number;
 	staleExposureAtK: number;
+	deletionEligibleSamples: number;
 	deletionLeakageAtK: number;
 	uncertainMemories: number;
 };
+
+export function semanticMetricEligibility(
+	decision: MemoryUpdateContract["cases"][number]["expectedDecision"],
+) {
+	return {
+		currentEligible: decision === "update" || decision === "no-update",
+		staleEligible: decision === "update",
+		deletionEligible: decision === "delete",
+	};
+}
 
 function sha256(value: string | Buffer): string {
 	return createHash("sha256").update(value).digest("hex");
@@ -199,6 +213,20 @@ function validateJudgments(value: unknown, packet: BlindPacket): JudgmentFile {
 				throw new Error(
 					`incomplete multi-rater coverage for ${packetSample.sampleId}/${adjudicatorId}`,
 				);
+			if (
+				sample.adjudicationMethod === "deterministic-no-retrieval" &&
+				packetSample.retrieved.length !== 0
+			)
+				throw new Error(
+					`deterministic no-retrieval adjudication has memories in ${packetSample.sampleId}`,
+				);
+			if (
+				sample.adjudicationMethod === "model" &&
+				adjudicators.get(adjudicatorId)?.kind !== "model"
+			)
+				throw new Error(
+					`model adjudication method requires a model adjudicator in ${packetSample.sampleId}`,
+				);
 			usedAdjudicators.add(adjudicatorId);
 			const expectedIds = packetSample.retrieved.map((item) => item.memoryId);
 			const seen = new Set<string>();
@@ -250,9 +278,12 @@ function validateJudgments(value: unknown, packet: BlindPacket): JudgmentFile {
 function emptyCell(): ScoreCell {
 	return {
 		samples: 0,
+		currentEligibleSamples: 0,
 		currentAt1: 0,
 		currentAtK: 0,
+		staleEligibleSamples: 0,
 		staleExposureAtK: 0,
+		deletionEligibleSamples: 0,
 		deletionLeakageAtK: 0,
 		uncertainMemories: 0,
 	};
@@ -291,6 +322,7 @@ export function scoreSemanticAdjudication(input: {
 		input.packet.samples.map((item) => [item.sampleId, item]),
 	);
 	const cells: Record<string, ScoreCell> = {};
+	const caseById = new Map(input.contract.cases.map((item) => [item.id, item]));
 	const agreementSubjects: RatedSemanticMemory[] = [];
 	const sampleResults = input.seal.samples.map((sealed) => {
 		const packetSample = packetBySample.get(sealed.sampleId);
@@ -321,11 +353,20 @@ export function scoreSemanticAdjudication(input: {
 		const key = `${sealed.engine}/${packetSample.language}`;
 		if (!cells[key]) cells[key] = emptyCell();
 		const cell = cells[key];
+		const benchmarkCase = caseById.get(sealed.caseId);
+		if (!benchmarkCase)
+			throw new Error(`scored sample has unknown case: ${sealed.caseId}`);
+		const { currentEligible, staleEligible, deletionEligible } =
+			semanticMetricEligibility(benchmarkCase.expectedDecision);
 		cell.samples += 1;
-		cell.currentAt1 += labels[0] === "current" ? 1 : 0;
-		cell.currentAtK += labels.includes("current") ? 1 : 0;
-		cell.staleExposureAtK += labels.includes("stale") ? 1 : 0;
-		cell.deletionLeakageAtK += labels.includes("deleted") ? 1 : 0;
+		cell.currentEligibleSamples += currentEligible ? 1 : 0;
+		cell.currentAt1 += currentEligible && labels[0] === "current" ? 1 : 0;
+		cell.currentAtK += currentEligible && labels.includes("current") ? 1 : 0;
+		cell.staleEligibleSamples += staleEligible ? 1 : 0;
+		cell.staleExposureAtK += staleEligible && labels.includes("stale") ? 1 : 0;
+		cell.deletionEligibleSamples += deletionEligible ? 1 : 0;
+		cell.deletionLeakageAtK +=
+			deletionEligible && labels.includes("deleted") ? 1 : 0;
 		cell.uncertainMemories += labels.filter(
 			(label) => label === "uncertain",
 		).length;
@@ -335,6 +376,7 @@ export function scoreSemanticAdjudication(input: {
 			language: packetSample.language,
 			caseId: sealed.caseId,
 			repetition: sealed.repetition,
+			metricEligibility: { currentEligible, staleEligible, deletionEligible },
 			labels,
 		};
 	});
@@ -342,7 +384,6 @@ export function scoreSemanticAdjudication(input: {
 		judgments.schemaVersion === "naia-memory-semantic-judgments-v3"
 			? calculateSemanticInterRaterAgreement(agreementSubjects)
 			: null;
-	const caseById = new Map(input.contract.cases.map((item) => [item.id, item]));
 	const uncertainty = calculateSemanticClusterBootstrap(
 		sampleResults.map((sample) => {
 			const benchmarkCase = caseById.get(sample.caseId);
@@ -352,19 +393,35 @@ export function scoreSemanticAdjudication(input: {
 				engine: sample.engine,
 				language: sample.language,
 				familyId: benchmarkCase.familyId,
-				currentAt1: sample.labels[0] === "current" ? 1 : 0,
-				currentAtK: sample.labels.includes("current") ? 1 : 0,
-				staleExposureAtK: sample.labels.includes("stale") ? 1 : 0,
-				deletionLeakageAtK: sample.labels.includes("deleted") ? 1 : 0,
+				currentAt1: sample.metricEligibility.currentEligible
+					? sample.labels[0] === "current"
+						? 1
+						: 0
+					: null,
+				currentAtK: sample.metricEligibility.currentEligible
+					? sample.labels.includes("current")
+						? 1
+						: 0
+					: null,
+				staleExposureAtK: sample.metricEligibility.staleEligible
+					? sample.labels.includes("stale")
+						? 1
+						: 0
+					: null,
+				deletionLeakageAtK: sample.metricEligibility.deletionEligible
+					? sample.labels.includes("deleted")
+						? 1
+						: 0
+					: null,
 			};
 		}),
 		`${input.packet.packetContentSha256}\0${sha256(input.judgmentsBytes)}`,
 	);
 	return {
-		schemaVersion: "naia-memory-semantic-adjudication-score-v1" as const,
+		schemaVersion: "naia-memory-semantic-adjudication-score-v2" as const,
 		disclosure: {
 			metricUnit:
-				"sample-level binary exposure; uncertain memories are reported and never coerced to another label",
+				"eligible sample-level binary exposure: current metrics use update/no-update cases, stale exposure uses update cases, and deletion leakage uses delete cases; uncertain memories are reported and never coerced to another label",
 			packetContentSha256: input.packet.packetContentSha256,
 			judgmentsFileSha256: sha256(input.judgmentsBytes),
 			judgmentsCanonicalSha256: sha256(JSON.stringify(judgments)),

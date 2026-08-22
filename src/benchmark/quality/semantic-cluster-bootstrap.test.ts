@@ -76,6 +76,49 @@ describe("semantic family-cluster bootstrap", () => {
 		).toMatchObject({ estimate: -0.5, lower: -1, upper: 0 });
 	});
 
+	it("resamples only metric-eligible families and reports their count", () => {
+		const nullable = (engine: string, familyId: string, eligible: boolean) => ({
+			...sample(engine, familyId, 1),
+			staleExposureAtK: eligible ? 0 : null,
+		});
+		const result = calculateSemanticClusterBootstrap(
+			[
+				nullable("a", "update-family", true),
+				nullable("a", "delete-family", false),
+				nullable("b", "update-family", true),
+				nullable("b", "delete-family", false),
+			],
+			"metric-eligibility",
+		);
+		expect(result.intervals["a/ko"].currentAt1?.independentClusters).toBe(2);
+		expect(result.intervals["a/ko"].staleExposureAtK).toMatchObject({
+			independentClusters: 1,
+			lower: 0,
+			upper: 0,
+		});
+	});
+
+	it("rejects eligibility drift within or across paired engines", () => {
+		const base = sample("a", "family-a", 1);
+		expect(() =>
+			calculateSemanticClusterBootstrap(
+				[
+					base,
+					{ ...base, staleExposureAtK: null },
+					{ ...base, engine: "b" },
+					{ ...base, engine: "b" },
+				],
+				"seed",
+			),
+		).toThrow("eligibility varies within family");
+		expect(() =>
+			calculateSemanticClusterBootstrap(
+				[base, { ...base, engine: "b", staleExposureAtK: null }],
+				"seed",
+			),
+		).toThrow("paired metric eligibility mismatch");
+	});
+
 	it("rejects unpaired family coverage and non-binary observations", () => {
 		expect(() =>
 			calculateSemanticClusterBootstrap(
@@ -111,6 +154,6 @@ describe("semantic family-cluster bootstrap", () => {
 				[sample("naia", "family-a", 0.5)],
 				"seed",
 			),
-		).toThrow("binary metrics");
+		).toThrow("binary or null metrics");
 	});
 });

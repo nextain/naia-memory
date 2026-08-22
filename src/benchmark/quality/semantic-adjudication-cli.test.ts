@@ -2,7 +2,10 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { scoreSemanticAdjudication } from "./semantic-adjudication-cli.js";
+import {
+	scoreSemanticAdjudication,
+	semanticMetricEligibility,
+} from "./semantic-adjudication-cli.js";
 import { buildSemanticBlindArtifacts } from "./semantic-blind-packet-cli.js";
 import { semanticBlindFixture } from "./semantic-blind-packet-fixture.js";
 
@@ -64,14 +67,19 @@ describe("semantic adjudication scorer", () => {
 			});
 			expect(score.cells["naia/ko"]).toMatchObject({
 				samples: 3,
+				currentEligibleSamples: 3,
 				currentAt1: 3,
+				staleEligibleSamples: 3,
+				deletionEligibleSamples: 0,
 			});
 			expect(score.cells["mem0/ko"]).toMatchObject({
 				samples: 3,
+				currentEligibleSamples: 3,
 				currentAt1: 3,
 			});
 			expect(score.cells["hindsight/ko"]).toMatchObject({
 				samples: 3,
+				currentEligibleSamples: 3,
 				currentAt1: 3,
 			});
 			expect(score.samples).toHaveLength(9);
@@ -79,6 +87,19 @@ describe("semantic adjudication scorer", () => {
 		} finally {
 			rmSync(directory, { recursive: true, force: true });
 		}
+	});
+
+	it("keeps delete cases out of current recall and stale denominators", () => {
+		expect(semanticMetricEligibility("delete")).toEqual({
+			currentEligible: false,
+			staleEligible: false,
+			deletionEligible: true,
+		});
+		expect(semanticMetricEligibility("no-update")).toEqual({
+			currentEligible: true,
+			staleEligible: false,
+			deletionEligible: false,
+		});
 	});
 
 	it("scores a v3 engine subset without creating an absent engine cell", () => {

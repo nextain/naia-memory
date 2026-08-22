@@ -15,10 +15,10 @@ export type SemanticBootstrapSample = {
 	engine: string;
 	language: string;
 	familyId: string;
-	currentAt1: number;
-	currentAtK: number;
-	staleExposureAtK: number;
-	deletionLeakageAtK: number;
+	currentAt1: number | null;
+	currentAtK: number | null;
+	staleExposureAtK: number | null;
+	deletionLeakageAtK: number | null;
 };
 
 type Interval = {
@@ -41,10 +41,17 @@ function mulberry32(seed: string): () => number {
 	};
 }
 
-function mean(samples: SemanticBootstrapSample[], metric: Metric): number {
-	return (
-		samples.reduce((sum, sample) => sum + sample[metric], 0) / samples.length
-	);
+function mean(
+	samples: SemanticBootstrapSample[],
+	metric: Metric,
+): number | null {
+	const eligible = samples.flatMap((sample) => {
+		const value = sample[metric];
+		return value === null ? [] : [value];
+	});
+	return eligible.length === 0
+		? null
+		: eligible.reduce((sum, value) => sum + value, 0) / eligible.length;
 }
 
 function percentile(sorted: number[], probability: number): number {
@@ -73,16 +80,21 @@ export function calculateSemanticClusterBootstrap(
 				!sample.engine.trim() ||
 				!sample.language.trim() ||
 				!sample.familyId.trim() ||
-				METRICS.some((metric) => sample[metric] !== 0 && sample[metric] !== 1),
+				METRICS.some(
+					(metric) =>
+						sample[metric] !== null &&
+						sample[metric] !== 0 &&
+						sample[metric] !== 1,
+				),
 		)
 	)
 		throw new Error(
-			"bootstrap samples must have identities and binary metrics",
+			"bootstrap samples must have identities and binary or null metrics",
 		);
 
 	const seedSha256 = createHash("sha256").update(seedMaterial).digest("hex");
 	const random = mulberry32(seedSha256);
-	const intervals: Record<string, Record<Metric, Interval>> = {};
+	const intervals: Record<string, Record<Metric, Interval | null>> = {};
 	const pairedDifferences: Array<{
 		leftEngine: string;
 		rightEngine: string;
@@ -138,24 +150,47 @@ export function calculateSemanticClusterBootstrap(
 			);
 
 		const distributions = new Map<string, number[]>();
+		const eligibleFamilies = new Map<Metric, string[]>();
 		for (const engine of engines)
 			for (const metric of METRICS)
 				distributions.set(`${engine}\0${metric}`, []);
-		for (
-			let iteration = 0;
-			iteration < SEMANTIC_BOOTSTRAP_ITERATIONS;
-			iteration++
-		) {
-			const drawnFamilies = Array.from(
-				{ length: families.length },
-				() => families[Math.floor(random() * families.length)],
-			);
-			for (const engine of engines) {
-				const drawn = drawnFamilies.flatMap(
-					(family) => byEngineFamily.get(`${engine}\0${family}`) ?? [],
+		for (const metric of METRICS) {
+			const metricFamilies = families.filter((family) => {
+				const engineEligibility = engines.map((engine) => {
+					const observations = byEngineFamily.get(`${engine}\0${family}`) ?? [];
+					const flags = observations.map((sample) => sample[metric] !== null);
+					if (new Set(flags).size !== 1)
+						throw new Error(
+							`metric eligibility varies within family: ${engine}/${language}/${family}/${metric}`,
+						);
+					return flags[0];
+				});
+				if (new Set(engineEligibility).size !== 1)
+					throw new Error(
+						`paired metric eligibility mismatch: ${language}/${family}/${metric}`,
+					);
+				return engineEligibility[0];
+			});
+			eligibleFamilies.set(metric, metricFamilies);
+			if (metricFamilies.length === 0) continue;
+			for (
+				let iteration = 0;
+				iteration < SEMANTIC_BOOTSTRAP_ITERATIONS;
+				iteration++
+			) {
+				const drawnFamilies = Array.from(
+					{ length: metricFamilies.length },
+					() => metricFamilies[Math.floor(random() * metricFamilies.length)],
 				);
-				for (const metric of METRICS)
-					distributions.get(`${engine}\0${metric}`)?.push(mean(drawn, metric));
+				for (const engine of engines) {
+					const drawn = drawnFamilies.flatMap(
+						(family) => byEngineFamily.get(`${engine}\0${family}`) ?? [],
+					);
+					const estimate = mean(drawn, metric);
+					if (estimate === null)
+						throw new Error("eligible bootstrap draw has no observations");
+					distributions.get(`${engine}\0${metric}`)?.push(estimate);
+				}
 			}
 		}
 
@@ -164,18 +199,23 @@ export function calculateSemanticClusterBootstrap(
 				(sample) => sample.engine === engine,
 			);
 			const key = `${engine}/${language}`;
-			intervals[key] = {} as Record<Metric, Interval>;
+			intervals[key] = {} as Record<Metric, Interval | null>;
 			for (const metric of METRICS) {
 				const values = distributions.get(`${engine}\0${metric}`);
 				const distribution = values
 					? [...values].sort((left, right) => left - right)
 					: undefined;
 				if (!distribution) throw new Error("missing bootstrap distribution");
+				const estimate = mean(engineSamples, metric);
+				if (estimate === null) {
+					intervals[key][metric] = null;
+					continue;
+				}
 				intervals[key][metric] = {
-					estimate: mean(engineSamples, metric),
+					estimate,
 					lower: percentile(distribution, 0.025),
 					upper: percentile(distribution, 0.975),
-					independentClusters: families.length,
+					independentClusters: eligibleFamilies.get(metric)?.length ?? 0,
 				};
 			}
 		}
@@ -185,6 +225,9 @@ export function calculateSemanticClusterBootstrap(
 				const left = distributions.get(`${leftEngine}\0${metric}`);
 				const right = distributions.get(`${rightEngine}\0${metric}`);
 				if (!left || !right) throw new Error("missing paired distribution");
+				const leftInterval = intervals[`${leftEngine}/${language}`][metric];
+				const rightInterval = intervals[`${rightEngine}/${language}`][metric];
+				if (!leftInterval || !rightInterval) continue;
 				const differences = left
 					.map((value, index) => value - right[index])
 					.sort((a, b) => a - b);
@@ -197,24 +240,25 @@ export function calculateSemanticClusterBootstrap(
 						metric === "currentAt1" || metric === "currentAtK"
 							? "higher"
 							: "lower",
-					estimate:
-						intervals[`${leftEngine}/${language}`][metric].estimate -
-						intervals[`${rightEngine}/${language}`][metric].estimate,
+					estimate: leftInterval.estimate - rightInterval.estimate,
 					lower: percentile(differences, 0.025),
 					upper: percentile(differences, 0.975),
-					independentClusters: families.length,
+					independentClusters: eligibleFamilies.get(metric)?.length ?? 0,
 				});
 			}
 	}
 
 	return {
-		method: "paired-family-cluster-percentile-bootstrap-v1" as const,
+		method:
+			"metric-eligible-paired-family-cluster-percentile-bootstrap-v2" as const,
 		confidenceLevel: 0.95,
 		iterations: SEMANTIC_BOOTSTRAP_ITERATIONS,
 		resamplingUnit: "familyId" as const,
 		minimumRecommendedClusters: 10,
-		hasSparseClusterWarning: Object.values(intervals).some(
-			(metrics) => metrics.currentAt1.independentClusters < 10,
+		hasSparseClusterWarning: Object.values(intervals).some((metrics) =>
+			Object.values(metrics).some(
+				(interval) => interval !== null && interval.independentClusters < 10,
+			),
 		),
 		multiplicityAdjustment: "none" as const,
 		seedSha256,

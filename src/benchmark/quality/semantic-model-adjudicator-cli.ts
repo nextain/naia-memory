@@ -10,7 +10,18 @@ const LABELS = new Set([
 	"irrelevant",
 	"uncertain",
 ]);
-const SYSTEM_PROMPT = `You are a blind memory-retrieval adjudicator. The engine identity is hidden. For every retrieved memory, label its relationship to the user's final state and query: current (valid and useful now), stale (superseded), deleted (the user explicitly requested forgetting/removal), irrelevant, or uncertain. Judge only from the supplied conversation, query, and retrieved text. Return strict JSON matching the requested schema, preserve every ID exactly, and do not omit items.`;
+const SYSTEM_PROMPT = `You are a blind memory-retrieval adjudicator. The engine identity is hidden. Judge the RETRIEVED MEMORY TEXT itself against the user's final state and query, not the older fact that the retrieved text may have replaced.
+
+Use exactly one label per retrieved memory:
+- current: the retrieved text states the user's valid final state and is useful for the query.
+- stale: the retrieved text states an older fact superseded by the final state.
+- deleted: the retrieved text states information that the user explicitly requested to forget or remove. A new value that replaces an old value is current, not deleted.
+- irrelevant: unrelated to the final state or query.
+- uncertain: the supplied evidence cannot support another label.
+
+Example: if the conversation changes "classical" to "jazz" and the retrieved text says "preference: jazz", label that retrieved text current. If it says "preference: classical", label it stale. Do not infer a retrieved text from the history; inspect its literal content.
+
+Judge only from the supplied conversation, query, and retrieved text. Return strict JSON matching the requested schema, preserve every ID exactly, and do not omit items.`;
 
 type Packet = {
 	packetContentSha256: string;
@@ -135,13 +146,18 @@ export async function runSemanticModelAdjudicatorCli(
 	const judged: Array<{
 		sampleId: string;
 		judgments: Array<{ memoryId: string; label: string; notes: string }>;
-	}> = [];
-	for (let offset = 0; offset < packet.samples.length; offset += batchSize) {
-		const batch = packet.samples.slice(offset, offset + batchSize);
+	}> = packet.samples
+		.filter((sample) => sample.retrieved.length === 0)
+		.map((sample) => ({ sampleId: sample.sampleId, judgments: [] }));
+	const samplesToJudge = packet.samples.filter(
+		(sample) => sample.retrieved.length > 0,
+	);
+	for (let offset = 0; offset < samplesToJudge.length; offset += batchSize) {
+		const batch = samplesToJudge.slice(offset, offset + batchSize);
 		const result = await judgeBatch(apiKey, model, batch);
 		judged.push(...result.samples);
 		process.stderr.write(
-			`judged ${Math.min(offset + batchSize, packet.samples.length)}/${packet.samples.length}\n`,
+			`judged ${Math.min(offset + batchSize, samplesToJudge.length)}/${samplesToJudge.length}\n`,
 		);
 	}
 	const byId = new Map(judged.map((sample) => [sample.sampleId, sample]));
@@ -200,6 +216,8 @@ export async function runSemanticModelAdjudicatorCli(
 		samples: packet.samples.map((sample) => ({
 			...byId.get(sample.sampleId),
 			adjudicatorId,
+			adjudicationMethod:
+				sample.retrieved.length === 0 ? "deterministic-no-retrieval" : "model",
 		})),
 	};
 	const temporary = `${output}.${randomUUID()}.tmp`;
