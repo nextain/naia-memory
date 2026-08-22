@@ -27,6 +27,7 @@ type OpenSslResult = {
 type OpenSslRunner = (args: string[]) => OpenSslResult;
 
 const MAX_PLAN_BYTES = 4 * 1024 * 1024;
+const MAX_ARTIFACT_BYTES = 16 * 1024 * 1024;
 const MAX_TOKEN_BYTES = 1024 * 1024;
 const SHA256 = /^[a-f0-9]{64}$/;
 
@@ -63,26 +64,48 @@ async function readPlan(path: string): Promise<SemanticPilotCollectionPlan> {
 	return parsed as SemanticPilotCollectionPlan;
 }
 
+async function exactArtifactSha256(path: string): Promise<string> {
+	let bytes: Buffer;
+	try {
+		bytes = await readBoundedEvidenceFile(resolve(path), MAX_ARTIFACT_BYTES);
+	} catch (error) {
+		if (error instanceof PublicEvidenceFileTooLargeError)
+			throw new Error("RFC 3161 artifact exceeds the 16 MiB intake limit");
+		throw new Error("RFC 3161 artifact is unreadable");
+	}
+	return createHash("sha256").update(bytes).digest("hex");
+}
+
 export async function runRfc3161TimestampCli(
 	args: string[],
 	openSslRunner: OpenSslRunner = defaultOpenSslRunner,
 ): Promise<number> {
 	if (
 		args.length !== 3 ||
-		!["request", "seal", "request-digest", "seal-digest"].includes(args[0])
+		![
+			"request",
+			"seal",
+			"request-digest",
+			"seal-digest",
+			"request-file",
+			"seal-file",
+		].includes(args[0])
 	) {
 		process.stderr.write(
-			"Usage: pnpm benchmark:semantic-pilot-timestamp <request|seal> <collection-plan.json> <query.tsq|response.tsr>\n       pnpm benchmark:semantic-pilot-timestamp <request-digest|seal-digest> <sha256> <query.tsq|response.tsr>\n",
+			"Usage: pnpm benchmark:semantic-pilot-timestamp <request|seal> <collection-plan.json> <query.tsq|response.tsr>\n       pnpm benchmark:semantic-pilot-timestamp <request-digest|seal-digest> <sha256> <query.tsq|response.tsr>\n       pnpm benchmark:semantic-pilot-timestamp <request-file|seal-file> <artifact> <query.tsq|response.tsr>\n",
 		);
 		return 2;
 	}
 	try {
 		const digestMode = args[0].endsWith("-digest");
+		const fileMode = args[0].endsWith("-file");
 		if (digestMode && !SHA256.test(args[1]))
 			throw new Error("RFC 3161 artifact SHA-256 is invalid");
 		const collectionPlanSha256 = digestMode
 			? args[1]
-			: evidenceObjectSha256(await readPlan(args[1]));
+			: fileMode
+				? await exactArtifactSha256(args[1])
+				: evidenceObjectSha256(await readPlan(args[1]));
 		const artifactPath = resolve(args[2]);
 		if (args[0].startsWith("request")) {
 			const result = openSslRunner([
@@ -111,7 +134,7 @@ export async function runRfc3161TimestampCli(
 		}
 		const tokenSha256 = createHash("sha256").update(token).digest("hex");
 		const evidence: Rfc3161TimestampEvidence | Rfc3161DigestTimestampEvidence =
-			digestMode
+			digestMode || fileMode
 				? {
 						schemaVersion: "naia-memory-rfc3161-digest-timestamp-evidence-v1",
 						artifactSha256: collectionPlanSha256,

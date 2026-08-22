@@ -1,12 +1,15 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import { runRfc3161TimestampCli } from "./rfc3161-timestamp-cli.js";
-import { validateRfc3161PriorExistence } from "./rfc3161-timestamp.js";
+import {
+	validateRfc3161DigestTimestampBinding,
+	validateRfc3161PriorExistence,
+} from "./rfc3161-timestamp.js";
 
 function fixture() {
 	const directory = mkdtempSync(join(tmpdir(), "naia-rfc3161-cli-"));
@@ -156,6 +159,70 @@ describe("RFC 3161 timestamp campaign CLI", () => {
 			trustedTimestampVerified: true,
 			priorAssignmentTimingVerified: true,
 		});
+
+		const artifactPath = join(current.directory, "publication-receipt.json");
+		const artifactBytes = Buffer.from('{"receipt":"published"}\n');
+		const artifactSha256 = createHash("sha256")
+			.update(artifactBytes)
+			.digest("hex");
+		const artifactQueryPath = join(
+			current.directory,
+			"publication-receipt.tsq",
+		);
+		const artifactResponsePath = join(
+			current.directory,
+			"publication-receipt.tsr",
+		);
+		writeFileSync(artifactPath, artifactBytes);
+		expect(
+			await runRfc3161TimestampCli([
+				"request-file",
+				artifactPath,
+				artifactQueryPath,
+			]),
+		).toBe(0);
+		execFileSync(
+			"openssl",
+			[
+				"ts",
+				"-reply",
+				"-config",
+				config,
+				"-section",
+				"tsa_config1",
+				"-queryfile",
+				artifactQueryPath,
+				"-out",
+				artifactResponsePath,
+			],
+			{ stdio: "ignore" },
+		);
+		const writes = vi
+			.spyOn(process.stdout, "write")
+			.mockImplementation(() => true);
+		expect(
+			await runRfc3161TimestampCli([
+				"seal-file",
+				artifactPath,
+				artifactResponsePath,
+			]),
+		).toBe(0);
+		const evidence = JSON.parse(String(writes.mock.calls.at(-1)?.[0]));
+		writes.mockRestore();
+		expect(
+			validateRfc3161DigestTimestampBinding({
+				expectedArtifactSha256: artifactSha256,
+				evidence,
+				trustPolicy: {
+					schemaVersion: "naia-memory-rfc3161-timestamp-trust-policy-v1",
+					trustedCaFilePath: caCert,
+					trustedCaFileSha256: createHash("sha256")
+						.update(readFileSync(caCert))
+						.digest("hex"),
+					requiredPolicyOid: "1.2.3.4.1",
+				},
+			}),
+		).toMatchObject({ trustedTimestampVerified: true });
 	}, 30_000);
 
 	it("creates a nonce-bearing request for the exact canonical plan hash", async () => {
@@ -244,6 +311,93 @@ describe("RFC 3161 timestamp campaign CLI", () => {
 		writes.mockRestore();
 	});
 
+	it("creates and seals digest evidence from exact artifact bytes", async () => {
+		const current = fixture();
+		const artifactPath = join(current.directory, "publication-receipt.json");
+		const artifactBytes = Buffer.from('{"receipt":"exact bytes"}\n');
+		const artifactSha256 = createHash("sha256")
+			.update(artifactBytes)
+			.digest("hex");
+		const queryPath = join(current.directory, "publication-receipt.tsq");
+		writeFileSync(artifactPath, artifactBytes);
+		const runner = vi.fn(() => ({
+			status: 0,
+			stdout: Buffer.from("publication timestamp query"),
+			stderr: "",
+		}));
+
+		expect(
+			await runRfc3161TimestampCli(
+				["request-file", artifactPath, queryPath],
+				runner,
+			),
+		).toBe(0);
+		expect(runner).toHaveBeenCalledWith([
+			"ts",
+			"-query",
+			"-digest",
+			artifactSha256,
+			"-sha256",
+			"-cert",
+		]);
+
+		const tokenPath = join(current.directory, "publication-receipt.tsr");
+		writeFileSync(tokenPath, "publication timestamp response");
+		const writes = vi
+			.spyOn(process.stdout, "write")
+			.mockImplementation(() => true);
+		expect(
+			await runRfc3161TimestampCli(["seal-file", artifactPath, tokenPath]),
+		).toBe(0);
+		expect(JSON.parse(String(writes.mock.calls.at(-1)?.[0]))).toMatchObject({
+			schemaVersion: "naia-memory-rfc3161-digest-timestamp-evidence-v1",
+			artifactSha256,
+			tokenPath,
+		});
+		writes.mockRestore();
+	});
+
+	it("rejects oversized and symlinked exact-byte artifacts", async () => {
+		const current = fixture();
+		const oversizedPath = join(current.directory, "oversized.bin");
+		const artifactPath = join(current.directory, "artifact.bin");
+		const artifactLink = join(current.directory, "artifact-link.bin");
+		writeFileSync(oversizedPath, Buffer.alloc(16 * 1024 * 1024 + 1));
+		writeFileSync(artifactPath, "artifact");
+		symlinkSync(artifactPath, artifactLink);
+		const writes = vi
+			.spyOn(process.stdout, "write")
+			.mockImplementation(() => true);
+
+		expect(
+			await runRfc3161TimestampCli([
+				"request-file",
+				oversizedPath,
+				join(current.directory, "oversized.tsq"),
+			]),
+		).toBe(1);
+		expect(String(writes.mock.calls.at(-1)?.[0])).toContain("16 MiB");
+		expect(
+			await runRfc3161TimestampCli([
+				"request-file",
+				artifactLink,
+				join(current.directory, "symlink.tsq"),
+			]),
+		).toBe(1);
+		expect(String(writes.mock.calls.at(-1)?.[0])).toContain("unreadable");
+		const tokenPath = join(current.directory, "artifact.tsr");
+		writeFileSync(tokenPath, "timestamp response");
+		expect(
+			await runRfc3161TimestampCli(["seal-file", oversizedPath, tokenPath]),
+		).toBe(1);
+		expect(String(writes.mock.calls.at(-1)?.[0])).toContain("16 MiB");
+		expect(
+			await runRfc3161TimestampCli(["seal-file", artifactLink, tokenPath]),
+		).toBe(1);
+		expect(String(writes.mock.calls.at(-1)?.[0])).toContain("unreadable");
+		writes.mockRestore();
+	});
+
 	it("rejects malformed external digests", async () => {
 		const current = fixture();
 		const writes = vi
@@ -276,6 +430,20 @@ describe("RFC 3161 timestamp campaign CLI", () => {
 			),
 		).toBe(1);
 		expect(readFileSync(queryPath, "utf8")).toBe("existing");
+
+		const artifactPath = join(current.directory, "artifact.bin");
+		const artifactQueryPath = join(current.directory, "artifact.tsq");
+		writeFileSync(artifactPath, "artifact");
+		writeFileSync(artifactQueryPath, "existing artifact query");
+		expect(
+			await runRfc3161TimestampCli(
+				["request-file", artifactPath, artifactQueryPath],
+				() => ({ status: 0, stdout: Buffer.from("new"), stderr: "" }),
+			),
+		).toBe(1);
+		expect(readFileSync(artifactQueryPath, "utf8")).toBe(
+			"existing artifact query",
+		);
 		writes.mockRestore();
 	});
 });
