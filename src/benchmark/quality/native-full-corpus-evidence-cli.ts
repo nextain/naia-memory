@@ -21,6 +21,9 @@ const evaluatorPath =
 const launchReceiptPath =
 	process.env.MIRACL_FULL_LAUNCH_RECEIPT ??
 	"reports/quality/miracl-ko-full-corpus-launch-receipt.json";
+const runtimeObservationPath =
+	process.env.MIRACL_FULL_RUNTIME_OBSERVATION ??
+	"reports/quality/miracl-ko-full-corpus-runtime-observation.json";
 const outputPath =
 	process.env.MIRACL_FULL_EVIDENCE_OUTPUT ?? `${resultPath}.evidence.json`;
 const qdrantUrl = process.env.QDRANT_URL ?? "http://127.0.0.1:6334";
@@ -31,15 +34,21 @@ async function main() {
 	const trec = readFileSync(trecPath);
 	const qrels = readFileSync(qrelsPath);
 	const result = JSON.parse(resultText) as FullCorpusResult;
-	const launchReceipt = JSON.parse(readFileSync(launchReceiptPath, "utf8")) as {
+	const launchReceiptBytes = readFileSync(launchReceiptPath);
+	const launchReceipt = JSON.parse(launchReceiptBytes.toString("utf8")) as {
 		pid: number;
 		capturedAt: string;
+		procStartTicks: string;
+		bootId: string;
 		cmdline: string[];
 		cudaVisibleDevices: string;
 		qdrantUrl: string;
 		outputPath: string;
 		evaluationSourceSha256: string;
 	};
+	const runtimeObservation = JSON.parse(
+		readFileSync(runtimeObservationPath, "utf8"),
+	);
 	if (launchReceipt.qdrantUrl !== qdrantUrl)
 		throw new Error("launch receipt Qdrant URL mismatch");
 	const rootResponse = await fetch(`${qdrantUrl}/`);
@@ -85,6 +94,8 @@ async function main() {
 		qrelsPath,
 		trecPath,
 		launchReceipt,
+		launchReceiptSha256: sha256Bytes(launchReceiptBytes),
+		runtimeObservation,
 		qdrant: {
 			version: identity.version,
 			commit: identity.commit,

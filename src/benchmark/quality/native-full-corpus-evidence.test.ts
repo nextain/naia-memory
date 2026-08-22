@@ -3,10 +3,12 @@ import {
 	EXPECTED_EVALUATION_SOURCE_SHA256,
 	EXPECTED_QDRANT_COMMIT,
 	EXPECTED_QDRANT_VERSION,
+	EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256,
 	EXPECTED_TREC_EVAL_BINARY_SHA256,
 	MIRACL_FULL_BENCHMARK,
 	createFullCorpusEvidenceReceipt,
 	parseTrecEvalAll,
+	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
 
 const result = {
@@ -39,11 +41,31 @@ function evidence(overrides = {}) {
 		launchReceipt: {
 			pid: 123,
 			capturedAt: "2026-08-22T00:00:00.000Z",
+			procStartTicks: "12345",
+			bootId: "boot-a",
 			cmdline: ["node", "native-full-corpus-evaluation-cli.ts"],
 			cudaVisibleDevices: "",
 			qdrantUrl: "http://127.0.0.1:6334",
 			outputPath: "/outputs/result.json",
 			evaluationSourceSha256: EXPECTED_EVALUATION_SOURCE_SHA256,
+		},
+		launchReceiptSha256: "launch-hash",
+		runtimeObservation: {
+			monitor: {
+				source: "/sources/runtime-monitor.ts",
+				sourceSha256: EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256,
+			},
+			launchReceipt: { path: "/outputs/launch.json", sha256: "launch-hash" },
+			process: {
+				pid: 123,
+				bootId: "boot-a",
+				procStartTicks: "12345",
+				cmdlineSha256: sha256Bytes(
+					["node", "native-full-corpus-evaluation-cli.ts"].join("\0"),
+				),
+			},
+			observation: { samples: 2, peakRssBytes: 4096 },
+			result: { path: "/outputs/result.json", sha256: "result" },
 		},
 		qdrant: {
 			version: EXPECTED_QDRANT_VERSION,
@@ -118,5 +140,15 @@ describe("full-corpus independent evidence", () => {
 				}),
 			),
 		).toThrow("launch evidence");
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					runtimeObservation: {
+						...evidence().runtimeObservation,
+						result: { path: "/outputs/result.json", sha256: "changed" },
+					},
+				}),
+			),
+		).toThrow("runtime observation");
 	});
 });

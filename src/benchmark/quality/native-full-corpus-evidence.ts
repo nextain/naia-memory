@@ -8,6 +8,8 @@ export const EXPECTED_TREC_EVAL_BINARY_SHA256 =
 	"e4b251b339db6ec556dc18e6b14d45fbdcfdb5166f7fb9dce6bb2e4ca6084987";
 export const EXPECTED_EVALUATION_SOURCE_SHA256 =
 	"d2bb8406d342aba307d254a8aef57b32353246ce06527a3bd4d13a4f9d2ff15b";
+export const EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256 =
+	"65a79853e511cd46a4ce83779b36c34151f21c4fb071312c19a0a2558e7d93f0";
 export const EXPECTED_QDRANT_COMMIT =
 	"48203e414e4e7f639a6d394fb6e4df695f808e51";
 export const EXPECTED_QDRANT_VERSION = "1.15.5";
@@ -66,11 +68,26 @@ export function createFullCorpusEvidenceReceipt(input: {
 	launchReceipt: {
 		pid: number;
 		capturedAt: string;
+		procStartTicks: string;
+		bootId: string;
 		cmdline: string[];
 		cudaVisibleDevices: string;
 		qdrantUrl: string;
 		outputPath: string;
 		evaluationSourceSha256: string;
+	};
+	launchReceiptSha256: string;
+	runtimeObservation: {
+		monitor: { source: string; sourceSha256: string };
+		launchReceipt: { path: string; sha256: string };
+		process: {
+			pid: number;
+			bootId: string;
+			procStartTicks: string;
+			cmdlineSha256: string;
+		};
+		observation: { samples: number; peakRssBytes: number };
+		result: { path: string; sha256: string };
 	};
 	qdrant: {
 		version: string;
@@ -117,6 +134,22 @@ export function createFullCorpusEvidenceReceipt(input: {
 		input.launchReceipt.outputPath !== input.trecPath.replace(/\.trec$/, "")
 	)
 		throw new Error("benchmark launch evidence mismatch");
+	const runtime = input.runtimeObservation;
+	if (
+		runtime.monitor.sourceSha256 !== EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256 ||
+		runtime.launchReceipt.sha256 !== input.launchReceiptSha256 ||
+		runtime.process.pid !== input.launchReceipt.pid ||
+		runtime.process.bootId !== input.launchReceipt.bootId ||
+		runtime.process.procStartTicks !== input.launchReceipt.procStartTicks ||
+		runtime.process.cmdlineSha256 !==
+			sha256Bytes(input.launchReceipt.cmdline.join("\0")) ||
+		runtime.observation.samples < 1 ||
+		!Number.isSafeInteger(runtime.observation.peakRssBytes) ||
+		runtime.observation.peakRssBytes <= 0 ||
+		runtime.result.path !== input.launchReceipt.outputPath ||
+		runtime.result.sha256 !== input.resultSha256
+	)
+		throw new Error("benchmark runtime observation mismatch");
 	if (
 		input.qdrant.version !== EXPECTED_QDRANT_VERSION ||
 		input.qdrant.commit !== EXPECTED_QDRANT_COMMIT ||
@@ -181,6 +214,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 		runtime: {
 			cpuOnly: true,
 			launchReceipt: input.launchReceipt,
+			observation: runtime,
 			qdrant: input.qdrant,
 			collectionName: result.configuration.collectionName,
 			latencySemantics: "query-embedding-plus-exact-qdrant-search",
