@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { EmbeddingProvider } from "../embeddings.js";
@@ -29,6 +29,13 @@ import {
 	searchLocalSemanticMemory,
 } from "./local-semantic-search.js";
 import { createLocalSemanticMemory } from "./local-semantic.js";
+
+export class LocalStoreLoadError extends Error {
+	constructor(storePath: string, cause: unknown) {
+		super(`Failed to load LocalAdapter store: ${storePath}`, { cause });
+		this.name = "LocalStoreLoadError";
+	}
+}
 
 export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private store: MemoryStore;
@@ -208,20 +215,32 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 
 	private load(): MemoryStore {
 		try {
-			if (existsSync(this.storePath)) {
-				const raw = readFileSync(this.storePath, "utf-8");
-				const parsed = JSON.parse(raw) as MemoryStore;
-				if (parsed.version === 1) {
-					for (const f of parsed.facts) {
-						if (!f.status) f.status = "active";
-					}
-					return parsed;
-				}
+			const raw = readFileSync(this.storePath, "utf-8");
+			const parsed = JSON.parse(raw) as MemoryStore;
+			if (parsed.version !== 1) {
+				throw new Error(`Unsupported store version: ${parsed.version}`);
 			}
-		} catch {
-			// Corrupted file — start fresh
+			if (
+				!Array.isArray(parsed.episodes) ||
+				!Array.isArray(parsed.facts) ||
+				!Array.isArray(parsed.skills) ||
+				!Array.isArray(parsed.reflections) ||
+				typeof parsed.associations !== "object" ||
+				Array.isArray(parsed.associations) ||
+				parsed.associations === null
+			) {
+				throw new Error("Store shape mismatch");
+			}
+			for (const fact of parsed.facts) {
+				if (!fact.status) fact.status = "active";
+			}
+			return parsed;
+		} catch (error) {
+			if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+				return emptyStore();
+			}
+			throw new LocalStoreLoadError(this.storePath, error);
 		}
-		return emptyStore();
 	}
 
 	private save(): void {

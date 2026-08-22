@@ -48,3 +48,22 @@ gain. It strengthens Naia Memory's local durable lifecycle path, but it does not
 change the current public benchmark verdict. Global retrieval claims remain
 blocked on the preregistered full-corpus MIRACL result and independent
 multilingual lifecycle evidence.
+
+## Follow-on preservation audit
+
+The next adversarial pass identified a separate high-severity load hazard. A
+read error, malformed JSON, unsupported version, or invalid top-level store
+shape was previously treated as an empty store. The next mutation could then
+atomically replace the unreadable original with fresh data, destroying the only
+copy without warning.
+
+`LocalAdapter` now starts fresh only for `ENOENT`. Every other load failure is
+wrapped in `LocalStoreLoadError` and fails construction before any write can be
+scheduled. Existing version-1 status migration remains intact. Tests cover a
+missing store, malformed JSON, unsupported version, invalid shape, a read error,
+and byte-for-byte preservation of rejected files.
+
+The follow-on OpenCode adversarial gate returned `PASS`. It noted that store
+validation remains intentionally top-level, matching encrypted-backup
+validation; deep field validation is a separate hardening opportunity rather
+than a regression in this fix.
