@@ -5,7 +5,11 @@ import type {
 } from "../../memory/embeddings.js";
 import { OFFLINE_MODEL_REVISIONS } from "../../memory/embeddings.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
-import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
+import {
+	MIRACL_KO_LOCK,
+	parseTrecRun,
+	validateTrecRunCoverage,
+} from "./public-miracl-source.js";
 
 export const MIRACL_FULL_BENCHMARK =
 	"miracl-ko-full-corpus-naia-vector-exact-v1";
@@ -22,6 +26,7 @@ export const EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256 =
 export const EXPECTED_MIRACL_SOURCE_LOCK_SHA256 =
 	"742952715d6e31eaf9718f04c2bad0509c9d7c754210aa81d793a14430fbb69c";
 export const EXPECTED_MIRACL_QRELS_SHA256 = MIRACL_KO_LOCK.files[1].sha256;
+export const EXPECTED_MIRACL_TOPICS_SHA256 = MIRACL_KO_LOCK.files[0].sha256;
 export const EXPECTED_QDRANT_COMMIT =
 	"48203e414e4e7f639a6d394fb6e4df695f808e51";
 export const EXPECTED_QDRANT_VERSION = "1.15.5";
@@ -65,6 +70,7 @@ export interface FullCorpusResult {
 	benchmark: string;
 	inputs: {
 		sourceLockSha256: string;
+		topicsSha256: string;
 		qrelsSha256: string;
 		documentCount: number;
 		queryCount: number;
@@ -89,6 +95,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 	result: FullCorpusResult;
 	resultSha256: string;
 	trecSha256: string;
+	trecRunText: string;
 	qrelsSha256: string;
 	trecEvalStdout: string;
 	trecEvalBinarySha256: string;
@@ -164,6 +171,14 @@ export function createFullCorpusEvidenceReceipt(input: {
 		throw new Error("benchmark execution policy mismatch");
 	if (result.trecSha256 !== input.trecSha256)
 		throw new Error("TREC hash mismatch");
+	if (sha256Bytes(input.trecRunText) !== input.trecSha256)
+		throw new Error("TREC content hash mismatch");
+	if (result.inputs.topicsSha256 !== EXPECTED_MIRACL_TOPICS_SHA256)
+		throw new Error("canonical topics hash mismatch");
+	const run = parseTrecRun(input.trecRunText);
+	if (run.size !== result.inputs.queryCount)
+		throw new Error("TREC query cardinality mismatch");
+	validateTrecRunCoverage(run, new Set(run.keys()), result.configuration.topK);
 	if (result.inputs.qrelsSha256 !== input.qrelsSha256)
 		throw new Error("qrels hash mismatch");
 	if (input.qrelsSha256 !== EXPECTED_MIRACL_QRELS_SHA256)

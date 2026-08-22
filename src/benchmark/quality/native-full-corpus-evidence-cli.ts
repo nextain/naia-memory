@@ -83,6 +83,7 @@ async function main() {
 		result,
 		resultSha256: sha256Bytes(resultText),
 		trecSha256: sha256Bytes(trec),
+		trecRunText: trec.toString("utf8"),
 		qrelsSha256: sha256Bytes(qrels),
 		trecEvalStdout: stdout,
 		trecEvalBinarySha256: sha256Bytes(readFileSync(evaluatorPath)),

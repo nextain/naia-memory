@@ -3,6 +3,7 @@ import {
 	EXPECTED_EVALUATION_SOURCE_SHA256,
 	EXPECTED_MIRACL_QRELS_SHA256,
 	EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
+	EXPECTED_MIRACL_TOPICS_SHA256,
 	EXPECTED_QDRANT_COMMIT,
 	EXPECTED_QDRANT_VERSION,
 	EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256,
@@ -23,11 +24,20 @@ const baselinePolicy = fullCorpusEmbeddingExecutionPolicy(
 	MIRACL_PASSAGE_COMPOSITION,
 	"per-item-v1",
 );
+const trecRunText = `${Array.from({ length: 213 }, (_, queryIndex) =>
+	Array.from(
+		{ length: 100 },
+		(_, rank) =>
+			`q${queryIndex + 1} Q0 d${queryIndex + 1}-${rank + 1} ${rank + 1} ${100 - rank} test`,
+	).join("\n"),
+).join("\n")}\n`;
+const trecSha256 = sha256Bytes(trecRunText);
 
 const result = {
 	benchmark: MIRACL_FULL_BENCHMARK,
 	inputs: {
 		sourceLockSha256: EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
+		topicsSha256: EXPECTED_MIRACL_TOPICS_SHA256,
 		qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
 		documentCount: 1_486_752,
 		queryCount: 213,
@@ -45,14 +55,15 @@ const result = {
 		collectionName: `naia_miracl_ko_${EXPECTED_MIRACL_SOURCE_LOCK_SHA256.slice(0, 8)}_${baselinePolicy.embeddingPolicySha256.slice(0, 8)}`,
 	},
 	metrics: { ndcgAt10: 0.4123454, recallAt100: 0.7654321 },
-	trecSha256: "trec",
+	trecSha256,
 };
 
 function evidence(overrides = {}) {
 	return {
 		result,
 		resultSha256: "result",
-		trecSha256: "trec",
+		trecSha256,
+		trecRunText,
 		qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
 		trecEvalStdout: "ndcg_cut_10 all 0.412345\nrecall_100 all 0.765432\n",
 		trecEvalBinarySha256: EXPECTED_TREC_EVAL_BINARY_SHA256,
@@ -206,6 +217,26 @@ describe("full-corpus independent evidence", () => {
 				}),
 			),
 		).toThrow("embedding identity");
+	});
+
+	it("rejects incomplete TREC query coverage even when its hash is consistent", () => {
+		const incompleteTrec = trecRunText
+			.split("\n")
+			.filter((line) => !line.startsWith("q213 "))
+			.join("\n");
+		const incompleteSha256 = sha256Bytes(incompleteTrec);
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					trecRunText: incompleteTrec,
+					trecSha256: incompleteSha256,
+					result: {
+						...result,
+						trecSha256: incompleteSha256,
+					},
+				}),
+			),
+		).toThrow("TREC query cardinality");
 	});
 
 	it("fails closed on metric, artifact, policy, and runtime drift", () => {
