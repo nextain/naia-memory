@@ -5,12 +5,14 @@ Copy this module into Graphiti's ``server/graph_service`` package and include
 loopback because the upstream graph-service has no authentication.
 """
 
+from datetime import datetime
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 from graphiti_core.edges import EntityEdge
 from graphiti_core.errors import GroupsEdgesNotFoundError, NodeNotFoundError
-from graphiti_core.nodes import EpisodicNode
+from graphiti_core.nodes import EpisodeType, EpisodicNode
 from graph_service.zep_graphiti import ZepGraphitiDep
 
 
@@ -20,6 +22,16 @@ router = APIRouter(prefix="/benchmark", tags=["benchmark-companion"])
 
 class EpisodeCommit(BaseModel):
     committed: bool
+    uuid: str | None = None
+
+
+class BenchmarkMessage(BaseModel):
+    uuid: str
+    group_id: str
+    name: str
+    content: str
+    timestamp: datetime
+    source_description: str
 
 
 class NativeFact(BaseModel):
@@ -29,6 +41,25 @@ class NativeFact(BaseModel):
 
 class CurrentFacts(BaseModel):
     facts: list[NativeFact]
+
+
+@router.post("/messages")
+async def add_message(
+    message: BenchmarkMessage, graphiti: ZepGraphitiDep
+) -> EpisodeCommit:
+    """Commit one episode before acknowledging the benchmark operation."""
+    result = await graphiti.add_episode(
+        # graphiti-core 0.28.2 interprets a supplied UUID as an existing episode
+        # lookup. Let the pinned core allocate its native identity instead.
+        uuid=None,
+        group_id=message.group_id,
+        name=message.name,
+        episode_body=f"benchmark-user(user): {message.content}",
+        reference_time=message.timestamp,
+        source=EpisodeType.message,
+        source_description=message.source_description,
+    )
+    return EpisodeCommit(committed=True, uuid=result.episode.uuid)
 
 
 @router.get("/episodes/{group_id}/{episode_uuid}")

@@ -17,7 +17,9 @@ describe("GraphitiRestSemanticClient", () => {
 	});
 
 	it("submits one timestamped user message with native identity", async () => {
-		const request = vi.fn(async () => json({ success: true }));
+		const request = vi.fn(async () =>
+			json({ committed: true, uuid: "native-episode-1" }),
+		);
 		const client = new GraphitiRestSemanticClient({
 			baseUrl: "http://127.0.0.1:8000",
 			fetch: request,
@@ -31,15 +33,16 @@ describe("GraphitiRestSemanticClient", () => {
 		});
 
 		const [url, init] = request.mock.calls[0];
-		expect(String(url)).toBe("http://127.0.0.1:8000/messages");
+		expect(String(url)).toBe("http://127.0.0.1:8000/benchmark/messages");
 		const body = JSON.parse(String(init?.body));
 		expect(body.group_id).toBe("case-ko");
-		expect(body.messages[0]).toMatchObject({
+		expect(body).toMatchObject({
 			uuid: "episode-1",
-			role_type: "user",
 			content: "부산으로 이사했어요",
+			name: "turn-1",
+			source_description: "benchmark",
 		});
-		expect(Number.isNaN(Date.parse(body.messages[0].timestamp))).toBe(false);
+		expect(Number.isNaN(Date.parse(body.timestamp))).toBe(false);
 	});
 
 	it("uses companion commit and complete-current-state routes", async () => {
@@ -68,6 +71,14 @@ describe("GraphitiRestSemanticClient", () => {
 	it("preserves native search facts and reports HTTP failures", async () => {
 		const request = vi
 			.fn()
+			.mockResolvedValueOnce(
+				json({
+					facts: [
+						{ uuid: "edge-old", fact: "라면을 좋아한다" },
+						{ uuid: "edge-1", fact: "비빔밥을 좋아한다" },
+					],
+				}),
+			)
 			.mockResolvedValueOnce(
 				json({ facts: [{ uuid: "edge-1", fact: "비빔밥을 좋아한다" }] }),
 			)

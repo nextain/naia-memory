@@ -1,10 +1,20 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "upstream": "https://github.com/getzep/graphiti",
   "revision": "993e081a6d7948a0d8851c12a5fbdbeb49fed862",
   "servicePackage": "server/graph_service",
   "databaseBackend": "neo4j",
+  "neo4jImage": "neo4j:5.26.2",
+  "graphitiCoreVersion": "0.28.2",
+  "neo4jDriverVersion": "5.28.1",
+  "providerAdapter": "graphiti-native-gemini",
+  "providerAdapterVersion": "google-genai@1.62.0",
+  "llmModel": "gemini-2.5-flash",
+  "embeddingModel": "gemini-embedding-001",
   "currentFactRule": "expired_at-is-null",
   "networkPolicy": "loopback-isolated",
+  "ingestionPolicy": "synchronous-native-episode-commit",
+  "episodeIdentityPolicy": "core-allocated-native-uuid",
+  "searchValidityPolicy": "native-search-intersect-current-native-edges",
   "registration": "from graphiti_benchmark_sidecar import router as benchmark_router; app.include_router(benchmark_router)"
 }

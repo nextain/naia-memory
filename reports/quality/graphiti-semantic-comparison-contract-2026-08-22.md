@@ -1,6 +1,6 @@
 # Graphiti semantic comparison contract (2026-08-22)
 
-Status: implementation checkpoint; not a competitive result.
+Status: backend eligibility passed; not yet a competitive result.
 
 ## Why Graphiti belongs in the comparison
 
@@ -32,11 +32,11 @@ than a vector store alone.
 
 The stock graph-service exposes fact search and episode listing, but no complete
 group fact-list route. Graphiti core does expose group-scoped entity-edge listing.
-The benchmark therefore uses a revision-pinned, read-only companion sidecar that
-maps that native core operation without changing extraction, invalidation, or
-ranking. Source compatibility is now implemented, but until isolation and
-current-edge filtering are tested against the running pinned backend, Graphiti
-execution is `NOT_RUN`; it must not be approximated.
+The benchmark therefore uses a revision-pinned companion sidecar that maps that
+native core operation and commits one episode synchronously without changing
+extraction, invalidation, or ranking. The REST bridge intersects native search
+results with native current edges by exact UUID and fact text because Graphiti
+search can return expired historical edges.
 
 ## Adversarial risks and gates
 
@@ -64,16 +64,20 @@ execution is `NOT_RUN`; it must not be approximated.
 - The companion is pinned to Graphiti commit
   `993e081a6d7948a0d8851c12a5fbdbeb49fed862` with Neo4j and pages native
   `EntityEdge.get_by_group_ids`, filtering current state by `expired_at is None`.
-- Eight focused Graphiti tests and the four semantic-runner regression tests pass;
+- The exact backend passed commit, two-group isolation, supersession, and
+  search/current-state identity checks with Graphiti core 0.28.2, Neo4j 5.26.2,
+  native Gemini client 1.62.0, Gemini 2.5 Flash, and gemini-embedding-001.
+- Eleven Graphiti-specific tests and four generic semantic-runner regression tests
+  pass;
   project TypeScript typechecking and Python syntax compilation pass.
 - Formal external review is `NOT_RUN`: deterministic review preflight rejected an
   unrelated, user-owned untracked tool cache. No cross-validation claim is made.
 
 ## Remaining release gate
 
-Pass backend namespace/validity smoke tests, wire the engine into the sealed
-semantic campaign, then run paired multilingual
-comparison with bootstrap intervals. Only those receipts can support a public claim.
+Wire the eligible engine into the sealed semantic campaign, then run a paired
+multilingual comparison with bootstrap intervals. Only those receipts can support
+a public claim. The smoke result must not be presented as a quality win.
 
 Primary references:
 

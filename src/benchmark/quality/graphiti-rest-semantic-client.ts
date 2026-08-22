@@ -15,6 +15,7 @@ export type GraphitiRestSemanticClientOptions = {
 export class GraphitiRestSemanticClient implements GraphitiSemanticClient {
 	private readonly baseUrl: URL;
 	private readonly request: FetchLike;
+	private readonly episodeIds = new Map<string, string>();
 
 	constructor(options: GraphitiRestSemanticClientOptions) {
 		this.baseUrl = normalizeBaseUrl(options.baseUrl);
@@ -33,23 +34,25 @@ export class GraphitiRestSemanticClient implements GraphitiSemanticClient {
 		name: string;
 		sourceDescription: string;
 	}): Promise<void> {
-		await this.fetchJson("messages", {
+		const value = await this.fetchJson("benchmark/messages", {
 			method: "POST",
 			body: JSON.stringify({
 				group_id: input.groupId,
-				messages: [
-					{
-						content: input.content,
-						uuid: input.uuid,
-						name: input.name,
-						role_type: "user",
-						role: "benchmark-user",
-						timestamp: new Date().toISOString(),
-						source_description: input.sourceDescription,
-					},
-				],
+				content: input.content,
+				uuid: input.uuid,
+				name: input.name,
+				timestamp: new Date().toISOString(),
+				source_description: input.sourceDescription,
 			}),
 		});
+		if (
+			!isRecord(value) ||
+			value.committed !== true ||
+			typeof value.uuid !== "string" ||
+			!value.uuid
+		)
+			throw new Error("Graphiti companion did not acknowledge episode commit");
+		this.episodeIds.set(input.uuid, value.uuid);
 	}
 
 	async hasEpisode(input: {
@@ -57,7 +60,7 @@ export class GraphitiRestSemanticClient implements GraphitiSemanticClient {
 		groupId: string;
 	}): Promise<boolean> {
 		const value = await this.fetchJson(
-			`benchmark/episodes/${encodeURIComponent(input.groupId)}/${encodeURIComponent(input.uuid)}`,
+			`benchmark/episodes/${encodeURIComponent(input.groupId)}/${encodeURIComponent(this.episodeIds.get(input.uuid) ?? input.uuid)}`,
 		);
 		if (!isRecord(value) || typeof value.committed !== "boolean")
 			throw new Error("Graphiti companion returned an invalid episode receipt");
@@ -77,7 +80,18 @@ export class GraphitiRestSemanticClient implements GraphitiSemanticClient {
 				max_facts: input.maxFacts,
 			}),
 		});
-		return parseFacts(value, "search");
+		const searchFacts = parseFacts(value, "search");
+		const currentFacts = (
+			await Promise.all(
+				input.groupIds.map((groupId) => this.listCurrentFacts(groupId)),
+			)
+		).flat();
+		const currentById = new Map(
+			currentFacts.map((fact) => [fact.uuid, fact.fact] as const),
+		);
+		return searchFacts.filter(
+			(fact) => currentById.get(fact.uuid) === fact.fact,
+		);
 	}
 
 	async listCurrentFacts(groupId: string): Promise<GraphitiNativeFact[]> {
