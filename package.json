@@ -73,6 +73,7 @@
 		"benchmark:miracl-full-corpus-launch-receipt": "tsx src/benchmark/quality/native-full-corpus-launch-receipt-cli.ts",
 		"benchmark:miracl-full-corpus-runtime-monitor": "tsx src/benchmark/quality/native-full-corpus-runtime-monitor-cli.ts",
 		"benchmark:miracl-full-corpus-evidence": "tsx src/benchmark/quality/native-full-corpus-evidence-cli.ts",
+		"benchmark:miracl-full-corpus-attestation": "tsx src/benchmark/quality/native-full-corpus-attestation-cli.ts",
 		"benchmark:miracl-ranking-ab": "tsx src/benchmark/quality/ranking-ab-analysis-cli.ts",
 		"benchmark:graphiti-smoke": "tsx src/benchmark/quality/graphiti-backend-smoke-cli.ts",
 		"benchmark:query-identity-evidence": "tsx src/benchmark/quality/query-identity-evidence-cli.ts",

@@ -103,6 +103,43 @@ export function evaluateFullCorpusPublicAttestation(input: {
 		input.benchmarkOperatorTrustDomain,
 		input.runnerTrustDomains,
 	);
+	const receipt = record(JSON.parse(input.receiptText));
+	const runtime = record(receipt?.runtime);
+	const launch = record(runtime?.launchReceipt);
+	const observationContainer = record(runtime?.observation);
+	const observation = record(observationContainer?.observation);
+	const launchCapturedAt = launch?.capturedAt;
+	const observationCompletedAt = observation?.completedAt;
+	const issuedAt = Date.parse(input.challenge.issuedAt);
+	const expiresAt = Date.parse(input.challenge.expiresAt);
+	const receiptStartedAt = Date.parse(
+		typeof launchCapturedAt === "string" ? launchCapturedAt : "",
+	);
+	const receiptFinishedAt = Date.parse(
+		typeof observationCompletedAt === "string" ? observationCompletedAt : "",
+	);
+	if (!Number.isFinite(receiptStartedAt) || !Number.isFinite(receiptFinishedAt))
+		failures.push(
+			`${binding.engine}: execution receipt timestamps are invalid`,
+		);
+	else {
+		if (receiptStartedAt < issuedAt || receiptStartedAt > expiresAt)
+			failures.push(
+				`${binding.engine}: execution receipt launch is outside the challenge window`,
+			);
+		if (receiptFinishedAt < receiptStartedAt || receiptFinishedAt > expiresAt)
+			failures.push(
+				`${binding.engine}: execution receipt completion is outside the challenge window`,
+			);
+		if (input.attestation.startedAt !== launchCapturedAt)
+			failures.push(
+				`${binding.engine}: execution startedAt does not match the receipt launch`,
+			);
+		if (input.attestation.finishedAt !== observationCompletedAt)
+			failures.push(
+				`${binding.engine}: execution finishedAt does not match the receipt completion`,
+			);
+	}
 	return {
 		schemaVersion: 1,
 		verdict: failures.length === 0 ? "PUBLIC_ATTESTATION_PASS" : "FAIL",

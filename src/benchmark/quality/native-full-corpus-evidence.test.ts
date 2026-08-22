@@ -1,5 +1,10 @@
 import { generateKeyPairSync, sign } from "node:crypto";
-import { describe, expect, it } from "vitest";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, expect, it, vi } from "vitest";
+import { runFullCorpusAttestationCli } from "./native-full-corpus-attestation-cli.js";
+import { buildFullCorpusChallengeSigningPacket } from "./native-full-corpus-attestation-packet.js";
 import {
 	EXPECTED_EVALUATION_SOURCE_SHA256,
 	EXPECTED_MIRACL_QRELS_SHA256,
@@ -259,8 +264,8 @@ describe("full-corpus independent evidence", () => {
 				engine: binding.engine,
 				datasetSha256: binding.datasetSha256,
 				protocolSha256: binding.protocolSha256,
-				issuedAt: "2026-08-23T00:00:00.000Z",
-				expiresAt: "2026-08-23T01:00:00.000Z",
+				issuedAt: "2026-08-21T23:59:00.000Z",
+				expiresAt: "2026-08-22T01:00:00.000Z",
 			},
 			issuerKeys.privateKey,
 		);
@@ -271,8 +276,8 @@ describe("full-corpus independent evidence", () => {
 				challengeId: challenge.challengeId,
 				nonce: challenge.nonce,
 				...binding,
-				startedAt: "2026-08-23T00:10:00.000Z",
-				finishedAt: "2026-08-23T00:20:00.000Z",
+				startedAt: "2026-08-22T00:00:00.000Z",
+				finishedAt: "2026-08-22T00:10:00.000Z",
 			},
 			runnerKeys.privateKey,
 		);
@@ -299,6 +304,39 @@ describe("full-corpus independent evidence", () => {
 		});
 		expect(verdict.publicClaimEligible).toBe(true);
 		expect(receipt.publicClaimEligible).toBe(false);
+
+		const staleChallenge = signed(
+			{
+				...challenge,
+				issuedAt: "2026-08-23T00:00:00.000Z",
+				expiresAt: "2026-08-23T01:00:00.000Z",
+				signatureBase64: undefined,
+			},
+			issuerKeys.privateKey,
+		);
+		const staleAttestation = signed(
+			{
+				...attestation,
+				startedAt: "2026-08-23T00:10:00.000Z",
+				finishedAt: "2026-08-23T00:20:00.000Z",
+				signatureBase64: undefined,
+			},
+			runnerKeys.privateKey,
+		);
+		const staleReplay = evaluateFullCorpusPublicAttestation({
+			receiptPath: "/evidence/local-pass.json",
+			receiptText,
+			challenge: staleChallenge,
+			attestation: staleAttestation,
+			...trust,
+		});
+		expect(staleReplay.publicClaimEligible).toBe(false);
+		expect(staleReplay.failures).toContain(
+			`${MIRACL_FULL_BENCHMARK}: execution receipt launch is outside the challenge window`,
+		);
+		expect(staleReplay.failures).toContain(
+			`${MIRACL_FULL_BENCHMARK}: execution startedAt does not match the receipt launch`,
+		);
 
 		const byteSubstitution = evaluateFullCorpusPublicAttestation({
 			receiptPath: "/evidence/local-pass.json",
@@ -376,6 +414,116 @@ describe("full-corpus independent evidence", () => {
 		expect(() =>
 			deriveFullCorpusExecutionBinding(JSON.stringify(promoted)),
 		).toThrow("eligible LOCAL_PASS base");
+	});
+
+	it("emits an external signing packet and verifies bounded file inputs", async () => {
+		const receiptText = JSON.stringify(
+			createFullCorpusEvidenceReceipt(evidence()),
+		);
+		const binding = deriveFullCorpusExecutionBinding(receiptText);
+		const packet = buildFullCorpusChallengeSigningPacket({
+			receiptText,
+			issuer: "external-issuer",
+			challengeId: "miracl-ko-independent-run-2026-08-23",
+			nonce: "0123456789abcdef0123456789abcdef",
+			issuedAt: "2026-08-21T23:59:00.000Z",
+			expiresAt: "2026-08-22T01:00:00.000Z",
+		});
+		expect(Buffer.from(packet.signingPayloadBase64, "base64")).toEqual(
+			evidenceSignaturePayload(packet.unsignedChallenge),
+		);
+		expect(packet.baseReceiptSha256).toBe(binding.receiptSha256);
+
+		const issuerKeys = generateKeyPairSync("ed25519");
+		const runnerKeys = generateKeyPairSync("ed25519");
+		const challenge = {
+			...packet.unsignedChallenge,
+			signatureBase64: sign(
+				null,
+				evidenceSignaturePayload(packet.unsignedChallenge),
+				issuerKeys.privateKey,
+			).toString("base64"),
+		};
+		const unsignedAttestation = {
+			schemaVersion: "naia-memory-public-execution-attestation-v1" as const,
+			runner: "external-runner",
+			challengeId: challenge.challengeId,
+			nonce: challenge.nonce,
+			...binding,
+			startedAt: "2026-08-22T00:00:00.000Z",
+			finishedAt: "2026-08-22T00:10:00.000Z",
+		};
+		const attestation = {
+			...unsignedAttestation,
+			signatureBase64: sign(
+				null,
+				evidenceSignaturePayload(unsignedAttestation),
+				runnerKeys.privateKey,
+			).toString("base64"),
+		};
+		const trust = {
+			challengeIssuerKeys: {
+				"external-issuer": issuerKeys.publicKey
+					.export({ type: "spki", format: "pem" })
+					.toString(),
+			},
+			runnerKeys: {
+				"external-runner": runnerKeys.publicKey
+					.export({ type: "spki", format: "pem" })
+					.toString(),
+			},
+			benchmarkOperatorTrustDomain: "nextain-operator",
+			runnerTrustDomains: { "external-runner": "independent-lab" },
+		};
+		const root = mkdtempSync(join(tmpdir(), "miracl-attestation-"));
+		const paths = ["receipt", "challenge", "attestation", "trust"].map((name) =>
+			join(root, `${name}.json`),
+		);
+		try {
+			for (const [path, value] of paths.map(
+				(path, index) =>
+					[
+						path,
+						[JSON.parse(receiptText), challenge, attestation, trust][index],
+					] as const,
+			))
+				writeFileSync(path, JSON.stringify(value));
+			const output: string[] = [];
+			vi.spyOn(process.stdout, "write").mockImplementation((value) => {
+				output.push(String(value));
+				return true;
+			});
+			expect(
+				await runFullCorpusAttestationCli([
+					"challenge",
+					paths[0] as string,
+					"external-issuer",
+					"miracl-ko-independent-run-2026-08-23",
+					"0123456789abcdef0123456789abcdef",
+					"2026-08-21T23:59:00.000Z",
+					"2026-08-22T01:00:00.000Z",
+				]),
+			).toBe(0);
+			expect(JSON.parse(output.pop() ?? "{}").packetSha256).toBe(
+				packet.packetSha256,
+			);
+			expect(await runFullCorpusAttestationCli(["verify", ...paths])).toBe(0);
+			expect(JSON.parse(output.pop() ?? "{}").publicClaimEligible).toBe(true);
+			writeFileSync(paths[2] as string, "{}");
+			expect(await runFullCorpusAttestationCli(["verify", ...paths])).toBe(1);
+			expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+				"attestation shape is invalid",
+			);
+			writeFileSync(paths[2] as string, JSON.stringify(attestation));
+			writeFileSync(paths[3] as string, JSON.stringify({ runnerKeys: {} }));
+			expect(await runFullCorpusAttestationCli(["verify", ...paths])).toBe(1);
+			expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+				"trust policy shape is invalid",
+			);
+		} finally {
+			vi.restoreAllMocks();
+			rmSync(root, { recursive: true });
+		}
 	});
 
 	it("binds the true-batch result to its candidate source and collection", () => {

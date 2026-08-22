@@ -182,9 +182,10 @@ function hasStringFields(
 	return fields.every((field) => typeof value[field] === "string");
 }
 
-function isExecutionChallenge(
-	value: Record<string, unknown>,
+export function isExecutionChallenge(
+	value: unknown,
 ): value is PublicExecutionChallenge {
+	if (!isPublicEvidenceRecord(value)) return false;
 	return hasStringFields(value, [
 		"schemaVersion",
 		"issuer",
@@ -199,9 +200,10 @@ function isExecutionChallenge(
 	]);
 }
 
-function isExecutionAttestation(
-	value: Record<string, unknown>,
+export function isExecutionAttestation(
+	value: unknown,
 ): value is PublicExecutionAttestation {
+	if (!isPublicEvidenceRecord(value)) return false;
 	return hasStringFields(value, [
 		"schemaVersion",
 		"runner",
