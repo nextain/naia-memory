@@ -1,7 +1,10 @@
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { buildFullCorpusChallengeSigningPacket } from "./native-full-corpus-attestation-packet.js";
-import { evaluateFullCorpusPublicAttestation } from "./native-full-corpus-public-attestation.js";
+import {
+	evaluateFullCorpusPublicAttestation,
+	evaluateTimestampQualifiedFullCorpusPublicAttestation,
+} from "./native-full-corpus-public-attestation.js";
 import {
 	PublicEvidenceFileTooLargeError,
 	readBoundedEvidenceFile,
@@ -10,6 +13,10 @@ import {
 	isExecutionAttestation,
 	isExecutionChallenge,
 } from "./public-execution-attestation.js";
+import {
+	isRfc3161DigestTimestampEvidence,
+	isRfc3161TimestampTrustPolicy,
+} from "./rfc3161-timestamp.js";
 
 const MAX_BYTES = 16 * 1024 * 1024;
 
@@ -113,8 +120,95 @@ export async function runFullCorpusAttestationCli(
 			process.stdout.write(`${JSON.stringify(verdict)}\n`);
 			return verdict.publicClaimEligible ? 0 : 1;
 		}
+		if (command === "verify-timestamped") {
+			if (values.length !== 8) {
+				process.stderr.write(
+					"Usage: pnpm benchmark:miracl-full-corpus-attestation verify-timestamped <receipt.json> <challenge.json> <attestation.json> <trust-policy.json> <challenge-timestamp.json> <challenge-timestamp-trust.json> <attestation-timestamp.json> <attestation-timestamp-trust.json>\n",
+				);
+				return 2;
+			}
+			const [
+				receiptPath,
+				challengePath,
+				attestationPath,
+				trustPath,
+				challengeTimestampPath,
+				challengeTimestampTrustPath,
+				attestationTimestampPath,
+				attestationTimestampTrustPath,
+			] = values as [
+				string,
+				string,
+				string,
+				string,
+				string,
+				string,
+				string,
+				string,
+			];
+			const [
+				receiptBytes,
+				challenge,
+				attestation,
+				trust,
+				challengeTimestampEvidence,
+				challengeTimestampTrustPolicy,
+				attestationTimestampEvidence,
+				attestationTimestampTrustPolicy,
+			] = await Promise.all([
+				bounded(receiptPath, "receipt"),
+				json(challengePath, "challenge"),
+				json(attestationPath, "attestation"),
+				json(trustPath, "trust policy"),
+				json(challengeTimestampPath, "challenge timestamp evidence"),
+				json(challengeTimestampTrustPath, "challenge timestamp trust policy"),
+				json(attestationTimestampPath, "attestation timestamp evidence"),
+				json(
+					attestationTimestampTrustPath,
+					"attestation timestamp trust policy",
+				),
+			]);
+			if (trust === null || typeof trust !== "object" || Array.isArray(trust))
+				throw new Error("trust policy root must be an object");
+			const policy = trust as Record<string, unknown>;
+			if (!isExecutionChallenge(challenge))
+				throw new Error("challenge shape is invalid");
+			if (!isExecutionAttestation(attestation))
+				throw new Error("attestation shape is invalid");
+			if (
+				!stringMap(policy.challengeIssuerKeys) ||
+				!stringMap(policy.runnerKeys) ||
+				typeof policy.benchmarkOperatorTrustDomain !== "string" ||
+				!stringMap(policy.runnerTrustDomains)
+			)
+				throw new Error("trust policy shape is invalid");
+			if (!isRfc3161DigestTimestampEvidence(challengeTimestampEvidence))
+				throw new Error("challenge timestamp evidence shape is invalid");
+			if (!isRfc3161TimestampTrustPolicy(challengeTimestampTrustPolicy))
+				throw new Error("challenge timestamp trust policy shape is invalid");
+			if (!isRfc3161DigestTimestampEvidence(attestationTimestampEvidence))
+				throw new Error("attestation timestamp evidence shape is invalid");
+			if (!isRfc3161TimestampTrustPolicy(attestationTimestampTrustPolicy))
+				throw new Error("attestation timestamp trust policy shape is invalid");
+			const verdict = evaluateTimestampQualifiedFullCorpusPublicAttestation({
+				receiptPath,
+				receiptText: receiptBytes.toString("utf8"),
+				challenge,
+				attestation,
+				challengeIssuerKeys: policy.challengeIssuerKeys,
+				runnerKeys: policy.runnerKeys,
+				benchmarkOperatorTrustDomain: policy.benchmarkOperatorTrustDomain,
+				runnerTrustDomains: policy.runnerTrustDomains,
+				challengeTimestampEvidence,
+				challengeTimestampTrustPolicy,
+				attestationTimestampEvidence,
+				attestationTimestampTrustPolicy,
+			});
+			process.stdout.write(`${JSON.stringify(verdict)}\n`);
+			return verdict.publicClaimEligible ? 0 : 1;
+		}
 		process.stderr.write(
-			"Usage: pnpm benchmark:miracl-full-corpus-attestation <challenge|verify> ...\n",
+			"Usage: pnpm benchmark:miracl-full-corpus-attestation <challenge|verify|verify-timestamped> ...\n",
 		);
 		return 2;
 	} catch (error) {

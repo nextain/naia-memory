@@ -107,33 +107,65 @@ function assertEvidenceShape(value: Rfc3161TimestampEvidence): void {
 		throw new Error("RFC 3161 timestamp evidence shape is invalid");
 }
 
+export function isRfc3161DigestTimestampEvidence(
+	value: unknown,
+): value is Rfc3161DigestTimestampEvidence {
+	const candidate = value as Rfc3161DigestTimestampEvidence;
+	return Boolean(
+		candidate &&
+			typeof candidate === "object" &&
+			candidate.schemaVersion ===
+				"naia-memory-rfc3161-digest-timestamp-evidence-v1" &&
+			SHA256.test(candidate.artifactSha256) &&
+			SHA256.test(candidate.tokenSha256) &&
+			typeof candidate.tokenPath === "string" &&
+			candidate.tokenPath.trim().length > 0,
+	);
+}
+
 function assertDigestEvidenceShape(
-	value: Rfc3161DigestTimestampEvidence,
-): void {
-	if (
-		!value ||
-		typeof value !== "object" ||
-		value.schemaVersion !==
-			"naia-memory-rfc3161-digest-timestamp-evidence-v1" ||
-		!SHA256.test(value.artifactSha256) ||
-		!SHA256.test(value.tokenSha256) ||
-		typeof value.tokenPath !== "string" ||
-		value.tokenPath.trim().length === 0
-	)
+	value: unknown,
+): asserts value is Rfc3161DigestTimestampEvidence {
+	if (!isRfc3161DigestTimestampEvidence(value))
 		throw new Error("RFC 3161 digest timestamp evidence shape is invalid");
 }
 
-function assertTrustPolicyShape(value: Rfc3161TimestampTrustPolicy): void {
-	if (
-		!value ||
-		typeof value !== "object" ||
-		value.schemaVersion !== "naia-memory-rfc3161-timestamp-trust-policy-v1" ||
-		!SHA256.test(value.trustedCaFileSha256) ||
-		typeof value.trustedCaFilePath !== "string" ||
-		value.trustedCaFilePath.trim().length === 0 ||
-		typeof value.requiredPolicyOid !== "string" ||
-		!/^\d+(?:\.\d+)+$/.test(value.requiredPolicyOid)
-	)
+export function isRfc3161TimestampTrustPolicy(
+	value: unknown,
+): value is Rfc3161TimestampTrustPolicy {
+	const candidate = value as Rfc3161TimestampTrustPolicy;
+	return Boolean(
+		candidate &&
+			typeof candidate === "object" &&
+			candidate.schemaVersion ===
+				"naia-memory-rfc3161-timestamp-trust-policy-v1" &&
+			SHA256.test(candidate.trustedCaFileSha256) &&
+			typeof candidate.trustedCaFilePath === "string" &&
+			candidate.trustedCaFilePath.trim().length > 0 &&
+			typeof candidate.requiredPolicyOid === "string" &&
+			/^\d+(?:\.\d+)+$/.test(candidate.requiredPolicyOid),
+	);
+}
+
+export function rfc3161TrustPolicyIdentity(
+	policy: Rfc3161TimestampTrustPolicy,
+): {
+	schemaVersion: 1;
+	trustedCaFileSha256: string;
+	requiredPolicyOid: string;
+} {
+	assertTrustPolicyShape(policy);
+	return {
+		schemaVersion: 1,
+		trustedCaFileSha256: policy.trustedCaFileSha256,
+		requiredPolicyOid: policy.requiredPolicyOid,
+	};
+}
+
+function assertTrustPolicyShape(
+	value: unknown,
+): asserts value is Rfc3161TimestampTrustPolicy {
+	if (!isRfc3161TimestampTrustPolicy(value))
 		throw new Error("RFC 3161 timestamp trust policy shape is invalid");
 }
 

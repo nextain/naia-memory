@@ -1,4 +1,4 @@
-import { generateKeyPairSync, sign } from "node:crypto";
+import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -27,8 +27,12 @@ import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.
 import {
 	deriveFullCorpusExecutionBinding,
 	evaluateFullCorpusPublicAttestation,
+	evaluateTimestampQualifiedFullCorpusPublicAttestation,
 } from "./native-full-corpus-public-attestation.js";
-import { evidenceSignaturePayload } from "./public-evidence-crypto.js";
+import {
+	evidenceObjectSha256,
+	evidenceSignaturePayload,
+} from "./public-evidence-crypto.js";
 import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
 
 const baselinePolicy = fullCorpusEmbeddingExecutionPolicy(
@@ -303,6 +307,7 @@ describe("full-corpus independent evidence", () => {
 			...trust,
 		});
 		expect(verdict.publicClaimEligible).toBe(true);
+		expect(verdict.publicationGateEligible).toBe(false);
 		expect(receipt.publicClaimEligible).toBe(false);
 
 		const staleChallenge = signed(
@@ -359,6 +364,148 @@ describe("full-corpus independent evidence", () => {
 			runnerTrustDomains: { "external-runner": "nextain-operator" },
 		});
 		expect(sameDomain.publicClaimEligible).toBe(false);
+	});
+
+	it("requires trusted timestamps over the complete signed challenge and attestation", () => {
+		const directory = mkdtempSync(join(tmpdir(), "naia-full-corpus-time-"));
+		try {
+			const receiptText = JSON.stringify(
+				createFullCorpusEvidenceReceipt(evidence()),
+			);
+			const binding = deriveFullCorpusExecutionBinding(receiptText);
+			const issuerKeys = generateKeyPairSync("ed25519");
+			const runnerKeys = generateKeyPairSync("ed25519");
+			const signed = <T extends Record<string, unknown>>(
+				value: T,
+				privateKey: typeof issuerKeys.privateKey,
+			) => ({
+				...value,
+				signatureBase64: sign(
+					null,
+					evidenceSignaturePayload(value),
+					privateKey,
+				).toString("base64"),
+			});
+			const challenge = signed(
+				{
+					schemaVersion: "naia-memory-public-execution-challenge-v1" as const,
+					issuer: "external-issuer",
+					challengeId: "timestamped-run-1",
+					nonce: "abcdef0123456789abcdef0123456789",
+					engine: binding.engine,
+					datasetSha256: binding.datasetSha256,
+					protocolSha256: binding.protocolSha256,
+					issuedAt: "2026-08-21T23:58:00.000Z",
+					expiresAt: "2026-08-22T01:00:00.000Z",
+				},
+				issuerKeys.privateKey,
+			);
+			const attestation = signed(
+				{
+					schemaVersion: "naia-memory-public-execution-attestation-v1" as const,
+					runner: "external-runner",
+					challengeId: challenge.challengeId,
+					nonce: challenge.nonce,
+					...binding,
+					startedAt: "2026-08-22T00:00:00.000Z",
+					finishedAt: "2026-08-22T00:10:00.000Z",
+				},
+				runnerKeys.privateKey,
+			);
+			const token = Buffer.from("timestamp token");
+			const ca = Buffer.from("timestamp CA");
+			const tokenPath = join(directory, "timestamp.tsr");
+			const caPath = join(directory, "tsa-ca.pem");
+			writeFileSync(tokenPath, token);
+			writeFileSync(caPath, ca);
+			const evidenceFor = (artifact: unknown) => ({
+				schemaVersion:
+					"naia-memory-rfc3161-digest-timestamp-evidence-v1" as const,
+				artifactSha256: evidenceObjectSha256(artifact),
+				tokenSha256: createHash("sha256").update(token).digest("hex"),
+				tokenPath,
+			});
+			const timestampTrust = {
+				schemaVersion: "naia-memory-rfc3161-timestamp-trust-policy-v1" as const,
+				trustedCaFilePath: caPath,
+				trustedCaFileSha256: createHash("sha256").update(ca).digest("hex"),
+				requiredPolicyOid: "1.2.3.4",
+			};
+			let inspection = 0;
+			const timestampCommandRunner = (args: string[]) => {
+				if (args.includes("-verify"))
+					return { status: 0, stdout: "OK", stderr: "" };
+				inspection += 1;
+				const time =
+					inspection === 1
+						? "Aug 21 23:59:00 2026 GMT"
+						: "Aug 22 00:11:00 2026 GMT";
+				return {
+					status: 0,
+					stdout: `Policy OID: 1.2.3.4\nTime stamp: ${time}\n`,
+					stderr: "",
+				};
+			};
+			const common = {
+				receiptPath: "/evidence/local-pass.json",
+				receiptText,
+				challenge,
+				attestation,
+				challengeIssuerKeys: {
+					"external-issuer": issuerKeys.publicKey
+						.export({ type: "spki", format: "pem" })
+						.toString(),
+				},
+				runnerKeys: {
+					"external-runner": runnerKeys.publicKey
+						.export({ type: "spki", format: "pem" })
+						.toString(),
+				},
+				benchmarkOperatorTrustDomain: "nextain-operator",
+				runnerTrustDomains: { "external-runner": "independent-lab" },
+				challengeTimestampEvidence: evidenceFor(challenge),
+				challengeTimestampTrustPolicy: timestampTrust,
+				attestationTimestampEvidence: evidenceFor(attestation),
+				attestationTimestampTrustPolicy: timestampTrust,
+				timestampCommandRunner,
+			};
+			const verdict =
+				evaluateTimestampQualifiedFullCorpusPublicAttestation(common);
+			expect(verdict.verdict).toBe(
+				"TIMESTAMP_QUALIFIED_PUBLIC_ATTESTATION_PASS",
+			);
+			expect(verdict.publicClaimEligible).toBe(true);
+			expect(verdict.publicationGateEligible).toBe(true);
+			expect(verdict.assuranceModel).toBe(
+				"trusted-runner-signature-with-rfc3161-chronology",
+			);
+			expect(verdict.timestampQualification.challengeTrustPolicySha256).toBe(
+				evidenceObjectSha256({
+					schemaVersion: 1,
+					trustedCaFileSha256: timestampTrust.trustedCaFileSha256,
+					requiredPolicyOid: timestampTrust.requiredPolicyOid,
+				}),
+			);
+
+			inspection = 0;
+			const substituted = evaluateTimestampQualifiedFullCorpusPublicAttestation(
+				{
+					...common,
+					challengeTimestampEvidence: evidenceFor({
+						...challenge,
+						signatureBase64: "substituted",
+					}),
+				},
+			);
+			expect(substituted.publicClaimEligible).toBe(false);
+			expect(
+				substituted.failures.some((failure) =>
+					failure.includes("artifact hash mismatch"),
+				),
+			).toBe(true);
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
 	});
 
 	it("rejects binding-manifest and base-receipt substitution", () => {
@@ -519,6 +666,24 @@ describe("full-corpus independent evidence", () => {
 			expect(await runFullCorpusAttestationCli(["verify", ...paths])).toBe(1);
 			expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
 				"trust policy shape is invalid",
+			);
+			writeFileSync(paths[3] as string, JSON.stringify(trust));
+			const timestampPaths = [
+				"challenge-timestamp",
+				"challenge-timestamp-trust",
+				"attestation-timestamp",
+				"attestation-timestamp-trust",
+			].map((name) => join(root, `${name}.json`));
+			for (const path of timestampPaths) writeFileSync(path, "{}");
+			expect(
+				await runFullCorpusAttestationCli([
+					"verify-timestamped",
+					...paths,
+					...timestampPaths,
+				]),
+			).toBe(1);
+			expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+				"challenge timestamp evidence shape is invalid",
 			);
 		} finally {
 			vi.restoreAllMocks();
