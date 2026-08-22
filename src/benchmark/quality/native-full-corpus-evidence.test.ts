@@ -4,6 +4,7 @@ import {
 	EXPECTED_MIRACL_QRELS_SHA256,
 	EXPECTED_MIRACL_SOURCE_LOCK_SHA256,
 	EXPECTED_MIRACL_TOPICS_SHA256,
+	EXPECTED_MIRACL_TOPIC_IDS,
 	EXPECTED_QDRANT_COMMIT,
 	EXPECTED_QDRANT_VERSION,
 	EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256,
@@ -24,13 +25,15 @@ const baselinePolicy = fullCorpusEmbeddingExecutionPolicy(
 	MIRACL_PASSAGE_COMPOSITION,
 	"per-item-v1",
 );
-const trecRunText = `${Array.from({ length: 213 }, (_, queryIndex) =>
-	Array.from(
-		{ length: 100 },
-		(_, rank) =>
-			`q${queryIndex + 1} Q0 d${queryIndex + 1}-${rank + 1} ${rank + 1} ${100 - rank} test`,
-	).join("\n"),
-).join("\n")}\n`;
+const trecRunText = `${[...EXPECTED_MIRACL_TOPIC_IDS]
+	.map((queryId) =>
+		Array.from(
+			{ length: 100 },
+			(_, rank) =>
+				`${queryId} Q0 d${queryId}-${rank + 1} ${rank + 1} ${100 - rank} test`,
+		).join("\n"),
+	)
+	.join("\n")}\n`;
 const trecSha256 = sha256Bytes(trecRunText);
 
 const result = {
@@ -231,7 +234,7 @@ describe("full-corpus independent evidence", () => {
 	it("rejects incomplete TREC query coverage even when its hash is consistent", () => {
 		const incompleteTrec = trecRunText
 			.split("\n")
-			.filter((line) => !line.startsWith("q213 "))
+			.filter((line) => !line.startsWith("1582 "))
 			.join("\n");
 		const incompleteSha256 = sha256Bytes(incompleteTrec);
 		expect(() =>
@@ -246,6 +249,20 @@ describe("full-corpus independent evidence", () => {
 				}),
 			),
 		).toThrow("TREC query cardinality");
+	});
+
+	it("rejects substituted query IDs even when count and depth are unchanged", () => {
+		const substitutedTrec = trecRunText.replaceAll(/^1582 /gm, "999999 ");
+		const substitutedSha256 = sha256Bytes(substitutedTrec);
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					trecRunText: substitutedTrec,
+					trecSha256: substitutedSha256,
+					result: { ...result, trecSha256: substitutedSha256 },
+				}),
+			),
+		).toThrow("TREC coverage mismatch");
 	});
 
 	it("rejects a substituted or incomplete checkpoint chain", () => {
