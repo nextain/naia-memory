@@ -74,6 +74,7 @@ export interface FullCorpusResult {
 		qrelsSha256: string;
 		documentCount: number;
 		queryCount: number;
+		corpusDocidsSha256: string;
 	};
 	configuration: {
 		passageComposition?: string;
@@ -88,6 +89,9 @@ export interface FullCorpusResult {
 		collectionName: string;
 	};
 	metrics: { ndcgAt10: number; recallAt100: number };
+	ingestion: {
+		lastChunkReceiptSha256: string | null;
+	};
 	trecSha256: string;
 }
 
@@ -103,6 +107,13 @@ export function createFullCorpusEvidenceReceipt(input: {
 	trecEvalPath: string;
 	qrelsPath: string;
 	trecPath: string;
+	checkpointChain: {
+		directory: string;
+		chunkCount: number;
+		documentCount: number;
+		docidsSha256: string;
+		lastChunkReceiptSha256: string;
+	};
 	launchReceipt: {
 		pid: number;
 		capturedAt: string;
@@ -161,6 +172,15 @@ export function createFullCorpusEvidenceReceipt(input: {
 		EXPECTED_MIRACL_SOURCE_LOCK_SHA256
 	)
 		throw new Error("pinned benchmark source lock is stale");
+	if (
+		input.checkpointChain.chunkCount !== 2_904 ||
+		input.checkpointChain.documentCount !== result.inputs.documentCount ||
+		input.checkpointChain.docidsSha256 !== result.inputs.corpusDocidsSha256 ||
+		result.ingestion.lastChunkReceiptSha256 === null ||
+		input.checkpointChain.lastChunkReceiptSha256 !==
+			result.ingestion.lastChunkReceiptSha256
+	)
+		throw new Error("benchmark checkpoint chain mismatch");
 	if (
 		result.configuration.vectorStore !== "Qdrant" ||
 		result.configuration.distance !== "Cosine" ||
@@ -295,6 +315,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 			},
 			trec: { path: input.trecPath, sha256: input.trecSha256 },
 			qrels: { path: input.qrelsPath, sha256: input.qrelsSha256 },
+			checkpointChain: input.checkpointChain,
 		},
 		independentEvaluatorTool: {
 			name: "usnistgov/trec_eval",

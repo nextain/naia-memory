@@ -3,6 +3,7 @@ import {
 	existsSync,
 	mkdirSync,
 	readFileSync,
+	readdirSync,
 	renameSync,
 	rmSync,
 	writeFileSync,
@@ -34,6 +35,103 @@ function canonicalReceipt(receipt: FullCorpusChunkReceipt): string {
 
 function chunkPrefix(directory: string, startOrdinal: number): string {
 	return join(directory, `chunk-${String(startOrdinal).padStart(9, "0")}`);
+}
+
+export interface FullCorpusCheckpointChainEvidence {
+	directory: string;
+	chunkCount: number;
+	documentCount: number;
+	docidsSha256: string;
+	lastChunkReceiptSha256: string;
+}
+
+export function verifyFullCorpusCheckpointChain(options: {
+	directory: string;
+	sourceLockSha256: string;
+	embeddingPolicySha256: string;
+	dimensions: number;
+	documentCount: number;
+	chunkSize: number;
+	docidsSha256: string;
+	lastChunkReceiptSha256: string;
+}): FullCorpusCheckpointChainEvidence {
+	if (
+		!Number.isSafeInteger(options.dimensions) ||
+		options.dimensions < 1 ||
+		!Number.isSafeInteger(options.documentCount) ||
+		options.documentCount < 1 ||
+		!Number.isSafeInteger(options.chunkSize) ||
+		options.chunkSize < 1
+	)
+		throw new Error("invalid full-corpus checkpoint chain shape");
+	const receiptNames = readdirSync(options.directory)
+		.filter((name) => /^chunk-\d{9}\.receipt\.json$/.test(name))
+		.sort();
+	const expectedChunkCount = Math.ceil(
+		options.documentCount / options.chunkSize,
+	);
+	if (receiptNames.length !== expectedChunkCount)
+		throw new Error("full-corpus checkpoint chain cardinality mismatch");
+
+	const aggregateDocids = createHash("sha256");
+	let previousReceiptSha256: string | null = null;
+	let documentCount = 0;
+	for (const [chunkIndex, receiptName] of receiptNames.entries()) {
+		const expectedStartOrdinal = chunkIndex * options.chunkSize;
+		const expectedName = `chunk-${String(expectedStartOrdinal).padStart(9, "0")}.receipt.json`;
+		if (receiptName !== expectedName)
+			throw new Error("full-corpus checkpoint chain ordinal gap");
+		const receiptPath = join(options.directory, receiptName);
+		const receiptText = readFileSync(receiptPath, "utf8");
+		const receipt = JSON.parse(receiptText) as FullCorpusChunkReceipt;
+		const expectedDocumentCount = Math.min(
+			options.chunkSize,
+			options.documentCount - expectedStartOrdinal,
+		);
+		if (
+			receiptText !== canonicalReceipt(receipt) ||
+			receipt.schemaVersion !== 1 ||
+			receipt.sourceLockSha256 !== options.sourceLockSha256 ||
+			receipt.embeddingPolicySha256 !== options.embeddingPolicySha256 ||
+			receipt.dimensions !== options.dimensions ||
+			receipt.startOrdinal !== expectedStartOrdinal ||
+			receipt.documentCount !== expectedDocumentCount ||
+			receipt.previousReceiptSha256 !== previousReceiptSha256
+		)
+			throw new Error("full-corpus checkpoint chain identity mismatch");
+		const prefix = chunkPrefix(options.directory, expectedStartOrdinal);
+		const docidsText = readFileSync(`${prefix}.docids`, "utf8");
+		const vectorBytes = readFileSync(`${prefix}.f32`);
+		const docids = docidsText.endsWith("\n")
+			? docidsText.slice(0, -1).split("\n")
+			: [];
+		if (
+			docids.length !== receipt.documentCount ||
+			new Set(docids).size !== docids.length ||
+			sha256(docidsText) !== receipt.docidsSha256 ||
+			vectorBytes.byteLength !==
+				receipt.documentCount * receipt.dimensions * 4 ||
+			sha256(vectorBytes) !== receipt.vectorsSha256
+		)
+			throw new Error("full-corpus checkpoint chain content mismatch");
+		aggregateDocids.update(docidsText);
+		documentCount += receipt.documentCount;
+		previousReceiptSha256 = sha256(receiptText);
+	}
+	const docidsSha256 = aggregateDocids.digest("hex");
+	if (
+		documentCount !== options.documentCount ||
+		docidsSha256 !== options.docidsSha256 ||
+		previousReceiptSha256 !== options.lastChunkReceiptSha256
+	)
+		throw new Error("full-corpus checkpoint chain terminal mismatch");
+	return {
+		directory: options.directory,
+		chunkCount: receiptNames.length,
+		documentCount,
+		docidsSha256,
+		lastChunkReceiptSha256: previousReceiptSha256,
+	};
 }
 
 export function recoverIncompleteFullCorpusChunk(options: {

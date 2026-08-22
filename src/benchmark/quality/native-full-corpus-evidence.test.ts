@@ -41,6 +41,7 @@ const result = {
 		qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
 		documentCount: 1_486_752,
 		queryCount: 213,
+		corpusDocidsSha256: "corpus-docids",
 	},
 	configuration: {
 		passageComposition: MIRACL_PASSAGE_COMPOSITION,
@@ -55,6 +56,7 @@ const result = {
 		collectionName: `naia_miracl_ko_${EXPECTED_MIRACL_SOURCE_LOCK_SHA256.slice(0, 8)}_${baselinePolicy.embeddingPolicySha256.slice(0, 8)}`,
 	},
 	metrics: { ndcgAt10: 0.4123454, recallAt100: 0.7654321 },
+	ingestion: { lastChunkReceiptSha256: "last-receipt" },
 	trecSha256,
 };
 
@@ -71,6 +73,13 @@ function evidence(overrides = {}) {
 		trecEvalPath: "/tools/trec_eval",
 		qrelsPath: "/inputs/qrels.tsv",
 		trecPath: "/outputs/result.json.trec",
+		checkpointChain: {
+			directory: "/checkpoints/vectors",
+			chunkCount: 2_904,
+			documentCount: 1_486_752,
+			docidsSha256: "corpus-docids",
+			lastChunkReceiptSha256: "last-receipt",
+		},
 		launchReceipt: {
 			pid: 123,
 			capturedAt: "2026-08-22T00:00:00.000Z",
@@ -237,6 +246,29 @@ describe("full-corpus independent evidence", () => {
 				}),
 			),
 		).toThrow("TREC query cardinality");
+	});
+
+	it("rejects a substituted or incomplete checkpoint chain", () => {
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					checkpointChain: {
+						...evidence().checkpointChain,
+						lastChunkReceiptSha256: "substituted",
+					},
+				}),
+			),
+		).toThrow("checkpoint chain");
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					checkpointChain: {
+						...evidence().checkpointChain,
+						chunkCount: 2_903,
+					},
+				}),
+			),
+		).toThrow("checkpoint chain");
 	});
 
 	it("fails closed on metric, artifact, policy, and runtime drift", () => {

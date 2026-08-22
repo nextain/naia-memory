@@ -2,11 +2,13 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { verifyFullCorpusCheckpointChain } from "./native-full-corpus-checkpoint.js";
 import {
 	type FullCorpusResult,
 	createFullCorpusEvidenceReceipt,
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
+import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
 import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
 
 const resultPath =
@@ -27,6 +29,9 @@ const runtimeObservationPath =
 const outputPath =
 	process.env.MIRACL_FULL_EVIDENCE_OUTPUT ?? `${resultPath}.evidence.json`;
 const qdrantUrl = process.env.QDRANT_URL ?? "http://127.0.0.1:6334";
+const checkpointRoot =
+	process.env.MIRACL_FULL_CHECKPOINT_DIR ??
+	".cache/benchmark-runs/miracl-ko-full-v1";
 
 async function main() {
 	if (existsSync(outputPath)) throw new Error("evidence output already exists");
@@ -50,6 +55,27 @@ async function main() {
 	const runtimeObservation = JSON.parse(
 		readFileSync(runtimeObservationPath, "utf8"),
 	);
+	const embedding = result.configuration.embedding;
+	const inferenceMode = result.configuration.embeddingInferenceMode;
+	if (!embedding || !inferenceMode)
+		throw new Error("result embedding policy is missing");
+	const executionPolicy = fullCorpusEmbeddingExecutionPolicy(
+		embedding,
+		result.configuration.passageComposition ?? "",
+		inferenceMode,
+	);
+	if (result.ingestion.lastChunkReceiptSha256 === null)
+		throw new Error("result checkpoint terminal is missing");
+	const checkpointChain = verifyFullCorpusCheckpointChain({
+		directory: join(checkpointRoot, executionPolicy.checkpointLeaf),
+		sourceLockSha256: result.inputs.sourceLockSha256,
+		embeddingPolicySha256: executionPolicy.embeddingPolicySha256,
+		dimensions: embedding.dimensions,
+		documentCount: result.inputs.documentCount,
+		chunkSize: 512,
+		docidsSha256: result.inputs.corpusDocidsSha256,
+		lastChunkReceiptSha256: result.ingestion.lastChunkReceiptSha256,
+	});
 	if (launchReceipt.qdrantUrl !== qdrantUrl)
 		throw new Error("launch receipt Qdrant URL mismatch");
 	const rootResponse = await fetch(`${qdrantUrl}/`);
@@ -95,6 +121,7 @@ async function main() {
 		trecEvalPath: evaluatorPath,
 		qrelsPath,
 		trecPath,
+		checkpointChain,
 		launchReceipt,
 		launchReceiptSha256: sha256Bytes(launchReceiptBytes),
 		runtimeObservation,

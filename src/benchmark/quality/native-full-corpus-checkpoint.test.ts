@@ -6,6 +6,7 @@ import {
 	loadFullCorpusChunk,
 	recoverIncompleteFullCorpusChunk,
 	saveFullCorpusChunk,
+	verifyFullCorpusCheckpointChain,
 } from "./native-full-corpus-checkpoint.js";
 
 const directories: string[] = [];
@@ -123,5 +124,47 @@ describe("native full-corpus checkpoint", () => {
 				vectors: new Float32Array([1]),
 			}),
 		).toThrow("vector shape mismatch");
+	});
+
+	it("verifies every byte and terminal of a complete checkpoint chain", () => {
+		const directory = mkdtempSync(join(tmpdir(), "naia-full-corpus-"));
+		directories.push(directory);
+		const first = saveFullCorpusChunk({
+			directory,
+			identity,
+			docids: ["a", "b"],
+			vectors: new Float32Array([1, 2, 3, 4]),
+			previousReceiptSha256: null,
+		});
+		const second = saveFullCorpusChunk({
+			directory,
+			identity: { ...identity, startOrdinal: 2, documentCount: 1 },
+			docids: ["c"],
+			vectors: new Float32Array([5, 6]),
+			previousReceiptSha256: first.receiptSha256,
+		});
+		const evidence = verifyFullCorpusCheckpointChain({
+			directory,
+			sourceLockSha256: "source-a",
+			embeddingPolicySha256: "policy-a",
+			dimensions: 2,
+			documentCount: 3,
+			chunkSize: 2,
+			docidsSha256:
+				"880553fca8fcea94e325ee2cfb48e5a985cc797f39a14cc6d3cedecfeb2ae4d2",
+			lastChunkReceiptSha256: second.receiptSha256,
+		});
+		expect(evidence).toMatchObject({ chunkCount: 2, documentCount: 3 });
+		expect(() =>
+			verifyFullCorpusCheckpointChain({
+				...evidence,
+				sourceLockSha256: "source-a",
+				embeddingPolicySha256: "policy-a",
+				dimensions: 2,
+				chunkSize: 2,
+				docidsSha256: evidence.docidsSha256,
+				lastChunkReceiptSha256: "substituted",
+			}),
+		).toThrow("terminal mismatch");
 	});
 });
