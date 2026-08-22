@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
 	type ThroughputAbEvidence,
@@ -14,11 +15,40 @@ function evidence(): ThroughputAbEvidence {
 		milliseconds: number,
 		startedAtMilliseconds = 0,
 	) => ({
+		...(() => {
+			const command = ["node", "benchmark.js", label];
+			const stdout = `${JSON.stringify({ label, policySha256 })}\n`;
+			const environment = { NAIA_THROUGHPUT_MODE: "test" };
+			const cmdline = [process.execPath, "benchmark.js", label];
+			return {
+				command,
+				commandSha256: createHash("sha256")
+					.update(JSON.stringify(command))
+					.digest("hex"),
+				environment,
+				environmentSha256: createHash("sha256")
+					.update(JSON.stringify(Object.entries(environment)))
+					.digest("hex"),
+				stdout,
+				stdoutSha256: createHash("sha256").update(stdout).digest("hex"),
+				process: {
+					pid: 123,
+					procStartTicks: "456",
+					cmdline,
+					cmdlineSha256: createHash("sha256")
+						.update(JSON.stringify(cmdline))
+						.digest("hex"),
+					pollMilliseconds: 100,
+					samples: 2,
+					rssObservation:
+						"100ms-sampled-process-tree-aggregate-vmrss-v1" as const,
+				},
+			};
+		})(),
 		label,
 		policySha256,
 		hostBootId: bootId,
-		commandSha256: hash("c"),
-		stdoutSha256: hash("d"),
+		cwd: process.cwd(),
 		startedAt: new Date(
 			Date.parse("2026-08-22T00:00:00.000Z") + startedAtMilliseconds,
 		).toISOString(),
@@ -120,9 +150,24 @@ describe("throughput A/B evidence", () => {
 		[
 			"command",
 			(value: ThroughputAbEvidence) => {
-				firstWarmPair(value).baseline.commandSha256 = "unbound";
+				firstWarmPair(value).baseline.command.push("drift");
 			},
-			"command hash",
+			"command hash mismatch",
+		],
+		[
+			"environment",
+			(value: ThroughputAbEvidence) => {
+				firstWarmPair(value).baseline.environment.NAIA_THROUGHPUT_MODE =
+					"drift";
+			},
+			"environment hash mismatch",
+		],
+		[
+			"process cmdline",
+			(value: ThroughputAbEvidence) => {
+				firstWarmPair(value).baseline.process.cmdline.push("drift");
+			},
+			"process cmdline hash mismatch",
 		],
 		[
 			"chronology",

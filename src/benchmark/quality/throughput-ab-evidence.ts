@@ -1,11 +1,12 @@
 import { createHash } from "node:crypto";
+import { isAbsolute } from "node:path";
 import {
 	type CrossedWarmPair,
 	type FullCorpusThroughputMeasurement,
 	analyzeThroughputAb,
 } from "./throughput-ab-analysis.js";
 
-interface PolicyIdentity {
+export interface PolicyIdentity {
 	label: "baseline" | "candidate";
 	policySha256: string;
 	inferenceMode: "per-item-v1" | "padded-array-batch-v1";
@@ -14,17 +15,31 @@ interface PolicyIdentity {
 	transformersVersion: string;
 }
 
-interface ExecutionObservation {
+export interface ExecutionObservation {
 	label: string;
 	policySha256: string;
 	hostBootId: string;
+	cwd: string;
+	command: string[];
 	commandSha256: string;
+	environment: Record<string, string>;
+	environmentSha256: string;
+	stdout: string;
 	stdoutSha256: string;
 	startedAt: string;
 	completedAt: string;
 	milliseconds: number;
 	peakRssBytes: number;
 	failures: number;
+	process: {
+		pid: number;
+		procStartTicks: string;
+		cmdline: string[];
+		cmdlineSha256: string;
+		pollMilliseconds: number;
+		samples: number;
+		rssObservation: "100ms-sampled-process-tree-aggregate-vmrss-v1";
+	};
 }
 
 interface WarmPairEvidence {
@@ -56,6 +71,16 @@ export interface ThroughputAbEvidence {
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const BOOT_ID = /^[a-f0-9-]{36}$/;
+
+export function canonicalEnvironment(
+	environment: Record<string, string>,
+): string {
+	return JSON.stringify(
+		Object.entries(environment).sort(([left], [right]) =>
+			left.localeCompare(right),
+		),
+	);
+}
 
 function assertIso(value: string, label: string): number {
 	const timestamp = Date.parse(value);
@@ -98,12 +123,46 @@ function validateObservation(
 		throw new Error(`${label}: host boot identity mismatch`);
 	if (observation.policySha256 !== policySha256)
 		throw new Error(`${label}: policy identity mismatch`);
-	for (const [name, digest] of [
-		["command", observation.commandSha256],
-		["stdout", observation.stdoutSha256],
-	] as const)
+	if (!isAbsolute(observation.cwd))
+		throw new Error(`${label}: working directory must be absolute`);
+	if (
+		observation.command.length < 1 ||
+		observation.command.some((argument) => argument.length < 1)
+	)
+		throw new Error(`${label}: command argv is invalid`);
+	for (const [name, value, digest] of [
+		["command", JSON.stringify(observation.command), observation.commandSha256],
+		[
+			"environment",
+			canonicalEnvironment(observation.environment),
+			observation.environmentSha256,
+		],
+		["stdout", observation.stdout, observation.stdoutSha256],
+		[
+			"process cmdline",
+			JSON.stringify(observation.process.cmdline),
+			observation.process.cmdlineSha256,
+		],
+	] as const) {
 		if (!SHA256.test(digest))
 			throw new Error(`${label}: ${name} hash is invalid`);
+		if (createHash("sha256").update(value).digest("hex") !== digest)
+			throw new Error(`${label}: ${name} hash mismatch`);
+	}
+	if (
+		!Number.isSafeInteger(observation.process.pid) ||
+		observation.process.pid <= 0 ||
+		!/^[0-9]+$/.test(observation.process.procStartTicks) ||
+		observation.process.cmdline.length < 1 ||
+		observation.process.cmdline.some((argument) => argument.length < 1) ||
+		!Number.isSafeInteger(observation.process.pollMilliseconds) ||
+		observation.process.pollMilliseconds !== 100 ||
+		!Number.isSafeInteger(observation.process.samples) ||
+		observation.process.samples < 1 ||
+		observation.process.rssObservation !==
+			"100ms-sampled-process-tree-aggregate-vmrss-v1"
+	)
+		throw new Error(`${label}: process observation identity is invalid`);
 	const startedAt = assertIso(observation.startedAt, `${label} start`);
 	const completedAt = assertIso(observation.completedAt, `${label} completion`);
 	if (completedAt <= startedAt)
