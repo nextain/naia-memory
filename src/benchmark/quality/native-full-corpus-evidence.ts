@@ -3,6 +3,7 @@ import type {
 	OfflineBatchInferenceMode,
 	OfflineEmbeddingPolicyReceipt,
 } from "../../memory/embeddings.js";
+import { OFFLINE_MODEL_REVISIONS } from "../../memory/embeddings.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
 import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
 
@@ -25,6 +26,20 @@ export const EXPECTED_QDRANT_COMMIT =
 	"48203e414e4e7f639a6d394fb6e4df695f808e51";
 export const EXPECTED_QDRANT_VERSION = "1.15.5";
 export const METRIC_TOLERANCE = 1e-6;
+export const MIRACL_PASSAGE_COMPOSITION = 'title + "\\n" + text';
+export const MIRACL_EMBEDDING_POLICY: OfflineEmbeddingPolicyReceipt = {
+	model: "Xenova/multilingual-e5-large",
+	revision: OFFLINE_MODEL_REVISIONS["multilingual-e5-large"],
+	dtype: "q8",
+	dimensions: 1024,
+	queryPrefix: "query: ",
+	passagePrefix: "passage: ",
+	pooling: "mean",
+	normalize: true,
+	tokenizerMaxLength: 512,
+	truncation: true,
+	titleConcatenation: "provider-receives-precomposed-text",
+};
 
 export function sha256Bytes(value: string | Uint8Array): string {
 	return createHash("sha256").update(value).digest("hex");
@@ -157,8 +172,27 @@ export function createFullCorpusEvidenceReceipt(input: {
 		throw new Error("trec_eval binary hash mismatch");
 	if (input.trecEvalSourceCommit !== TREC_EVAL_COMMIT)
 		throw new Error("trec_eval source commit mismatch");
-	const inferenceMode =
-		result.configuration.embeddingInferenceMode ?? "per-item-v1";
+	const inferenceMode = result.configuration.embeddingInferenceMode;
+	if (
+		(inferenceMode !== "per-item-v1" &&
+			inferenceMode !== "padded-array-batch-v1") ||
+		result.configuration.passageComposition !== MIRACL_PASSAGE_COMPOSITION ||
+		JSON.stringify(result.configuration.embedding) !==
+			JSON.stringify(MIRACL_EMBEDDING_POLICY)
+	)
+		throw new Error("benchmark embedding identity mismatch");
+	const expectedPolicy = fullCorpusEmbeddingExecutionPolicy(
+		MIRACL_EMBEDDING_POLICY,
+		MIRACL_PASSAGE_COMPOSITION,
+		inferenceMode,
+	);
+	const expectedCollection = `naia_miracl_ko_${result.inputs.sourceLockSha256.slice(0, 8)}_${expectedPolicy.embeddingPolicySha256.slice(0, 8)}`;
+	if (
+		result.configuration.embeddingExecutionPolicySha256 !==
+			expectedPolicy.embeddingPolicySha256 ||
+		result.configuration.collectionName !== expectedCollection
+	)
+		throw new Error("benchmark embedding execution policy mismatch");
 	const expectedEvaluationSourceSha256 =
 		inferenceMode === "per-item-v1"
 			? EXPECTED_EVALUATION_SOURCE_SHA256
@@ -175,23 +209,6 @@ export function createFullCorpusEvidenceReceipt(input: {
 			input.launchReceipt.embeddingInferenceMode !== inferenceMode)
 	)
 		throw new Error("benchmark launch evidence mismatch");
-	if (inferenceMode === "padded-array-batch-v1") {
-		const embedding = result.configuration.embedding;
-		const passageComposition = result.configuration.passageComposition;
-		if (!embedding || !passageComposition)
-			throw new Error("true-batch embedding policy is missing");
-		const expectedPolicy = fullCorpusEmbeddingExecutionPolicy(
-			embedding,
-			passageComposition,
-			inferenceMode,
-		).embeddingPolicySha256;
-		const expectedCollection = `naia_miracl_ko_${result.inputs.sourceLockSha256.slice(0, 8)}_${expectedPolicy.slice(0, 8)}`;
-		if (
-			result.configuration.embeddingExecutionPolicySha256 !== expectedPolicy ||
-			result.configuration.collectionName !== expectedCollection
-		)
-			throw new Error("true-batch embedding execution policy mismatch");
-	}
 	const runtime = input.runtimeObservation;
 	const launchCapturedAt = Date.parse(input.launchReceipt.capturedAt);
 	const observationStartedAt = Date.parse(runtime.observation.startedAt);

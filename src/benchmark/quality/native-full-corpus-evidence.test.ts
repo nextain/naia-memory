@@ -8,13 +8,21 @@ import {
 	EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256,
 	EXPECTED_TREC_EVAL_BINARY_SHA256,
 	EXPECTED_TRUE_BATCH_EVALUATION_SOURCE_SHA256,
+	MIRACL_EMBEDDING_POLICY,
 	MIRACL_FULL_BENCHMARK,
+	MIRACL_PASSAGE_COMPOSITION,
 	createFullCorpusEvidenceReceipt,
 	parseTrecEvalAll,
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
 import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
+
+const baselinePolicy = fullCorpusEmbeddingExecutionPolicy(
+	MIRACL_EMBEDDING_POLICY,
+	MIRACL_PASSAGE_COMPOSITION,
+	"per-item-v1",
+);
 
 const result = {
 	benchmark: MIRACL_FULL_BENCHMARK,
@@ -25,12 +33,16 @@ const result = {
 		queryCount: 213,
 	},
 	configuration: {
+		passageComposition: MIRACL_PASSAGE_COMPOSITION,
+		embedding: MIRACL_EMBEDDING_POLICY,
+		embeddingInferenceMode: "per-item-v1" as const,
+		embeddingExecutionPolicySha256: baselinePolicy.embeddingPolicySha256,
 		vectorStore: "Qdrant",
 		distance: "Cosine",
 		exactSearch: true,
 		topK: 100,
 		cpuOnly: true,
-		collectionName: "locked-collection",
+		collectionName: `naia_miracl_ko_${EXPECTED_MIRACL_SOURCE_LOCK_SHA256.slice(0, 8)}_${baselinePolicy.embeddingPolicySha256.slice(0, 8)}`,
 	},
 	metrics: { ndcgAt10: 0.4123454, recallAt100: 0.7654321 },
 	trecSha256: "trec",
@@ -131,30 +143,17 @@ describe("full-corpus independent evidence", () => {
 	});
 
 	it("binds the true-batch result to its candidate source and collection", () => {
-		const embedding = {
-			model: "Xenova/multilingual-e5-large",
-			revision: "locked-revision",
-			dtype: "q8" as const,
-			dimensions: 1024,
-			queryPrefix: "query: ",
-			passagePrefix: "passage: ",
-			pooling: "mean" as const,
-			normalize: true as const,
-			tokenizerMaxLength: 512 as const,
-			truncation: true as const,
-			titleConcatenation: "provider-receives-precomposed-text" as const,
-		};
 		const policy = fullCorpusEmbeddingExecutionPolicy(
-			embedding,
-			"title + text",
+			MIRACL_EMBEDDING_POLICY,
+			MIRACL_PASSAGE_COMPOSITION,
 			"padded-array-batch-v1",
 		);
 		const candidateResult = {
 			...result,
 			configuration: {
 				...result.configuration,
-				passageComposition: "title + text",
-				embedding,
+				passageComposition: MIRACL_PASSAGE_COMPOSITION,
+				embedding: MIRACL_EMBEDDING_POLICY,
 				embeddingInferenceMode: "padded-array-batch-v1" as const,
 				embeddingExecutionPolicySha256: policy.embeddingPolicySha256,
 				collectionName: `naia_miracl_ko_${EXPECTED_MIRACL_SOURCE_LOCK_SHA256.slice(0, 8)}_${policy.embeddingPolicySha256.slice(0, 8)}`,
@@ -181,6 +180,32 @@ describe("full-corpus independent evidence", () => {
 				}),
 			),
 		).toThrow("launch evidence");
+	});
+
+	it("rejects omitted or substituted embedding identity for the baseline", () => {
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					result: {
+						...result,
+						configuration: { ...result.configuration, embedding: undefined },
+					},
+				}),
+			),
+		).toThrow("embedding identity");
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					result: {
+						...result,
+						configuration: {
+							...result.configuration,
+							embedding: { ...MIRACL_EMBEDDING_POLICY, revision: "changed" },
+						},
+					},
+				}),
+			),
+		).toThrow("embedding identity");
 	});
 
 	it("fails closed on metric, artifact, policy, and runtime drift", () => {
