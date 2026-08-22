@@ -106,7 +106,27 @@ async function main() {
 	if (!collectionBody.result)
 		throw new Error("Qdrant collection result missing");
 	const argv = ["-m", "ndcg_cut.10", "-m", "recall.100", qrelsPath, trecPath];
+	const binaryBeforeSha256 = sha256Bytes(readFileSync(evaluatorPath));
+	const sourceCommitBefore = execFileSync(
+		"git",
+		["-C", dirname(evaluatorPath), "rev-parse", "HEAD"],
+		{ encoding: "utf8" },
+	).trim();
 	const stdout = execFileSync(evaluatorPath, argv, { encoding: "utf8" });
+	const evaluationStability = {
+		trecBeforeSha256: sha256Bytes(trec),
+		trecAfterSha256: sha256Bytes(readFileSync(trecPath)),
+		qrelsBeforeSha256: sha256Bytes(qrels),
+		qrelsAfterSha256: sha256Bytes(readFileSync(qrelsPath)),
+		binaryBeforeSha256,
+		binaryAfterSha256: sha256Bytes(readFileSync(evaluatorPath)),
+		sourceCommitBefore,
+		sourceCommitAfter: execFileSync(
+			"git",
+			["-C", dirname(evaluatorPath), "rev-parse", "HEAD"],
+			{ encoding: "utf8" },
+		).trim(),
+	};
 	const receipt = createFullCorpusEvidenceReceipt({
 		result,
 		resultSha256: sha256Bytes(resultText),
@@ -115,13 +135,10 @@ async function main() {
 		topicsSha256: sha256Bytes(topics),
 		qrelsSha256: sha256Bytes(qrels),
 		trecEvalStdout: stdout,
-		trecEvalBinarySha256: sha256Bytes(readFileSync(evaluatorPath)),
-		trecEvalSourceCommit: execFileSync(
-			"git",
-			["-C", dirname(evaluatorPath), "rev-parse", "HEAD"],
-			{ encoding: "utf8" },
-		).trim(),
+		trecEvalBinarySha256: binaryBeforeSha256,
+		trecEvalSourceCommit: sourceCommitBefore,
 		trecEvalPath: evaluatorPath,
+		evaluationStability,
 		topicsPath,
 		qrelsPath,
 		trecPath,

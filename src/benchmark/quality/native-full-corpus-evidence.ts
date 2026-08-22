@@ -113,6 +113,16 @@ export function createFullCorpusEvidenceReceipt(input: {
 	trecEvalBinarySha256: string;
 	trecEvalSourceCommit: string;
 	trecEvalPath: string;
+	evaluationStability: {
+		trecBeforeSha256: string;
+		trecAfterSha256: string;
+		qrelsBeforeSha256: string;
+		qrelsAfterSha256: string;
+		binaryBeforeSha256: string;
+		binaryAfterSha256: string;
+		sourceCommitBefore: string;
+		sourceCommitAfter: string;
+	};
 	topicsPath: string;
 	qrelsPath: string;
 	trecPath: string;
@@ -224,6 +234,18 @@ export function createFullCorpusEvidenceReceipt(input: {
 		throw new Error("trec_eval binary hash mismatch");
 	if (input.trecEvalSourceCommit !== TREC_EVAL_COMMIT)
 		throw new Error("trec_eval source commit mismatch");
+	const stability = input.evaluationStability;
+	if (
+		stability.trecBeforeSha256 !== input.trecSha256 ||
+		stability.trecAfterSha256 !== input.trecSha256 ||
+		stability.qrelsBeforeSha256 !== input.qrelsSha256 ||
+		stability.qrelsAfterSha256 !== input.qrelsSha256 ||
+		stability.binaryBeforeSha256 !== input.trecEvalBinarySha256 ||
+		stability.binaryAfterSha256 !== input.trecEvalBinarySha256 ||
+		stability.sourceCommitBefore !== input.trecEvalSourceCommit ||
+		stability.sourceCommitAfter !== input.trecEvalSourceCommit
+	)
+		throw new Error("trec_eval execution stability mismatch");
 	const inferenceMode = result.configuration.embeddingInferenceMode;
 	if (
 		(inferenceMode !== "per-item-v1" &&
@@ -352,6 +374,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 			],
 			stdout: input.trecEvalStdout,
 			stdoutSha256: sha256Bytes(input.trecEvalStdout),
+			executionStability: input.evaluationStability,
 		},
 		metrics: {
 			inProcess: result.metrics,
