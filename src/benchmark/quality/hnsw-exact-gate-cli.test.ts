@@ -4,6 +4,8 @@ import {
 	resolveFactId,
 	resolveFactIds,
 	summarizeGeneratedInterference,
+	summarizeGeneratedInterferenceDetails,
+	summarizePreservationByCategory,
 } from "./hnsw-exact-gate.js";
 
 describe("HNSW exact gate labels", () => {
@@ -47,6 +49,50 @@ describe("HNSW exact gate labels", () => {
 			top1Rate: 0.5,
 			top10QueryRate: 0.5,
 			meanGeneratedAt10: 1,
+		});
+	});
+
+	it("attributes generated intrusion to query categories and template families", () => {
+		expect(
+			summarizeGeneratedInterferenceDetails(
+				[["scale-en-1", "F1", "scale-en-2"], ["F2", "scale-en-1"], ["F3"]],
+				["direct", "direct", "temporal"],
+				(id) => (id.startsWith("scale-") ? Number(id.at(-1)) : null),
+			),
+		).toEqual({
+			byCategory: {
+				direct: {
+					queryCount: 2,
+					top1Rate: 0.5,
+					top10QueryRate: 1,
+					meanGeneratedAt10: 1.5,
+				},
+				temporal: {
+					queryCount: 1,
+					top1Rate: 0,
+					top10QueryRate: 0,
+					meanGeneratedAt10: 0,
+				},
+			},
+			byTemplate: [
+				{ templateIndex: 1, hitCount: 2, top1Count: 1 },
+				{ templateIndex: 2, hitCount: 1, top1Count: 0 },
+			],
+		});
+	});
+
+	it("reports approximate preservation by query category", () => {
+		expect(
+			summarizePreservationByCategory(
+				[
+					{ goldId: "F1", baseline: ["F1", "F2"], candidate: ["F1", "F2"] },
+					{ goldId: "F2", baseline: ["F2", "F3"], candidate: ["F3", "F2"] },
+				],
+				["direct", "temporal"],
+			),
+		).toEqual({
+			direct: { queryCount: 1, overlapAt10: 1, agreementAt1: 1 },
+			temporal: { queryCount: 1, overlapAt10: 1, agreementAt1: 0 },
 		});
 	});
 });

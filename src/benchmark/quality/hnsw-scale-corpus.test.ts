@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
 	buildScaleCorpus,
 	normalizeForContamination,
+	scaleFactAxes,
+	scaleFactAxesFromId,
 } from "./hnsw-scale-corpus.js";
 
 describe("HNSW scale corpus", () => {
@@ -46,6 +48,13 @@ describe("HNSW scale corpus", () => {
 
 	it("normalizes punctuation, width, case, and whitespace", () => {
 		expect(normalizeForContamination(" Ａ-B C! ")).toBe("abc");
+	});
+
+	it("recovers deterministic axes from generated fact ids", () => {
+		expect(scaleFactAxesFromId("scale-en-translated-000123")).toEqual(
+			scaleFactAxes(123),
+		);
+		expect(scaleFactAxesFromId("F123")).toBeNull();
 	});
 
 	it("records pre-existing duplicate base statements separately", () => {

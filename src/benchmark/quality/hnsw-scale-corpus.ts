@@ -196,6 +196,13 @@ const EN_UNITS = [
 
 const TEMPLATE_FAMILY_COUNT = 32;
 
+export interface ScaleFactAxes {
+	domainIndex: number;
+	regionIndex: number;
+	unitIndex: number;
+	templateIndex: number;
+}
+
 function mixIndex(index: number, salt: number): number {
 	let value = (index + salt) >>> 0;
 	value = Math.imul(value ^ (value >>> 16), 0x7feb352d);
@@ -203,11 +210,27 @@ function mixIndex(index: number, salt: number): number {
 	return (value ^ (value >>> 16)) >>> 0;
 }
 
+export function scaleFactAxes(index: number): ScaleFactAxes {
+	if (!Number.isSafeInteger(index) || index < 0) {
+		throw new Error("scale fact index must be a non-negative safe integer");
+	}
+	return {
+		domainIndex: mixIndex(index, 0x9e3779b9) % KO_DOMAINS.length,
+		regionIndex: mixIndex(index, 0x243f6a88) % KO_REGIONS.length,
+		unitIndex: mixIndex(index, 0xb7e15162) % UNITS.length,
+		templateIndex: mixIndex(index, 0xdeadbeef) % TEMPLATE_FAMILY_COUNT,
+	};
+}
+
+export function scaleFactAxesFromId(id: string): ScaleFactAxes | null {
+	const match = /-(\d+)$/.exec(id);
+	if (!id.startsWith("scale-") || !match) return null;
+	return scaleFactAxes(Number(match[1]));
+}
+
 function generatedStatement(language: string, index: number): string {
-	const domainIndex = mixIndex(index, 0x9e3779b9) % KO_DOMAINS.length;
-	const regionIndex = mixIndex(index, 0x243f6a88) % KO_REGIONS.length;
-	const unitIndex = mixIndex(index, 0xb7e15162) % UNITS.length;
-	const templateIndex = mixIndex(index, 0xdeadbeef) % TEMPLATE_FAMILY_COUNT;
+	const { domainIndex, regionIndex, unitIndex, templateIndex } =
+		scaleFactAxes(index);
 	const serial = mixIndex(index, 0xa5a5a5a5);
 	const code = `${String.fromCharCode(65 + (serial % 26))}${String(index).padStart(6, "0")}`;
 	const value = 1000 + ((index * 7919 + 104729) % 8999);

@@ -18,18 +18,23 @@ import {
 	rankingsAreStable,
 	resolveFactIds,
 	summarizeGeneratedInterference,
+	summarizeGeneratedInterferenceDetails,
+	summarizePreservationByCategory,
 	top1Agreement,
 } from "./hnsw-exact-gate.js";
 import {
 	type ContaminationReceipt,
 	buildScaleCorpus,
+	scaleFactAxesFromId,
 } from "./hnsw-scale-corpus.js";
 import { loadVectorCache, saveVectorCache } from "./hnsw-vector-cache.js";
 
 const MODEL = "multilingual-e5-large";
 const QDRANT_URL = process.env.QDRANT_URL ?? "http://127.0.0.1:6334";
 const TOP_K = 10;
-const HNSW_EF_VALUES = (process.env.BENCH_HNSW_EF_VALUES ?? "16,32,64,128,256,512")
+const HNSW_EF_VALUES = (
+	process.env.BENCH_HNSW_EF_VALUES ?? "16,32,64,128,256,512"
+)
 	.split(",")
 	.map((value) => Number(value.trim()))
 	.filter((value) => Number.isInteger(value) && value > 0);
@@ -74,6 +79,7 @@ interface Fact {
 }
 
 interface Query {
+	category?: string;
 	fact_ref?: string | string[];
 	query: string;
 }
@@ -120,13 +126,28 @@ class QdrantRest {
 	constructor(private readonly baseUrl: string) {}
 
 	private async request<T>(path: string, init?: RequestInit): Promise<T> {
-		const response = await fetch(`${this.baseUrl}${path}`, {
-			...init,
-			headers: { "content-type": "application/json", ...init?.headers },
-		});
+		let response: Response | undefined;
+		for (let attempt = 1; attempt <= 3; attempt++) {
+			try {
+				response = await fetch(`${this.baseUrl}${path}`, {
+					...init,
+					headers: { "content-type": "application/json", ...init?.headers },
+				});
+				break;
+			} catch (error) {
+				if (!(error instanceof TypeError) || attempt === 3) throw error;
+				console.warn(
+					`Qdrant request transiently failed; retrying (${attempt}/3): ${path}`,
+				);
+				await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+			}
+		}
+		if (!response)
+			throw new Error(`Qdrant request produced no response: ${path}`);
 		const body = (await response.json()) as { result?: T; status?: unknown };
-		if (!response.ok)
+		if (!response.ok) {
 			throw new Error(`Qdrant ${response.status}: ${JSON.stringify(body)}`);
+		}
 		return body.result as T;
 	}
 
@@ -351,7 +372,15 @@ async function evaluateLanguage(
 	).length;
 	const queries = sourceQueries.flatMap((query) => {
 		const goldIds = resolveFactIds(query.fact_ref, factIds);
-		return goldIds.length > 0 ? [{ query: query.query, goldIds }] : [];
+		return goldIds.length > 0
+			? [
+					{
+						query: query.query,
+						goldIds,
+						category: query.category ?? "uncategorized",
+					},
+				]
+			: [];
 	});
 	if (queries.length + negativeQueryCount !== sourceQueries.length) {
 		throw new Error(
@@ -481,6 +510,10 @@ async function evaluateLanguage(
 			metrics,
 			recallLoss,
 			stableAcrossRepeats,
+			preservationByCategory: summarizePreservationByCategory(
+				rankingPairs,
+				queries.map(({ category }) => category),
+			),
 			latencyMs: {
 				p50: percentile(latencies, 0.5),
 				p95: percentile(latencies, 0.95),
@@ -516,6 +549,11 @@ async function evaluateLanguage(
 		baseline: {
 			metrics: baselineMetrics,
 			generatedInterference: summarizeGeneratedInterference(exactRankings),
+			generatedInterferenceDetails: summarizeGeneratedInterferenceDetails(
+				exactRankings,
+				queries.map(({ category }) => category),
+				(id) => scaleFactAxesFromId(id)?.templateIndex ?? null,
+			),
 			latencyMs: {
 				p50: percentile(exactLatencies, 0.5),
 				p95: percentile(exactLatencies, 0.95),

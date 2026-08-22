@@ -14,7 +14,7 @@
     "issue_doc": "https://github.com/nextain/naia-memory/issues/39",
     "github_issue": "https://github.com/nextain/naia-memory/issues/39",
     "started": "2026-08-13T06:37:43Z",
-    "last_updated": "2026-08-22T00:21:00Z",
+    "last_updated": "2026-08-22T01:11:00Z",
     "status": "in_progress"
   },
 
@@ -22,8 +22,8 @@
     "P01": { "status": "done", "name": "user_scenarios", "deliverable": "docs/user-scenarios.md", "ref": "UC-MEM-01, UC-MEM-02 (#39)" },
     "P02": { "status": "done", "name": "test_scenarios", "deliverable": "docs/user-scenarios.md", "ref": "Test Coverage Map: memory-system.test.ts (#39)" },
     "P03": { "status": "done", "name": "requirements", "deliverable": "docs/requirements.md", "ref": "MEM-FR-01..03, MEM-NFR-01 (#39)" },
-    "P04": { "status": "done", "name": "integration_test", "deliverable": "CPU-only structured-fact regression, storage round-trip, public-evidence adversarial review, provenance gate, bounded file intake, model-free protocol v6 verification, SQLite 100k scale evidence, and geometry-qualified HNSW 100k multilingual diagnostics", "ref": "reports/quality/public-model-free-protocol-v6-2026-08-18.md; reports/perf/sqlite-concurrent-upsert-2026-08-22.md; reports/quality/hnsw-100k-multilingual-qualification-2026-08-22.md; 843 tests pass; headless evidence review PASS (recovery mode, no formal CLEAN)" },
-    "P05": { "status": "pending", "name": "requirements_complete", "deliverable": "Externally owned held-out corpus and same-input global-engine receipts", "ref": "#39; public evidence integrity passes, external multilingual comparison evidence remains absent" }
+    "P04": { "status": "done", "name": "integration_test", "deliverable": "CPU-only structured-fact regression, storage round-trip, public-evidence adversarial review, provenance gate, bounded file intake, model-free protocol v6 verification, SQLite 100k scale evidence, and geometry-qualified HNSW 100k multilingual diagnostics", "ref": "reports/quality/public-model-free-protocol-v6-2026-08-18.md; reports/perf/sqlite-concurrent-upsert-2026-08-22.md; reports/quality/hnsw-100k-multilingual-qualification-2026-08-22.md; 846 tests pass; OpenCode adversarial evidence review PASS (recovery mode, no formal CLEAN)" },
+    "P05": { "status": "pending", "name": "requirements_complete", "deliverable": "Externally owned native-language held-out corpus, sealed tuning/validation split, resource receipts, and same-input global-engine receipts", "ref": "#39; translated synthetic 100k quality ceiling passes 6/6, but public competitiveness evidence remains absent" }
   },
 
   "resource_registry": {
