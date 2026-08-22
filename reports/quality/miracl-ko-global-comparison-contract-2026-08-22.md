@@ -26,6 +26,19 @@ metrics must be reproduced by an independent evaluator or a separately
 implemented parser, not accepted solely from the benchmark runner's in-process
 calculation.
 
+The independent evaluator is NIST `usnistgov/trec_eval` pinned to commit
+`ba38899cbd4de0fb699b47f39b64ef1c107e4a5c` (reported version `10.0-rc3`). Its
+upstream `make quicktest` suite passed locally before the benchmark completed.
+The frozen invocation is:
+
+```text
+trec_eval -m ndcg_cut.10 -m recall.100 <locked-qrels> <generated-trec-run>
+```
+
+Both `all` values must agree with the JSON result within `1e-6`. The evaluator
+commit, command, stdout, binary SHA-256, and agreement deltas belong in the
+final evidence receipt.
+
 ## Frozen historical reference rows
 
 The MIRACL dataset paper's Table 5 reports the following Korean development
