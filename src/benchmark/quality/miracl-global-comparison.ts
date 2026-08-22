@@ -39,6 +39,7 @@ export const MIRACL_KO_HISTORICAL_ROWS = [
 
 const BENCHMARK = "miracl-ko-full-corpus-naia-vector-exact-v1";
 const HYBRID = MIRACL_KO_HISTORICAL_ROWS[2];
+const HISTORICAL_ROW_RESOLUTION = 0.001;
 
 interface ComparisonReceipt {
 	schemaVersion?: unknown;
@@ -163,10 +164,16 @@ export function createMiraclGlobalComparison(receiptText: string) {
 		deltaRecall > METRIC_TOLERANCE
 	)
 		throw new Error("independent metric reproduction mismatch");
-	const ndcgMatches = ndcgAt10 >= HYBRID.ndcgAt10;
-	const recallMatches = recallAt100 >= HYBRID.recallAt100;
-	const hybridTier =
-		ndcgMatches && recallMatches
+	const ndcgDelta = ndcgAt10 - HYBRID.ndcgAt10;
+	const recallDelta = recallAt100 - HYBRID.recallAt100;
+	const withinPublishedResolution =
+		Math.abs(ndcgDelta) <= HISTORICAL_ROW_RESOLUTION + Number.EPSILON &&
+		Math.abs(recallDelta) <= HISTORICAL_ROW_RESOLUTION + Number.EPSILON;
+	const ndcgMatches = ndcgDelta >= 0;
+	const recallMatches = recallDelta >= 0;
+	const hybridTier = withinPublishedResolution
+		? "WITHIN_HISTORICAL_ROW_RESOLUTION"
+		: ndcgMatches && recallMatches
 			? "MATCHES_OR_EXCEEDS_BOTH"
 			: ndcgMatches || recallMatches
 				? "MIXED"
@@ -178,15 +185,26 @@ export function createMiraclGlobalComparison(receiptText: string) {
 		publicClaimEligible: false,
 		comparisonScope:
 			"historical protocol-matched MIRACL Korean development retrieval rows only",
+		evidenceIdentity: {
+			datasetSha256: receipt.attestationBinding?.hashes?.datasetSha256,
+			protocolSha256: receipt.attestationBinding?.hashes?.protocolSha256,
+			implementationArtifactSha256:
+				receipt.attestationBinding?.hashes?.implementationArtifactSha256,
+			configurationSha256:
+				receipt.attestationBinding?.hashes?.configurationSha256,
+			executionEvidenceSha256:
+				receipt.attestationBinding?.hashes?.executionEvidenceSha256,
+		},
 		notEstablished: [
 			"receipt authenticity outside the local operator trust boundary",
 			"current state of the art",
 			"memory-engine superiority",
 			"Naia-specific retrieval innovation",
 			"multilingual quality",
+			"statistical significance versus historical rows",
 		],
 		interpretationThreshold:
-			"Beating BM25 or mDPR alone is not a publishable differentiator. Matching or exceeding the historical hybrid row on both metrics is a strong base retrieval result, not a Naia-specific innovation.",
+			"Beating BM25 or mDPR alone is not a publishable differentiator. Differences no larger than 0.001 on both metrics are within the resolution of the three-decimal historical row. Exceeding that resolution on both metrics is a strong base retrieval result, not a Naia-specific innovation.",
 		metrics: { ndcgAt10, recallAt100 },
 		hybridTier,
 		rows: MIRACL_KO_HISTORICAL_ROWS.map((row) => ({

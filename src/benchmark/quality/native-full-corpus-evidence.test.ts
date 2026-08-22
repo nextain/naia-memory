@@ -1,11 +1,22 @@
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	existsSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { createMiraclGlobalComparison } from "./miracl-global-comparison.js";
 import { FULL_CORPUS_ATTESTATION_ARTIFACT_NAMES } from "./native-full-corpus-attestation-bundle.js";
 import { runFullCorpusAttestationCli } from "./native-full-corpus-attestation-cli.js";
 import { buildFullCorpusChallengeSigningPacket } from "./native-full-corpus-attestation-packet.js";
+import {
+	buildFullCorpusBundleSigningPacket,
+	collectFullCorpusBundleSignature,
+} from "./native-full-corpus-bundle-publication.js";
 import { publishFullCorpusEvidenceReceipt } from "./native-full-corpus-evidence-cli.js";
 import {
 	EXPECTED_EVALUATION_SOURCE_SHA256,
@@ -32,6 +43,7 @@ import {
 	evaluateTimestampQualifiedFullCorpusPublicAttestation,
 } from "./native-full-corpus-public-attestation.js";
 import {
+	canonicalEvidenceJson,
 	evidenceObjectSha256,
 	evidenceSignaturePayload,
 } from "./public-evidence-crypto.js";
@@ -797,6 +809,7 @@ describe("full-corpus independent evidence", () => {
 			const bundleText = JSON.stringify(bundle);
 			writeFileSync(bundlePath, bundleText);
 			let inspection = 0;
+			let publicationSequence = false;
 			const timestampCommandRunner = (
 				args: string[],
 				actualToken: Buffer,
@@ -807,13 +820,18 @@ describe("full-corpus independent evidence", () => {
 				if (args.includes("-verify"))
 					return { status: 0, stdout: "OK", stderr: "" };
 				inspection += 1;
+				const timestamp = publicationSequence
+					? [
+							"Aug 22 00:20:00 2026 GMT",
+							"Aug 21 23:59:00 2026 GMT",
+							"Aug 22 00:11:00 2026 GMT",
+						][inspection - 1]
+					: inspection === 1
+						? "Aug 21 23:59:00 2026 GMT"
+						: "Aug 22 00:11:00 2026 GMT";
 				return {
 					status: 0,
-					stdout: `Policy OID: 1.2.3.4\nTime stamp: ${
-						inspection === 1
-							? "Aug 21 23:59:00 2026 GMT"
-							: "Aug 22 00:11:00 2026 GMT"
-					}\n`,
+					stdout: `Policy OID: 1.2.3.4\nTime stamp: ${timestamp}\n`,
 					stderr: "",
 				};
 			};
@@ -833,6 +851,168 @@ describe("full-corpus independent evidence", () => {
 			expect(bundledVerdict.verificationBundle.artifactSha256).toEqual(
 				artifactSha256,
 			);
+
+			const publisherKeys = generateKeyPairSync("ed25519");
+			const publisherPolicy = {
+				schemaVersion:
+					"naia-memory-full-corpus-bundle-signer-trust-policy-v1" as const,
+				signers: {
+					publisher: {
+						publicKey: publisherKeys.publicKey
+							.export({ type: "spki", format: "pem" })
+							.toString(),
+						notBefore: "2026-08-01T00:00:00.000Z",
+						notAfter: "2026-09-01T00:00:00.000Z",
+					},
+				},
+			};
+			const manifestSha256 = createHash("sha256")
+				.update(bundleText)
+				.digest("hex");
+			const publicationPacket = buildFullCorpusBundleSigningPacket({
+				manifestSha256,
+				signerId: "publisher",
+				trustPolicy: publisherPolicy,
+			});
+			const publicationReceipt = collectFullCorpusBundleSignature({
+				packet: publicationPacket,
+				detachedSignature: {
+					schemaVersion: "naia-memory-full-corpus-bundle-detached-signature-v1",
+					packetSha256: publicationPacket.packetSha256,
+					signatureBase64: sign(
+						null,
+						Buffer.from(publicationPacket.signingPayloadBase64, "base64"),
+						publisherKeys.privateKey,
+					).toString("base64"),
+				},
+				trustPolicy: publisherPolicy,
+			});
+			const publicationReceiptText = `${canonicalEvidenceJson(publicationReceipt)}\n`;
+			const publicationReceiptPath = join(root, "publication-receipt.json");
+			const publisherPolicyPath = join(root, "publisher-policy.json");
+			const publicationTimestampPath = join(root, "publication-timestamp.json");
+			const publicationTimestampPolicyPath = join(
+				root,
+				"publication-timestamp-policy.json",
+			);
+			writeFileSync(publicationReceiptPath, publicationReceiptText);
+			writeFileSync(publisherPolicyPath, JSON.stringify(publisherPolicy));
+			writeFileSync(
+				publicationTimestampPath,
+				JSON.stringify({
+					schemaVersion: "naia-memory-rfc3161-digest-timestamp-evidence-v1",
+					artifactSha256: createHash("sha256")
+						.update(publicationReceiptText)
+						.digest("hex"),
+					tokenSha256: createHash("sha256").update(token).digest("hex"),
+					tokenPath,
+				}),
+			);
+			writeFileSync(
+				publicationTimestampPolicyPath,
+				JSON.stringify(timestampTrust),
+			);
+			const comparisonPath = join(root, "local-comparison.json");
+			const publishedComparisonPath = join(root, "published-comparison.json");
+			writeFileSync(
+				comparisonPath,
+				`${JSON.stringify(createMiraclGlobalComparison(receiptText), null, 2)}\n`,
+			);
+			inspection = 0;
+			publicationSequence = true;
+			const publishedComparisonExit = await runFullCorpusAttestationCli(
+				[
+					"verify-published-comparison",
+					bundlePath,
+					publicationReceiptPath,
+					publisherPolicyPath,
+					publicationTimestampPath,
+					publicationTimestampPolicyPath,
+					tokenPath,
+					caPath,
+					comparisonPath,
+					publishedComparisonPath,
+				],
+				{ timestampCommandRunner },
+			);
+			expect(publishedComparisonExit, output.at(-1)).toBe(0);
+			const publishedBytes = readFileSync(publishedComparisonPath);
+			expect(output.pop()).toBe(publishedBytes.toString("utf8"));
+			expect(JSON.parse(publishedBytes.toString("utf8"))).toMatchObject({
+				verdict: "HISTORICAL_COMPARISON_PUBLICATION_PASS",
+				publicClaimEligible: true,
+				sourceReceiptSha256: binding.receiptSha256,
+			});
+			inspection = 0;
+			expect(
+				await runFullCorpusAttestationCli(
+					[
+						"verify-published-comparison",
+						bundlePath,
+						publicationReceiptPath,
+						publisherPolicyPath,
+						publicationTimestampPath,
+						publicationTimestampPolicyPath,
+						tokenPath,
+						caPath,
+						comparisonPath,
+						publishedComparisonPath,
+					],
+					{ timestampCommandRunner },
+				),
+			).toBe(1);
+			expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+				"published comparison output already exists",
+			);
+
+			const rejectedOutputPath = join(root, "rejected-comparison.json");
+			const editedComparison = createMiraclGlobalComparison(receiptText);
+			editedComparison.metrics.ndcgAt10 = 0;
+			writeFileSync(comparisonPath, JSON.stringify(editedComparison));
+			inspection = 0;
+			expect(
+				await runFullCorpusAttestationCli(
+					[
+						"verify-published-comparison",
+						bundlePath,
+						publicationReceiptPath,
+						publisherPolicyPath,
+						publicationTimestampPath,
+						publicationTimestampPolicyPath,
+						tokenPath,
+						caPath,
+						comparisonPath,
+						rejectedOutputPath,
+					],
+					{ timestampCommandRunner },
+				),
+			).toBe(1);
+			expect(existsSync(rejectedOutputPath)).toBe(false);
+
+			const invalidUtf8OutputPath = join(root, "invalid-utf8-comparison.json");
+			writeFileSync(comparisonPath, Buffer.from([0xff]));
+			inspection = 0;
+			expect(
+				await runFullCorpusAttestationCli(
+					[
+						"verify-published-comparison",
+						bundlePath,
+						publicationReceiptPath,
+						publisherPolicyPath,
+						publicationTimestampPath,
+						publicationTimestampPolicyPath,
+						tokenPath,
+						caPath,
+						comparisonPath,
+						invalidUtf8OutputPath,
+					],
+					{ timestampCommandRunner },
+				),
+			).toBe(1);
+			expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+				"local historical comparison is not valid UTF-8",
+			);
+			expect(existsSync(invalidUtf8OutputPath)).toBe(false);
 		} finally {
 			vi.restoreAllMocks();
 			rmSync(root, { recursive: true });

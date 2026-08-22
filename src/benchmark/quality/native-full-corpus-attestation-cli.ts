@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { createMiraclPublishedComparison } from "./miracl-published-comparison.js";
 import {
 	FULL_CORPUS_ATTESTATION_ARTIFACT_NAMES,
 	FULL_CORPUS_ATTESTATION_JSON_ARTIFACT_NAMES,
@@ -40,6 +41,35 @@ import type {
 
 const MAX_BYTES = 16 * 1024 * 1024;
 const MAX_SIGNING_INPUT_BYTES = 64 * 1024;
+
+export async function publishMiraclPublishedComparison(
+	outputPath: string,
+	publishedComparison: ReturnType<typeof createMiraclPublishedComparison>,
+	evidenceWriter: typeof writeExclusiveEvidenceFile = writeExclusiveEvidenceFile,
+): Promise<Buffer> {
+	const bytes = Buffer.from(`${canonicalEvidenceJson(publishedComparison)}\n`);
+	try {
+		await evidenceWriter(resolve(outputPath), bytes);
+	} catch (error) {
+		if (error instanceof PublicEvidenceDirectorySyncError)
+			throw new Error(
+				"published comparison output was written but crash-durability could not be confirmed; inspect the existing output before retry",
+				{ cause: error },
+			);
+		if ((error as NodeJS.ErrnoException).code === "EEXIST")
+			throw new Error("published comparison output already exists");
+		throw new Error("published comparison output cannot be written");
+	}
+	return bytes;
+}
+
+function strictUtf8(bytes: Buffer, label: string): string {
+	try {
+		return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+	} catch {
+		throw new Error(`${label} is not valid UTF-8`);
+	}
+}
 
 async function bounded(path: string, label: string): Promise<Buffer> {
 	try {
@@ -107,7 +137,24 @@ export async function runFullCorpusAttestationCli(
 	let bundlePublication:
 		| ReturnType<typeof validateFullCorpusBundlePublication>
 		| undefined;
+	let publishedComparisonPaths:
+		| { comparisonPath: string; outputPath: string }
+		| undefined;
 	try {
+		if (command === "verify-published-comparison") {
+			if (values.length !== 9) {
+				process.stderr.write(
+					"Usage: pnpm benchmark:miracl-full-corpus-attestation verify-published-comparison <bundle.json> <publication-receipt.json> <external-signer-policy.json> <receipt-timestamp.json> <external-timestamp-policy.json> <timestamp-token.tsr> <trusted-ca.pem> <local-comparison.json> <published-comparison.json>\n",
+				);
+				return 2;
+			}
+			publishedComparisonPaths = {
+				comparisonPath: values[7] as string,
+				outputPath: values[8] as string,
+			};
+			command = "verify-published-bundle";
+			values = values.slice(0, 7);
+		}
 		if (command === "publish-packet") {
 			if (values.length !== 3) {
 				process.stderr.write(
@@ -423,30 +470,61 @@ export async function runFullCorpusAttestationCli(
 					(artifact) => artifact.name === "attestationTimestampTrustedCa",
 				)?.bytes,
 			});
-			process.stdout.write(
-				`${JSON.stringify(
-					verificationBundle
-						? {
-								...verdict,
-								verificationBundle: {
-									schemaVersion: verificationBundle.manifest.schemaVersion,
-									manifestSha256: verificationBundle.manifestSha256,
-									artifactSha256: Object.fromEntries(
-										verificationBundle.artifacts.map((artifact) => [
-											artifact.name,
-											artifact.sha256,
-										]),
-									),
-								},
-								...(bundlePublication ? { bundlePublication } : {}),
-							}
-						: verdict,
-				)}\n`,
-			);
+			const extendedVerdict = verificationBundle
+				? {
+						...verdict,
+						verificationBundle: {
+							schemaVersion: verificationBundle.manifest.schemaVersion,
+							manifestSha256: verificationBundle.manifestSha256,
+							artifactSha256: Object.fromEntries(
+								verificationBundle.artifacts.map((artifact) => [
+									artifact.name,
+									artifact.sha256,
+								]),
+							),
+						},
+						...(bundlePublication ? { bundlePublication } : {}),
+					}
+				: verdict;
+			if (publishedComparisonPaths) {
+				if (!verdict.publicClaimEligible)
+					throw new Error(
+						"published comparison requires a passing public attestation",
+					);
+				const receiptArtifact = verificationBundle?.artifacts.find(
+					(artifact) => artifact.name === "receipt",
+				);
+				if (!receiptArtifact)
+					throw new Error("verified bundle receipt artifact is missing");
+				const comparisonBytes = await bounded(
+					publishedComparisonPaths.comparisonPath,
+					"local historical comparison",
+				);
+				const comparisonText = strictUtf8(
+					comparisonBytes,
+					"local historical comparison",
+				);
+				const publishedComparison = createMiraclPublishedComparison({
+					receiptText: strictUtf8(
+						receiptArtifact.bytes,
+						"verified bundle receipt",
+					),
+					comparisonText,
+					verifiedPublishedVerdict: extendedVerdict,
+				});
+				const publishedBytes = await publishMiraclPublishedComparison(
+					publishedComparisonPaths.outputPath,
+					publishedComparison,
+					dependencies.evidenceWriter,
+				);
+				process.stdout.write(publishedBytes);
+				return 0;
+			}
+			process.stdout.write(`${JSON.stringify(extendedVerdict)}\n`);
 			return verdict.publicClaimEligible ? 0 : 1;
 		}
 		process.stderr.write(
-			"Usage: pnpm benchmark:miracl-full-corpus-attestation <publish-packet|publish-collect|challenge|verify|verify-timestamped|verify-bundle|verify-published-bundle> ...\n",
+			"Usage: pnpm benchmark:miracl-full-corpus-attestation <publish-packet|publish-collect|challenge|verify|verify-timestamped|verify-bundle|verify-published-bundle|verify-published-comparison> ...\n",
 		);
 		return 2;
 	} catch (error) {

@@ -65,7 +65,7 @@ describe("MIRACL global comparison", () => {
 	it("compares every frozen row using only independently reproduced metrics", () => {
 		const comparison = createMiraclGlobalComparison(receipt());
 		expect(comparison.rows).toHaveLength(MIRACL_KO_HISTORICAL_ROWS.length);
-		expect(comparison.hybridTier).toBe("MATCHES_OR_EXCEEDS_BOTH");
+		expect(comparison.hybridTier).toBe("WITHIN_HISTORICAL_ROW_RESOLUTION");
 		expect(comparison.rows[2]?.deltas.ndcgAt10).toBeCloseTo(0.001, 12);
 		expect(comparison.rows[2]?.deltas.recallAt100).toBeCloseTo(0.001, 12);
 		expect(comparison.publicClaimEligible).toBe(false);
@@ -74,7 +74,7 @@ describe("MIRACL global comparison", () => {
 
 	it("represents mixed and both-below outcomes without cherry-picking", () => {
 		expect(createMiraclGlobalComparison(receipt(0.609, 0.9)).hybridTier).toBe(
-			"MATCHES_OR_EXCEEDS_BOTH",
+			"WITHIN_HISTORICAL_ROW_RESOLUTION",
 		);
 		expect(createMiraclGlobalComparison(receipt(0.61, 0.89)).hybridTier).toBe(
 			"MIXED",

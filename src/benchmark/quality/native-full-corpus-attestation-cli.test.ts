@@ -3,7 +3,10 @@ import { mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { runFullCorpusAttestationCli } from "./native-full-corpus-attestation-cli.js";
+import {
+	publishMiraclPublishedComparison,
+	runFullCorpusAttestationCli,
+} from "./native-full-corpus-attestation-cli.js";
 import { buildFullCorpusBundleSigningPacket } from "./native-full-corpus-bundle-publication.js";
 import { canonicalEvidenceJson } from "./public-evidence-crypto.js";
 import { PublicEvidenceDirectorySyncError } from "./public-evidence-file-io.js";
@@ -49,6 +52,19 @@ function fixture() {
 }
 
 describe("full-corpus attestation CLI", () => {
+	it("does not overwrite an existing published comparison", async () => {
+		const conflict = Object.assign(new Error("conflict"), { code: "EEXIST" });
+		await expect(
+			publishMiraclPublishedComparison(
+				"published-comparison.json",
+				{} as Parameters<typeof publishMiraclPublishedComparison>[1],
+				async () => {
+					throw conflict;
+				},
+			),
+		).rejects.toThrow("published comparison output already exists");
+	});
+
 	it("durably collects canonical publication-receipt bytes", async () => {
 		const current = fixture();
 		const receiptPath = join(current.directory, "publication-receipt.json");
