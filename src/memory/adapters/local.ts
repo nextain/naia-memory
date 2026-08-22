@@ -40,6 +40,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private readonly embedder: EmbeddingProvider | null;
 	private readonly disableKGSpreading: boolean;
 	private readonly reranker: import("../reranker.js").RerankerProvider | null;
+	private readonly onPersistenceError: ((error: unknown) => void) | null;
 	private readonly embedCache = new Map<string, number[]>();
 	private embeddingSpaceMismatch: string | null = null;
 	private storeGeneration = 0;
@@ -55,6 +56,8 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 				: false;
 		this.reranker =
 			typeof options === "object" ? (options?.reranker ?? null) : null;
+		this.onPersistenceError =
+			typeof options === "object" ? (options?.onPersistenceError ?? null) : null;
 		this.storePath =
 			storePath ?? join(homedir(), ".naia", "memory", "naia-memory.json");
 		this.store = this.load();
@@ -160,6 +163,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			this.markDirty();
 			this.saveImmediate();
 		} catch (error) {
+			if (error instanceof AtomicReplaceCommittedError) throw error;
 			this.store.factEmbeddings = previousFactEmbeddings;
 			this.store.episodeEmbeddings = previousEpisodeEmbeddings;
 			this.store.embeddingSpaceId = previousSpaceId;
@@ -227,7 +231,26 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		// guaranteed flush at most every SAVE_DEBOUNCE_MS even under sustained writes.
 		if (this.saveTimer) return;
 		this.saveTimer = setTimeout(() => {
-			this.saveImmediate();
+			try {
+				this.saveImmediate();
+			} catch (error) {
+				// A timer callback has no caller to receive persistence failures. Keep
+				// the store dirty so a later mutation or explicit flush can retry,
+				// instead of turning a recoverable I/O error into an uncaught exception.
+				if (this.onPersistenceError) {
+					try {
+						this.onPersistenceError(error);
+					} catch {
+						// Observer failures must not replace the persistence failure or crash
+						// the host from a timer callback.
+					}
+				} else {
+					process.emitWarning(
+						error instanceof Error ? error : String(error),
+						{ code: "NAIA_MEMORY_DELAYED_SAVE_FAILED" },
+					);
+				}
+			}
 		}, this.SAVE_DEBOUNCE_MS);
 	}
 

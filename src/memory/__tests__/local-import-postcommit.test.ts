@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { EmbeddingProvider } from "../embeddings.js";
 import type { Fact } from "../index.js";
 
 const writeFailure = vi.hoisted(() => ({ afterCommit: false }));
@@ -29,6 +30,18 @@ const { AtomicReplaceCommittedError } = await import(
 );
 const { LocalAdapter } = await import("../adapters/local.js");
 const directories: string[] = [];
+
+class FixedEmbedder implements EmbeddingProvider {
+	readonly name = "fixed";
+	readonly dims = 2;
+	constructor(readonly embeddingSpaceId: string) {}
+	async embed(): Promise<number[]> {
+		return this.embeddingSpaceId === "model-a" ? [1, 0] : [0, 1];
+	}
+	async embedBatch(texts: string[]): Promise<number[][]> {
+		return Promise.all(texts.map(() => this.embed()));
+	}
+}
 
 afterEach(async () => {
 	writeFailure.afterCommit = false;
@@ -83,5 +96,41 @@ describe("LocalAdapter import post-commit failure", () => {
 		expect(
 			(await reopened.semantic.getAll()).map((item) => item.content),
 		).toEqual(["new imported fact"]);
+	});
+
+	it("keeps reindexed vectors aligned with an already-replaced disk store", async () => {
+		const directory = await mkdtemp(join(tmpdir(), "naia-reindex-postcommit-"));
+		directories.push(directory);
+		const storePath = join(directory, "memory.json");
+		const source = new LocalAdapter({
+			storePath,
+			embeddingProvider: new FixedEmbedder("model-a"),
+		});
+		const storedFact = fact("fact to reindex");
+		await source.semantic.upsert(storedFact);
+		await source.flush();
+
+		const target = new LocalAdapter({
+			storePath,
+			embeddingProvider: new FixedEmbedder("model-b"),
+		});
+		writeFailure.afterCommit = true;
+		await expect(target.reindexEmbeddings()).rejects.toThrow(
+			AtomicReplaceCommittedError,
+		);
+		writeFailure.afterCommit = false;
+
+		expect(target.getStore().embeddingSpaceId).toBe("model-b");
+		expect(target.getStore().factEmbeddings).toEqual({
+			[storedFact.id]: [0, 1],
+		});
+		const reopened = new LocalAdapter({
+			storePath,
+			embeddingProvider: new FixedEmbedder("model-b"),
+		});
+		expect(reopened.getStore().embeddingSpaceId).toBe("model-b");
+		expect(reopened.getStore().factEmbeddings).toEqual(
+			target.getStore().factEmbeddings,
+		);
 	});
 });

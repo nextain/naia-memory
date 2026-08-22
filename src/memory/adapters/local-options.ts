@@ -11,4 +11,6 @@ export interface LocalAdapterOptions {
 	disableKGSpreading?: boolean;
 	/** Optional caller-injected multilingual cross-encoder reranker. */
 	reranker?: import("../reranker.js").RerankerProvider;
+	/** Observes background persistence failures that cannot be returned to a caller. */
+	onPersistenceError?: (error: unknown) => void;
 }
