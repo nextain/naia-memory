@@ -1,9 +1,13 @@
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { createHash, randomBytes } from "node:crypto";
+import { constants, writeFileSync } from "node:fs";
+import { link, open, unlink } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
+import {
+	canonicalEvidenceJson,
+	evidenceObjectSha256,
+} from "./public-evidence-crypto.js";
 import {
 	PublicEvidenceFileTooLargeError,
 	readBoundedEvidenceFile,
@@ -76,12 +80,47 @@ async function exactArtifactSha256(path: string): Promise<string> {
 	return createHash("sha256").update(bytes).digest("hex");
 }
 
+async function writeExclusiveDurable(
+	path: string,
+	bytes: Buffer,
+): Promise<void> {
+	const temporary = `${path}.tmp-${randomBytes(12).toString("hex")}`;
+	let created = false;
+	try {
+		const handle = await open(
+			temporary,
+			constants.O_WRONLY |
+				constants.O_CREAT |
+				constants.O_EXCL |
+				constants.O_NOFOLLOW,
+			0o600,
+		);
+		created = true;
+		try {
+			await handle.writeFile(bytes);
+			await handle.sync();
+		} finally {
+			await handle.close();
+		}
+		await link(temporary, path);
+		const directory = await open(dirname(path), constants.O_RDONLY);
+		try {
+			await directory.sync();
+		} finally {
+			await directory.close();
+		}
+	} finally {
+		if (created) await unlink(temporary).catch(() => undefined);
+	}
+}
+
 export async function runRfc3161TimestampCli(
 	args: string[],
 	openSslRunner: OpenSslRunner = defaultOpenSslRunner,
 ): Promise<number> {
+	const sealFileOutput = args[0] === "seal-file-output";
 	if (
-		args.length !== 3 ||
+		(sealFileOutput ? args.length !== 4 : args.length !== 3) ||
 		![
 			"request",
 			"seal",
@@ -89,16 +128,17 @@ export async function runRfc3161TimestampCli(
 			"seal-digest",
 			"request-file",
 			"seal-file",
+			"seal-file-output",
 		].includes(args[0])
 	) {
 		process.stderr.write(
-			"Usage: pnpm benchmark:semantic-pilot-timestamp <request|seal> <collection-plan.json> <query.tsq|response.tsr>\n       pnpm benchmark:semantic-pilot-timestamp <request-digest|seal-digest> <sha256> <query.tsq|response.tsr>\n       pnpm benchmark:semantic-pilot-timestamp <request-file|seal-file> <artifact> <query.tsq|response.tsr>\n",
+			"Usage: pnpm benchmark:semantic-pilot-timestamp <request|seal> <collection-plan.json> <query.tsq|response.tsr>\n       pnpm benchmark:semantic-pilot-timestamp <request-digest|seal-digest> <sha256> <query.tsq|response.tsr>\n       pnpm benchmark:semantic-pilot-timestamp <request-file|seal-file> <artifact> <query.tsq|response.tsr>\n       pnpm benchmark:semantic-pilot-timestamp seal-file-output <artifact> <response.tsr> <evidence.json>\n",
 		);
 		return 2;
 	}
 	try {
 		const digestMode = args[0].endsWith("-digest");
-		const fileMode = args[0].endsWith("-file");
+		const fileMode = args[0].endsWith("-file") || sealFileOutput;
 		if (digestMode && !SHA256.test(args[1]))
 			throw new Error("RFC 3161 artifact SHA-256 is invalid");
 		const collectionPlanSha256 = digestMode
@@ -147,6 +187,20 @@ export async function runRfc3161TimestampCli(
 						tokenSha256,
 						tokenPath: artifactPath,
 					};
+		if (sealFileOutput) {
+			const evidenceBytes = Buffer.from(`${canonicalEvidenceJson(evidence)}\n`);
+			try {
+				await writeExclusiveDurable(resolve(args[3]), evidenceBytes);
+			} catch (error) {
+				if ((error as NodeJS.ErrnoException).code === "EEXIST")
+					throw new Error("RFC 3161 timestamp evidence output already exists");
+				throw new Error("RFC 3161 timestamp evidence output cannot be written");
+			}
+			process.stdout.write(
+				`${JSON.stringify({ evidenceSha256: createHash("sha256").update(evidenceBytes).digest("hex") })}\n`,
+			);
+			return 0;
+		}
 		process.stdout.write(`${JSON.stringify(evidence)}\n`);
 		return 0;
 	} catch (error) {

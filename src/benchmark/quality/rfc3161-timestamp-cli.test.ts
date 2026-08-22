@@ -4,7 +4,10 @@ import { mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
+import {
+	canonicalEvidenceJson,
+	evidenceObjectSha256,
+} from "./public-evidence-crypto.js";
 import { runRfc3161TimestampCli } from "./rfc3161-timestamp-cli.js";
 import {
 	validateRfc3161DigestTimestampBinding,
@@ -223,6 +226,45 @@ describe("RFC 3161 timestamp campaign CLI", () => {
 				},
 			}),
 		).toMatchObject({ trustedTimestampVerified: true });
+
+		const evidencePath = join(
+			current.directory,
+			"publication-receipt.timestamp.json",
+		);
+		const outputWrites = vi
+			.spyOn(process.stdout, "write")
+			.mockImplementation(() => true);
+		expect(
+			await runRfc3161TimestampCli([
+				"seal-file-output",
+				artifactPath,
+				artifactResponsePath,
+				evidencePath,
+			]),
+		).toBe(0);
+		const evidenceBytes = readFileSync(evidencePath);
+		const durableEvidence = JSON.parse(evidenceBytes.toString("utf8"));
+		expect(JSON.parse(String(outputWrites.mock.calls.at(-1)?.[0]))).toEqual({
+			evidenceSha256: createHash("sha256").update(evidenceBytes).digest("hex"),
+		});
+		outputWrites.mockRestore();
+		expect(evidenceBytes.toString("utf8")).toBe(
+			`${canonicalEvidenceJson(durableEvidence)}\n`,
+		);
+		expect(
+			validateRfc3161DigestTimestampBinding({
+				expectedArtifactSha256: artifactSha256,
+				evidence: durableEvidence,
+				trustPolicy: {
+					schemaVersion: "naia-memory-rfc3161-timestamp-trust-policy-v1",
+					trustedCaFilePath: caCert,
+					trustedCaFileSha256: createHash("sha256")
+						.update(readFileSync(caCert))
+						.digest("hex"),
+					requiredPolicyOid: "1.2.3.4.1",
+				},
+			}),
+		).toMatchObject({ trustedTimestampVerified: true });
 	}, 30_000);
 
 	it("creates a nonce-bearing request for the exact canonical plan hash", async () => {
@@ -395,6 +437,40 @@ describe("RFC 3161 timestamp campaign CLI", () => {
 			await runRfc3161TimestampCli(["seal-file", artifactLink, tokenPath]),
 		).toBe(1);
 		expect(String(writes.mock.calls.at(-1)?.[0])).toContain("unreadable");
+		writes.mockRestore();
+	});
+
+	it("preserves existing timestamp evidence outputs", async () => {
+		const current = fixture();
+		const artifactPath = join(current.directory, "artifact.bin");
+		const tokenPath = join(current.directory, "artifact.tsr");
+		const evidencePath = join(current.directory, "artifact.timestamp.json");
+		const evidenceTarget = join(current.directory, "target.json");
+		const evidenceLink = join(current.directory, "linked-evidence.json");
+		writeFileSync(artifactPath, "artifact");
+		writeFileSync(tokenPath, "timestamp response");
+		writeFileSync(evidencePath, "existing evidence");
+		writeFileSync(evidenceTarget, "symlink target");
+		symlinkSync(evidenceTarget, evidenceLink);
+		const writes = vi
+			.spyOn(process.stdout, "write")
+			.mockImplementation(() => true);
+
+		for (const outputPath of [evidencePath, evidenceLink]) {
+			expect(
+				await runRfc3161TimestampCli([
+					"seal-file-output",
+					artifactPath,
+					tokenPath,
+					outputPath,
+				]),
+			).toBe(1);
+			expect(String(writes.mock.calls.at(-1)?.[0])).toContain(
+				"output already exists",
+			);
+		}
+		expect(readFileSync(evidencePath, "utf8")).toBe("existing evidence");
+		expect(readFileSync(evidenceTarget, "utf8")).toBe("symlink target");
 		writes.mockRestore();
 	});
 
