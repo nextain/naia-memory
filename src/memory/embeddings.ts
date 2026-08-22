@@ -53,6 +53,21 @@ export const OFFLINE_MODEL_REVISIONS = {
 } as const;
 
 type OfflineModelName = keyof typeof OFFLINE_MODEL_REVISIONS;
+export type OfflineBatchInferenceMode = "per-item-v1" | "padded-array-batch-v1";
+
+interface OfflineFeatureExtractionResult {
+	data: ArrayLike<number>;
+}
+
+type OfflineFeatureExtractionPipeline = (
+	input: string | string[],
+	options: {
+		pooling: "mean";
+		normalize: true;
+		truncation: true;
+		max_length: 512;
+	},
+) => Promise<OfflineFeatureExtractionResult>;
 
 /**
  * OfflineEmbeddingProvider — @huggingface/transformers (dynamic import).
@@ -61,12 +76,13 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 	readonly name = "offline";
 	readonly dims: number;
 	readonly embeddingSpaceId: string;
-	private pipeline: any = null;
+	private pipeline: OfflineFeatureExtractionPipeline | null = null;
 	private readonly modelName: string;
 	private readonly revision: string;
 	/** 실행 device(naia-embedded 컴퓨트 선택). 미지정 = transformers 기본(현행 동작 무변).
 	 *  "cpu" = 강제 CPU / "gpu" = 가용 시 GPU(onnxruntime EP), 없으면 CPU 폴백("auto"로 매핑) / "auto" = 자동. */
 	private readonly device?: "cpu" | "gpu" | "auto";
+	readonly batchInferenceMode: OfflineBatchInferenceMode;
 	private initPromise: Promise<void> | null = null;
 
 	get policyReceipt(): OfflineEmbeddingPolicyReceipt {
@@ -90,10 +106,12 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 		model: OfflineModelName = "all-MiniLM-L6-v2",
 		device?: "cpu" | "gpu" | "auto",
 		revision?: string,
+		batchInferenceMode: OfflineBatchInferenceMode = "per-item-v1",
 	) {
 		this.modelName = model;
 		this.revision = revision ?? OFFLINE_MODEL_REVISIONS[model];
 		this.device = device;
+		this.batchInferenceMode = batchInferenceMode;
 		// paraphrase-multilingual-MiniLM-L12-v2 = 384d 다국어(한국어) 경량. all-MiniLM-L6-v2 와
 		// 같은 384d 지만 다국어 학습 → 한국어 회상 가능(실측 top-1 5/5). fp32 단일파일이라 로드 안정.
 		if (model === "multilingual-e5-large") this.dims = 1024;
@@ -143,11 +161,11 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 					...(dtype !== undefined ? { dtype } : {}),
 					revision: this.revision,
 				};
-				this.pipeline = await pipelineFn(
+				this.pipeline = (await pipelineFn(
 					"feature-extraction",
 					hfModel,
 					pipeOpts,
-				);
+				)) as unknown as OfflineFeatureExtractionPipeline;
 			})();
 		}
 		return this.initPromise;
@@ -155,9 +173,12 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 
 	async embed(text: string): Promise<number[]> {
 		await this.init();
+		if (!this.pipeline)
+			throw new Error("offline embedding pipeline is unavailable");
+		const pipeline = this.pipeline;
 		const policy = this.policyReceipt;
 		const processedText = `${policy.queryPrefix}${text}`;
-		const result = await this.pipeline(processedText, {
+		const result = await pipeline(processedText, {
 			pooling: policy.pooling,
 			normalize: policy.normalize,
 			truncation: policy.truncation,
@@ -167,21 +188,40 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 	}
 
 	async embedBatch(texts: string[]): Promise<number[][]> {
+		if (texts.length === 0) return [];
 		await this.init();
+		if (!this.pipeline)
+			throw new Error("offline embedding pipeline is unavailable");
+		const pipeline = this.pipeline;
 		const policy = this.policyReceipt;
 		const processedTexts = texts.map(
 			(text) => `${policy.passagePrefix}${text}`,
 		);
-		return Promise.all(
-			processedTexts.map(async (t) => {
-				const result = await this.pipeline(t, {
-					pooling: policy.pooling,
-					normalize: policy.normalize,
-					truncation: policy.truncation,
-					max_length: policy.tokenizerMaxLength,
-				});
-				return Array.from(result.data) as number[];
-			}),
+		if (this.batchInferenceMode === "per-item-v1")
+			return Promise.all(
+				processedTexts.map(async (t) => {
+					const result = await pipeline(t, {
+						pooling: policy.pooling,
+						normalize: policy.normalize,
+						truncation: policy.truncation,
+						max_length: policy.tokenizerMaxLength,
+					});
+					return Array.from(result.data) as number[];
+				}),
+			);
+		const result = await pipeline(processedTexts, {
+			pooling: policy.pooling,
+			normalize: policy.normalize,
+			truncation: policy.truncation,
+			max_length: policy.tokenizerMaxLength,
+		});
+		const flattened = Array.from(result.data) as number[];
+		if (flattened.length !== texts.length * this.dims)
+			throw new Error(
+				`batched embedding shape mismatch: expected ${texts.length}x${this.dims}, got ${flattened.length} values`,
+			);
+		return texts.map((_, index) =>
+			flattened.slice(index * this.dims, (index + 1) * this.dims),
 		);
 	}
 }

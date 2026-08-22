@@ -20,6 +20,10 @@ import {
 	saveFullCorpusChunk,
 } from "./native-full-corpus-checkpoint.js";
 import {
+	fullCorpusEmbeddingExecutionPolicy,
+	parseOfflineBatchInferenceMode,
+} from "./native-full-corpus-policy.js";
+import {
 	MIRACL_KO_LOCK,
 	parseQrelsTsv,
 	parseTopicsTsv,
@@ -157,15 +161,26 @@ async function main(): Promise<void> {
 	);
 
 	const sourceLockSha256 = sha256(canonical(MIRACL_KO_LOCK));
-	const embedder = new OfflineEmbeddingProvider(MODEL, "cpu", MODEL_REVISION);
-	const embeddingPolicySha256 = sha256(
-		canonical({
-			modelPolicy: embedder.policyReceipt,
-			passageComposition: PASSAGE_COMPOSITION,
-		}),
+	const batchInferenceMode = parseOfflineBatchInferenceMode(
+		process.env.MIRACL_EMBEDDING_INFERENCE_MODE,
 	);
+	const embedder = new OfflineEmbeddingProvider(
+		MODEL,
+		"cpu",
+		MODEL_REVISION,
+		batchInferenceMode,
+	);
+	const executionPolicy = fullCorpusEmbeddingExecutionPolicy(
+		embedder.policyReceipt,
+		PASSAGE_COMPOSITION,
+		batchInferenceMode,
+	);
+	const { embeddingPolicySha256 } = executionPolicy;
 	const collectionName = `naia_miracl_ko_${sourceLockSha256.slice(0, 8)}_${embeddingPolicySha256.slice(0, 8)}`;
-	const checkpointDirectory = join(CHECKPOINT_ROOT, "vectors");
+	const checkpointDirectory = join(
+		CHECKPOINT_ROOT,
+		executionPolicy.checkpointLeaf,
+	);
 	mkdirSync(checkpointDirectory, { recursive: true, mode: 0o700 });
 	const client = new QdrantRest(QDRANT_URL);
 	const existing = await client.collectionOrNull(collectionName);
@@ -373,6 +388,8 @@ async function main(): Promise<void> {
 		configuration: {
 			passageComposition: PASSAGE_COMPOSITION,
 			embedding: embedder.policyReceipt,
+			embeddingInferenceMode: executionPolicy.batchInferenceMode,
+			embeddingExecutionPolicySha256: embeddingPolicySha256,
 			vectorStore: "Qdrant",
 			distance: "Cosine",
 			exactSearch: true,

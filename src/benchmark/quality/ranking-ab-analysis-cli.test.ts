@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
 import {
 	validateBoundRankingResult,
+	validateRankingAbExecutionTreatment,
 	validateReportedRankingMetrics,
 	validateSharedRankingProtocol,
 } from "./ranking-ab-analysis.js";
@@ -18,7 +20,19 @@ describe("ranking A/B result binding", () => {
 		},
 		configuration: {
 			passageComposition: "title + text",
-			embedding: { model: "locked-model", normalize: true },
+			embedding: {
+				model: "locked-model",
+				revision: "locked-revision",
+				dtype: "q8",
+				dimensions: 1024,
+				queryPrefix: "query: ",
+				passagePrefix: "passage: ",
+				pooling: "mean",
+				normalize: true,
+				tokenizerMaxLength: 512,
+				truncation: true,
+				titleConcatenation: "provider-receives-precomposed-text",
+			},
 			vectorStore: "Qdrant",
 			distance: "Cosine",
 			exactSearch: true,
@@ -79,5 +93,47 @@ describe("ranking A/B result binding", () => {
 		expect(() => validateSharedRankingProtocol(valid, changedModel)).toThrow(
 			"same ranking protocol",
 		);
+	});
+
+	it("binds a legacy per-item baseline to an isolated true-batch candidate", () => {
+		const candidate = JSON.parse(valid);
+		candidate.configuration.embeddingInferenceMode = "padded-array-batch-v1";
+		candidate.configuration.embeddingExecutionPolicySha256 =
+			fullCorpusEmbeddingExecutionPolicy(
+				candidate.configuration.embedding,
+				candidate.configuration.passageComposition,
+				"padded-array-batch-v1",
+			).embeddingPolicySha256;
+		candidate.configuration.collectionName = `naia_miracl_ko_source_${candidate.configuration.embeddingExecutionPolicySha256.slice(0, 8)}`;
+		expect(() =>
+			validateRankingAbExecutionTreatment(valid, JSON.stringify(candidate)),
+		).not.toThrow();
+		candidate.configuration.embeddingExecutionPolicySha256 = "tampered";
+		expect(() =>
+			validateRankingAbExecutionTreatment(valid, JSON.stringify(candidate)),
+		).toThrow("policy hash mismatch");
+	});
+
+	it("rejects a true-batch receipt that reuses an unrelated collection", () => {
+		const candidate = JSON.parse(valid);
+		candidate.configuration.embeddingInferenceMode = "padded-array-batch-v1";
+		candidate.configuration.embeddingExecutionPolicySha256 =
+			fullCorpusEmbeddingExecutionPolicy(
+				candidate.configuration.embedding,
+				candidate.configuration.passageComposition,
+				"padded-array-batch-v1",
+			).embeddingPolicySha256;
+		candidate.configuration.collectionName = "baseline-only";
+		expect(() =>
+			validateRankingAbExecutionTreatment(valid, JSON.stringify(candidate)),
+		).toThrow("collection is not isolated");
+	});
+
+	it("rejects candidates that do not declare the exact treatment", () => {
+		const candidate = JSON.parse(valid);
+		candidate.configuration.embeddingInferenceMode = "per-item-v1";
+		expect(() =>
+			validateRankingAbExecutionTreatment(valid, JSON.stringify(candidate)),
+		).toThrow("expected inference modes");
 	});
 });

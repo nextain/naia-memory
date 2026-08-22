@@ -11,6 +11,7 @@ import {
 import {
 	analyzeRankingAb,
 	validateBoundRankingResult,
+	validateRankingAbExecutionTreatment,
 	validateReportedRankingMetrics,
 	validateSharedRankingProtocol,
 } from "./ranking-ab-analysis.js";
@@ -70,6 +71,7 @@ async function main(): Promise<void> {
 		EXPECTED_QUERIES,
 	);
 	validateSharedRankingProtocol(baselineResultText, candidateResultText);
+	validateRankingAbExecutionTreatment(baselineResultText, candidateResultText);
 	const baseline = [...parseTrecRun(baselineText)].map(
 		([queryId, ranking]) => ({
 			queryId,

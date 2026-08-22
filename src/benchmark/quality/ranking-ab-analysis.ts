@@ -1,3 +1,9 @@
+import type {
+	OfflineBatchInferenceMode,
+	OfflineEmbeddingPolicyReceipt,
+} from "../../memory/embeddings.js";
+import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
+
 export interface RankedQuery {
 	queryId: string;
 	ranking: string[];
@@ -52,7 +58,10 @@ export interface BoundRankingResult {
 	};
 	configuration?: {
 		passageComposition?: string;
-		embedding?: unknown;
+		embedding?: OfflineEmbeddingPolicyReceipt;
+		embeddingInferenceMode?: OfflineBatchInferenceMode;
+		embeddingExecutionPolicySha256?: string;
+		collectionName?: string;
 		vectorStore?: string;
 		distance?: string;
 		exactSearch?: boolean;
@@ -124,6 +133,56 @@ export function validateSharedRankingProtocol(
 		JSON.stringify(sharedProtocol(candidate))
 	)
 		throw new Error("A/B results do not share the same ranking protocol");
+}
+
+export function validateRankingAbExecutionTreatment(
+	baselineText: string,
+	candidateText: string,
+): void {
+	const baseline = JSON.parse(baselineText) as BoundRankingResult;
+	const candidate = JSON.parse(candidateText) as BoundRankingResult;
+	const baselineMode =
+		baseline.configuration?.embeddingInferenceMode ?? "per-item-v1";
+	if (
+		baselineMode !== "per-item-v1" ||
+		candidate.configuration?.embeddingInferenceMode !== "padded-array-batch-v1"
+	)
+		throw new Error("A/B results do not declare the expected inference modes");
+	for (const [label, result, mode] of [
+		["baseline", baseline, baselineMode],
+		["candidate", candidate, "padded-array-batch-v1"],
+	] as const) {
+		const embedding = result.configuration?.embedding;
+		const passageComposition = result.configuration?.passageComposition;
+		if (!embedding || !passageComposition)
+			throw new Error(`${label} result has no embedding execution policy`);
+		const expected = fullCorpusEmbeddingExecutionPolicy(
+			embedding,
+			passageComposition,
+			mode,
+		).embeddingPolicySha256;
+		const reported = result.configuration?.embeddingExecutionPolicySha256;
+		if (
+			label === "baseline" &&
+			result.configuration?.embeddingInferenceMode === undefined &&
+			reported === undefined
+		)
+			continue;
+		if (reported !== expected)
+			throw new Error(`${label} embedding execution policy hash mismatch`);
+	}
+	const candidatePolicySha256 =
+		candidate.configuration?.embeddingExecutionPolicySha256;
+	const sourceLockSha256 = candidate.inputs?.sourceLockSha256;
+	if (!candidatePolicySha256 || !sourceLockSha256)
+		throw new Error("candidate result has no collection identity inputs");
+	const expectedCandidateCollection = `naia_miracl_ko_${sourceLockSha256.slice(0, 8)}_${candidatePolicySha256.slice(0, 8)}`;
+	if (
+		candidate.configuration.collectionName !== expectedCandidateCollection ||
+		candidate.configuration.collectionName ===
+			baseline.configuration?.collectionName
+	)
+		throw new Error("candidate collection is not isolated by execution policy");
 }
 
 export function validateReportedRankingMetrics(
