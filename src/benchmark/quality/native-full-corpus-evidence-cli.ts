@@ -45,6 +45,7 @@ async function main() {
 		qdrantUrl: string;
 		outputPath: string;
 		evaluationSourceSha256: string;
+		embeddingInferenceMode?: "per-item-v1" | "padded-array-batch-v1";
 	};
 	const runtimeObservation = JSON.parse(
 		readFileSync(runtimeObservationPath, "utf8"),

@@ -46,6 +46,8 @@ const receipt = {
 		"reports/quality/miracl-ko-full-corpus-vector-exact.json",
 	evaluationSource,
 	evaluationSourceSha256: sha256Bytes(readFileSync(evaluationSource)),
+	embeddingInferenceMode:
+		environment.get("MIRACL_EMBEDDING_INFERENCE_MODE") ?? "per-item-v1",
 };
 writeFileSync(output, `${JSON.stringify(receipt, null, 2)}\n`, {
 	flag: "wx",

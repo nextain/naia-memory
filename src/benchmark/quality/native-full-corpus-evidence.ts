@@ -1,4 +1,9 @@
 import { createHash } from "node:crypto";
+import type {
+	OfflineBatchInferenceMode,
+	OfflineEmbeddingPolicyReceipt,
+} from "../../memory/embeddings.js";
+import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
 
 export const MIRACL_FULL_BENCHMARK =
 	"miracl-ko-full-corpus-naia-vector-exact-v1";
@@ -8,6 +13,8 @@ export const EXPECTED_TREC_EVAL_BINARY_SHA256 =
 	"e4b251b339db6ec556dc18e6b14d45fbdcfdb5166f7fb9dce6bb2e4ca6084987";
 export const EXPECTED_EVALUATION_SOURCE_SHA256 =
 	"d2bb8406d342aba307d254a8aef57b32353246ce06527a3bd4d13a4f9d2ff15b";
+export const EXPECTED_TRUE_BATCH_EVALUATION_SOURCE_SHA256 =
+	"a83dda08753d8d1981d9823fa251aee3a7a7458ea6cd64161b9163e0dda096fc";
 export const EXPECTED_RUNTIME_MONITOR_SOURCE_SHA256 =
 	"65a79853e511cd46a4ce83779b36c34151f21c4fb071312c19a0a2558e7d93f0";
 export const EXPECTED_QDRANT_COMMIT =
@@ -38,11 +45,16 @@ export function parseTrecEvalAll(stdout: string): Map<string, number> {
 export interface FullCorpusResult {
 	benchmark: string;
 	inputs: {
+		sourceLockSha256: string;
 		qrelsSha256: string;
 		documentCount: number;
 		queryCount: number;
 	};
 	configuration: {
+		passageComposition?: string;
+		embedding?: OfflineEmbeddingPolicyReceipt;
+		embeddingInferenceMode?: OfflineBatchInferenceMode;
+		embeddingExecutionPolicySha256?: string;
 		vectorStore: string;
 		distance: string;
 		exactSearch: boolean;
@@ -75,6 +87,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 		qdrantUrl: string;
 		outputPath: string;
 		evaluationSourceSha256: string;
+		embeddingInferenceMode?: OfflineBatchInferenceMode;
 	};
 	launchReceiptSha256: string;
 	runtimeObservation: {
@@ -131,16 +144,41 @@ export function createFullCorpusEvidenceReceipt(input: {
 		throw new Error("trec_eval binary hash mismatch");
 	if (input.trecEvalSourceCommit !== TREC_EVAL_COMMIT)
 		throw new Error("trec_eval source commit mismatch");
+	const inferenceMode =
+		result.configuration.embeddingInferenceMode ?? "per-item-v1";
+	const expectedEvaluationSourceSha256 =
+		inferenceMode === "per-item-v1"
+			? EXPECTED_EVALUATION_SOURCE_SHA256
+			: EXPECTED_TRUE_BATCH_EVALUATION_SOURCE_SHA256;
 	if (
 		input.launchReceipt.cudaVisibleDevices !== "" ||
 		input.launchReceipt.evaluationSourceSha256 !==
-			EXPECTED_EVALUATION_SOURCE_SHA256 ||
+			expectedEvaluationSourceSha256 ||
 		!input.launchReceipt.cmdline.some((argument) =>
 			argument.endsWith("native-full-corpus-evaluation-cli.ts"),
 		) ||
-		input.launchReceipt.outputPath !== input.trecPath.replace(/\.trec$/, "")
+		input.launchReceipt.outputPath !== input.trecPath.replace(/\.trec$/, "") ||
+		(inferenceMode === "padded-array-batch-v1" &&
+			input.launchReceipt.embeddingInferenceMode !== inferenceMode)
 	)
 		throw new Error("benchmark launch evidence mismatch");
+	if (inferenceMode === "padded-array-batch-v1") {
+		const embedding = result.configuration.embedding;
+		const passageComposition = result.configuration.passageComposition;
+		if (!embedding || !passageComposition)
+			throw new Error("true-batch embedding policy is missing");
+		const expectedPolicy = fullCorpusEmbeddingExecutionPolicy(
+			embedding,
+			passageComposition,
+			inferenceMode,
+		).embeddingPolicySha256;
+		const expectedCollection = `naia_miracl_ko_${result.inputs.sourceLockSha256.slice(0, 8)}_${expectedPolicy.slice(0, 8)}`;
+		if (
+			result.configuration.embeddingExecutionPolicySha256 !== expectedPolicy ||
+			result.configuration.collectionName !== expectedCollection
+		)
+			throw new Error("true-batch embedding execution policy mismatch");
+	}
 	const runtime = input.runtimeObservation;
 	const launchCapturedAt = Date.parse(input.launchReceipt.capturedAt);
 	const observationStartedAt = Date.parse(runtime.observation.startedAt);
