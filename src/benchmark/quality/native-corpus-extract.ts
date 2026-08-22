@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { createInterface } from "node:readline";
+import { StringDecoder } from "node:string_decoder";
 import { createGunzip } from "node:zlib";
 
 export interface NativeCorpusDocument {
@@ -15,13 +15,14 @@ export async function extractNativeCorpusDocuments(
 ): Promise<NativeCorpusDocument[]> {
 	const found = new Map<string, NativeCorpusDocument>();
 	for (const shard of shards) {
-		const lines = createInterface({
-			input: createReadStream(shard).pipe(createGunzip()),
-			crlfDelay: Number.POSITIVE_INFINITY,
-		});
 		let lineNumber = 0;
-		for await (const line of lines) {
+		let pending = "";
+		const decoder = new StringDecoder("utf8");
+		const consume = (rawLine: string) => {
 			lineNumber++;
+			const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+			if (line.length === 0)
+				throw new Error(`${shard}:${lineNumber}: blank JSONL row`);
 			let parsed: unknown;
 			try {
 				parsed = JSON.parse(line);
@@ -30,11 +31,22 @@ export async function extractNativeCorpusDocuments(
 			}
 			if (!isNativeCorpusDocument(parsed))
 				throw new Error(`${shard}:${lineNumber}: invalid MIRACL document`);
-			if (!requiredDocumentIds.has(parsed.docid)) continue;
+			if (!requiredDocumentIds.has(parsed.docid)) return;
 			if (found.has(parsed.docid))
 				throw new Error(`duplicate required document: ${parsed.docid}`);
 			found.set(parsed.docid, parsed);
+		};
+		for await (const chunk of createReadStream(shard).pipe(createGunzip())) {
+			pending += decoder.write(chunk);
+			let separator = pending.indexOf("\n");
+			while (separator >= 0) {
+				consume(pending.slice(0, separator));
+				pending = pending.slice(separator + 1);
+				separator = pending.indexOf("\n");
+			}
 		}
+		pending += decoder.end();
+		if (pending.length > 0) consume(pending);
 	}
 	const missing = [...requiredDocumentIds].filter((id) => !found.has(id));
 	if (missing.length > 0)

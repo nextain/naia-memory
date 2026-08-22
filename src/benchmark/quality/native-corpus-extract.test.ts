@@ -43,4 +43,19 @@ describe("native MIRACL corpus extraction", () => {
 			extractNativeCorpusDocuments([shard], new Set(["missing"])),
 		).rejects.toThrow("missing 1 required documents");
 	});
+
+	it("preserves Korean UTF-8 across decompression chunk boundaries", async () => {
+		const directory = await mkdtemp(join(tmpdir(), "naia-native-corpus-"));
+		const shard = join(directory, "docs.jsonl.gz");
+		const text = `경계-${"가나다라마바사".repeat(20_000)}-끝`;
+		await writeFile(
+			shard,
+			gzipSync(JSON.stringify({ docid: "ko", title: "한글", text })),
+		);
+		const [result] = await extractNativeCorpusDocuments(
+			[shard],
+			new Set(["ko"]),
+		);
+		expect(result?.text).toBe(text);
+	});
 });
