@@ -15,6 +15,7 @@ import {
 	writeExclusiveEvidenceFile,
 } from "./public-evidence-file-io.js";
 import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
+import { auditQdrantCollectionMembership } from "./qdrant-collection-membership.js";
 
 const resultPath =
 	process.env.MIRACL_FULL_OUTPUT ??
@@ -139,6 +140,11 @@ export async function runFullCorpusEvidenceCli() {
 	};
 	if (!collectionBody.result)
 		throw new Error("Qdrant collection result missing");
+	const collectionMembership = await auditQdrantCollectionMembership({
+		baseUrl: qdrantUrl,
+		collectionName: result.configuration.collectionName,
+		expectedDocumentCount: result.inputs.documentCount,
+	});
 	const argv = ["-m", "ndcg_cut.10", "-m", "recall.100", qrelsPath, trecPath];
 	const binaryBeforeSha256 = sha256Bytes(readFileSync(evaluatorPath));
 	const sourceCommitBefore = execFileSync(
@@ -193,6 +199,7 @@ export async function runFullCorpusEvidenceCli() {
 			indexingThreshold:
 				collectionBody.result.config?.optimizer_config?.indexing_threshold ??
 				-1,
+			membership: collectionMembership,
 		},
 	});
 	await publishFullCorpusEvidenceReceipt(outputPath, receipt);

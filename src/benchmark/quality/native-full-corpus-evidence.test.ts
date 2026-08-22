@@ -191,6 +191,12 @@ function evidence(overrides = {}) {
 			distance: "Cosine",
 			hnswM: 0,
 			indexingThreshold: 0,
+			membership: {
+				documentCount: 1_486_752,
+				docidsSha256: "a".repeat(64),
+				firstPointId: 1,
+				lastPointId: 1_486_752,
+			},
 		},
 		...remainingOverrides,
 	};
@@ -1268,6 +1274,19 @@ describe("full-corpus independent evidence", () => {
 		expect(() =>
 			createFullCorpusEvidenceReceipt(
 				evidence({ qdrant: { ...evidence().qdrant, commit: "changed" } }),
+			),
+		).toThrow("Qdrant runtime");
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					qdrant: {
+						...evidence().qdrant,
+						membership: {
+							...evidence().qdrant.membership,
+							docidsSha256: "changed",
+						},
+					},
+				}),
 			),
 		).toThrow("Qdrant runtime");
 		expect(() =>

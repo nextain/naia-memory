@@ -180,6 +180,12 @@ export function createFullCorpusEvidenceReceipt(input: {
 		distance: string;
 		hnswM: number;
 		indexingThreshold: number;
+		membership: {
+			documentCount: number;
+			docidsSha256: string;
+			firstPointId: number;
+			lastPointId: number;
+		};
 	};
 }) {
 	if (sha256Bytes(input.resultText) !== input.resultSha256)
@@ -340,7 +346,11 @@ export function createFullCorpusEvidenceReceipt(input: {
 		input.qdrant.vectorSize !== 1024 ||
 		input.qdrant.distance !== "Cosine" ||
 		input.qdrant.hnswM !== 0 ||
-		input.qdrant.indexingThreshold !== 0
+		input.qdrant.indexingThreshold !== 0 ||
+		input.qdrant.membership.documentCount !== result.inputs.documentCount ||
+		input.qdrant.membership.docidsSha256 !== result.inputs.corpusDocidsSha256 ||
+		input.qdrant.membership.firstPointId !== 1 ||
+		input.qdrant.membership.lastPointId !== result.inputs.documentCount
 	)
 		throw new Error("Qdrant runtime evidence mismatch");
 	const attestationBindingManifests = {
