@@ -1,3 +1,4 @@
+import { generateKeyPairSync, sign } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
 	EXPECTED_EVALUATION_SOURCE_SHA256,
@@ -18,6 +19,11 @@ import {
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
+import {
+	deriveFullCorpusExecutionBinding,
+	evaluateFullCorpusPublicAttestation,
+} from "./native-full-corpus-public-attestation.js";
+import { evidenceSignaturePayload } from "./public-evidence-crypto.js";
 import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
 
 const baselinePolicy = fullCorpusEmbeddingExecutionPolicy(
@@ -222,6 +228,154 @@ describe("full-corpus independent evidence", () => {
 		expect(receipt.runtime.latencySemantics).toContain("query-embedding");
 		expect(receipt.runtime.attachmentDelayMilliseconds).toBe(300_000);
 		expect(receipt.runtime.observationBoundary).toContain("after-launch");
+		const binding = deriveFullCorpusExecutionBinding(JSON.stringify(receipt));
+		expect(binding.engine).toBe(MIRACL_FULL_BENCHMARK);
+		expect(binding.receiptSha256).toBe(sha256Bytes(JSON.stringify(receipt)));
+	});
+
+	it("keeps public eligibility detached, externally signed, and fail-closed", () => {
+		const receipt = createFullCorpusEvidenceReceipt(evidence());
+		const receiptText = JSON.stringify(receipt);
+		const binding = deriveFullCorpusExecutionBinding(receiptText);
+		const issuerKeys = generateKeyPairSync("ed25519");
+		const runnerKeys = generateKeyPairSync("ed25519");
+		const signed = <T extends Record<string, unknown>>(
+			value: T,
+			privateKey: typeof issuerKeys.privateKey,
+		) => ({
+			...value,
+			signatureBase64: sign(
+				null,
+				evidenceSignaturePayload(value),
+				privateKey,
+			).toString("base64"),
+		});
+		const challenge = signed(
+			{
+				schemaVersion: "naia-memory-public-execution-challenge-v1" as const,
+				issuer: "external-issuer",
+				challengeId: "miracl-ko-public-run-1",
+				nonce: "0123456789abcdef0123456789abcdef",
+				engine: binding.engine,
+				datasetSha256: binding.datasetSha256,
+				protocolSha256: binding.protocolSha256,
+				issuedAt: "2026-08-23T00:00:00.000Z",
+				expiresAt: "2026-08-23T01:00:00.000Z",
+			},
+			issuerKeys.privateKey,
+		);
+		const attestation = signed(
+			{
+				schemaVersion: "naia-memory-public-execution-attestation-v1" as const,
+				runner: "external-runner",
+				challengeId: challenge.challengeId,
+				nonce: challenge.nonce,
+				...binding,
+				startedAt: "2026-08-23T00:10:00.000Z",
+				finishedAt: "2026-08-23T00:20:00.000Z",
+			},
+			runnerKeys.privateKey,
+		);
+		const trust = {
+			challengeIssuerKeys: {
+				"external-issuer": issuerKeys.publicKey
+					.export({ type: "spki", format: "pem" })
+					.toString(),
+			},
+			runnerKeys: {
+				"external-runner": runnerKeys.publicKey
+					.export({ type: "spki", format: "pem" })
+					.toString(),
+			},
+			benchmarkOperatorTrustDomain: "nextain-operator",
+			runnerTrustDomains: { "external-runner": "independent-lab" },
+		};
+		const verdict = evaluateFullCorpusPublicAttestation({
+			receiptPath: "/evidence/local-pass.json",
+			receiptText,
+			challenge,
+			attestation,
+			...trust,
+		});
+		expect(verdict.publicClaimEligible).toBe(true);
+		expect(receipt.publicClaimEligible).toBe(false);
+
+		const byteSubstitution = evaluateFullCorpusPublicAttestation({
+			receiptPath: "/evidence/local-pass.json",
+			receiptText: `${receiptText}\n`,
+			challenge,
+			attestation,
+			...trust,
+		});
+		expect(byteSubstitution.publicClaimEligible).toBe(false);
+		expect(byteSubstitution.failures).toContain(
+			`${MIRACL_FULL_BENCHMARK}: execution receiptSha256 mismatch`,
+		);
+
+		const sameDomain = evaluateFullCorpusPublicAttestation({
+			receiptPath: "/evidence/local-pass.json",
+			receiptText,
+			challenge,
+			attestation,
+			...trust,
+			runnerTrustDomains: { "external-runner": "nextain-operator" },
+		});
+		expect(sameDomain.publicClaimEligible).toBe(false);
+	});
+
+	it("rejects binding-manifest and base-receipt substitution", () => {
+		const receipt = createFullCorpusEvidenceReceipt(evidence());
+		for (const [manifest, mutate, expectedHash] of [
+			[
+				"dataset",
+				(value: typeof receipt) => {
+					value.attestationBinding.manifests.dataset.documentCount += 1;
+				},
+				"datasetSha256",
+			],
+			[
+				"protocol",
+				(value: typeof receipt) => {
+					value.attestationBinding.manifests.protocol.topK += 1;
+				},
+				"protocolSha256",
+			],
+			[
+				"implementation",
+				(value: typeof receipt) => {
+					value.attestationBinding.manifests.implementation.qdrantCommit =
+						"substituted";
+				},
+				"implementationArtifactSha256",
+			],
+			[
+				"configuration",
+				(value: typeof receipt) => {
+					value.attestationBinding.manifests.configuration.topK += 1;
+				},
+				"configurationSha256",
+			],
+			[
+				"execution evidence",
+				(value: typeof receipt) => {
+					value.attestationBinding.manifests.executionEvidence.resultSha256 =
+						"0".repeat(64);
+				},
+				"executionEvidenceSha256",
+			],
+		] as const) {
+			const tampered = structuredClone(receipt);
+			mutate(tampered);
+			expect(
+				() => deriveFullCorpusExecutionBinding(JSON.stringify(tampered)),
+				manifest,
+			).toThrow(`${expectedHash} manifest mismatch`);
+		}
+
+		const promoted = { ...receipt, publicClaimEligible: true };
+		expect(() =>
+			deriveFullCorpusExecutionBinding(JSON.stringify(promoted)),
+		).toThrow("eligible LOCAL_PASS base");
 	});
 
 	it("binds the true-batch result to its candidate source and collection", () => {

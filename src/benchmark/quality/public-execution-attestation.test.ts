@@ -202,6 +202,33 @@ describe("public execution attestation", () => {
 		);
 	});
 
+	it("rejects issuer and runner aliases backed by the same key material", () => {
+		const { challenge } = evidence();
+		const aliasedAttestation = signed(
+			{
+				schemaVersion: "naia-memory-public-execution-attestation-v1" as const,
+				runner,
+				challengeId: challenge.challengeId,
+				nonce: challenge.nonce,
+				...binding,
+				startedAt: "2026-08-18T00:10:00.000Z",
+				finishedAt: "2026-08-18T00:20:00.000Z",
+			},
+			issuerKeys.privateKey,
+		);
+		expect(
+			evaluateExecutionAttestation(
+				challenge,
+				aliasedAttestation,
+				binding,
+				trust.issuers,
+				{ [runner]: trust.issuers[issuer] },
+				trust.operatorDomain,
+				trust.runnerDomains,
+			),
+		).toContain("naia: execution issuer and runner key material overlap");
+	});
+
 	it("fails closed when the verifier did not assign the runner a trust domain", () => {
 		const { challenge, attestation } = evidence();
 		expect(

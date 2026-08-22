@@ -1,4 +1,5 @@
 import {
+	evidencePublicKeysMatch,
 	evidenceSignaturePayload,
 	hasValidEvidenceSignature,
 } from "./public-evidence-crypto.js";
@@ -261,6 +262,13 @@ export function evaluateExecutionAttestation(
 	);
 	reject(attestation.runner === challenge.issuer, "issuer and runner overlap");
 	reject(attestation.runner === binding.engine, "engine and runner overlap");
+	reject(
+		evidencePublicKeysMatch(
+			challengeIssuerKeys[challenge.issuer],
+			runnerKeys[attestation.runner],
+		),
+		"issuer and runner key material overlap",
+	);
 	const runnerTrustDomain = runnerTrustDomains[attestation.runner];
 	reject(!runnerTrustDomain, "runner trust domain is missing");
 	reject(

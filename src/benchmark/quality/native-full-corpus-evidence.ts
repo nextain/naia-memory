@@ -5,6 +5,7 @@ import type {
 } from "../../memory/embeddings.js";
 import { OFFLINE_MODEL_REVISIONS } from "../../memory/embeddings.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
+import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import {
 	MIRACL_KO_LOCK,
 	parseTrecRun,
@@ -342,6 +343,54 @@ export function createFullCorpusEvidenceReceipt(input: {
 		input.qdrant.indexingThreshold !== 0
 	)
 		throw new Error("Qdrant runtime evidence mismatch");
+	const attestationBindingManifests = {
+		dataset: {
+			benchmark: MIRACL_FULL_BENCHMARK,
+			sourceLockSha256: result.inputs.sourceLockSha256,
+			topicsSha256: result.inputs.topicsSha256,
+			qrelsSha256: result.inputs.qrelsSha256,
+			documentCount: result.inputs.documentCount,
+			queryCount: result.inputs.queryCount,
+			corpusDocidsSha256: result.inputs.corpusDocidsSha256,
+			passageComposition: expectedPolicy.passageComposition,
+		},
+		protocol: {
+			benchmark: MIRACL_FULL_BENCHMARK,
+			exactSearch: true,
+			topK: 100,
+			metrics: ["ndcg_cut.10", "recall.100"],
+			metricTolerance: METRIC_TOLERANCE,
+			independentEvaluator: {
+				name: "usnistgov/trec_eval",
+				version: TREC_EVAL_VERSION,
+				commit: TREC_EVAL_COMMIT,
+				binarySha256: input.trecEvalBinarySha256,
+			},
+		},
+		implementation: {
+			evaluationSourceSha256: launchReceipt.evaluationSourceSha256,
+			runtimeMonitorSourceSha256: runtime.monitor.sourceSha256,
+			qdrantVersion: input.qdrant.version,
+			qdrantCommit: input.qdrant.commit,
+			embeddingModel: MIRACL_EMBEDDING_POLICY.model,
+			embeddingModelRevision: MIRACL_EMBEDDING_POLICY.revision,
+		},
+		configuration: {
+			...result.configuration,
+			embeddingPolicySha256: expectedPolicy.embeddingPolicySha256,
+			embeddingExecutionPolicySha256: expectedPolicy.embeddingPolicySha256,
+			qdrant: input.qdrant,
+		},
+		executionEvidence: {
+			resultSha256: input.resultSha256,
+			trecSha256: input.trecSha256,
+			launchReceiptSha256,
+			runtimeObservationSha256,
+			checkpointChain: input.checkpointChain,
+			trecEvalStdoutSha256: sha256Bytes(input.trecEvalStdout),
+			evaluationStability: input.evaluationStability,
+		},
+	};
 	const independentlyMeasured = parseTrecEvalAll(input.trecEvalStdout);
 	const ndcgAt10 = independentlyMeasured.get("ndcg_cut_10");
 	const recallAt100 = independentlyMeasured.get("recall_100");
@@ -364,6 +413,26 @@ export function createFullCorpusEvidenceReceipt(input: {
 		publicClaimRequirement:
 			"independent signed execution attestation from a runner outside the benchmark operator trust boundary",
 		benchmark: MIRACL_FULL_BENCHMARK,
+		attestationBinding: {
+			manifests: attestationBindingManifests,
+			hashes: {
+				datasetSha256: evidenceObjectSha256(
+					attestationBindingManifests.dataset,
+				),
+				protocolSha256: evidenceObjectSha256(
+					attestationBindingManifests.protocol,
+				),
+				implementationArtifactSha256: evidenceObjectSha256(
+					attestationBindingManifests.implementation,
+				),
+				configurationSha256: evidenceObjectSha256(
+					attestationBindingManifests.configuration,
+				),
+				executionEvidenceSha256: evidenceObjectSha256(
+					attestationBindingManifests.executionEvidence,
+				),
+			},
+		},
 		artifacts: {
 			result: {
 				path: input.trecPath.replace(/\.trec$/, ""),

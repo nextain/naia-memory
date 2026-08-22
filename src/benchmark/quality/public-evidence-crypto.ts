@@ -26,6 +26,20 @@ export function evidenceObjectSha256(value: unknown): string {
 		.digest("hex");
 }
 
+export function evidencePublicKeysMatch(
+	left?: string,
+	right?: string,
+): boolean {
+	if (!left || !right) return false;
+	try {
+		const exportDer = (value: string) =>
+			createPublicKey(value).export({ type: "spki", format: "der" });
+		return exportDer(left).equals(exportDer(right));
+	} catch {
+		return false;
+	}
+}
+
 export function hasValidEvidenceSignature(
 	value: object,
 	publicKey?: string,
