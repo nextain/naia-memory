@@ -173,6 +173,48 @@ describe("public evidence promotion gate manifest and provenance", () => {
 		}
 	});
 
+	it.each([
+		"Nextain-benchmark-operator",
+		" nextain-benchmark-operator",
+		"nextain-벤치",
+	])(
+		"rejects a non-canonical operator trust-domain alias: %s",
+		async (operatorDomain) => {
+			const root = await mkdtemp(join(tmpdir(), "naia-public-domain-alias-"));
+			try {
+				const manifest = validManifest();
+				await writeValidEvidence(root, manifest);
+				const policy = structuredClone(trustPolicy);
+				policy.benchmarkOperatorTrustDomain = operatorDomain;
+				expect(
+					(await evaluatePublicEvidenceFiles(manifest, root, policy)).failures,
+				).toContain("benchmark operator trust domain is not canonical");
+			} finally {
+				await rm(root, { recursive: true, force: true });
+			}
+		},
+	);
+
+	it("rejects a runner trust-domain alias that differs only by case", async () => {
+		const root = await mkdtemp(join(tmpdir(), "naia-public-runner-alias-"));
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const policy = structuredClone(trustPolicy);
+			policy.runnerTrustDomains["runner-naia"] = "Nextain-benchmark-operator";
+			expect(
+				(await evaluatePublicEvidenceFiles(manifest, root, policy)).failures,
+			).toEqual(
+				expect.arrayContaining([
+					"trusted runner trust domain is not canonical: runner-naia",
+					"naia: execution runner trust domain is not canonical",
+				]),
+			);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
 	it("normalizes equivalent key encodings before checking role overlap", async () => {
 		const root = await mkdtemp(
 			join(tmpdir(), "naia-public-key-normalization-"),

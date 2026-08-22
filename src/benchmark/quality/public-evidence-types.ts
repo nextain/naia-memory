@@ -95,6 +95,13 @@ export type PublicEvidenceTrustPolicy = {
 	approvedScoringPolicies: Record<string, string>;
 };
 
+const CANONICAL_TRUST_DOMAIN = /^[a-z0-9](?:[a-z0-9._:/-]{0,126}[a-z0-9])?$/u;
+
+/** Stable policy identifier; deliberately excludes case and Unicode aliases. */
+export function isCanonicalTrustDomain(value: string): boolean {
+	return CANONICAL_TRUST_DOMAIN.test(value);
+}
+
 function isStringRecord(value: unknown): value is Record<string, string> {
 	return (
 		isPublicEvidenceRecord(value) &&
@@ -133,8 +140,9 @@ export function isPublicEvidenceTrustPolicy(
 		isPublicKeyRecord(value.challengeIssuerPublicKeys) &&
 		isPublicKeyRecord(value.runnerPublicKeys) &&
 		typeof value.benchmarkOperatorTrustDomain === "string" &&
-		value.benchmarkOperatorTrustDomain.trim().length > 0 &&
+		isCanonicalTrustDomain(value.benchmarkOperatorTrustDomain) &&
 		isStringRecord(value.runnerTrustDomains) &&
+		Object.values(value.runnerTrustDomains).every(isCanonicalTrustDomain) &&
 		isStringRecord(value.approvedScoringPolicies)
 	);
 }

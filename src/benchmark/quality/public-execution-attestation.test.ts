@@ -216,4 +216,19 @@ describe("public execution attestation", () => {
 			),
 		).toContain("naia: execution runner trust domain is missing");
 	});
+
+	it("rejects case aliases instead of treating them as independent domains", () => {
+		const { challenge, attestation } = evidence();
+		expect(
+			evaluateExecutionAttestation(
+				challenge,
+				attestation,
+				binding,
+				trust.issuers,
+				trust.runners,
+				trust.operatorDomain,
+				{ [runner]: "Nextain-benchmark-operator" },
+			),
+		).toContain("naia: execution runner trust domain is not canonical");
+	});
 });

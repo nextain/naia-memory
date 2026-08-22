@@ -9,6 +9,7 @@ import type {
 	PublicEvidenceManifest,
 	PublicEvidenceTrustPolicy,
 } from "./public-evidence-types.js";
+import { isCanonicalTrustDomain } from "./public-evidence-types.js";
 import { evaluateExecutionAttestations } from "./public-execution-attestation.js";
 import {
 	isPublicEvidenceManifest,
@@ -46,11 +47,14 @@ function validateTrustPolicy(
 ): string[] {
 	const failures: string[] = [];
 	const runnerIdentities = Object.keys(trustPolicy.runnerPublicKeys);
-	if (!trustPolicy.benchmarkOperatorTrustDomain.trim())
-		failures.push("benchmark operator trust domain is missing");
+	if (!isCanonicalTrustDomain(trustPolicy.benchmarkOperatorTrustDomain))
+		failures.push("benchmark operator trust domain is not canonical");
 	for (const runner of runnerIdentities) {
-		if (!trustPolicy.runnerTrustDomains[runner]?.trim())
+		const trustDomain = trustPolicy.runnerTrustDomains[runner];
+		if (!trustDomain)
 			failures.push(`trusted runner trust domain is missing: ${runner}`);
+		else if (!isCanonicalTrustDomain(trustDomain))
+			failures.push(`trusted runner trust domain is not canonical: ${runner}`);
 	}
 	for (const runner of Object.keys(trustPolicy.runnerTrustDomains)) {
 		if (!(runner in trustPolicy.runnerPublicKeys))

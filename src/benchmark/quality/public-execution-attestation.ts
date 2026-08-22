@@ -4,6 +4,7 @@ import {
 } from "./public-evidence-crypto.js";
 import {
 	PUBLIC_EVIDENCE_SHA256 as SHA256,
+	isCanonicalTrustDomain,
 	isPublicEvidenceRecord,
 } from "./public-evidence-types.js";
 
@@ -260,11 +261,19 @@ export function evaluateExecutionAttestation(
 	);
 	reject(attestation.runner === challenge.issuer, "issuer and runner overlap");
 	reject(attestation.runner === binding.engine, "engine and runner overlap");
-	const runnerTrustDomain = runnerTrustDomains[attestation.runner]?.trim();
+	const runnerTrustDomain = runnerTrustDomains[attestation.runner];
 	reject(!runnerTrustDomain, "runner trust domain is missing");
 	reject(
+		Boolean(runnerTrustDomain) && !isCanonicalTrustDomain(runnerTrustDomain),
+		"runner trust domain is not canonical",
+	);
+	reject(
+		!isCanonicalTrustDomain(benchmarkOperatorTrustDomain),
+		"benchmark operator trust domain is not canonical",
+	);
+	reject(
 		Boolean(runnerTrustDomain) &&
-			runnerTrustDomain === benchmarkOperatorTrustDomain.trim(),
+			runnerTrustDomain === benchmarkOperatorTrustDomain,
 		"runner is inside the benchmark operator trust boundary",
 	);
 	reject(
