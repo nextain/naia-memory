@@ -43,6 +43,7 @@ export interface QueryIdentityPrediction {
 export interface QueryIdentityPredictionArtifact {
 	schemaVersion: "naia-memory-query-identity-predictions-v1";
 	oracleSha256: string;
+	launchReceiptSha256?: string;
 	run: {
 		engine: string;
 		model: string;
@@ -384,6 +385,12 @@ export function scoreQueryIdentityArtifact(
 	);
 	return {
 		schemaVersion: "naia-memory-query-identity-score-v1" as const,
+		evidenceAssurance: {
+			level: "scoring-only" as const,
+			oraclePriorExistenceVerified: false as const,
+			hiddenPacketDeliveryVerified: false as const,
+			predictionChronologyVerified: false as const,
+		},
 		scoringPolicyVersion: "query-identity-point-gate-wilson-report-v1" as const,
 		oracleSha256,
 		predictionSha256: evidenceObjectSha256(artifact),
