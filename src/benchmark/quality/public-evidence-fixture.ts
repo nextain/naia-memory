@@ -103,6 +103,12 @@ export const trustPolicy: PublicEvidenceTrustPolicy = {
 			],
 		),
 	),
+	benchmarkOperatorTrustDomain: "nextain-benchmark-operator",
+	runnerTrustDomains: {
+		"runner-naia": "external-runner-naia",
+		"runner-competitor-a": "external-runner-competitor-a",
+		"runner-competitor-b": "external-runner-competitor-b",
+	},
 	approvedScoringPolicies: {
 		[PUBLIC_RETRIEVAL_SCORING_POLICY_ID]: createHash("sha256")
 			.update(JSON.stringify(PUBLIC_RETRIEVAL_SCORING_POLICY))

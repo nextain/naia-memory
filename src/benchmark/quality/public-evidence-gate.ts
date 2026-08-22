@@ -45,6 +45,17 @@ function validateTrustPolicy(
 	trustPolicy: PublicEvidenceTrustPolicy,
 ): string[] {
 	const failures: string[] = [];
+	const runnerIdentities = Object.keys(trustPolicy.runnerPublicKeys);
+	if (!trustPolicy.benchmarkOperatorTrustDomain.trim())
+		failures.push("benchmark operator trust domain is missing");
+	for (const runner of runnerIdentities) {
+		if (!trustPolicy.runnerTrustDomains[runner]?.trim())
+			failures.push(`trusted runner trust domain is missing: ${runner}`);
+	}
+	for (const runner of Object.keys(trustPolicy.runnerTrustDomains)) {
+		if (!(runner in trustPolicy.runnerPublicKeys))
+			failures.push(`runner trust domain has no trusted key: ${runner}`);
+	}
 	if (
 		!hasValidEvidenceSignature(
 			manifest,
@@ -143,6 +154,8 @@ export async function evaluatePublicEvidenceFiles(
 			loaded.attestations,
 			trustPolicy.challengeIssuerPublicKeys,
 			trustPolicy.runnerPublicKeys,
+			trustPolicy.benchmarkOperatorTrustDomain,
+			trustPolicy.runnerTrustDomains,
 		),
 	);
 	decision.promotable = decision.failures.length === 0;

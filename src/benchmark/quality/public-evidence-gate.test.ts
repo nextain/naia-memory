@@ -155,6 +155,24 @@ describe("public evidence promotion gate manifest and provenance", () => {
 		}
 	});
 
+	it("rejects a runner declared inside the benchmark operator trust boundary", async () => {
+		const root = await mkdtemp(join(tmpdir(), "naia-public-runner-domain-"));
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const policy = structuredClone(trustPolicy);
+			policy.runnerTrustDomains["runner-naia"] =
+				policy.benchmarkOperatorTrustDomain;
+			expect(
+				(await evaluatePublicEvidenceFiles(manifest, root, policy)).failures,
+			).toContain(
+				"naia: execution runner is inside the benchmark operator trust boundary",
+			);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
 	it("normalizes equivalent key encodings before checking role overlap", async () => {
 		const root = await mkdtemp(
 			join(tmpdir(), "naia-public-key-normalization-"),

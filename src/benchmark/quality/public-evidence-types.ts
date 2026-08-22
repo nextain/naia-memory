@@ -89,6 +89,9 @@ export type PublicEvidenceTrustPolicy = {
 	nativeReviewerPublicKeysByLanguage: Record<string, Record<string, string>>;
 	challengeIssuerPublicKeys: Record<string, string>;
 	runnerPublicKeys: Record<string, string>;
+	/** Organizational/control boundary asserted by the verifier, not submitted evidence. */
+	benchmarkOperatorTrustDomain: string;
+	runnerTrustDomains: Record<string, string>;
 	approvedScoringPolicies: Record<string, string>;
 };
 
@@ -129,6 +132,9 @@ export function isPublicEvidenceTrustPolicy(
 		Object.values(nativeReviewers).every(isPublicKeyRecord) &&
 		isPublicKeyRecord(value.challengeIssuerPublicKeys) &&
 		isPublicKeyRecord(value.runnerPublicKeys) &&
+		typeof value.benchmarkOperatorTrustDomain === "string" &&
+		value.benchmarkOperatorTrustDomain.trim().length > 0 &&
+		isStringRecord(value.runnerTrustDomains) &&
 		isStringRecord(value.approvedScoringPolicies)
 	);
 }

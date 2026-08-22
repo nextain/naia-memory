@@ -122,6 +122,8 @@ export function evaluateExecutionAttestations(
 	attestations: Map<string, unknown>,
 	challengeIssuerKeys: Record<string, string>,
 	runnerKeys: Record<string, string>,
+	benchmarkOperatorTrustDomain: string,
+	runnerTrustDomains: Record<string, string>,
 ): string[] {
 	// Replay uniqueness is scoped to one immutable evidence bundle. A verifier may
 	// re-check that same bundle later; challenge expiry limits execution time, not
@@ -163,6 +165,8 @@ export function evaluateExecutionAttestations(
 				binding,
 				challengeIssuerKeys,
 				runnerKeys,
+				benchmarkOperatorTrustDomain,
+				runnerTrustDomains,
 			),
 		);
 	}
@@ -220,6 +224,8 @@ export function evaluateExecutionAttestation(
 	binding: ExecutionBinding,
 	challengeIssuerKeys: Record<string, string>,
 	runnerKeys: Record<string, string>,
+	benchmarkOperatorTrustDomain: string,
+	runnerTrustDomains: Record<string, string>,
 ): string[] {
 	const failures: string[] = [];
 	const prefix = `${binding.engine}: execution`;
@@ -254,6 +260,13 @@ export function evaluateExecutionAttestation(
 	);
 	reject(attestation.runner === challenge.issuer, "issuer and runner overlap");
 	reject(attestation.runner === binding.engine, "engine and runner overlap");
+	const runnerTrustDomain = runnerTrustDomains[attestation.runner]?.trim();
+	reject(!runnerTrustDomain, "runner trust domain is missing");
+	reject(
+		Boolean(runnerTrustDomain) &&
+			runnerTrustDomain === benchmarkOperatorTrustDomain.trim(),
+		"runner is inside the benchmark operator trust boundary",
+	);
 	reject(
 		attestation.challengeId !== challenge.challengeId,
 		"challenge identity mismatch",

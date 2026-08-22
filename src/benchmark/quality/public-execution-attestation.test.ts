@@ -27,6 +27,8 @@ const trust = {
 			.export({ type: "spki", format: "pem" })
 			.toString(),
 	},
+	operatorDomain: "nextain-benchmark-operator",
+	runnerDomains: { [runner]: "external-independent-runner" },
 };
 const binding = {
 	engine: "naia",
@@ -112,6 +114,8 @@ describe("public execution attestation", () => {
 				binding,
 				trust.issuers,
 				trust.runners,
+				trust.operatorDomain,
+				trust.runnerDomains,
 			),
 		).toEqual([]);
 	});
@@ -126,6 +130,8 @@ describe("public execution attestation", () => {
 				binding,
 				trust.issuers,
 				trust.runners,
+				trust.operatorDomain,
+				trust.runnerDomains,
 			),
 		).toEqual(
 			expect.arrayContaining([
@@ -151,6 +157,8 @@ describe("public execution attestation", () => {
 				]),
 				trust.issuers,
 				trust.runners,
+				trust.operatorDomain,
+				trust.runnerDomains,
 			),
 		).toEqual(
 			expect.arrayContaining([
@@ -170,8 +178,42 @@ describe("public execution attestation", () => {
 					new Map([[binding.engine, attestation]]),
 					trust.issuers,
 					trust.runners,
+					trust.operatorDomain,
+					trust.runnerDomains,
 				),
 			).not.toEqual([]);
 		}
+	});
+
+	it("rejects a separately named and keyed runner controlled by the operator", () => {
+		const { challenge, attestation } = evidence();
+		expect(
+			evaluateExecutionAttestation(
+				challenge,
+				attestation,
+				binding,
+				trust.issuers,
+				trust.runners,
+				trust.operatorDomain,
+				{ [runner]: trust.operatorDomain },
+			),
+		).toContain(
+			"naia: execution runner is inside the benchmark operator trust boundary",
+		);
+	});
+
+	it("fails closed when the verifier did not assign the runner a trust domain", () => {
+		const { challenge, attestation } = evidence();
+		expect(
+			evaluateExecutionAttestation(
+				challenge,
+				attestation,
+				binding,
+				trust.issuers,
+				trust.runners,
+				trust.operatorDomain,
+				{},
+			),
+		).toContain("naia: execution runner trust domain is missing");
 	});
 });
