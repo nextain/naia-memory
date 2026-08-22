@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	deterministicInsertionOrder,
 	rankingsAreStable,
 	resolveFactId,
 	resolveFactIds,
@@ -9,6 +10,15 @@ import {
 } from "./hnsw-exact-gate.js";
 
 describe("HNSW exact gate labels", () => {
+	it("uses deterministic but build-specific insertion permutations", () => {
+		const first = deterministicInsertionOrder(100, "build-1");
+		expect(first).toEqual(deterministicInsertionOrder(100, "build-1"));
+		expect(first).not.toEqual(deterministicInsertionOrder(100, "build-2"));
+		expect([...first].sort((a, b) => a - b)).toEqual(
+			Array.from({ length: 100 }, (_, index) => index),
+		);
+	});
+
 	it("normalizes legacy zero-padded fact references without inventing ids", () => {
 		const ids = new Set(["F48", "F049"]);
 		expect(resolveFactId("F048", ids)).toBe("F48");

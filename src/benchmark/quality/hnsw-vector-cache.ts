@@ -9,22 +9,33 @@ import {
 import { join } from "node:path";
 
 interface VectorCacheManifest {
-	version: 1;
+	version: 2;
+	cacheKey: string;
+	language: string;
+	endianness: "LE" | "BE";
 	corpusSha256: string;
 	embeddingSpaceId: string;
+	embeddingPolicySha256: string;
 	dims: number;
 	vectorCount: number;
 	binarySha256: string;
 }
 
+function hostEndianness(): "LE" | "BE" {
+	const bytes = new Uint8Array(new Uint16Array([0x00ff]).buffer);
+	return bytes[0] === 0xff ? "LE" : "BE";
+}
+
 export function vectorCacheKey(options: {
 	corpusSha256: string;
 	embeddingSpaceId: string;
+	embeddingPolicySha256: string;
 	dims: number;
 }): string {
 	const identity = {
 		corpusSha256: options.corpusSha256,
 		embeddingSpaceId: options.embeddingSpaceId,
+		embeddingPolicySha256: options.embeddingPolicySha256,
 		dims: options.dims,
 	};
 	return createHash("sha256")
@@ -38,6 +49,7 @@ export function loadVectorCache(options: {
 	language: string;
 	corpusSha256: string;
 	embeddingSpaceId: string;
+	embeddingPolicySha256: string;
 	dims: number;
 	vectorCount: number;
 }): Float32Array | null {
@@ -46,13 +58,22 @@ export function loadVectorCache(options: {
 	const manifestPath = `${prefix}.json`;
 	const binaryPath = `${prefix}.f32`;
 	if (!existsSync(manifestPath) || !existsSync(binaryPath)) return null;
-	const manifest = JSON.parse(
-		readFileSync(manifestPath, "utf8"),
-	) as VectorCacheManifest;
+	let manifest: VectorCacheManifest;
+	try {
+		manifest = JSON.parse(
+			readFileSync(manifestPath, "utf8"),
+		) as VectorCacheManifest;
+	} catch {
+		return null;
+	}
 	if (
-		manifest.version !== 1 ||
+		manifest.version !== 2 ||
+		manifest.cacheKey !== key ||
+		manifest.language !== options.language ||
+		manifest.endianness !== hostEndianness() ||
 		manifest.corpusSha256 !== options.corpusSha256 ||
 		manifest.embeddingSpaceId !== options.embeddingSpaceId ||
+		manifest.embeddingPolicySha256 !== options.embeddingPolicySha256 ||
 		manifest.dims !== options.dims ||
 		manifest.vectorCount !== options.vectorCount
 	) {
@@ -75,6 +96,7 @@ export function saveVectorCache(options: {
 	language: string;
 	corpusSha256: string;
 	embeddingSpaceId: string;
+	embeddingPolicySha256: string;
 	dims: number;
 	vectorCount: number;
 	vectors: Float32Array;
@@ -97,9 +119,13 @@ export function saveVectorCache(options: {
 	writeFileSync(binaryTemporary, binary, { mode: 0o600 });
 	renameSync(binaryTemporary, binaryPath);
 	const manifest: VectorCacheManifest = {
-		version: 1,
+		version: 2,
+		cacheKey: key,
+		language: options.language,
+		endianness: hostEndianness(),
 		corpusSha256: options.corpusSha256,
 		embeddingSpaceId: options.embeddingSpaceId,
+		embeddingPolicySha256: options.embeddingPolicySha256,
 		dims: options.dims,
 		vectorCount: options.vectorCount,
 		binarySha256: createHash("sha256").update(binary).digest("hex"),

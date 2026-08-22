@@ -1,12 +1,10 @@
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { performance } from "node:perf_hooks";
 import { OfflineEmbeddingProvider } from "../../memory/embeddings.js";
 import { benchmarkReceipt } from "../provenance.js";
-import {
-	type RankedMetrics,
-	meanTopKOverlap,
-} from "./binary-quantization-gate.js";
+import { meanTopKOverlap } from "./binary-quantization-gate.js";
 import {
 	type CorpusGeometryReceipt,
 	GEOMETRY_PAIR_COUNT,
@@ -15,6 +13,7 @@ import {
 	qualifyCorpusGeometry,
 } from "./hnsw-corpus-geometry.js";
 import {
+	deterministicInsertionOrder,
 	rankingsAreStable,
 	resolveFactIds,
 	summarizeGeneratedInterference,
@@ -28,16 +27,18 @@ import {
 	scaleFactAxesFromId,
 } from "./hnsw-scale-corpus.js";
 import { loadVectorCache, saveVectorCache } from "./hnsw-vector-cache.js";
+import {
+	type RetrievalMetrics,
+	summarizeRetrievalMetrics,
+} from "./retrieval-metrics.js";
 
 const MODEL = "multilingual-e5-large";
 const QDRANT_URL = process.env.QDRANT_URL ?? "http://127.0.0.1:6334";
 const TOP_K = 10;
-const HNSW_EF_VALUES = (
-	process.env.BENCH_HNSW_EF_VALUES ?? "16,32,64,128,256,512"
-)
-	.split(",")
-	.map((value) => Number(value.trim()))
-	.filter((value) => Number.isInteger(value) && value > 0);
+const HNSW_EF_VALUES_RAW =
+	process.env.BENCH_HNSW_EF_VALUES ?? "16,32,64,128,256,512";
+const hnswEfTokens = HNSW_EF_VALUES_RAW.split(",").map((value) => value.trim());
+const HNSW_EF_VALUES = hnswEfTokens.map(Number);
 const REPEATS = 3;
 const BUILD_REPEATS = Number(process.env.BENCH_BUILD_REPEATS ?? 3);
 const HNSW_M = Number(process.env.BENCH_HNSW_M ?? 16);
@@ -49,10 +50,38 @@ const INDEX_TIMEOUT_MS = Number(process.env.BENCH_INDEX_TIMEOUT_MS ?? 600_000);
 const INDEX_STABLE_POLLS = Number(process.env.BENCH_INDEX_STABLE_POLLS ?? 5);
 const VECTOR_CACHE_DIR =
 	process.env.BENCH_VECTOR_CACHE_DIR ?? "/tmp/naia-memory-hnsw-vector-cache";
-if (HNSW_EF_VALUES.length === 0)
-	throw new Error("BENCH_HNSW_EF_VALUES must contain a positive integer");
+const SEALED_VALIDATION = process.env.BENCH_SEALED_VALIDATION === "1";
+const SEALED_ATTEMPT_ID = new Date().toISOString().replaceAll(/[:.]/g, "-");
+if (
+	HNSW_EF_VALUES.length === 0 ||
+	HNSW_EF_VALUES.some((value) => !Number.isInteger(value) || value <= 0)
+)
+	throw new Error(
+		"every BENCH_HNSW_EF_VALUES token must be a positive integer",
+	);
 if (!Number.isInteger(BUILD_REPEATS) || BUILD_REPEATS < 1)
 	throw new Error("BENCH_BUILD_REPEATS must be a positive integer");
+for (const [name, value] of Object.entries({
+	BENCH_HNSW_M: HNSW_M,
+	BENCH_HNSW_EF_CONSTRUCT: HNSW_EF_CONSTRUCT,
+})) {
+	if (!Number.isSafeInteger(value) || value <= 0) {
+		throw new Error(`${name} must be a positive safe integer`);
+	}
+}
+if (
+	SEALED_VALIDATION &&
+	(HNSW_EF_VALUES.length !== 1 ||
+		HNSW_EF_VALUES[0] !== 2048 ||
+		HNSW_M !== 128 ||
+		HNSW_EF_CONSTRUCT !== 800 ||
+		TARGET_CORPUS_SIZE < 100_000 ||
+		BUILD_REPEATS !== 5)
+) {
+	throw new Error(
+		"sealed validation requires the pre-registered candidate: ef=2048, m=128, efConstruct=800, corpus>=100000, builds=5",
+	);
+}
 const RUN_ID = `${TARGET_CORPUS_SIZE}-m${HNSW_M}-efc${HNSW_EF_CONSTRUCT}-ef${HNSW_EF_VALUES.at(-1)}`;
 const MIN_OVERLAP = 0.98;
 const MIN_TOP1_AGREEMENT = 0.99;
@@ -109,6 +138,21 @@ interface PreparedCorpus {
 }
 
 const preparedCorpora = new Map<string, PreparedCorpus>();
+
+function sealedOutput(base: string): string {
+	return SEALED_VALIDATION
+		? base.replace(/\.json$/, `-${SEALED_ATTEMPT_ID}.json`)
+		: base;
+}
+
+function writeArtifact(output: string, artifact: unknown): void {
+	mkdirSync(join(process.cwd(), "reports/quality"), { recursive: true });
+	writeFileSync(
+		join(process.cwd(), output),
+		`${JSON.stringify(artifact, null, 2)}\n`,
+		SEALED_VALIDATION ? { flag: "wx" } : undefined,
+	);
+}
 
 class CorpusGeometryRejectedError extends Error {
 	constructor(
@@ -208,26 +252,13 @@ function percentile(values: number[], quantile: number): number {
 function summarizeMultiGold(
 	comparisons: MultiGoldComparison[],
 	key: "baseline" | "candidate",
-): RankedMetrics {
-	let recall1 = 0;
-	let recall5 = 0;
-	let recall10 = 0;
-	let reciprocalRank = 0;
-	for (const comparison of comparisons) {
-		const accepted = new Set(comparison.goldIds);
-		const rank = comparison[key].findIndex((id) => accepted.has(id));
-		if (rank === 0) recall1++;
-		if (rank >= 0 && rank < 5) recall5++;
-		if (rank >= 0 && rank < 10) recall10++;
-		if (rank >= 0) reciprocalRank += 1 / (rank + 1);
-	}
-	const count = comparisons.length;
-	return {
-		recall1: recall1 / count,
-		recall5: recall5 / count,
-		recall10: recall10 / count,
-		mrr: reciprocalRank / count,
-	};
+): RetrievalMetrics {
+	return summarizeRetrievalMetrics(
+		comparisons.map((comparison) => ({
+			relevantIds: comparison.goldIds,
+			ranking: comparison[key],
+		})),
+	);
 }
 
 async function waitForIndex(
@@ -288,10 +319,13 @@ async function prepareCorpus(
 		language,
 		corpusSha256: receipt.corpusSha256,
 		embeddingSpaceId: embedder.embeddingSpaceId,
+		embeddingPolicySha256: createHash("sha256")
+			.update(JSON.stringify(embedder.policyReceipt))
+			.digest("hex"),
 		dims: embedder.dims,
 		vectorCount: facts.length,
 	};
-	const cached = loadVectorCache(cacheIdentity);
+	const cached = SEALED_VALIDATION ? null : loadVectorCache(cacheIdentity);
 	if (cached) {
 		console.log(`Loaded ${language} vectors from verified cache`);
 		const geometryReceipt = qualifyCorpusGeometry({
@@ -406,6 +440,14 @@ async function evaluateLanguage(
 		queryVectors.push(await embedder.embed(query.query));
 
 	const collection = `naia_hnsw_gate_${spec.language.replaceAll("-", "_")}_${buildIndex}`;
+	const insertionOrderSeed = `${RUN_ID}:${spec.language}:build-${buildIndex}`;
+	const insertionOrder = deterministicInsertionOrder(
+		facts.length,
+		insertionOrderSeed,
+	);
+	const insertionOrderSha256 = createHash("sha256")
+		.update(`${insertionOrder.join("\n")}\n`)
+		.digest("hex");
 	const existing = await client.collections();
 	if (existing.collections.some(({ name }) => name === collection)) {
 		await client.delete(collection);
@@ -415,21 +457,30 @@ async function evaluateLanguage(
 		hnsw_config: { m: 0, ef_construct: 100, full_scan_threshold: 10 },
 		optimizers_config: { indexing_threshold: 0, default_segment_number: 1 },
 	});
-	for (let offset = 0; offset < facts.length; offset += UPSERT_BATCH_SIZE) {
+	for (
+		let offset = 0;
+		offset < insertionOrder.length;
+		offset += UPSERT_BATCH_SIZE
+	) {
+		const batchIndexes = insertionOrder.slice(
+			offset,
+			offset + UPSERT_BATCH_SIZE,
+		);
 		await client.upsert(
 			collection,
-			facts
-				.slice(offset, offset + UPSERT_BATCH_SIZE)
-				.map((fact, batchIndex) => ({
-					id: offset + batchIndex + 1,
+			batchIndexes.map((factIndex) => {
+				const fact = facts[factIndex];
+				return {
+					id: factIndex + 1,
 					vector: Array.from(
 						factVectors.subarray(
-							(offset + batchIndex) * embedder.dims,
-							(offset + batchIndex + 1) * embedder.dims,
+							factIndex * embedder.dims,
+							(factIndex + 1) * embedder.dims,
 						),
 					),
 					payload: { factId: fact.id },
-				})),
+				};
+			}),
 		);
 	}
 	await client.update(collection, {
@@ -441,10 +492,20 @@ async function evaluateLanguage(
 		optimizers_config: { indexing_threshold: 1, default_segment_number: 1 },
 	});
 	const indexInfo = await waitForIndex(client, collection, facts.length);
+	const actualHnsw = indexInfo.config.hnsw_config;
+	if (
+		actualHnsw.m !== HNSW_M ||
+		actualHnsw.ef_construct !== HNSW_EF_CONSTRUCT
+	) {
+		throw new Error(
+			`${spec.language}: Qdrant HNSW config mismatch: ${JSON.stringify(actualHnsw)}`,
+		);
+	}
 
 	const exactRankings: string[][] = [];
 	const exactLatencies: number[] = [];
 	for (const vector of queryVectors) {
+		await rankedSearch(client, collection, vector, { exact: true });
 		const started = performance.now();
 		exactRankings.push(
 			await rankedSearch(client, collection, vector, { exact: true }),
@@ -468,6 +529,10 @@ async function evaluateLanguage(
 		for (let queryIndex = 0; queryIndex < queries.length; queryIndex++) {
 			let candidate: string[] = [];
 			const repeatRankings: string[][] = [];
+			await rankedSearch(client, collection, queryVectors[queryIndex], {
+				exact: false,
+				hnsw_ef: hnswEf,
+			});
 			for (let repeat = 0; repeat < REPEATS; repeat++) {
 				const started = performance.now();
 				candidate = await rankedSearch(
@@ -491,9 +556,11 @@ async function evaluateLanguage(
 		}
 		const metrics = summarizeMultiGold(comparisons, "candidate");
 		const recallLoss = {
-			recall1: baselineMetrics.recall1 - metrics.recall1,
-			recall5: baselineMetrics.recall5 - metrics.recall5,
-			recall10: baselineMetrics.recall10 - metrics.recall10,
+			successAt1: baselineMetrics.successAt1 - metrics.successAt1,
+			successAt5: baselineMetrics.successAt5 - metrics.successAt5,
+			successAt10: baselineMetrics.successAt10 - metrics.successAt10,
+			recallAt10: baselineMetrics.recallAt10 - metrics.recallAt10,
+			ndcgAt10: baselineMetrics.ndcgAt10 - metrics.ndcgAt10,
 			mrr: baselineMetrics.mrr - metrics.mrr,
 		};
 		const rankingPairs = comparisons.map(({ baseline, candidate }) => ({
@@ -522,9 +589,11 @@ async function evaluateLanguage(
 				stableAcrossRepeats &&
 				overlapAt10 >= MIN_OVERLAP &&
 				agreementAt1 >= MIN_TOP1_AGREEMENT &&
-				recallLoss.recall1 <= MAX_RECALL_LOSS &&
-				recallLoss.recall5 <= MAX_RECALL_LOSS &&
-				recallLoss.recall10 <= MAX_RECALL_LOSS &&
+				recallLoss.successAt1 <= MAX_RECALL_LOSS &&
+				recallLoss.successAt5 <= MAX_RECALL_LOSS &&
+				recallLoss.successAt10 <= MAX_RECALL_LOSS &&
+				recallLoss.recallAt10 <= MAX_RECALL_LOSS &&
+				recallLoss.ndcgAt10 <= MAX_RECALL_LOSS &&
 				recallLoss.mrr <= MAX_RECALL_LOSS,
 		});
 	}
@@ -539,6 +608,8 @@ async function evaluateLanguage(
 		contaminationReceipt: prepared.contaminationReceipt,
 		geometryReceipt: prepared.geometryReceipt,
 		indexReceipt: {
+			insertionOrderSeed,
+			insertionOrderSha256,
 			status: indexInfo.status,
 			pointsCount: indexInfo.points_count,
 			indexedVectorsCount: indexInfo.indexed_vectors_count,
@@ -599,7 +670,9 @@ async function main() {
 				);
 			} catch (error) {
 				if (!(error instanceof CorpusGeometryRejectedError)) throw error;
-				const output = `reports/quality/hnsw-exact-scale-gate-geometry-rejected-${RUN_ID}.json`;
+				const output = sealedOutput(
+					`reports/quality/hnsw-exact-scale-gate-geometry-rejected-${RUN_ID}.json`,
+				);
 				const artifact = {
 					benchmark: "qdrant-hnsw-exact-quality-gate",
 					status: "corpus_geometry_rejected",
@@ -638,11 +711,7 @@ async function main() {
 						],
 					),
 				};
-				mkdirSync(join(process.cwd(), "reports/quality"), { recursive: true });
-				writeFileSync(
-					join(process.cwd(), output),
-					`${JSON.stringify(artifact, null, 2)}\n`,
-				);
+				writeArtifact(output, artifact);
 				console.log(
 					JSON.stringify({ output, status: artifact.status }, null, 2),
 				);
@@ -650,6 +719,19 @@ async function main() {
 			}
 		}
 		preparedCorpora.delete(language.language);
+	}
+	for (const language of LANGUAGES) {
+		const insertionOrderDigests = results
+			.filter((result) => result.language === language.language)
+			.map((result) => result.indexReceipt.insertionOrderSha256);
+		if (
+			insertionOrderDigests.length !== BUILD_REPEATS ||
+			new Set(insertionOrderDigests).size !== BUILD_REPEATS
+		) {
+			throw new Error(
+				`${language.language}: expected ${BUILD_REPEATS} distinct insertion-order receipts`,
+			);
+		}
 	}
 	const selectedEf =
 		HNSW_EF_VALUES.find((hnswEf) =>
@@ -668,6 +750,16 @@ async function main() {
 			: "quality_gate_rejected",
 		selectedEf,
 		gate: {
+			sealedValidation: SEALED_VALIDATION,
+			preRegisteredCandidate: SEALED_VALIDATION
+				? {
+						hnswEf: 2048,
+						hnswM: 128,
+						hnswEfConstruct: 800,
+						minimumCorpusSize: 100_000,
+						buildRepeats: 5,
+					}
+				: null,
 			topK: TOP_K,
 			minOverlapAt10: MIN_OVERLAP,
 			minTop1Agreement: MIN_TOP1_AGREEMENT,
@@ -687,6 +779,11 @@ async function main() {
 			device: "cpu",
 		},
 		limitations: [
+			...(SEALED_VALIDATION
+				? [
+						"This is a single pre-registered candidate confirmation, not a validation-set parameter selection.",
+					]
+				: []),
 			"This experiment qualifies approximate-vs-exact retrieval preservation only; it does not establish cross-engine superiority.",
 			"Scale distractors are deterministic synthetic facts, not independently authored user memories; passing does not establish production workload validity.",
 			"English is a deterministic translation of the Korean corpus, not an independently authored multilingual benchmark.",
@@ -702,6 +799,9 @@ async function main() {
 				qdrantVersion: service.version,
 				topK: TOP_K,
 				hnswEfValues: HNSW_EF_VALUES,
+				hnswEfValuesRaw: HNSW_EF_VALUES_RAW,
+				sealedValidation: SEALED_VALIDATION,
+				coldVectorCache: SEALED_VALIDATION,
 				hnswM: HNSW_M,
 				hnswEfConstruct: HNSW_EF_CONSTRUCT,
 				repeats: REPEATS,
@@ -728,12 +828,10 @@ async function main() {
 			],
 		),
 	};
-	const output = `reports/quality/hnsw-exact-scale-gate-${RUN_ID}-2026-08-22.json`;
-	mkdirSync(join(process.cwd(), "reports/quality"), { recursive: true });
-	writeFileSync(
-		join(process.cwd(), output),
-		`${JSON.stringify(artifact, null, 2)}\n`,
+	const output = sealedOutput(
+		`reports/quality/hnsw-exact-scale-gate-${RUN_ID}-2026-08-22.json`,
 	);
+	writeArtifact(output, artifact);
 	console.log(
 		JSON.stringify(
 			{

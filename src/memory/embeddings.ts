@@ -18,6 +18,20 @@ export interface EmbeddingProvider {
 	readonly embeddingSpaceId?: string;
 }
 
+export interface OfflineEmbeddingPolicyReceipt {
+	model: string;
+	revision: string;
+	dtype: "q8" | "fp32";
+	dimensions: number;
+	queryPrefix: string;
+	passagePrefix: string;
+	pooling: "mean";
+	normalize: true;
+	tokenizerMaxLength: 512;
+	truncation: true;
+	titleConcatenation: "provider-receives-precomposed-text";
+}
+
 function embeddingEndpointIdentity(baseUrl: string): string {
 	const endpoint = new URL(baseUrl);
 	if (!/^https?:$/.test(endpoint.protocol)) {
@@ -34,7 +48,8 @@ export const OFFLINE_MODEL_REVISIONS = {
 	"multilingual-e5-small": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
 	"multilingual-e5-base": "1ec9243030a27d1a115d5c340572074c125b58b2",
 	"multilingual-e5-large": "00fc3aeb3dbb95842de2ac1961d33c6319acf57b",
-	"paraphrase-multilingual-MiniLM-L12-v2": "2c4055b12046f11709e9df2c122e59ffbdc2f900",
+	"paraphrase-multilingual-MiniLM-L12-v2":
+		"2c4055b12046f11709e9df2c122e59ffbdc2f900",
 } as const;
 
 type OfflineModelName = keyof typeof OFFLINE_MODEL_REVISIONS;
@@ -53,6 +68,23 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 	 *  "cpu" = 강제 CPU / "gpu" = 가용 시 GPU(onnxruntime EP), 없으면 CPU 폴백("auto"로 매핑) / "auto" = 자동. */
 	private readonly device?: "cpu" | "gpu" | "auto";
 	private initPromise: Promise<void> | null = null;
+
+	get policyReceipt(): OfflineEmbeddingPolicyReceipt {
+		const e5 = this.modelName.startsWith("multilingual-e5-");
+		return {
+			model: `Xenova/${this.modelName}`,
+			revision: this.revision,
+			dtype: e5 ? "q8" : "fp32",
+			dimensions: this.dims,
+			queryPrefix: e5 ? "query: " : "",
+			passagePrefix: e5 ? "passage: " : "",
+			pooling: "mean",
+			normalize: true,
+			tokenizerMaxLength: 512,
+			truncation: true,
+			titleConcatenation: "provider-receives-precomposed-text",
+		};
+	}
 
 	constructor(
 		model: OfflineModelName = "all-MiniLM-L6-v2",
@@ -92,8 +124,11 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 				// 역직렬화 실패(external-initializer offset 이 데이터 파일 길이 초과).
 				// q8 단일파일 변형은 CPU 에서 안정 로드되고 한국어 회상 품질을 보존한다
 				// (실측 top-1 5/5 vs all-mpnet 영어전용 2/5). 나머지 모델은 기본 fp32 로 정상 로드.
-				const dtype: "q8" | undefined =
-					this.modelName.startsWith("multilingual-e5-") ? "q8" : undefined;
+				const dtype: "q8" | undefined = this.modelName.startsWith(
+					"multilingual-e5-",
+				)
+					? "q8"
+					: undefined;
 
 				// device 매핑: gpu→"auto"(onnxruntime EP 가용 시 GPU, 없으면 CPU 폴백 — 메모리 비활성 회피) /
 				// cpu→"cpu" / auto→"auto" / 미지정→옵션 없이(transformers 기본, 현행 무변).
@@ -104,11 +139,15 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 							? "auto"
 							: this.device;
 				const pipeOpts = {
-								...(deviceOpt !== undefined ? { device: deviceOpt } : {}),
-								...(dtype !== undefined ? { dtype } : {}),
-								revision: this.revision,
-							};
-				this.pipeline = await pipelineFn("feature-extraction", hfModel, pipeOpts);
+					...(deviceOpt !== undefined ? { device: deviceOpt } : {}),
+					...(dtype !== undefined ? { dtype } : {}),
+					revision: this.revision,
+				};
+				this.pipeline = await pipelineFn(
+					"feature-extraction",
+					hfModel,
+					pipeOpts,
+				);
 			})();
 		}
 		return this.initPromise;
@@ -116,27 +155,30 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 
 	async embed(text: string): Promise<number[]> {
 		await this.init();
-		const processedText = this.modelName.startsWith("multilingual-e5-")
-			? `query: ${text}`
-			: text;
+		const policy = this.policyReceipt;
+		const processedText = `${policy.queryPrefix}${text}`;
 		const result = await this.pipeline(processedText, {
-			pooling: "mean",
-			normalize: true,
+			pooling: policy.pooling,
+			normalize: policy.normalize,
+			truncation: policy.truncation,
+			max_length: policy.tokenizerMaxLength,
 		});
 		return Array.from(result.data) as number[];
 	}
 
 	async embedBatch(texts: string[]): Promise<number[][]> {
 		await this.init();
-		const processedTexts =
-			this.modelName.startsWith("multilingual-e5-")
-				? texts.map((t) => `passage: ${t}`)
-				: texts;
+		const policy = this.policyReceipt;
+		const processedTexts = texts.map(
+			(text) => `${policy.passagePrefix}${text}`,
+		);
 		return Promise.all(
 			processedTexts.map(async (t) => {
 				const result = await this.pipeline(t, {
-					pooling: "mean",
-					normalize: true,
+					pooling: policy.pooling,
+					normalize: policy.normalize,
+					truncation: policy.truncation,
+					max_length: policy.tokenizerMaxLength,
 				});
 				return Array.from(result.data) as number[];
 			}),
@@ -191,7 +233,10 @@ export class OpenAICompatEmbeddingProvider implements EmbeddingProvider {
 			},
 			body: JSON.stringify({ model: this.model, input: texts }),
 		});
-		if (!res.ok) throw new Error(`Embedding API error: ${res.status} ${await res.text().catch(() => "")}`);
+		if (!res.ok)
+			throw new Error(
+				`Embedding API error: ${res.status} ${await res.text().catch(() => "")}`,
+			);
 		const data = (await res.json()) as {
 			data: Array<{ embedding: number[] }>;
 			usage?: { prompt_tokens?: number; total_tokens?: number };
@@ -280,7 +325,17 @@ export class HuggingFaceEmbeddingProvider implements EmbeddingProvider {
  */
 export class NaiaGatewayEmbeddingProvider extends OpenAICompatEmbeddingProvider {
 	override readonly name = "naia-gateway";
-	constructor(naiaGatewayUrl: string, naiaKey: string, deploymentRevision?: string) {
-		super(naiaGatewayUrl, naiaKey, "vertexai:text-embedding-004", 768, deploymentRevision);
+	constructor(
+		naiaGatewayUrl: string,
+		naiaKey: string,
+		deploymentRevision?: string,
+	) {
+		super(
+			naiaGatewayUrl,
+			naiaKey,
+			"vertexai:text-embedding-004",
+			768,
+			deploymentRevision,
+		);
 	}
 }

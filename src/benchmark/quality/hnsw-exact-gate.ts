@@ -1,7 +1,29 @@
+import { createHash } from "node:crypto";
 import {
 	type QueryComparison,
 	meanTopKOverlap,
 } from "./binary-quantization-gate.js";
+
+export function deterministicInsertionOrder(
+	length: number,
+	seed: string,
+): number[] {
+	if (!Number.isSafeInteger(length) || length < 0) {
+		throw new Error("length must be a non-negative safe integer");
+	}
+	return Array.from({ length }, (_, index) => ({
+		index,
+		rank: createHash("sha256").update(`${seed}\0${index}`).digest("hex"),
+	}))
+		.sort((left, right) =>
+			left.rank < right.rank
+				? -1
+				: left.rank > right.rank
+					? 1
+					: left.index - right.index,
+		)
+		.map(({ index }) => index);
+}
 
 export function resolveFactId(
 	reference: string | undefined,
