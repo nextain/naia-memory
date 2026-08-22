@@ -1,3 +1,6 @@
+import { createHash, randomBytes } from "node:crypto";
+import { constants } from "node:fs";
+import { link, open, unlink } from "node:fs/promises";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
@@ -8,12 +11,15 @@ import {
 import { buildFullCorpusChallengeSigningPacket } from "./native-full-corpus-attestation-packet.js";
 import {
 	type FullCorpusBundleSignerTrustPolicy,
+	buildFullCorpusBundleSigningPacket,
+	collectFullCorpusBundleSignature,
 	validateFullCorpusBundlePublication,
 } from "./native-full-corpus-bundle-publication.js";
 import {
 	evaluateFullCorpusPublicAttestation,
 	evaluateTimestampQualifiedFullCorpusPublicAttestation,
 } from "./native-full-corpus-public-attestation.js";
+import { canonicalEvidenceJson } from "./public-evidence-crypto.js";
 import {
 	PublicEvidenceFileTooLargeError,
 	readBoundedEvidenceFile,
@@ -33,6 +39,32 @@ import type {
 } from "./rfc3161-timestamp.js";
 
 const MAX_BYTES = 16 * 1024 * 1024;
+const MAX_SIGNING_INPUT_BYTES = 64 * 1024;
+
+async function writeExclusive(path: string, bytes: Buffer): Promise<void> {
+	const temporary = `${path}.tmp-${randomBytes(12).toString("hex")}`;
+	let created = false;
+	try {
+		const handle = await open(
+			temporary,
+			constants.O_WRONLY |
+				constants.O_CREAT |
+				constants.O_EXCL |
+				constants.O_NOFOLLOW,
+			0o600,
+		);
+		created = true;
+		try {
+			await handle.writeFile(bytes);
+			await handle.sync();
+		} finally {
+			await handle.close();
+		}
+		await link(temporary, path);
+	} finally {
+		if (created) await unlink(temporary).catch(() => undefined);
+	}
+}
 
 async function bounded(path: string, label: string): Promise<Buffer> {
 	try {
@@ -46,6 +78,23 @@ async function bounded(path: string, label: string): Promise<Buffer> {
 
 async function json(path: string, label: string): Promise<unknown> {
 	const bytes = await bounded(path, label);
+	try {
+		return JSON.parse(bytes.toString("utf8"));
+	} catch {
+		throw new Error(`${label} is not valid JSON`);
+	}
+}
+
+async function signingJson(path: string, label: string): Promise<unknown> {
+	let bytes: Buffer;
+	try {
+		bytes = await readBoundedEvidenceFile(
+			resolve(path),
+			MAX_SIGNING_INPUT_BYTES,
+		);
+	} catch {
+		throw new Error(`${label} is unreadable`);
+	}
 	try {
 		return JSON.parse(bytes.toString("utf8"));
 	} catch {
@@ -81,6 +130,62 @@ export async function runFullCorpusAttestationCli(
 		| ReturnType<typeof validateFullCorpusBundlePublication>
 		| undefined;
 	try {
+		if (command === "publish-packet") {
+			if (values.length !== 3) {
+				process.stderr.write(
+					"Usage: pnpm benchmark:miracl-full-corpus-attestation publish-packet <bundle.json> <external-signer-policy.json> <signer-id>\n",
+				);
+				return 2;
+			}
+			const [bundlePath, signerPolicyPath, signerId] = values as [
+				string,
+				string,
+				string,
+			];
+			const [bundle, signerTrustPolicy] = await Promise.all([
+				loadFullCorpusAttestationBundle(bundlePath),
+				signingJson(signerPolicyPath, "external bundle signer policy"),
+			]);
+			const packet = buildFullCorpusBundleSigningPacket({
+				manifestSha256: bundle.manifestSha256,
+				signerId,
+				trustPolicy: signerTrustPolicy as FullCorpusBundleSignerTrustPolicy,
+			});
+			process.stdout.write(`${canonicalEvidenceJson(packet)}\n`);
+			return 0;
+		}
+		if (command === "publish-collect") {
+			if (values.length !== 4) {
+				process.stderr.write(
+					"Usage: pnpm benchmark:miracl-full-corpus-attestation publish-collect <packet.json> <detached-signature.json> <external-signer-policy.json> <publication-receipt.json>\n",
+				);
+				return 2;
+			}
+			const [packetPath, signaturePath, signerPolicyPath, receiptPath] =
+				values as [string, string, string, string];
+			const [packet, detachedSignature, signerTrustPolicy] = await Promise.all([
+				signingJson(packetPath, "full-corpus bundle signing packet"),
+				signingJson(signaturePath, "full-corpus bundle detached signature"),
+				signingJson(signerPolicyPath, "external bundle signer policy"),
+			]);
+			const receipt = collectFullCorpusBundleSignature({
+				packet,
+				detachedSignature,
+				trustPolicy: signerTrustPolicy as FullCorpusBundleSignerTrustPolicy,
+			});
+			const receiptBytes = Buffer.from(`${canonicalEvidenceJson(receipt)}\n`);
+			try {
+				await writeExclusive(resolve(receiptPath), receiptBytes);
+			} catch (error) {
+				if ((error as NodeJS.ErrnoException).code === "EEXIST")
+					throw new Error("bundle publication receipt output already exists");
+				throw new Error("bundle publication receipt output cannot be written");
+			}
+			process.stdout.write(
+				`${JSON.stringify({ receiptSha256: createHash("sha256").update(receiptBytes).digest("hex") })}\n`,
+			);
+			return 0;
+		}
 		if (command === "verify-published-bundle") {
 			if (values.length !== 7) {
 				process.stderr.write(
@@ -355,7 +460,7 @@ export async function runFullCorpusAttestationCli(
 			return verdict.publicClaimEligible ? 0 : 1;
 		}
 		process.stderr.write(
-			"Usage: pnpm benchmark:miracl-full-corpus-attestation <challenge|verify|verify-timestamped|verify-bundle|verify-published-bundle> ...\n",
+			"Usage: pnpm benchmark:miracl-full-corpus-attestation <publish-packet|publish-collect|challenge|verify|verify-timestamped|verify-bundle|verify-published-bundle> ...\n",
 		);
 		return 2;
 	} catch (error) {
