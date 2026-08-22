@@ -28,3 +28,11 @@ The pin establishes source compatibility only. A competitive run remains blocked
 until the exact service passes two-group isolation, supersession, and identity
 smoke probes and its LLM/embedder/reranker configuration is frozen in the campaign
 receipt.
+
+With the pinned service running, execute the fail-closed probe and save its JSON
+receipt outside tracked report paths until the run passes:
+
+```bash
+GRAPHITI_BENCHMARK_URL=http://127.0.0.1:8000/ \
+  pnpm benchmark:graphiti-smoke /tmp/graphiti-smoke.json
+```
