@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { FULL_CORPUS_ATTESTATION_ARTIFACT_NAMES } from "./native-full-corpus-attestation-bundle.js";
 import { runFullCorpusAttestationCli } from "./native-full-corpus-attestation-cli.js";
 import { buildFullCorpusChallengeSigningPacket } from "./native-full-corpus-attestation-packet.js";
+import { publishFullCorpusEvidenceReceipt } from "./native-full-corpus-evidence-cli.js";
 import {
 	EXPECTED_EVALUATION_SOURCE_SHA256,
 	EXPECTED_MIRACL_QRELS_SHA256,
@@ -34,6 +35,7 @@ import {
 	evidenceObjectSha256,
 	evidenceSignaturePayload,
 } from "./public-evidence-crypto.js";
+import { PublicEvidenceDirectorySyncError } from "./public-evidence-file-io.js";
 import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
 
 const baselinePolicy = fullCorpusEmbeddingExecutionPolicy(
@@ -191,6 +193,49 @@ function parsedRuntimeObservation() {
 }
 
 describe("full-corpus independent evidence", () => {
+	it("publishes exact receipt bytes through the exclusive durable writer", async () => {
+		const writer = vi.fn(async () => undefined);
+		await publishFullCorpusEvidenceReceipt(
+			"relative/evidence.json",
+			{ verdict: "LOCAL_PASS" },
+			writer,
+		);
+		expect(writer).toHaveBeenCalledOnce();
+		expect(writer.mock.calls[0]?.[0]).toBe(
+			join(process.cwd(), "relative/evidence.json"),
+		);
+		expect(writer.mock.calls[0]?.[1]).toEqual(
+			Buffer.from('{\n  "verdict": "LOCAL_PASS"\n}\n'),
+		);
+	});
+
+	it("fails closed when the evidence output already exists", async () => {
+		const conflict = Object.assign(new Error("conflict"), { code: "EEXIST" });
+		await expect(
+			publishFullCorpusEvidenceReceipt("evidence.json", {}, async () => {
+				throw conflict;
+			}),
+		).rejects.toThrow("full-corpus evidence output already exists");
+	});
+
+	it("distinguishes a written output whose directory sync was not confirmed", async () => {
+		await expect(
+			publishFullCorpusEvidenceReceipt("evidence.json", {}, async (path) => {
+				throw new PublicEvidenceDirectorySyncError(path, new Error("sync"));
+			}),
+		).rejects.toThrow(
+			"was written but crash-durability could not be confirmed",
+		);
+	});
+
+	it("fails closed for an unclassified evidence writer failure", async () => {
+		await expect(
+			publishFullCorpusEvidenceReceipt("evidence.json", {}, async () => {
+				throw new Error("disk unavailable");
+			}),
+		).rejects.toThrow("full-corpus evidence output cannot be written");
+	});
+
 	it("parses only aggregate trec_eval rows", () => {
 		expect(parseTrecEvalAll("ndcg_cut_10 all 0.5\n").get("ndcg_cut_10")).toBe(
 			0.5,

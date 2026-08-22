@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { verifyFullCorpusCheckpointChain } from "./native-full-corpus-checkpoint.js";
 import {
 	type FullCorpusResult,
@@ -9,6 +10,10 @@ import {
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
+import {
+	PublicEvidenceDirectorySyncError,
+	writeExclusiveEvidenceFile,
+} from "./public-evidence-file-io.js";
 import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
 
 const resultPath =
@@ -34,7 +39,38 @@ const checkpointRoot =
 	process.env.MIRACL_FULL_CHECKPOINT_DIR ??
 	".cache/benchmark-runs/miracl-ko-full-v1";
 
-async function main() {
+export async function publishFullCorpusEvidenceReceipt(
+	path: string,
+	receipt: unknown,
+	evidenceWriter: typeof writeExclusiveEvidenceFile = writeExclusiveEvidenceFile,
+): Promise<void> {
+	try {
+		await evidenceWriter(
+			resolve(path),
+			Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`),
+		);
+	} catch (error) {
+		if (error instanceof PublicEvidenceDirectorySyncError)
+			throw new Error(
+				"full-corpus evidence output was written but crash-durability could not be confirmed; inspect the existing output before retry",
+				{ cause: error },
+			);
+		if (
+			error !== null &&
+			typeof error === "object" &&
+			"code" in error &&
+			error.code === "EEXIST"
+		)
+			throw new Error("full-corpus evidence output already exists", {
+				cause: error,
+			});
+		throw new Error("full-corpus evidence output cannot be written", {
+			cause: error,
+		});
+	}
+}
+
+export async function runFullCorpusEvidenceCli() {
 	if (existsSync(outputPath)) throw new Error("evidence output already exists");
 	const resultText = readFileSync(resultPath, "utf8");
 	const trec = readFileSync(trecPath);
@@ -159,13 +195,10 @@ async function main() {
 				-1,
 		},
 	});
-	const temporary = `${outputPath}.${process.pid}.tmp`;
-	writeFileSync(temporary, `${JSON.stringify(receipt, null, 2)}\n`, {
-		flag: "wx",
-		mode: 0o600,
-	});
-	renameSync(temporary, outputPath);
+	await publishFullCorpusEvidenceReceipt(outputPath, receipt);
 	process.stdout.write(`${JSON.stringify(receipt, null, 2)}\n`);
 }
 
-await main();
+const invokedPath =
+	process.argv[1] && pathToFileURL(resolve(process.argv[1])).href;
+if (invokedPath === import.meta.url) await runFullCorpusEvidenceCli();
