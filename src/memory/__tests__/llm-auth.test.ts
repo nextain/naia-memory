@@ -36,7 +36,7 @@ describe("OpenAI-compatible LLM auth", () => {
 							{
 								message: {
 									content:
-										'```json\n{"subject":"사용자","property":"선호 에디터"}\n```',
+										'```json\n{"subject":"사용자","property":"선호 에디터","subjectId":"person:self","propertyId":"profile:preferred_editor"}\n```',
 								},
 							},
 						],
@@ -79,6 +79,47 @@ describe("OpenAI-compatible LLM auth", () => {
 		await expect(structure("   ")).resolves.toBeUndefined();
 		await expect(structure("안녕?")).resolves.toBeUndefined();
 		expect(fetchMock).toHaveBeenCalledTimes(1);
+	});
+
+	it("query structurer emits only complete allowlisted identity pairs when opted in", async () => {
+		const outputs = [
+			'{"subject":"사용자","property":"거주지","subjectId":"person:self","propertyId":"profile:residence"}',
+			'{"subject":"사용자","property":"거주지","subjectId":"person:self"}',
+			'{"subject":"사용자","property":"거주지","subjectId":"person:self","propertyId":"invented:residence"}',
+		];
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(
+				async () =>
+					new Response(
+						JSON.stringify({
+							choices: [{ message: { content: outputs.shift() } }],
+						}),
+						{ status: 200, headers: { "content-type": "application/json" } },
+					),
+			),
+		);
+		const structure = buildLLMQueryStructurer({
+			apiKey: "",
+			baseURL: "https://provider.test/v1/",
+			model: "test",
+			includeIdentityIds: true,
+		});
+
+		await expect(structure("내 거주지는?")).resolves.toEqual({
+			subject: "사용자",
+			property: "거주지",
+			subjectId: "person:self",
+			propertyId: "profile:residence",
+		});
+		await expect(structure("내 거주지는?")).resolves.toEqual({
+			subject: "사용자",
+			property: "거주지",
+		});
+		await expect(structure("내 거주지는?")).resolves.toEqual({
+			subject: "사용자",
+			property: "거주지",
+		});
 	});
 
 	it("fact extractor preserves only valid explicit structured facts", async () => {

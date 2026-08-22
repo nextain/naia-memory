@@ -15,6 +15,11 @@
 
 import { hasGroundedDeleteEvidence } from "./delete-grounding.js";
 import type { ExtractedFact } from "./index.js";
+import {
+	inferEnglishMemoryPropertyId,
+	isMemoryPropertyId,
+	isMemorySubjectId,
+} from "./memory-identity-ontology.js";
 import type { Episode, StructuredFact } from "./types.js";
 
 export interface LLMFactExtractorOptions {
@@ -48,68 +53,8 @@ const DEFAULT_MODEL = USE_GATEWAY
 	: "gemini-2.5-flash-lite";
 const DEFAULT_BATCH_SIZE = 10;
 
-const EXTRACTOR_SUBJECT_IDS = new Set(["person:self"]);
 function normalizedDeleteQuote(value: string): string {
 	return value.normalize("NFC").trim();
-}
-
-const EXTRACTOR_PROPERTY_IDS = new Set([
-	"profile:name",
-	"profile:pronouns",
-	"profile:residence",
-	"profile:occupation",
-	"profile:organization",
-	"profile:timezone",
-	"profile:language",
-	"profile:allergy",
-	"profile:diet",
-	"profile:medication",
-	"profile:beverage-consumption",
-	"profile:hobby",
-	"plan:activity",
-	"routine:morning",
-	"preference:animal",
-	"preference:book-genre",
-	"preference:color",
-	"preference:editor",
-	"preference:food",
-	"preference:music-genre",
-	"preference:tool",
-	"preference:travel-destination",
-	"preference:communication",
-]);
-
-const GENERIC_IDENTITY_TOKENS = new Set([
-	"profile",
-	"preference",
-	"prefer",
-	"preferred",
-	"routine",
-]);
-
-function identityTokens(value: string): Set<string> {
-	return new Set(
-		value
-			.normalize("NFC")
-			.toLocaleLowerCase("en")
-			.match(/[a-z]+/g)
-			?.filter((token) => !GENERIC_IDENTITY_TOKENS.has(token)) ?? [],
-	);
-}
-
-function inferEnglishPropertyId(property: string): string | undefined {
-	if ([...property].some((character) => (character.codePointAt(0) ?? 0) > 0x7f))
-		return undefined;
-	const propertyTokens = identityTokens(property);
-	if (propertyTokens.size === 0) return undefined;
-	const candidates = [...EXTRACTOR_PROPERTY_IDS].filter((propertyId) => {
-		const idTokens = identityTokens(propertyId);
-		return (
-			[...propertyTokens].every((token) => idTokens.has(token)) ||
-			[...idTokens].every((token) => propertyTokens.has(token))
-		);
-	});
-	return candidates.length === 1 ? candidates[0] : undefined;
 }
 
 /**
@@ -506,16 +451,12 @@ function parseStructuredFact(value: unknown): StructuredFact | undefined {
 		(candidate.cardinality !== "single" && candidate.cardinality !== "multi")
 	)
 		return undefined;
-	const subjectId =
-		typeof candidate.subjectId === "string" &&
-		EXTRACTOR_SUBJECT_IDS.has(candidate.subjectId)
-			? candidate.subjectId
-			: undefined;
-	const propertyId =
-		typeof candidate.propertyId === "string" &&
-		EXTRACTOR_PROPERTY_IDS.has(candidate.propertyId)
-			? candidate.propertyId
-			: inferEnglishPropertyId(candidate.property);
+	const subjectId = isMemorySubjectId(candidate.subjectId)
+		? candidate.subjectId
+		: undefined;
+	const propertyId = isMemoryPropertyId(candidate.propertyId)
+		? candidate.propertyId
+		: inferEnglishMemoryPropertyId(candidate.property);
 	const identityIds = subjectId && propertyId ? { subjectId, propertyId } : {};
 	return {
 		subject: candidate.subject,
