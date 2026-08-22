@@ -26,7 +26,9 @@ export type SemanticIngestReceipt = {
 export type SemanticEngineBridge = {
 	readonly isolationPolicy: "fresh-case-state-v1";
 	readonly identityPolicy: "engine-native-memory-v1";
-	readonly ingestionPolicy: "sequential-turn-commit-v1";
+	readonly ingestionPolicy:
+		| "sequential-turn-commit-v1"
+		| "sequential-turn-settled-bank-v1";
 	readonly temporalInputPolicy: "engine-default-ingest-time-v1";
 	readonly retrievalSurface:
 		| "engine-native-semantic-memory-v1"
@@ -114,7 +116,10 @@ export async function runSemanticRawContract(
 				throw new Error("semantic bridge does not guarantee fresh case state");
 			if (bridge.identityPolicy !== "engine-native-memory-v1")
 				throw new Error("semantic bridge must preserve engine-native identity");
-			if (bridge.ingestionPolicy !== "sequential-turn-commit-v1")
+			if (
+				bridge.ingestionPolicy !== "sequential-turn-commit-v1" &&
+				bridge.ingestionPolicy !== "sequential-turn-settled-bank-v1"
+			)
 				throw new Error("semantic bridge must commit each turn sequentially");
 			if (bridge.temporalInputPolicy !== "engine-default-ingest-time-v1")
 				throw new Error("semantic bridge must not receive fixture timestamps");

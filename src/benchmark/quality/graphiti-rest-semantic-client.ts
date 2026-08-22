@@ -72,15 +72,7 @@ export class GraphitiRestSemanticClient implements GraphitiSemanticClient {
 		groupIds: string[];
 		maxFacts: number;
 	}): Promise<GraphitiNativeFact[]> {
-		const value = await this.fetchJson("search", {
-			method: "POST",
-			body: JSON.stringify({
-				query: input.query,
-				group_ids: input.groupIds,
-				max_facts: input.maxFacts,
-			}),
-		});
-		const searchFacts = parseFacts(value, "search");
+		const searchFacts = await this.searchFactsRaw(input);
 		const currentFacts = (
 			await Promise.all(
 				input.groupIds.map((groupId) => this.listCurrentFacts(groupId)),
@@ -92,6 +84,23 @@ export class GraphitiRestSemanticClient implements GraphitiSemanticClient {
 		return searchFacts.filter(
 			(fact) => currentById.get(fact.uuid) === fact.fact,
 		);
+	}
+
+	/** Unprojected Graphiti search output, used only for contamination audits. */
+	async searchFactsRaw(input: {
+		query: string;
+		groupIds: string[];
+		maxFacts: number;
+	}): Promise<GraphitiNativeFact[]> {
+		const value = await this.fetchJson("search", {
+			method: "POST",
+			body: JSON.stringify({
+				query: input.query,
+				group_ids: input.groupIds,
+				max_facts: input.maxFacts,
+			}),
+		});
+		return parseFacts(value, "search");
 	}
 
 	async listCurrentFacts(groupId: string): Promise<GraphitiNativeFact[]> {

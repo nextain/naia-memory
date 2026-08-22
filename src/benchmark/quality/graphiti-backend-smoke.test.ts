@@ -35,6 +35,29 @@ describe("runGraphitiBackendSmoke", () => {
 			searchStateIdentity: true,
 		});
 		expect(client.deleteGroup).toHaveBeenCalledTimes(2);
+		expect(result.counts.committedEpisodes).toBe(3);
+	});
+
+	it("audits unprojected search output instead of accepting projected identity", async () => {
+		let current = [{ uuid: "old", fact: "서울" }];
+		const client: GraphitiSemanticClient & {
+			searchFactsRaw: GraphitiSemanticClient["searchFacts"];
+		} = {
+			addEpisode: vi.fn(async ({ content }) => {
+				if (content.includes("부산")) current = [{ uuid: "new", fact: "부산" }];
+			}),
+			hasEpisode: vi.fn(async () => true),
+			listCurrentFacts: vi.fn(async () => [...current]),
+			searchFacts: vi.fn(async () => [...current]),
+			searchFactsRaw: vi.fn(async () => [
+				...current,
+				{ uuid: "old", fact: "서울" },
+			]),
+			deleteGroup: vi.fn(async () => undefined),
+		};
+		const result = await runGraphitiBackendSmoke(client, { pollIntervalMs: 0 });
+		expect(result.passed).toBe(false);
+		expect(result.counts.staleRawSearchResults).toBe(1);
 	});
 
 	it("fails closed when search returns an expired edge", async () => {

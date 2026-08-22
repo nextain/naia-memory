@@ -1,6 +1,8 @@
 # Graphiti semantic comparison contract (2026-08-22)
 
-Status: backend eligibility passed; not yet a competitive result.
+Status: backend eligibility rejected by the 2026-08-23 v2 smoke; do not score
+or publish the existing Graphiti campaigns. Eligibility requires a new clean
+smoke with `passed: true` before any campaign rerun.
 
 ## Why Graphiti belongs in the comparison
 

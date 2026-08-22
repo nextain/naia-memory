@@ -12,9 +12,15 @@
   "llmModel": "gemini-2.5-flash",
   "embeddingModel": "gemini-embedding-001",
   "currentFactRule": "expired_at-is-null",
-  "networkPolicy": "loopback-isolated",
+  "serviceNetworkPolicy": "unauthenticated-http-loopback-only",
+  "modelNetworkPolicy": "external-gemini-api-required-non-hermetic",
   "ingestionPolicy": "synchronous-native-episode-commit",
   "episodeIdentityPolicy": "core-allocated-native-uuid",
   "searchValidityPolicy": "native-search-intersect-current-native-edges",
-  "registration": "from graphiti_benchmark_sidecar import router as benchmark_router; app.include_router(benchmark_router)"
+  "clientLifecyclePolicy": "single-process-client-off-loop-construction-explicit-public-init",
+  "coreDistributionPolicy": "server-uv-lock-graphiti-core-0.28.2",
+  "requiredPatch": "process-lifetime-client.patch",
+  "providerPatch": "provider-adapter.patch",
+  "externalModelDependency": "non-hermetic-gemini-api",
+  "registration": "from graph_service.graphiti_benchmark_sidecar import router as benchmark_router; app.include_router(benchmark_router)"
 }

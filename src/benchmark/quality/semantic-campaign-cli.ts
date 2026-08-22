@@ -114,7 +114,8 @@ export function validateRawArtifact(
 						})),
 						query: benchmarkCase.query,
 					}) ||
-				item.ingestionPolicy !== "sequential-turn-commit-v1" ||
+				(item.ingestionPolicy !== "sequential-turn-commit-v1" &&
+					item.ingestionPolicy !== "sequential-turn-settled-bank-v1") ||
 				item.temporalInputPolicy !== "engine-default-ingest-time-v1" ||
 				(item.retrievalSurface !== "engine-native-semantic-memory-v1" &&
 					item.retrievalSurface !== "engine-native-core-state-v1" &&
@@ -335,7 +336,7 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 		generalizationBoundary:
 			"Generated diagnostic cases only; repetitions measure execution stability, not held-out generalization.",
 		configurationPolicy:
-			"Engine-native surfaces are observed with disclosed native configurations. Letta exposes always-active non-persona core blocks first, followed by its query-ranked archival search results, and preserves the complete core-plus-archive state for identity validation. Graphiti retrieval is projected onto complete current native edges and may return fewer than top-k. Component-level parity and a single retrieval leaderboard are not claimed.",
+			"Engine-native surfaces are observed with disclosed native configurations. Letta exposes always-active non-persona core blocks first, followed by its query-ranked archival search results, and preserves the complete core-plus-archive state for identity validation. Graphiti retrieval is projected onto complete current native edges and may return fewer than top-k. A 2026-08-23 local smoke observed 2 stale results among 3 raw native search results; projected scores therefore do not establish Graphiti-native retrieval quality. Component-level parity and a single retrieval leaderboard are not claimed.",
 	};
 	const manifest = {
 		schemaVersion: "naia-memory-semantic-campaign-v3",

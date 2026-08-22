@@ -95,6 +95,16 @@ describe("GraphitiRestSemanticClient", () => {
 				maxFacts: 3,
 			}),
 		).resolves.toEqual([{ uuid: "edge-1", fact: "비빔밥을 좋아한다" }]);
+		const rawRequest = vi.fn(async () =>
+			json({ facts: [{ uuid: "edge-old", fact: "라면을 좋아한다" }] }),
+		);
+		const rawClient = new GraphitiRestSemanticClient({
+			baseUrl: "http://127.0.0.1:8000",
+			fetch: rawRequest,
+		});
+		await expect(
+			rawClient.searchFactsRaw({ query: "음식", groupIds: ["g"], maxFacts: 3 }),
+		).resolves.toEqual([{ uuid: "edge-old", fact: "라면을 좋아한다" }]);
 		await expect(client.deleteGroup("g")).rejects.toThrow(/422/);
 	});
 });

@@ -389,6 +389,9 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 						}
 					: {
 							providerPolicy: "engine-server-native-configuration-v1",
+							ingestionSurface: "synchronous-retain-settled-bank-v1",
+							settlePolicy:
+								"two-consecutive-zero-pending-bank-stats-fail-on-background-error-v1",
 							endpoint: discloseEndpoint(hindsightEndpoint),
 							hindsightRuntime: hindsightRuntimeReceipt,
 						}),

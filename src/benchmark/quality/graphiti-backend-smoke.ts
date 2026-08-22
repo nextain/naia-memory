@@ -5,7 +5,7 @@ import type {
 } from "./bridge-graphiti-semantic.js";
 
 export type GraphitiBackendSmokeResult = {
-	schemaVersion: 1;
+	schemaVersion: 2;
 	passed: boolean;
 	checks: {
 		episodeCommit: boolean;
@@ -20,6 +20,9 @@ export type GraphitiBackendSmokeResult = {
 		expiredFromCurrentState: number;
 		newInCurrentState: number;
 		searchResults: number;
+		rawSearchResults: number;
+		staleRawSearchResults: number;
+		committedEpisodes: number;
 	};
 };
 
@@ -30,7 +33,9 @@ export type GraphitiBackendSmokeOptions = {
 };
 
 export async function runGraphitiBackendSmoke(
-	client: GraphitiSemanticClient,
+	client: GraphitiSemanticClient & {
+		searchFactsRaw?: GraphitiSemanticClient["searchFacts"];
+	},
 	options: GraphitiBackendSmokeOptions = {},
 ): Promise<GraphitiBackendSmokeResult> {
 	const groupA = `graphiti-smoke-a-${randomUUID()}`;
@@ -41,8 +46,9 @@ export async function runGraphitiBackendSmoke(
 		options.wait ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
 	let outcome: GraphitiBackendSmokeResult | undefined;
 	let executionError: unknown;
+	let committedEpisodes = 0;
 	try {
-		await ingestAndWait(
+		committedEpisodes += await ingestAndWait(
 			client,
 			groupA,
 			"저는 서울에 살고 있습니다.",
@@ -51,7 +57,7 @@ export async function runGraphitiBackendSmoke(
 			wait,
 		);
 		const before = await client.listCurrentFacts(groupA);
-		await ingestAndWait(
+		committedEpisodes += await ingestAndWait(
 			client,
 			groupB,
 			"저는 제주도에서 감귤 농장을 운영합니다.",
@@ -61,7 +67,7 @@ export async function runGraphitiBackendSmoke(
 		);
 		const isolated = await client.listCurrentFacts(groupB);
 		const groupAAfterB = await client.listCurrentFacts(groupA);
-		await ingestAndWait(
+		committedEpisodes += await ingestAndWait(
 			client,
 			groupA,
 			"서울에서 부산으로 이사했습니다. 이제 서울에 살지 않고 부산에 삽니다.",
@@ -75,6 +81,13 @@ export async function runGraphitiBackendSmoke(
 			groupIds: [groupA],
 			maxFacts: 10,
 		});
+		const rawSearch = client.searchFactsRaw
+			? await client.searchFactsRaw({
+					query: "지금 어디에 살고 있나요?",
+					groupIds: [groupA],
+					maxFacts: 10,
+				})
+			: search;
 
 		const beforeIds = new Set(before.map((fact) => fact.uuid));
 		const afterIds = new Set(after.map((fact) => fact.uuid));
@@ -89,18 +102,20 @@ export async function runGraphitiBackendSmoke(
 				groupAAfterB.some((candidate) => sameFact(fact, candidate)),
 			) &&
 			!isolated.some((fact) => beforeIds.has(fact.uuid));
+		const staleRawSearchResults = rawSearch.filter(
+			(fact) => state.get(fact.uuid) !== fact.fact,
+		).length;
 		const searchStateIdentity =
-			search.length > 0 &&
-			search.every((fact) => state.get(fact.uuid) === fact.fact);
+			rawSearch.length > 0 && staleRawSearchResults === 0;
 		const supersessionObserved = expired.length > 0 && created.length > 0;
 		const checks = {
-			episodeCommit: true,
+			episodeCommit: committedEpisodes === 3,
 			namespaceIsolation,
 			supersessionObserved,
 			searchStateIdentity,
 		};
 		outcome = {
-			schemaVersion: 1,
+			schemaVersion: 2,
 			passed: Object.values(checks).every(Boolean),
 			checks,
 			counts: {
@@ -110,6 +125,9 @@ export async function runGraphitiBackendSmoke(
 				expiredFromCurrentState: expired.length,
 				newInCurrentState: created.length,
 				searchResults: search.length,
+				rawSearchResults: rawSearch.length,
+				staleRawSearchResults,
+				committedEpisodes,
 			},
 		};
 	} catch (error) {
@@ -145,7 +163,7 @@ async function ingestAndWait(
 	pollIntervalMs: number,
 	timeoutMs: number,
 	wait: (milliseconds: number) => Promise<void>,
-): Promise<void> {
+): Promise<1> {
 	const uuid = randomUUID();
 	await client.addEpisode({
 		uuid,
@@ -160,6 +178,7 @@ async function ingestAndWait(
 			throw new Error("Graphiti smoke episode commit timed out");
 		await wait(pollIntervalMs);
 	}
+	return 1;
 }
 
 function sameFact(
