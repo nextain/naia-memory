@@ -59,3 +59,29 @@ on an independent Korean full corpus. It cannot by itself establish that Naia is
 the best global memory engine or that Naia's lifecycle/update semantics are
 better. A public competitive report additionally requires protocol-matched
 external baselines and independent adversarial review of metric compatibility.
+
+## Post-launch disclosure correction (score still unseen)
+
+This section was added after the run started, in response to adversarial review,
+while no effectiveness score was available. It is not preregistered content.
+The original frozen document is commit `042d7ff` with SHA-256
+`e9adaf9d88617673b5856c91e9d6549eb4765724abc13a9e44aa55cbf0cd3a9e`.
+The retrieval policy, source locks, corpus, queries, and metrics were not changed.
+
+- The `multilingual-e5-large` model card reports that MIRACL **training-split**
+  examples were included in model training. This run does not use development
+  labels for tuning, but it is not a dataset-family-zero-shot evaluation.
+- `successAt1`, `successAt5`, and `successAt10` in the result are binary Hit
+  Rate@1, Hit Rate@5, and Hit Rate@10: the fraction of queries with at least one
+  positive passage in the corresponding prefix. They are not reciprocal rank.
+- Reported query latency spans query embedding plus exact Qdrant search. It must
+  be labelled end-to-end query latency, not search-only or index latency.
+- The active Qdrant service reports version `1.15.5`, commit
+  `48203e414e4e7f639a6d394fb6e4df695f808e51`. The final receipt must bind this
+  service identity together with the result and evaluator artifacts.
+- The result's `policyReceipt` is the machine-readable record of model revision,
+  q8 quantization, `query: ` / `passage: ` prefixes, mean pooling,
+  normalization, and maximum token length. The result's `cpuOnly` field and the
+  launch environment receipt record the runtime device constraint; the final
+  evidence receipt must bind both records rather than implying that either one
+  contains the complete execution identity.

@@ -21,6 +21,12 @@ for this split. Recall@100 is the mean, over all 213 queries, of unique judged
 positive passages retrieved in the first 100 divided by that query's positive
 judgment count.
 
+The runner's `successAt1`, `successAt5`, and `successAt10` fields are Hit Rate@k:
+the mean binary indicator that a query has at least one positive passage in its
+top-k results. They are supplementary diagnostics and are not historical-table
+comparison metrics. Runner latency includes query embedding and exact Qdrant
+search and must be reported as end-to-end query latency.
+
 The generated TREC run is the interchange artifact. Before a public claim, its
 metrics must be reproduced by an independent evaluator or a separately
 implemented parser, not accepted solely from the benchmark runner's in-process
@@ -38,6 +44,11 @@ trec_eval -m ndcg_cut.10 -m recall.100 <locked-qrels> <generated-trec-run>
 Both `all` values must agree with the JSON result within `1e-6`. The evaluator
 commit, command, stdout, binary SHA-256, and agreement deltas belong in the
 final evidence receipt.
+
+The active Qdrant dependency reports version `1.15.5` at commit
+`48203e414e4e7f639a6d394fb6e4df695f808e51`. The final evidence receipt must
+bind that service identity; this dependency detail was recorded after launch
+but before the effectiveness score was available.
 
 ## Frozen historical reference rows
 
@@ -63,7 +74,8 @@ measured Naia vector score and its numerical difference from each frozen row.
 It may call a result stronger or weaker only on the corresponding metric and
 protocol. It must identify the actual embedding policy, including model,
 revision, q8 quantization, prefixes, pooling, title composition, and exact
-search.
+search. This identity is the union of the result configuration and the final
+environment receipt; it is not claimed to live in one nested policy object.
 
 ## Prohibited statements
 
