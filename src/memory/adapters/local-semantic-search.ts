@@ -39,11 +39,16 @@ export async function searchLocalSemanticMemory(
 			const now = Date.now();
 		        const BROAD_FACTOR = 3;
 			const searchMode = process.env.NAIA_SEARCH_MODE ?? (host.embedder && host.embedder.dims >= 2000 ? "vector-only" : "rrf");
+			if (!["rrf", "vector-only", "bm25-only"].includes(searchMode)) {
+				throw new Error(`unsupported NAIA_SEARCH_MODE: ${searchMode}`);
+			}
 
 			// #27 HyDE — caller 가 queryHint 주면 그것으로 embedding (가상 답 →
 			// fact form 정합). 미설정 시 query 그대로.
 			const embedTarget = context?.queryHint ?? query;
-			const queryVec = await host.embedWithCache(embedTarget);
+			const queryVec = searchMode === "bm25-only"
+				? null
+				: await host.embedWithCache(embedTarget);
 
 			const queryTokens = tokenize(query);
 			const structuredQuery = context?.structuredQuery;
@@ -203,6 +208,9 @@ export async function searchLocalSemanticMemory(
 			                if (!isRelevant && !deepRecall) return null;					let relevanceScore: number;
 					if (searchMode === "vector-only") {
 				        relevanceScore = vs + eb;
+					} else if (searchMode === "bm25-only") {
+						relevanceScore =
+							1 / (RRF_K + (bm25Rank?.get(fact.id) ?? allFacts.length)) + eb;
 					} else {
 					        // RRF fusion of the vector + BM25 rank streams. The
 					        // entity/KG bonus (eb) MUST also be added here — it is a

@@ -26,6 +26,8 @@ const MODEL_REVISION = OFFLINE_MODEL_REVISIONS[MODEL];
 const TOP_K = 100;
 const BATCH_SIZE = 8;
 const FIXED_NOW = 1_720_000_000_000;
+const SEARCH_MODES = ["rrf", "vector-only", "bm25-only"] as const;
+type SearchMode = (typeof SEARCH_MODES)[number];
 
 interface VectorCacheReceipt {
 	schemaVersion: 1;
@@ -91,6 +93,12 @@ async function main() {
 		"MIRACL_CANDIDATE_DOCUMENT_IDS",
 	);
 	const outputPrefix = requiredEnvironment("MIRACL_NATIVE_EVALUATION_PREFIX");
+	const searchMode = (process.env.MIRACL_NATIVE_SEARCH_MODE ??
+		"rrf") as SearchMode;
+	if (!SEARCH_MODES.includes(searchMode))
+		throw new Error(
+			`MIRACL_NATIVE_SEARCH_MODE must be one of ${SEARCH_MODES.join(", ")}`,
+		);
 	if (MIRACL_KO_LOCK.files.length !== 5)
 		throw new Error(
 			"locked MIRACL layout must contain topics, qrels, and 3 shards",
@@ -137,7 +145,8 @@ async function main() {
 	);
 
 	const embedder = new OfflineEmbeddingProvider(MODEL, "cpu", MODEL_REVISION);
-	const vectorPath = `${outputPrefix}.vectors.f32`;
+	const vectorPrefix = process.env.MIRACL_NATIVE_VECTOR_PREFIX ?? outputPrefix;
+	const vectorPath = `${vectorPrefix}.vectors.f32`;
 	const vectorReceiptPath = `${vectorPath}.receipt.json`;
 	const vectorBinding: VectorCacheReceipt["binding"] = {
 		candidateDocumentIdsSha256: expectedPoolHash,
@@ -224,7 +233,9 @@ async function main() {
 		);
 	const kg = new KnowledgeGraph(emptyKGState());
 	process.env.NAIA_MMR = "off";
-	Reflect.deleteProperty(process.env, "NAIA_SEARCH_MODE");
+	if (searchMode === "rrf")
+		Reflect.deleteProperty(process.env, "NAIA_SEARCH_MODE");
+	else process.env.NAIA_SEARCH_MODE = searchMode;
 	const rankings: Array<{
 		queryId: string;
 		ranking: string[];
@@ -277,7 +288,7 @@ async function main() {
 		.flatMap(({ queryId, ranking }) =>
 			ranking.map(
 				(documentId, index) =>
-					`${queryId} Q0 ${documentId} ${index + 1} ${TOP_K - index} naia-local-rrf`,
+					`${queryId} Q0 ${documentId} ${index + 1} ${TOP_K - index} naia-local-${searchMode}`,
 			),
 		)
 		.join("\n")}\n`;
@@ -294,7 +305,7 @@ async function main() {
 		},
 		configuration: {
 			productFunction: "searchLocalSemanticMemory",
-			searchMode: "rrf",
+			searchMode,
 			topK: TOP_K,
 			deepRecall: true,
 			mmr: "off",
