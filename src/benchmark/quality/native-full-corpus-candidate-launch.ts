@@ -19,6 +19,10 @@ const EQUIVALENCE_SOURCE_SHA256 = {
 		"1b6664ca151f71711361db6033322a225906d2373b00439906d50d07d6c82fd4",
 	"src/benchmark/quality/true-batch-equivalence-evidence-cli.ts":
 		"77ee7bfda10d3435948ddc7ba1ce672722b19e518372395d0d84e2d477ee9407",
+	"src/benchmark/quality/true-batch-equivalence-runner.ts":
+		"1095d1e9221e948a31d585b93abb7c9fa7e40d9fd51be9970ed23524ad880651",
+	"src/benchmark/quality/true-batch-equivalence-runner-cli.ts":
+		"f817cd91a3d565107a31de61527823006c9f916e0a5168497c7fe79ca3db76cb",
 } as const;
 
 const BASELINE_PATHS = new Set([
