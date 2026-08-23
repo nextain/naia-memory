@@ -28,6 +28,10 @@ import {
 	canonicalPublicEvidenceV10SigningPacket,
 	collectPublicEvidenceV10Signature,
 } from "./public-evidence-v10-signing.js";
+import {
+	isPublicEvidenceManifest,
+	validatePublicEvidenceManifest,
+} from "./public-manifest-validator.js";
 import { isRfc3161DigestTimestampEvidence } from "./rfc3161-timestamp.js";
 
 const MAX_JSON_BYTES = 1024 * 1024;
@@ -123,16 +127,17 @@ export async function preparePublicEvidenceV10LaunchPacket(input: {
 	} catch {
 		throw new Error("v10 launch JSON artifact is invalid");
 	}
-	const coreRecord = coreValue as {
-		publisher?: unknown;
-		dataset?: { path?: unknown; sha256?: unknown };
-	};
+	if (!isPublicEvidenceManifest(coreValue))
+		throw new Error("v10 launch core manifest is invalid");
+	const coreDecision = validatePublicEvidenceManifest(coreValue);
+	if (!coreDecision.promotable)
+		throw new Error(
+			`v10 launch core manifest is not promotable: ${coreDecision.failures[0]}`,
+		);
 	if (
-		!coreValue ||
-		typeof coreValue !== "object" ||
-		coreRecord.publisher !== input.publisher ||
-		coreRecord.dataset?.path !== dataset.path ||
-		coreRecord.dataset.sha256 !== dataset.sha256
+		coreValue.publisher !== input.publisher ||
+		coreValue.dataset.path !== dataset.path ||
+		coreValue.dataset.sha256 !== dataset.sha256
 	)
 		throw new Error("v10 launch core manifest binding mismatch");
 	if (

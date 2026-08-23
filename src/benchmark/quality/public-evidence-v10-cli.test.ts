@@ -4,7 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { publicDatasetCustodySealSigningPacket } from "./public-dataset-custody-seal.js";
-import { trustPolicy } from "./public-evidence-fixture.js";
+import { trustPolicy, validManifest } from "./public-evidence-fixture.js";
+import { publicEvidenceScopeSha256 } from "./public-evidence-gate.js";
 import {
 	evaluatePublicEvidenceV10Bundle,
 	preparePublicEvidenceV10LaunchPacket,
@@ -37,6 +38,13 @@ describe("public evidence v10 verifier intake", () => {
 		];
 		const dataset = Buffer.from("artifact-1");
 		const datasetSha256 = createHash("sha256").update(dataset).digest("hex");
+		const manifest = validManifest();
+		manifest.publisher = "external-publisher";
+		manifest.dataset.sha256 = datasetSha256;
+		manifest.protocol.sameInputSha256 = datasetSha256;
+		for (const engine of manifest.engines) engine.datasetSha256 = datasetSha256;
+		manifest.adversarialReview.evidenceScopeSha256 =
+			publicEvidenceScopeSha256(manifest);
 		const seal = {
 			schemaVersion: "naia-memory-public-dataset-custody-seal-v1" as const,
 			custodian: "custodian",
@@ -48,10 +56,7 @@ describe("public evidence v10 verifier intake", () => {
 		const token = Buffer.from("artifact-4");
 		await writeFile(
 			join(evidence, paths[0] as string),
-			JSON.stringify({
-				publisher: "external-publisher",
-				dataset: { path: paths[1], sha256: datasetSha256 },
-			}),
+			JSON.stringify(manifest),
 		);
 		await writeFile(join(evidence, paths[1] as string), dataset);
 		await writeFile(join(evidence, paths[2] as string), JSON.stringify(seal));
@@ -85,8 +90,27 @@ describe("public evidence v10 verifier intake", () => {
 			join(evidence, paths[0] as string),
 			JSON.stringify({
 				publisher: "external-publisher",
-				dataset: { path: "other-dataset.json", sha256: datasetSha256 },
+				dataset: { path: paths[1], sha256: datasetSha256 },
 			}),
+		);
+		await expect(
+			preparePublicEvidenceV10LaunchPacket({
+				evidenceRoot: evidence,
+				publisher: "external-publisher",
+				publisherPublicKeyPath: keyPath,
+				coreManifestPath: paths[0] as string,
+				datasetPath: paths[1] as string,
+				custodySealPath: paths[2] as string,
+				custodyTimestampEvidencePath: paths[3] as string,
+				custodyTimestampTokenPath: paths[4] as string,
+			}),
+		).rejects.toThrow("core manifest is invalid");
+		manifest.dataset.path = "other-dataset.json";
+		manifest.adversarialReview.evidenceScopeSha256 =
+			publicEvidenceScopeSha256(manifest);
+		await writeFile(
+			join(evidence, paths[0] as string),
+			JSON.stringify(manifest),
 		);
 		await expect(
 			preparePublicEvidenceV10LaunchPacket({
