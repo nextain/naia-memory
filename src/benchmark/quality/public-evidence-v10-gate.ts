@@ -16,11 +16,13 @@ import type {
 	PublicEvidenceManifest,
 	PublicEvidenceTrustPolicy,
 } from "./public-evidence-types.js";
+import { isPublicEvidenceTrustPolicy } from "./public-evidence-types.js";
 import { isPublicEvidenceManifest } from "./public-manifest-validator.js";
 import {
 	type Rfc3161CommandRunner,
 	type Rfc3161TimestampTrustPolicy,
 	isRfc3161DigestTimestampEvidence,
+	isRfc3161TimestampTrustPolicy,
 } from "./rfc3161-timestamp.js";
 
 const SHA256 = /^[a-f0-9]{64}$/;
@@ -47,7 +49,9 @@ export type PublicEvidenceV10TrustPolicy = {
 	custodyTimestamp: Rfc3161TimestampTrustPolicy;
 };
 
-function isEnvelope(value: unknown): value is PublicEvidenceV10Envelope {
+export function isPublicEvidenceV10Envelope(
+	value: unknown,
+): value is PublicEvidenceV10Envelope {
 	if (!value || typeof value !== "object" || Array.isArray(value)) return false;
 	const item = value as Record<string, unknown>;
 	const keys = [
@@ -77,6 +81,20 @@ function isEnvelope(value: unknown): value is PublicEvidenceV10Envelope {
 			"custodyTimestampEvidenceSha256",
 			"custodyTimestampTokenSha256",
 		].every((key) => SHA256.test(item[key] as string))
+	);
+}
+
+export function isPublicEvidenceV10TrustPolicy(
+	value: unknown,
+): value is PublicEvidenceV10TrustPolicy {
+	if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+	const item = value as Record<string, unknown>;
+	return (
+		Object.keys(item).length === 2 &&
+		"core" in item &&
+		"custodyTimestamp" in item &&
+		isPublicEvidenceTrustPolicy(item.core) &&
+		isRfc3161TimestampTrustPolicy(item.custodyTimestamp)
 	);
 }
 
@@ -116,8 +134,10 @@ export async function evaluatePublicEvidenceV10(input: {
 	trustedCaBytes?: Buffer;
 }): Promise<PublicEvidenceDecision> {
 	try {
-		if (!isEnvelope(input.envelope))
+		if (!isPublicEvidenceV10Envelope(input.envelope))
 			throw new Error("v10 promotion envelope shape is invalid");
+		if (!isPublicEvidenceV10TrustPolicy(input.trustPolicy))
+			throw new Error("v10 verifier trust policy shape is invalid");
 		const envelope = input.envelope;
 		if (
 			!hasValidEvidenceSignature(
