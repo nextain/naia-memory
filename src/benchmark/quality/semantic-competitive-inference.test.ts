@@ -223,9 +223,14 @@ describe("semantic competitive inference", () => {
 	});
 
 	it("discloses disagreement between author-equal and family-equal sensitivity", () => {
+		const sensitivityPlan = {
+			...plan,
+			requiredIndependentAuthorClustersByLanguage: { en: 10, ko: 10 },
+			requiredIndependentConstructionClustersByLanguage: { en: 10, ko: 10 },
+		};
 		const samples = ["en", "ko"].flatMap((language) =>
-			Array.from({ length: 6 }, (_, authorIndex) => {
-				const familyCount = authorIndex === 0 ? 10 : 1;
+			Array.from({ length: 10 }, (_, authorIndex) => {
+				const familyCount = authorIndex === 0 ? 20 : 1;
 				return Array.from({ length: familyCount }, (_, familyIndex) => {
 					const familyId = `f-${language}-${authorIndex}-${familyIndex}`;
 					return [
@@ -239,7 +244,10 @@ describe("semantic competitive inference", () => {
 				}).flat();
 			}).flat(),
 		);
-		const result = calculateSemanticCompetitiveInference({ samples, plan });
+		const result = calculateSemanticCompetitiveInference({
+			samples,
+			plan: sensitivityPlan,
+		});
 		expect(
 			result.hypotheses.every(
 				(item) =>
@@ -248,6 +256,39 @@ describe("semantic competitive inference", () => {
 					!item.sensitivityDirectionalAgreement,
 			),
 		).toBe(true);
+		expect(result.allHypothesesRejected).toBe(true);
+		expect(result.allSensitivityDirectionsAgree).toBe(false);
+		expect(result.competitiveThresholdsPassed).toBe(false);
+	});
+
+	it("does not treat neutral sensitivity means as directional agreement", () => {
+		const samples = ["en", "ko"].flatMap((language) =>
+			Array.from({ length: 6 }, (_, index) => [
+				sample(
+					"naia",
+					language,
+					`f-${language}-${index}`,
+					index % 2 === 0 ? 1 : 0,
+				),
+				sample(
+					"mem0",
+					language,
+					`f-${language}-${index}`,
+					index % 2 === 0 ? 0 : 1,
+				),
+			]).flat(),
+		);
+		const result = calculateSemanticCompetitiveInference({ samples, plan });
+		expect(
+			result.hypotheses.every(
+				(item) =>
+					item.authorEqualMeanDifference === 0 &&
+					item.familyEqualMeanDifference === 0 &&
+					!item.sensitivityDirectionalAgreement,
+			),
+		).toBe(true);
+		expect(result.allSensitivityDirectionsAgree).toBe(false);
+		expect(result.competitiveThresholdsPassed).toBe(false);
 	});
 
 	it("fails closed on non-binary samples and unsupported exact-test size", () => {

@@ -44,6 +44,16 @@ function mean(values: number[]): number {
 	return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function haveMatchingNonZeroDirections(left: number, right: number): boolean {
+	if (
+		Math.abs(left) <= PRACTICAL_DIFFERENCE_TIE_TOLERANCE ||
+		Math.abs(right) <= PRACTICAL_DIFFERENCE_TIE_TOLERANCE
+	) {
+		return false;
+	}
+	return Math.sign(left) === Math.sign(right);
+}
+
 export function calculateSemanticCompetitiveInference(input: {
 	samples: SemanticCompetitiveSample[];
 	plan: SemanticAnalysisPlan;
@@ -225,9 +235,10 @@ export function calculateSemanticCompetitiveInference(input: {
 				observedMeanDifference: mean(constructionDifferences),
 				authorEqualMeanDifference,
 				familyEqualMeanDifference,
-				sensitivityDirectionalAgreement:
-					Math.sign(authorEqualMeanDifference) ===
-					Math.sign(familyEqualMeanDifference),
+				sensitivityDirectionalAgreement: haveMatchingNonZeroDirections(
+					authorEqualMeanDifference,
+					familyEqualMeanDifference,
+				),
 				minimumPracticallyImportantDifference:
 					plan.minimumPracticallyImportantDifference,
 				rawPValue,
@@ -280,15 +291,19 @@ export function calculateSemanticCompetitiveInference(input: {
 		),
 		allHypothesesEstimable: hypotheses.every((item) => item.estimable),
 		allHypothesesRejected: hypotheses.every((item) => item.holmRejected),
+		allSensitivityDirectionsAgree: hypotheses.every(
+			(item) => item.sensitivityDirectionalAgreement,
+		),
 		competitiveThresholdsPassed:
 			hypotheses.every((item) => item.estimable) &&
-			hypotheses.every((item) => item.holmRejected),
+			hypotheses.every((item) => item.holmRejected) &&
+			hypotheses.every((item) => item.sensitivityDirectionalAgreement),
 		internalIntegrityGateOnly: true as const,
 		claimEligible: false as const,
 		publicQuotable: false as const,
 		methodAdequacyVerified: false as const,
 		sampleSizeAdequacyVerified: false as const,
 		caveat:
-			"This exact sign test targets construction-cluster-majority superiority beyond MPID, not mean superiority. Families are averaged equally within authors and authors equally within each signed construction cluster; construction clusters are the inferential units. Author-equal and family-equal descriptive means are disclosed as a directional sensitivity check. Signed cluster IDs do not by themselves prove independence. Shifted differences within 1e-12 are ties. Holm plus an all-cells rule is conservative; power must be verified for this complete rule before any public claim.",
+			"This exact sign test targets construction-cluster-majority superiority beyond MPID, not mean superiority. Families are averaged equally within authors and authors equally within each signed construction cluster; construction clusters are the inferential units. Author-equal and family-equal descriptive means must agree in direction for every hypothesis. Signed cluster IDs do not by themselves prove independence. Shifted differences within 1e-12 are ties. Holm plus an all-cells rule is conservative; power must be verified for this complete rule before any public claim.",
 	};
 }
