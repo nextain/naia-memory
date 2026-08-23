@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { sha256Bytes } from "./native-full-corpus-evidence.js";
 import {
+	resolveEnglishCorpusIdentityBinding,
 	resolveFullCorpusLanguage,
 	resolveFullCorpusLaunchReceiptOutput,
 	resolveFullCorpusOutputPath,
@@ -52,6 +53,10 @@ const evaluationSource = resolve(
 	"src/benchmark/quality/native-full-corpus-evaluation-cli.ts",
 );
 const serviceBindingPath = environment.get("MIRACL_QDRANT_SERVICE_RECEIPT");
+const corpusIdentityBinding = resolveEnglishCorpusIdentityBinding(
+	environment,
+	(path) => JSON.parse(readFileSync(path, "utf8")) as unknown,
+);
 let qdrantServiceReceiptSha256: string | null = null;
 if (language === "en") {
 	if (!serviceBindingPath)
@@ -75,6 +80,9 @@ const receipt = {
 	cudaVisibleDevices: environment.get("CUDA_VISIBLE_DEVICES"),
 	qdrantUrl: qdrantUrl ?? "http://127.0.0.1:6334",
 	qdrantServiceReceiptSha256,
+	corpusIdentityReceiptSha256: corpusIdentityBinding?.receiptSha256 ?? null,
+	corpusIdentitySourceLockSha256:
+		corpusIdentityBinding?.sourceLockSha256 ?? null,
 	language,
 	outputPath: resolveFullCorpusOutputPath(environment),
 	evaluationSource,

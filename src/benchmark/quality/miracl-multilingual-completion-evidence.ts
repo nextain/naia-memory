@@ -15,6 +15,7 @@ import {
 	parseTrecEvalAll,
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
+import { verifyEnglishCorpusIdentityLaunchChain } from "./native-full-corpus-launch-receipt.js";
 import {
 	type NativeRuntimeExecutionIdentity,
 	validateNativeRuntimeExecutionIdentity,
@@ -45,6 +46,8 @@ interface MultilingualLaunchReceipt {
 	outputPath: string;
 	evaluationSourceSha256: string;
 	qdrantServiceReceiptSha256?: string | null;
+	corpusIdentityReceiptSha256?: string | null;
+	corpusIdentitySourceLockSha256?: string | null;
 }
 
 interface MultilingualRuntimeObservation {
@@ -204,6 +207,12 @@ export function createMultilingualCompletionEvidence(
 		language: input.language,
 		launchReceiptSha256: launch.qdrantServiceReceiptSha256,
 		resultReceiptSha256: result.configuration.qdrantServiceReceiptSha256,
+	});
+	verifyEnglishCorpusIdentityLaunchChain({
+		language: input.language,
+		receiptSha256: launch.corpusIdentityReceiptSha256,
+		launchSourceLockSha256: launch.corpusIdentitySourceLockSha256,
+		resultSourceLockSha256: result.inputs.sourceLockSha256,
 	});
 	let qdrantServiceReceiptArtifact:
 		| {

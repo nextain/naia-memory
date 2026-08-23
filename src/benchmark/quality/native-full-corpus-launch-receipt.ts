@@ -1,8 +1,49 @@
 import { basename, isAbsolute, normalize, resolve } from "node:path";
 import {
+	parseMiraclCorpusIdentityReceipt,
+	sha256MiraclCorpusIdentity,
+} from "./miracl-corpus-identity.js";
+import {
 	MIRACL_MULTILINGUAL_CONTRACT,
 	type MiraclEvidenceLanguage,
 } from "./miracl-multilingual-contract.js";
+
+export function resolveEnglishCorpusIdentityBinding(
+	environment: ReadonlyMap<string, string>,
+	readJson: (path: string) => unknown,
+): { receiptSha256: string; sourceLockSha256: string } | null {
+	const language = resolveFullCorpusLanguage(environment);
+	const path = environment.get("MIRACL_CORPUS_IDENTITY_RECEIPT");
+	if (language !== "en") {
+		if (path)
+			throw new Error("corpus identity launch binding is reserved for English");
+		return null;
+	}
+	if (!path)
+		throw new Error("English launch requires a corpus identity receipt");
+	const receipt = parseMiraclCorpusIdentityReceipt("en", readJson(path));
+	return {
+		receiptSha256: sha256MiraclCorpusIdentity(receipt),
+		sourceLockSha256: receipt.sourceLockSha256,
+	};
+}
+
+export function verifyEnglishCorpusIdentityLaunchChain(input: {
+	language: MiraclEvidenceLanguage;
+	receiptSha256?: string | null;
+	launchSourceLockSha256?: string | null;
+	resultSourceLockSha256: string;
+}): void {
+	if (input.language !== "en") return;
+	if (
+		!input.receiptSha256 ||
+		!/^[a-f0-9]{64}$/u.test(input.receiptSha256) ||
+		!input.launchSourceLockSha256 ||
+		!/^[a-f0-9]{64}$/u.test(input.launchSourceLockSha256) ||
+		input.launchSourceLockSha256 !== input.resultSourceLockSha256
+	)
+		throw new Error("English corpus identity launch chain mismatch");
+}
 
 function isLanguageScopedPath(
 	path: string,

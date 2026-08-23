@@ -7,6 +7,7 @@ import {
 	buildMiraclCorpusIdentityReceipt,
 	canonicalMiraclCorpusIdentity,
 	miraclCorpusShardPaths,
+	parseMiraclCorpusIdentityReceipt,
 	prepareMiraclCorpusIdentityScan,
 	publishMiraclCorpusIdentity,
 	sha256MiraclCorpusIdentity,
@@ -113,6 +114,26 @@ describe("MIRACL corpus identity qualification", () => {
 		expect(receipt.claimBoundary).toContain("no retrieval score");
 		expect(canonicalMiraclCorpusIdentity(receipt)).toMatch(/\n$/);
 		expect(sha256MiraclCorpusIdentity(receipt)).toMatch(/^[a-f0-9]{64}$/);
+	});
+
+	it("parses only canonical locked identity receipts", () => {
+		const receipt = buildMiraclCorpusIdentityReceipt({
+			language: "ko",
+			sourceLock: koSourceLock(),
+			producerSourceManifest: producerSourceManifest(),
+			scan: lockedKoScan(),
+		});
+		expect(parseMiraclCorpusIdentityReceipt("ko", receipt)).toEqual(receipt);
+		for (const changed of [
+			{ ...receipt, claimBoundary: "quality proven" },
+			{ ...receipt, corpusManifestSha256: "0".repeat(64) },
+			{ ...receipt, compressedBytes: receipt.compressedBytes + 1 },
+			{ ...receipt, language: "en" },
+			{ ...receipt, untrustedExtension: "must-not-be-dropped" },
+		])
+			expect(() =>
+				parseMiraclCorpusIdentityReceipt("ko", changed),
+			).toThrow();
 	});
 
 	it("rejects malformed scan identities", () => {

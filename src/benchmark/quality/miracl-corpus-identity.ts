@@ -144,6 +144,52 @@ export function sha256MiraclCorpusIdentity(
 		.digest("hex");
 }
 
+export function parseMiraclCorpusIdentityReceipt(
+	language: MiraclEvidenceLanguage,
+	value: unknown,
+): MiraclCorpusIdentityReceipt {
+	if (typeof value !== "object" || value === null)
+		throw new Error("MIRACL corpus identity receipt is not an object");
+	const receipt = value as Partial<MiraclCorpusIdentityReceipt>;
+	if (
+		receipt.schemaVersion !== 1 ||
+		receipt.artifactClass !== "corpus-identity-observation" ||
+		receipt.language !== language ||
+		receipt.datasetRevision !== MIRACL_DATASET_REVISION ||
+		receipt.corpusRevision !== MIRACL_CORPUS_REVISION ||
+		typeof receipt.claimBoundary !== "string" ||
+		typeof receipt.corpusManifestSha256 !== "string" ||
+		!Number.isSafeInteger(receipt.corpusShardCount) ||
+		!Number.isSafeInteger(receipt.compressedBytes) ||
+		receipt.duplicateDocidCount !== 0 ||
+		receipt.docidHashCanonicalization !== "utf8-docid-lf-v1" ||
+		typeof receipt.sourceLockSha256 !== "string" ||
+		!Number.isSafeInteger(receipt.documentCount) ||
+		typeof receipt.docidsSha256 !== "string" ||
+		!receipt.sourceLock ||
+		!receipt.producerSourceManifest
+	)
+		throw new Error("MIRACL corpus identity receipt shape is invalid");
+	const rebuilt = buildMiraclCorpusIdentityReceipt({
+		language,
+		sourceLock: receipt.sourceLock,
+		producerSourceManifest: receipt.producerSourceManifest,
+		scan: {
+			documentCount: receipt.documentCount as number,
+			docidsSha256: receipt.docidsSha256,
+			compressedShardCount: receipt.corpusShardCount as number,
+			compressedBytes: receipt.compressedBytes as number,
+			duplicateDocidCount: 0,
+		},
+	});
+	if (
+		canonicalMiraclCorpusIdentity(receipt as MiraclCorpusIdentityReceipt) !==
+		canonicalMiraclCorpusIdentity(rebuilt)
+	)
+		throw new Error("MIRACL corpus identity receipt is not canonical");
+	return rebuilt;
+}
+
 export function readMiraclSourceReceipt(path: string): unknown {
 	try {
 		return JSON.parse(readFileSync(path, "utf8")) as unknown;
