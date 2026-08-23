@@ -32,7 +32,7 @@ async function fixture() {
 		artifacts[name] = path;
 	}
 	const draft = {
-		schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v4",
+		schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v5",
 		blindingSeed: "held-secret-seed",
 		artifacts,
 	};
