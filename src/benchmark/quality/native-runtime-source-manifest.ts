@@ -28,6 +28,32 @@ function canonicalPayload(
 	return `${JSON.stringify(manifest)}\n`;
 }
 
+export function validateNativeRuntimeSourceManifest(
+	expected: NativeRuntimeSourceManifest,
+): void {
+	if (
+		!Array.isArray(expected.additionalInputs) ||
+		!Array.isArray(expected.files) ||
+		expected.additionalInputs.some((path) => typeof path !== "string") ||
+		expected.files.some(
+			(entry) =>
+				typeof entry?.path !== "string" || typeof entry.sha256 !== "string",
+		)
+	)
+		throw new Error("runtime source manifest shape is invalid");
+	const expectedPayload = {
+		schemaVersion: expected.schemaVersion,
+		entryPoint: expected.entryPoint,
+		additionalInputs: [...expected.additionalInputs],
+		files: expected.files.map(({ path, sha256 }) => ({ path, sha256 })),
+	};
+	if (
+		expected.schemaVersion !== NATIVE_RUNTIME_SOURCE_MANIFEST_SCHEMA ||
+		expected.manifestSha256 !== sha256(canonicalPayload(expectedPayload))
+	)
+		throw new Error("runtime source manifest is internally inconsistent");
+}
+
 function rootRelative(root: string, path: string): string {
 	const candidate = relative(root, path);
 	if (
@@ -160,27 +186,13 @@ export function verifyNativeRuntimeSourceManifest(
 	root: string,
 	expected: NativeRuntimeSourceManifest,
 ): void {
-	if (
-		!Array.isArray(expected.additionalInputs) ||
-		!Array.isArray(expected.files) ||
-		expected.additionalInputs.some((path) => typeof path !== "string") ||
-		expected.files.some(
-			(entry) =>
-				typeof entry?.path !== "string" || typeof entry.sha256 !== "string",
-		)
-	)
-		throw new Error("runtime source manifest shape is invalid");
+	validateNativeRuntimeSourceManifest(expected);
 	const expectedPayload = {
 		schemaVersion: expected.schemaVersion,
 		entryPoint: expected.entryPoint,
 		additionalInputs: [...expected.additionalInputs],
 		files: expected.files.map(({ path, sha256 }) => ({ path, sha256 })),
 	};
-	if (
-		expected.schemaVersion !== NATIVE_RUNTIME_SOURCE_MANIFEST_SCHEMA ||
-		expected.manifestSha256 !== sha256(canonicalPayload(expectedPayload))
-	)
-		throw new Error("runtime source manifest is internally inconsistent");
 	const actual = buildNativeRuntimeSourceManifest({
 		root,
 		entryPoint: expected.entryPoint,

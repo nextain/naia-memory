@@ -155,6 +155,11 @@ export function parseMiraclSourceLockReceipt(
 	)
 		throw new Error(`MIRACL-${language} topics/qrels receipt mismatch`);
 	verifyMiraclCorpusManifest(language, corpus);
+	const canonicalCorpus = [...corpus].sort((left, right) =>
+		left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
+	);
+	if (JSON.stringify(corpus) !== JSON.stringify(canonicalCorpus))
+		throw new Error(`MIRACL-${language} corpus receipt order mismatch`);
 	const withProvider = files.map((file, index) => ({
 		...file,
 		provider: index < 2 ? ("dataset" as const) : ("corpus" as const),

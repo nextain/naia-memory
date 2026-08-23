@@ -207,10 +207,10 @@ describe("multilingual true-batch candidate authorization", () => {
 		expect(authorization.claimBoundary).toContain("no retrieval-quality");
 	});
 
-	it("keeps English fail-closed until its corpus identity is qualified", () => {
+	it("rejects a malformed English source receipt after identity qualification", () => {
 		const input = fixtures("en", "d".repeat(64));
 		expect(() => authorizeMultilingualTrueBatchCandidate(input)).toThrow(
-			"en corpus identity is not qualified",
+			"MIRACL-en source receipt header mismatch",
 		);
 	});
 

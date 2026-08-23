@@ -64,15 +64,13 @@ describe("native MIRACL corpus extraction", () => {
 	it("streams the complete corpus with stable ordinals and backpressure", async () => {
 		const directory = await mkdtemp(join(tmpdir(), "naia-native-corpus-"));
 		const shard = join(directory, "docs.jsonl.gz");
-		await writeFile(
-			shard,
-			gzipSync(
-				[
-					JSON.stringify({ docid: "a", title: "A", text: "첫 번째" }),
-					JSON.stringify({ docid: "b", title: "B", text: "두 번째" }),
-				].join("\n"),
-			),
+		const compressed = gzipSync(
+			[
+				JSON.stringify({ docid: "a", title: "A", text: "첫 번째" }),
+				JSON.stringify({ docid: "b", title: "B", text: "두 번째" }),
+			].join("\n"),
 		);
+		await writeFile(shard, compressed);
 		const observed: string[] = [];
 		let callbackActive = false;
 		const receipt = await scanNativeCorpusDocuments(
@@ -90,7 +88,26 @@ describe("native MIRACL corpus extraction", () => {
 			documentCount: 2,
 			docidsSha256:
 				"911169ddaaf146aff539f58c26c489af3b892dff0fe283c1c264c65ae5aa59a2",
+			compressedShardCount: 1,
+			compressedBytes: compressed.length,
+			duplicateDocidCount: 0,
 		});
+	});
+
+	it("rejects docids that make the LF-delimited identity ambiguous", async () => {
+		const directory = await mkdtemp(join(tmpdir(), "naia-native-corpus-"));
+		const shard = join(directory, "docs.jsonl.gz");
+		await writeFile(
+			shard,
+			gzipSync(
+				JSON.stringify({ docid: "line\nbreak", title: "A", text: "text" }),
+			),
+		);
+		await expect(
+			scanNativeCorpusDocuments([shard], () => undefined, {
+				duplicateWorkDirectory: directory,
+			}),
+		).rejects.toThrow("invalid MIRACL document");
 	});
 
 	it("fails closed on duplicate IDs during a full scan", async () => {

@@ -4,6 +4,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { StringDecoder } from "node:string_decoder";
 import { createGunzip } from "node:zlib";
 import Database from "better-sqlite3";
@@ -17,6 +18,9 @@ export interface NativeCorpusDocument {
 export interface NativeCorpusScanReceipt {
 	documentCount: number;
 	docidsSha256: string;
+	compressedShardCount: number;
+	compressedBytes: number;
+	duplicateDocidCount: 0;
 }
 
 export interface NativeCorpusScanOptions {
@@ -92,6 +96,7 @@ export async function scanNativeCorpusDocuments(
 	);
 	const docidsHash = createHash("sha256");
 	let documentCount = 0;
+	let totalCompressedBytes = 0;
 	try {
 		await duplicateTracker.open();
 		for (const [shardIndex, shard] of shards.entries()) {
@@ -125,17 +130,22 @@ export async function scanNativeCorpusDocuments(
 				await consumeDocument(parsed, documentCount);
 				documentCount++;
 			};
-			for await (const chunk of createReadStream(shard)
-				.pipe(observeCompressedBytes)
-				.pipe(createGunzip())) {
-				pending += decoder.write(chunk);
-				let separator = pending.indexOf("\n");
-				while (separator >= 0) {
-					await consume(pending.slice(0, separator));
-					pending = pending.slice(separator + 1);
-					separator = pending.indexOf("\n");
-				}
-			}
+			await pipeline(
+				createReadStream(shard),
+				observeCompressedBytes,
+				createGunzip(),
+				async (source) => {
+					for await (const chunk of source) {
+						pending += decoder.write(chunk);
+						let separator = pending.indexOf("\n");
+						while (separator >= 0) {
+							await consume(pending.slice(0, separator));
+							pending = pending.slice(separator + 1);
+							separator = pending.indexOf("\n");
+						}
+					}
+				},
+			);
 			pending += decoder.end();
 			if (pending.length > 0) await consume(pending);
 			const expected = options.expectedCompressedShards?.[shardIndex];
@@ -145,8 +155,15 @@ export async function scanNativeCorpusDocuments(
 					compressedHash.digest("hex") !== expected.sha256)
 			)
 				throw new Error(`${shard}: compressed source lock mismatch`);
+			totalCompressedBytes += compressedSize;
 		}
-		return { documentCount, docidsSha256: docidsHash.digest("hex") };
+		return {
+			documentCount,
+			docidsSha256: docidsHash.digest("hex"),
+			compressedShardCount: shards.length,
+			compressedBytes: totalCompressedBytes,
+			duplicateDocidCount: 0,
+		};
 	} finally {
 		await duplicateTracker.close();
 	}
@@ -205,6 +222,7 @@ function isNativeCorpusDocument(value: unknown): value is NativeCorpusDocument {
 	return (
 		typeof row.docid === "string" &&
 		row.docid.length > 0 &&
+		!/[\r\n]/u.test(row.docid) &&
 		typeof row.title === "string" &&
 		typeof row.text === "string"
 	);

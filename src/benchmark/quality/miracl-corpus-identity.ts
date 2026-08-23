@@ -8,15 +8,36 @@ import {
 } from "node:fs";
 import { dirname, join } from "node:path";
 import type { MiraclEvidenceLanguage } from "./miracl-multilingual-contract.js";
-import { parseMiraclSourceLockReceipt } from "./miracl-multilingual-download.js";
+import {
+	MIRACL_CORPUS_REVISION,
+	MIRACL_DATASET_REVISION,
+	MIRACL_MULTILINGUAL_CONTRACT,
+} from "./miracl-multilingual-contract.js";
+import {
+	type miraclSourceLockReceipt,
+	parseMiraclSourceLockReceipt,
+} from "./miracl-multilingual-download.js";
 import type { NativeCorpusScanReceipt } from "./native-corpus-extract.js";
+import {
+	type NativeRuntimeSourceManifest,
+	validateNativeRuntimeSourceManifest,
+} from "./native-runtime-source-manifest.js";
 
 export interface MiraclCorpusIdentityReceipt {
 	schemaVersion: 1;
 	artifactClass: "corpus-identity-observation";
 	claimBoundary: string;
 	language: MiraclEvidenceLanguage;
+	datasetRevision: typeof MIRACL_DATASET_REVISION;
+	corpusRevision: typeof MIRACL_CORPUS_REVISION;
+	corpusManifestSha256: string;
+	corpusShardCount: number;
+	compressedBytes: number;
+	duplicateDocidCount: 0;
+	docidHashCanonicalization: "utf8-docid-lf-v1";
 	sourceLockSha256: string;
+	sourceLock: ReturnType<typeof miraclSourceLockReceipt>;
+	producerSourceManifest: NativeRuntimeSourceManifest;
 	documentCount: number;
 	docidsSha256: string;
 }
@@ -33,6 +54,7 @@ export function prepareMiraclCorpusIdentityScan(input: {
 	sourceReceipt: unknown;
 }): {
 	sourceLockSha256: string;
+	sourceLock: ReturnType<typeof miraclSourceLockReceipt>;
 	shards: string[];
 	expectedCompressedShards: { size: number; sha256: string }[];
 } {
@@ -42,6 +64,7 @@ export function prepareMiraclCorpusIdentityScan(input: {
 	);
 	return {
 		sourceLockSha256: sourceLock.sourceLockSha256,
+		sourceLock,
 		shards: miraclCorpusShardPaths(input.sourceRoot, sourceLock.files),
 		expectedCompressedShards: sourceLock.files
 			.slice(2)
@@ -58,11 +81,15 @@ export function miraclCorpusShardPaths(
 
 export function buildMiraclCorpusIdentityReceipt(input: {
 	language: MiraclEvidenceLanguage;
-	sourceLockSha256: string;
+	sourceLock: ReturnType<typeof miraclSourceLockReceipt>;
+	producerSourceManifest: NativeRuntimeSourceManifest;
 	scan: NativeCorpusScanReceipt;
 }): MiraclCorpusIdentityReceipt {
-	if (!/^[a-f0-9]{64}$/.test(input.sourceLockSha256))
-		throw new Error("source lock SHA-256 is invalid");
+	const sourceLock = parseMiraclSourceLockReceipt(
+		input.language,
+		input.sourceLock,
+	);
+	validateNativeRuntimeSourceManifest(input.producerSourceManifest);
 	if (
 		!Number.isSafeInteger(input.scan.documentCount) ||
 		input.scan.documentCount < 1
@@ -70,13 +97,40 @@ export function buildMiraclCorpusIdentityReceipt(input: {
 		throw new Error("corpus document count is invalid");
 	if (!/^[a-f0-9]{64}$/.test(input.scan.docidsSha256))
 		throw new Error("corpus docid SHA-256 is invalid");
+	const contract = MIRACL_MULTILINGUAL_CONTRACT[input.language];
+	if (
+		sourceLock.sourceLockSha256 !==
+			contract.corpus.expectedSourceReceiptSha256 ||
+		input.scan.documentCount !== contract.corpus.expectedDocumentCount ||
+		input.scan.docidsSha256 !== contract.corpus.expectedDocidsSha256
+	)
+		throw new Error("corpus identity does not match the locked contract");
+	if (
+		input.scan.compressedShardCount !== contract.corpus.shardCount ||
+		input.scan.duplicateDocidCount !== 0
+	)
+		throw new Error("corpus scan verification is incomplete");
+	const expectedCompressedBytes = sourceLock.files
+		.slice(2)
+		.reduce((total, file) => total + file.size, 0);
+	if (input.scan.compressedBytes !== expectedCompressedBytes)
+		throw new Error("corpus compressed byte count mismatch");
 	return {
 		schemaVersion: 1,
 		artifactClass: "corpus-identity-observation",
 		claimBoundary:
 			"Source identity only; this observation contains no retrieval score, quality result, or multilingual comparison claim.",
 		language: input.language,
-		sourceLockSha256: input.sourceLockSha256,
+		datasetRevision: MIRACL_DATASET_REVISION,
+		corpusRevision: MIRACL_CORPUS_REVISION,
+		corpusManifestSha256: contract.corpus.manifestSha256,
+		corpusShardCount: input.scan.compressedShardCount,
+		compressedBytes: input.scan.compressedBytes,
+		duplicateDocidCount: input.scan.duplicateDocidCount,
+		docidHashCanonicalization: "utf8-docid-lf-v1",
+		sourceLockSha256: sourceLock.sourceLockSha256,
+		sourceLock,
+		producerSourceManifest: input.producerSourceManifest,
 		documentCount: input.scan.documentCount,
 		docidsSha256: input.scan.docidsSha256,
 	};

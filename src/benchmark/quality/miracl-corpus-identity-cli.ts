@@ -14,6 +14,7 @@ import {
 } from "./miracl-multilingual-contract.js";
 import { miraclSourceRoot } from "./miracl-multilingual-download.js";
 import { scanNativeCorpusDocuments } from "./native-corpus-extract.js";
+import { buildNativeRuntimeSourceManifest } from "./native-runtime-source-manifest.js";
 
 const language = process.argv[2] as MiraclEvidenceLanguage | undefined;
 if (!language || !(language in MIRACL_MULTILINGUAL_CONTRACT))
@@ -40,7 +41,12 @@ const scan = await scanNativeCorpusDocuments(prepared.shards, () => undefined, {
 });
 const receipt = buildMiraclCorpusIdentityReceipt({
 	language,
-	sourceLockSha256: prepared.sourceLockSha256,
+	sourceLock: prepared.sourceLock,
+	producerSourceManifest: buildNativeRuntimeSourceManifest({
+		root: resolve(import.meta.dirname, "../../.."),
+		entryPoint: "src/benchmark/quality/miracl-corpus-identity-cli.ts",
+		additionalInputs: ["pnpm-lock.yaml"],
+	}),
 	scan,
 });
 publishMiraclCorpusIdentity(output, receipt);

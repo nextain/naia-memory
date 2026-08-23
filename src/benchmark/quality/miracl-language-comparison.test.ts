@@ -27,9 +27,10 @@ function evidence(
 		},
 		en: {
 			role: "transfer",
-			documentCount: 1,
+			documentCount: 32_893_221,
 			queryCount: 799,
-			sourceLockSha256: "0".repeat(64),
+			sourceLockSha256:
+				"99727481b47a8a423ad8fa54ca09c8296515fba17ce9c9ce6356e53654918549",
 		},
 		ar: {
 			role: "transfer",
@@ -52,7 +53,7 @@ function evidence(
 					? "6024e30f6c7aed244a5451a9552163a86f74b4254775022f4d4829fcaa87e879"
 					: language === "ar"
 						? "b81389dd2afad4d0273ec92c25f446b478cb41afb8327c162f8919d93b3c3659"
-						: "0".repeat(64),
+						: "23a425f3889a6b6a3f41f32666cb748fca05ae2e750abad13ebbc0354ebb7847",
 		},
 	};
 	return JSON.stringify({
@@ -119,10 +120,12 @@ describe("MIRACL language-specific comparison", () => {
 		},
 	);
 
-	it("blocks English until its corpus cardinality and docid identity are pinned", () => {
-		expect(() =>
-			createMiraclLanguageComparison(evidence("en", 0.549, 0.882)),
-		).toThrow("en corpus identity contract is incomplete");
+	it("rejects an English result that differs from the qualified corpus identity", () => {
+		const input = JSON.parse(evidence("en", 0.549, 0.882));
+		input.identity.documentCount = 1;
+		expect(() => createMiraclLanguageComparison(JSON.stringify(input))).toThrow(
+			"language-specific benchmark identity mismatch",
+		);
 	});
 
 	it("pins publication and table provenance", () => {

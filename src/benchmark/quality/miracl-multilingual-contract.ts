@@ -60,6 +60,7 @@ export interface MiraclLanguageContract {
 		expectedDocumentCount?: number;
 		expectedDocidsSha256?: string;
 		expectedSourceLockSha256?: string;
+		expectedSourceReceiptSha256?: string;
 	};
 }
 
@@ -88,6 +89,8 @@ export const MIRACL_MULTILINGUAL_CONTRACT = {
 				"6024e30f6c7aed244a5451a9552163a86f74b4254775022f4d4829fcaa87e879",
 			expectedSourceLockSha256:
 				"742952715d6e31eaf9718f04c2bad0509c9d7c754210aa81d793a14430fbb69c",
+			expectedSourceReceiptSha256:
+				"e4d2c8ac646b0d5830f1370bd06302c72288396c92a2aef1adfb9453ba48ae41",
 			manifestSha256:
 				"86a86e5958e106c2bb93ba0ea673fbf238bcf497397616db7657482279ba9d99",
 		},
@@ -111,6 +114,13 @@ export const MIRACL_MULTILINGUAL_CONTRACT = {
 		corpus: {
 			directory: "miracl-corpus-v1.0-en",
 			shardCount: 66,
+			expectedDocumentCount: 32_893_221,
+			expectedDocidsSha256:
+				"23a425f3889a6b6a3f41f32666cb748fca05ae2e750abad13ebbc0354ebb7847",
+			expectedSourceLockSha256:
+				"99727481b47a8a423ad8fa54ca09c8296515fba17ce9c9ce6356e53654918549",
+			expectedSourceReceiptSha256:
+				"99727481b47a8a423ad8fa54ca09c8296515fba17ce9c9ce6356e53654918549",
 			manifestSha256:
 				"1b75a8e0328c437c6cd89fd9d61a5fca2a4687bdda0dbea764ca6553e2cd707f",
 		},
@@ -138,6 +148,8 @@ export const MIRACL_MULTILINGUAL_CONTRACT = {
 			expectedDocidsSha256:
 				"b81389dd2afad4d0273ec92c25f446b478cb41afb8327c162f8919d93b3c3659",
 			expectedSourceLockSha256:
+				"6f67a375d0bf8062fb6d591843052ab3555b1b5d69acdae164a83387dbaf71e1",
+			expectedSourceReceiptSha256:
 				"6f67a375d0bf8062fb6d591843052ab3555b1b5d69acdae164a83387dbaf71e1",
 			manifestSha256:
 				"935b72bf2efde49bf09132145d35137c6e442a19223c765795878464967da4a9",

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,6 +14,41 @@ import {
 import { MIRACL_MULTILINGUAL_CONTRACT } from "./miracl-multilingual-contract.js";
 import { miraclSourceLockReceipt } from "./miracl-multilingual-download.js";
 import { MIRACL_KO_LOCK } from "./public-miracl-source.js";
+
+const koSourceLock = () => {
+	return miraclSourceLockReceipt(
+		"ko",
+		MIRACL_KO_LOCK.files.map((file, index) => ({
+			...file,
+			provider: index < 2 ? ("dataset" as const) : ("corpus" as const),
+		})),
+	);
+};
+
+const producerSourceManifest = () => {
+	const payload = {
+		schemaVersion: "naia-native-runtime-source-manifest-v1" as const,
+		entryPoint: "src/benchmark/quality/miracl-corpus-identity-cli.ts",
+		additionalInputs: ["pnpm-lock.yaml"],
+		files: [{ path: "pnpm-lock.yaml", sha256: "c".repeat(64) }],
+	};
+	return {
+		...payload,
+		manifestSha256: createHash("sha256")
+			.update(`${JSON.stringify(payload)}\n`)
+			.digest("hex"),
+	};
+};
+
+const lockedKoScan = () => ({
+	documentCount: MIRACL_MULTILINGUAL_CONTRACT.ko.corpus.expectedDocumentCount,
+	docidsSha256: MIRACL_MULTILINGUAL_CONTRACT.ko.corpus.expectedDocidsSha256,
+	compressedShardCount: MIRACL_MULTILINGUAL_CONTRACT.ko.corpus.shardCount,
+	compressedBytes: MIRACL_KO_LOCK.files
+		.slice(2)
+		.reduce((total, file) => total + file.size, 0),
+	duplicateDocidCount: 0 as const,
+});
 
 describe("MIRACL corpus identity qualification", () => {
 	it("preserves the lexical order used by the 66-shard English receipt", () => {
@@ -69,9 +105,10 @@ describe("MIRACL corpus identity qualification", () => {
 
 	it("publishes a deterministic non-quality observation", () => {
 		const receipt = buildMiraclCorpusIdentityReceipt({
-			language: "en",
-			sourceLockSha256: "a".repeat(64),
-			scan: { documentCount: 42, docidsSha256: "b".repeat(64) },
+			language: "ko",
+			sourceLock: koSourceLock(),
+			producerSourceManifest: producerSourceManifest(),
+			scan: lockedKoScan(),
 		});
 		expect(receipt.claimBoundary).toContain("no retrieval score");
 		expect(canonicalMiraclCorpusIdentity(receipt)).toMatch(/\n$/);
@@ -81,11 +118,48 @@ describe("MIRACL corpus identity qualification", () => {
 	it("rejects malformed scan identities", () => {
 		expect(() =>
 			buildMiraclCorpusIdentityReceipt({
-				language: "en",
-				sourceLockSha256: "a".repeat(64),
-				scan: { documentCount: 0, docidsSha256: "b".repeat(64) },
+				language: "ko",
+				sourceLock: koSourceLock(),
+				producerSourceManifest: producerSourceManifest(),
+				scan: { ...lockedKoScan(), documentCount: 0 },
 			}),
 		).toThrow("document count");
+	});
+
+	it("rejects an internally inconsistent source receipt", () => {
+		expect(() =>
+			buildMiraclCorpusIdentityReceipt({
+				language: "ko",
+				sourceLock: { ...koSourceLock(), sourceLockSha256: "0".repeat(64) },
+				producerSourceManifest: producerSourceManifest(),
+				scan: lockedKoScan(),
+			}),
+		).toThrow("source receipt digest mismatch");
+	});
+
+	it("rejects an internally inconsistent producer manifest", () => {
+		expect(() =>
+			buildMiraclCorpusIdentityReceipt({
+				language: "ko",
+				sourceLock: koSourceLock(),
+				producerSourceManifest: {
+					...producerSourceManifest(),
+					manifestSha256: "0".repeat(64),
+				},
+				scan: lockedKoScan(),
+			}),
+		).toThrow("internally inconsistent");
+	});
+
+	it("rejects a scan identity that differs from the locked contract", () => {
+		expect(() =>
+			buildMiraclCorpusIdentityReceipt({
+				language: "ko",
+				sourceLock: koSourceLock(),
+				producerSourceManifest: producerSourceManifest(),
+				scan: { ...lockedKoScan(), docidsSha256: "b".repeat(64) },
+			}),
+		).toThrow("locked contract");
 	});
 
 	it("publishes once without clobbering evidence and removes its temporary", () => {
@@ -93,8 +167,9 @@ describe("MIRACL corpus identity qualification", () => {
 		const output = join(directory, "identity.json");
 		const receipt = buildMiraclCorpusIdentityReceipt({
 			language: "ko",
-			sourceLockSha256: "a".repeat(64),
-			scan: { documentCount: 1, docidsSha256: "b".repeat(64) },
+			sourceLock: koSourceLock(),
+			producerSourceManifest: producerSourceManifest(),
+			scan: lockedKoScan(),
 		});
 		publishMiraclCorpusIdentity(output, receipt, 42);
 		const published = readFileSync(output, "utf8");

@@ -72,4 +72,13 @@ describe("MIRACL multilingual download", () => {
 			}),
 		).toThrow();
 	});
+
+	it("rejects a validly re-signed receipt with permuted corpus shards", () => {
+		const files = miraclDownloadFiles("ar", corpus);
+		const permuted = [files[0], files[1], ...files.slice(2).reverse()];
+		const receipt = miraclSourceLockReceipt("ar", permuted);
+		expect(() => parseMiraclSourceLockReceipt("ar", receipt)).toThrow(
+			"corpus receipt order mismatch",
+		);
+	});
 });
