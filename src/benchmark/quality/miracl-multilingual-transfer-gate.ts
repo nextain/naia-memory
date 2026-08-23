@@ -1,4 +1,8 @@
-import { createMiraclLanguageComparison } from "./miracl-language-comparison.js";
+import {
+	MIRACL_HISTORICAL_ROWS,
+	MIRACL_PUBLISHED_ROW_ROUNDING_TOLERANCE,
+	createMiraclLanguageComparison,
+} from "./miracl-language-comparison.js";
 import {
 	MIRACL_PREREGISTERED_LANGUAGES,
 	type MiraclEvidenceLanguage,
@@ -78,6 +82,21 @@ export function createMiraclMultilingualTransferGate(
 			hybridReferenceOutcome: item.comparison.hybridReferenceOutcome,
 		};
 	});
+	const strongTransfer = languages.every((result) => {
+		const hybrid = MIRACL_HISTORICAL_ROWS[result.language].find(
+			(row) => row.class === "hybrid",
+		);
+		const metrics = result.metrics;
+		return (
+			hybrid !== undefined &&
+			typeof metrics?.ndcgAt10 === "number" &&
+			typeof metrics.recallAt100 === "number" &&
+			metrics.ndcgAt10 >
+				hybrid.ndcgAt10 + MIRACL_PUBLISHED_ROW_ROUNDING_TOLERANCE &&
+			metrics.recallAt100 >
+				hybrid.recallAt100 + MIRACL_PUBLISHED_ROW_ROUNDING_TOLERANCE
+		);
+	});
 
 	return {
 		schemaVersion: "naia-memory-miracl-multilingual-transfer-gate-v1",
@@ -86,6 +105,14 @@ export function createMiraclMultilingualTransferGate(
 		claimBoundary:
 			"Completeness proves that every preregistered language was measured and reported independently. It does not establish current SOTA, memory-engine superiority, or a pooled multilingual quality score.",
 		aggregation: "none",
+		preregisteredInterpretation: {
+			strongTransferCriterion:
+				"Every preregistered language must exceed both reported BM25 + mDPR metrics outside the frozen published-row rounding tolerance.",
+			outcome: strongTransfer
+				? "STRONG_TRANSFER"
+				: "STRONG_TRANSFER_NOT_ESTABLISHED",
+			postHocThresholdChangesAllowed: false,
+		},
 		requiredLanguages: [...MIRACL_PREREGISTERED_LANGUAGES],
 		languages,
 	};

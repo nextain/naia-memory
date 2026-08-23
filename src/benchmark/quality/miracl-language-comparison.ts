@@ -118,8 +118,9 @@ export const MIRACL_HISTORICAL_ROWS = {
 	],
 } as const satisfies Record<MiraclEvidenceLanguage, readonly BaselineRow[]>;
 
-const PUBLISHED_ROW_ROUNDING_UNIT = 0.001;
-const PUBLISHED_ROW_ROUNDING_TOLERANCE = PUBLISHED_ROW_ROUNDING_UNIT / 2;
+export const MIRACL_PUBLISHED_ROW_ROUNDING_UNIT = 0.001;
+export const MIRACL_PUBLISHED_ROW_ROUNDING_TOLERANCE =
+	MIRACL_PUBLISHED_ROW_ROUNDING_UNIT / 2;
 
 interface CompletionEvidence {
 	schemaVersion?: unknown;
@@ -286,8 +287,10 @@ export function createMiraclLanguageComparison(evidenceText: string) {
 	const ndcgDelta = ndcgAt10 - hybrid.ndcgAt10;
 	const recallDelta = recallAt100 - hybrid.recallAt100;
 	const withinPublishedRounding =
-		Math.abs(ndcgDelta) <= PUBLISHED_ROW_ROUNDING_TOLERANCE + Number.EPSILON &&
-		Math.abs(recallDelta) <= PUBLISHED_ROW_ROUNDING_TOLERANCE + Number.EPSILON;
+		Math.abs(ndcgDelta) <=
+			MIRACL_PUBLISHED_ROW_ROUNDING_TOLERANCE + Number.EPSILON &&
+		Math.abs(recallDelta) <=
+			MIRACL_PUBLISHED_ROW_ROUNDING_TOLERANCE + Number.EPSILON;
 	const hybridReferenceOutcome = withinPublishedRounding
 		? "WITHIN_PUBLISHED_ROUNDING"
 		: ndcgDelta >= 0 && recallDelta >= 0
@@ -309,8 +312,8 @@ export function createMiraclLanguageComparison(evidenceText: string) {
 				"Each preregistered language is judged independently; no pooled multilingual score is produced.",
 			sourceLockSemantics:
 				"The source lock identifies the language-specific corpus source receipt, not a shared implementation; it is validated upstream and bound here to the preregistered language contract.",
-			publishedRowRoundingUnit: PUBLISHED_ROW_ROUNDING_UNIT,
-			publishedRowRoundingTolerance: PUBLISHED_ROW_ROUNDING_TOLERANCE,
+			publishedRowRoundingUnit: MIRACL_PUBLISHED_ROW_ROUNDING_UNIT,
+			publishedRowRoundingTolerance: MIRACL_PUBLISHED_ROW_ROUNDING_TOLERANCE,
 		},
 		knownLimitations: [
 			{

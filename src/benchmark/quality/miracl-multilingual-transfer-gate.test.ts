@@ -43,14 +43,18 @@ const identities = {
 	},
 } as const;
 
-function completion(language: keyof typeof identities) {
+function completion(
+	language: keyof typeof identities,
+	overrideMetrics?: readonly [number, number],
+) {
 	const identity = identities[language];
 	const metrics =
-		language === "ko"
+		overrideMetrics ??
+		(language === "ko"
 			? [0.6526, 0.9233]
 			: language === "en"
 				? [0.549, 0.882]
-				: [0.673, 0.941];
+				: [0.673, 0.941]);
 	const stdout = `ndcg_cut_10 all ${metrics[0]}\nrecall_100 all ${metrics[1]}\n`;
 	const artifacts = {
 		result: {
@@ -110,9 +114,9 @@ function completion(language: keyof typeof identities) {
 	)}\n`;
 }
 
-function inputs() {
+function inputs(overrideMetrics?: readonly [number, number]) {
 	return (["ko", "en", "ar"] as const).map((language) => {
-		const completionEvidenceText = completion(language);
+		const completionEvidenceText = completion(language, overrideMetrics);
 		return {
 			completionEvidenceText,
 			comparisonText: `${JSON.stringify(createMiraclLanguageComparison(completionEvidenceText), null, 2)}\n`,
@@ -131,6 +135,24 @@ describe("MIRACL multilingual transfer gate", () => {
 		]);
 		expect(result.aggregation).toBe("none");
 		expect(result.publicClaimEligible).toBe(false);
+		expect(result.preregisteredInterpretation.outcome).toBe(
+			"STRONG_TRANSFER_NOT_ESTABLISHED",
+		);
+	});
+
+	it("uses the frozen all-languages, both-metrics threshold for strong transfer", () => {
+		const result = createMiraclMultilingualTransferGate(inputs([0.99, 0.99]));
+		expect(result.preregisteredInterpretation).toMatchObject({
+			outcome: "STRONG_TRANSFER",
+			postHocThresholdChangesAllowed: false,
+		});
+	});
+
+	it("rejects a gain that remains inside published-row rounding on one metric", () => {
+		const result = createMiraclMultilingualTransferGate(inputs([0.6734, 0.99]));
+		expect(result.preregisteredInterpretation.outcome).toBe(
+			"STRONG_TRANSFER_NOT_ESTABLISHED",
+		);
 	});
 
 	it("rejects omission, duplication, and a comparison detached from its evidence", () => {
