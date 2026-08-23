@@ -2,7 +2,10 @@ import { createHash } from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { MemoryUpdateContract } from "./memory-update-contract.js";
-import { buildSemanticCampaignPlan } from "./semantic-campaign-cli.js";
+import {
+	type SUPPORTED_SEMANTIC_ENGINES,
+	buildSemanticCampaignPlan,
+} from "./semantic-campaign-cli.js";
 
 function sha256(value: string | Buffer): string {
 	return createHash("sha256").update(value).digest("hex");
@@ -15,7 +18,7 @@ function sha256Json(value: unknown): string {
 export function semanticBlindFixture(
 	directory: string,
 	options?: {
-		engines: Array<"hindsight" | "mem0" | "naia">;
+		engines: Array<(typeof SUPPORTED_SEMANTIC_ENGINES)[number]>;
 		schemaVersion: "naia-memory-semantic-campaign-v3";
 	},
 ) {

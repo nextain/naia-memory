@@ -185,10 +185,7 @@ function validateCampaign(
 			run.engine !== planned.engine ||
 			run.caseExecutionSeed !== planned.caseExecutionSeed ||
 			run.outputFile !== planned.outputFile ||
-			!SHA256.test(run.artifactSha256) ||
-			!/^repetition-\d{2,}-(graphiti|hindsight|letta|mem0|naia)\.json$/.test(
-				run.outputFile,
-			)
+			!SHA256.test(run.artifactSha256)
 		)
 			throw new Error("semantic execution campaign plan is invalid");
 		const artifactPath = resolve(campaignDirectory, run.outputFile);

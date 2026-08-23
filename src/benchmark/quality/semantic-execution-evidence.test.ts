@@ -8,6 +8,7 @@ import {
 	evidenceSignaturePayload,
 } from "./public-evidence-crypto.js";
 import { semanticBlindFixture } from "./semantic-blind-packet-fixture.js";
+import { SUPPORTED_SEMANTIC_ENGINES } from "./semantic-campaign-cli.js";
 import {
 	type SemanticExecutionEvidenceBundle,
 	semanticEngineRunSetSha256,
@@ -26,7 +27,7 @@ async function fixture() {
 	const directory = await mkdtemp(join(tmpdir(), "semantic-execution-"));
 	roots.push(directory);
 	const source = semanticBlindFixture(directory, {
-		engines: ["graphiti", "hindsight", "mem0", "naia"],
+		engines: [...SUPPORTED_SEMANTIC_ENGINES],
 		schemaVersion: "naia-memory-semantic-campaign-v3",
 	});
 	source.contract.familySplitFreeze = {
@@ -101,7 +102,7 @@ describe("semantic execution evidence", () => {
 				bundle: value.bundle,
 				trustPolicy: value.trustPolicy,
 			}),
-		).toEqual({ engineCount: 4, runCount: 16, costComplete: false });
+		).toEqual({ engineCount: 5, runCount: 25, costComplete: false });
 	});
 
 	it("rejects forged signatures and incomplete engine coverage", async () => {
@@ -151,5 +152,22 @@ describe("semantic execution evidence", () => {
 				trustPolicy: value.trustPolicy,
 			}),
 		).toThrow("artifact is not a regular file");
+	});
+
+	it("rejects an output path that differs from the deterministic campaign plan", async () => {
+		const value = await fixture();
+		const firstRun = value.campaign.runs[0];
+		if (!firstRun) throw new Error("fixture campaign run is missing");
+		firstRun.outputFile = "../outside.json";
+		expect(() =>
+			validateSemanticExecutionEvidence({
+				contract: value.contract,
+				campaign: value.campaign,
+				campaignBytes: value.campaignBytes,
+				campaignDirectory: value.directory,
+				bundle: value.bundle,
+				trustPolicy: value.trustPolicy,
+			}),
+		).toThrow("campaign plan is invalid");
 	});
 });
