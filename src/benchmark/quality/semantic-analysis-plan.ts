@@ -8,13 +8,23 @@ import {
 const SHA256 = /^[a-f0-9]{64}$/;
 
 export type SemanticAnalysisPlan = {
-	schemaVersion: "naia-memory-semantic-analysis-plan-v4";
+	schemaVersion: "naia-memory-semantic-analysis-plan-v5";
 	administrator: string;
 	contractSha256: string;
 	engines: string[];
 	primaryEngine: "naia";
 	primaryMetric: "currentAt1" | "staleExposureRate" | "deletionLeakageRate";
 	primaryComparisons: string[];
+	claimScope:
+		| "direct-lifecycle-competitive-report-v1"
+		| "declared-multi-class-competitive-report-v1";
+	comparisonLanes: {
+		directLifecycle: Array<"hindsight" | "mem0">;
+		nativeTemporalCharacterization: [] | ["graphiti-historical"];
+		agentManagedCharacterization: [] | ["letta"];
+		productIntegrationDiagnostic: [] | ["graphiti"];
+	};
+	crossLaneAggregation: "prohibited";
 	familyWiseAlpha: number;
 	multiplicityAdjustment: "holm";
 	targetPower: number;
@@ -51,6 +61,42 @@ function validUniqueStrings(value: unknown): value is string[] {
 	);
 }
 
+function hasValidComparisonLanes(
+	value: unknown,
+	claimScope: unknown,
+): value is SemanticAnalysisPlan["comparisonLanes"] {
+	if (!isRecord(value)) return false;
+	const direct = value.directLifecycle;
+	const nativeTemporal = value.nativeTemporalCharacterization;
+	const agentManaged = value.agentManagedCharacterization;
+	const productDiagnostic = value.productIntegrationDiagnostic;
+	const validDirect =
+		validUniqueStrings(direct) &&
+		direct.every((engine) => ["hindsight", "mem0"].includes(engine));
+	const validNative =
+		Array.isArray(nativeTemporal) &&
+		(nativeTemporal.length === 0 ||
+			(nativeTemporal.length === 1 &&
+				nativeTemporal[0] === "graphiti-historical"));
+	const validAgent =
+		Array.isArray(agentManaged) &&
+		(agentManaged.length === 0 ||
+			(agentManaged.length === 1 && agentManaged[0] === "letta"));
+	const validDiagnostic =
+		Array.isArray(productDiagnostic) &&
+		(productDiagnostic.length === 0 ||
+			(productDiagnostic.length === 1 && productDiagnostic[0] === "graphiti"));
+	if (!validDirect || !validNative || !validAgent || !validDiagnostic)
+		return false;
+	return claimScope === "declared-multi-class-competitive-report-v1"
+		? direct.length === 2 &&
+				nativeTemporal.length === 1 &&
+				agentManaged.length === 1
+		: claimScope === "direct-lifecycle-competitive-report-v1" &&
+				nativeTemporal.length === 0 &&
+				agentManaged.length === 0;
+}
+
 function isEd25519Key(value: unknown): value is string {
 	if (typeof value !== "string") return false;
 	try {
@@ -65,7 +111,7 @@ export function isSemanticAnalysisPlan(
 ): value is SemanticAnalysisPlan {
 	return (
 		isRecord(value) &&
-		value.schemaVersion === "naia-memory-semantic-analysis-plan-v4" &&
+		value.schemaVersion === "naia-memory-semantic-analysis-plan-v5" &&
 		typeof value.administrator === "string" &&
 		value.administrator.trim().length > 0 &&
 		typeof value.contractSha256 === "string" &&
@@ -76,6 +122,12 @@ export function isSemanticAnalysisPlan(
 			value.primaryMetric as string,
 		) &&
 		validUniqueStrings(value.primaryComparisons) &&
+		[
+			"direct-lifecycle-competitive-report-v1",
+			"declared-multi-class-competitive-report-v1",
+		].includes(value.claimScope as string) &&
+		hasValidComparisonLanes(value.comparisonLanes, value.claimScope) &&
+		value.crossLaneAggregation === "prohibited" &&
 		typeof value.familyWiseAlpha === "number" &&
 		Number.isFinite(value.familyWiseAlpha) &&
 		value.familyWiseAlpha > 0 &&
@@ -143,15 +195,57 @@ export function validateSemanticAnalysisPlan(input: {
 	forbiddenTrustPublicKeys?: Iterable<string>;
 }): {
 	analysisPlanIntegrityQualified: true;
+	claimScope: SemanticAnalysisPlan["claimScope"];
+	comparisonLanes: SemanticAnalysisPlan["comparisonLanes"];
+	crossLaneAggregation: "prohibited";
 	plannedIndependentAuthorClusterCount: number;
 	plannedIndependentConstructionClusterCount: number;
 	sampleSizeAdequacyVerified: false;
 	trustedTimestampVerified: false;
 } {
 	const disclosure = input.campaign.disclosure;
-	if (!isRecord(disclosure) || !validUniqueStrings(disclosure.engines))
+	if (
+		!isRecord(disclosure) ||
+		!validUniqueStrings(disclosure.engines) ||
+		disclosure.claimScope !== input.plan.claimScope ||
+		JSON.stringify(disclosure.comparisonLanes) !==
+			JSON.stringify(input.plan.comparisonLanes) ||
+		disclosure.crossLaneAggregation !== input.plan.crossLaneAggregation
+	)
 		throw new Error("semantic analysis plan campaign shape is invalid");
 	const plan = input.plan;
+	const lanes = plan.comparisonLanes;
+	const isMultiClassClaim =
+		plan.claimScope === "declared-multi-class-competitive-report-v1";
+	const validDirect =
+		lanes.directLifecycle.length > 0 &&
+		new Set(lanes.directLifecycle).size === lanes.directLifecycle.length &&
+		lanes.directLifecycle.every((engine) =>
+			["hindsight", "mem0"].includes(engine),
+		) &&
+		(!isMultiClassClaim ||
+			["hindsight", "mem0"].every((engine) =>
+				lanes.directLifecycle.includes(engine as "hindsight" | "mem0"),
+			));
+	const validNativeTemporal = isMultiClassClaim
+		? lanes.nativeTemporalCharacterization.length === 1 &&
+			lanes.nativeTemporalCharacterization[0] === "graphiti-historical"
+		: lanes.nativeTemporalCharacterization.length === 0;
+	const validAgentManaged = isMultiClassClaim
+		? lanes.agentManagedCharacterization.length === 1 &&
+			lanes.agentManagedCharacterization[0] === "letta"
+		: lanes.agentManagedCharacterization.length === 0;
+	const validProductIntegration =
+		lanes.productIntegrationDiagnostic.length === 0 ||
+		(lanes.productIntegrationDiagnostic.length === 1 &&
+			lanes.productIntegrationDiagnostic[0] === "graphiti");
+	const scopedEngines = [
+		...lanes.directLifecycle,
+		...lanes.nativeTemporalCharacterization,
+		...lanes.agentManagedCharacterization,
+		...lanes.productIntegrationDiagnostic,
+		plan.primaryEngine,
+	];
 	const publicKey =
 		input.trustPolicy.administratorPublicKeys[plan.administrator];
 	const createdAt = Date.parse(plan.createdAt);
@@ -163,10 +257,17 @@ export function validateSemanticAnalysisPlan(input: {
 		plan.engines.some(
 			(engine, index) => engine !== disclosure.engines[index],
 		) ||
-		plan.primaryComparisons.length !== plan.engines.length - 1 ||
+		!validDirect ||
+		!validNativeTemporal ||
+		!validAgentManaged ||
+		!validProductIntegration ||
+		new Set(scopedEngines).size !== scopedEngines.length ||
+		scopedEngines.length !== plan.engines.length ||
+		scopedEngines.some((engine) => !plan.engines.includes(engine)) ||
+		plan.primaryComparisons.length !== lanes.directLifecycle.length ||
 		plan.primaryComparisons.some(
 			(engine) =>
-				engine === plan.primaryEngine || !plan.engines.includes(engine),
+				!lanes.directLifecycle.includes(engine as "hindsight" | "mem0"),
 		) ||
 		!plan.engines.includes(plan.primaryEngine) ||
 		!Number.isFinite(createdAt) ||
@@ -246,6 +347,9 @@ export function validateSemanticAnalysisPlan(input: {
 	}
 	return {
 		analysisPlanIntegrityQualified: true,
+		claimScope: plan.claimScope,
+		comparisonLanes: plan.comparisonLanes,
+		crossLaneAggregation: plan.crossLaneAggregation,
 		plannedIndependentAuthorClusterCount: Object.values(
 			plan.requiredIndependentAuthorClustersByLanguage,
 		).reduce((sum, count) => sum + count, 0),

@@ -212,6 +212,14 @@ async function writeExecutionFixture(
 			repetitions: 3,
 			topK: 5,
 			engines: [...engines],
+			claimScope: "direct-lifecycle-competitive-report-v1",
+			comparisonLanes: {
+				directLifecycle: ["hindsight", "mem0"],
+				nativeTemporalCharacterization: [],
+				agentManagedCharacterization: [],
+				productIntegrationDiagnostic: [],
+			},
+			crossLaneAggregation: "prohibited",
 		},
 		runs,
 	};
@@ -399,13 +407,21 @@ async function writeAnalysisPlanFixture(
 		]),
 	);
 	const unsigned = {
-		schemaVersion: "naia-memory-semantic-analysis-plan-v4" as const,
+		schemaVersion: "naia-memory-semantic-analysis-plan-v5" as const,
 		administrator: "external-statistician",
 		contractSha256: evidenceObjectSha256(contract),
 		engines: ["hindsight", "mem0", "naia"],
 		primaryEngine: "naia" as const,
 		primaryMetric: "currentAt1" as const,
 		primaryComparisons: ["hindsight", "mem0"],
+		claimScope: "direct-lifecycle-competitive-report-v1" as const,
+		comparisonLanes: {
+			directLifecycle: ["hindsight", "mem0"] as Array<"hindsight" | "mem0">,
+			nativeTemporalCharacterization: [] as [],
+			agentManagedCharacterization: [] as [],
+			productIntegrationDiagnostic: [] as [],
+		},
+		crossLaneAggregation: "prohibited" as const,
 		familyWiseAlpha: 0.05,
 		multiplicityAdjustment: "holm" as const,
 		targetPower: 0.8,

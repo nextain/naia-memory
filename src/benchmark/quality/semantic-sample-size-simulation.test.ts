@@ -33,13 +33,21 @@ const assumptions: SemanticSampleSizeAssumptions = {
 
 function planFor(value = assumptions): SemanticAnalysisPlan {
 	return {
-		schemaVersion: "naia-memory-semantic-analysis-plan-v4",
+		schemaVersion: "naia-memory-semantic-analysis-plan-v5",
 		administrator: "statistician",
 		contractSha256: "0".repeat(64),
 		engines: ["mem0", "naia"],
 		primaryEngine: "naia",
 		primaryMetric: "currentAt1",
 		primaryComparisons: ["mem0"],
+		claimScope: "direct-lifecycle-competitive-report-v1",
+		comparisonLanes: {
+			directLifecycle: ["mem0"],
+			nativeTemporalCharacterization: [],
+			agentManagedCharacterization: [],
+			productIntegrationDiagnostic: [],
+		},
+		crossLaneAggregation: "prohibited",
 		familyWiseAlpha: 0.05,
 		multiplicityAdjustment: "holm",
 		targetPower: 0.8,
