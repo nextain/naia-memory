@@ -20,6 +20,10 @@ import {
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
+import {
+	buildNativeRuntimeSourceManifest,
+	verifyNativeRuntimeSourceManifest,
+} from "./native-runtime-source-manifest.js";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import { auditQdrantCollectionMembership } from "./qdrant-collection-membership.js";
 import {
@@ -39,6 +43,13 @@ function evidenceLanguage(value: string | undefined): MiraclEvidenceLanguage {
 export async function runMultilingualCompletionEvidenceCli(
 	environment = process.env,
 ) {
+	const repositoryRoot = resolve(import.meta.dirname, "../../..");
+	const producerSourceManifest = buildNativeRuntimeSourceManifest({
+		root: repositoryRoot,
+		entryPoint:
+			"src/benchmark/quality/miracl-multilingual-completion-evidence-cli.ts",
+		additionalInputs: ["pnpm-lock.yaml"],
+	});
 	const language = evidenceLanguage(environment.MIRACL_LANGUAGE);
 	const contract = MIRACL_MULTILINGUAL_CONTRACT[language];
 	const resultPath =
@@ -228,6 +239,7 @@ export async function runMultilingualCompletionEvidenceCli(
 		lastChunkReceiptSha256: result.ingestion.lastChunkReceiptSha256,
 	});
 	const evidence = createMultilingualCompletionEvidence({
+		producerSourceManifest,
 		language,
 		resultPath,
 		resultText,
@@ -292,6 +304,7 @@ export async function runMultilingualCompletionEvidenceCli(
 		qdrantUrl,
 		qdrant,
 	});
+	verifyNativeRuntimeSourceManifest(repositoryRoot, producerSourceManifest);
 	await publishFullCorpusEvidenceReceipt(outputPath, evidence);
 	process.stdout.write(`${JSON.stringify(evidence, null, 2)}\n`);
 }

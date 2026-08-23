@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { createMultilingualCompletionEvidence } from "./miracl-multilingual-completion-evidence.js";
 import { MIRACL_MULTILINGUAL_CONTRACT } from "./miracl-multilingual-contract.js";
@@ -18,6 +19,7 @@ import {
 } from "./native-full-corpus-evidence.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
+import { buildNativeRuntimeSourceManifest } from "./native-runtime-source-manifest.js";
 
 const corpus = [
 	[
@@ -297,7 +299,14 @@ describe("multilingual full-corpus evidence identity", () => {
 			runtimeObservationAfterSha256: sha256Bytes(runtimeObservationText),
 			checkpointChainAfterSha256: evidenceObjectSha256(checkpointChain),
 		};
+		const producerSourceManifest = buildNativeRuntimeSourceManifest({
+			root: resolve(import.meta.dirname, "../../.."),
+			entryPoint:
+				"src/benchmark/quality/miracl-multilingual-completion-evidence-cli.ts",
+			additionalInputs: ["pnpm-lock.yaml"],
+		});
 		const completion = createMultilingualCompletionEvidence({
+			producerSourceManifest,
 			language: "ko",
 			resultPath,
 			resultText,
@@ -345,9 +354,49 @@ describe("multilingual full-corpus evidence identity", () => {
 			language: "ko",
 			publicClaimEligible: false,
 		});
+		expect(completion.implementation.producerSourceManifest).toEqual(
+			producerSourceManifest,
+		);
 		expect(() =>
 			createMultilingualCompletionEvidence({
 				...{
+					producerSourceManifest: {
+						...producerSourceManifest,
+						manifestSha256: "0".repeat(64),
+					},
+					language: "ko" as const,
+					resultPath,
+					resultText,
+					trecPath: `${resultPath}.trec`,
+					trecRunText,
+					topicsPath: contract.topics.path,
+					topicsText,
+					qrelsPath: contract.qrels.path,
+					qrelsText,
+					sourceReceiptPath: "source-lock-receipt.json",
+					sourceReceiptText,
+					checkpointChain,
+					launchReceiptPath,
+					launchReceiptText,
+					runtimeObservationPath: "reports/quality/runtime.json",
+					runtimeObservationText,
+					trecEvalPath: "/tools/trec_eval",
+					trecEvalStdout: `ndcg_cut_10 all ${result.metrics.ndcgAt10.toFixed(4)}\nrecall_100 all ${result.metrics.recallAt100.toFixed(4)}\n`,
+					trecEvalBinarySha256: EXPECTED_TREC_EVAL_BINARY_SHA256,
+					trecEvalSourceCommit: evaluatorCommit,
+					evaluationStability: stability,
+					artifactStability,
+					evaluationSourceSha256,
+					runtimeMonitorSourceSha256,
+					qdrantUrl: "http://127.0.0.1:6334",
+					qdrant: completion.runtime.qdrant,
+				},
+			}),
+		).toThrow("runtime source manifest is internally inconsistent");
+		expect(() =>
+			createMultilingualCompletionEvidence({
+				...{
+					producerSourceManifest,
 					language: "ko" as const,
 					resultPath,
 					resultText,

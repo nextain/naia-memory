@@ -23,6 +23,10 @@ import {
 	verifyQdrantServiceCompletionBinding,
 	verifyQdrantServiceReceiptChain,
 } from "./qdrant-service-binding.js";
+import {
+	type NativeRuntimeSourceManifest,
+	validateNativeRuntimeSourceManifest,
+} from "./native-runtime-source-manifest.js";
 
 interface MultilingualLaunchReceipt {
 	schemaVersion: number;
@@ -77,6 +81,7 @@ export interface MultilingualQdrantEvidence {
 }
 
 export interface MultilingualCompletionEvidenceInput {
+	producerSourceManifest: NativeRuntimeSourceManifest;
 	language: MiraclEvidenceLanguage;
 	resultPath: string;
 	resultText: string;
@@ -135,6 +140,12 @@ function parseJson<T>(text: string, name: string): T {
 export function createMultilingualCompletionEvidence(
 	input: MultilingualCompletionEvidenceInput,
 ) {
+	validateNativeRuntimeSourceManifest(input.producerSourceManifest);
+	if (
+		input.producerSourceManifest.entryPoint !==
+		"src/benchmark/quality/miracl-multilingual-completion-evidence-cli.ts"
+	)
+		throw new Error("completion evidence producer entry point mismatch");
 	const result = parseJson<MultilingualFullCorpusResult>(
 		input.resultText,
 		"result",
@@ -364,6 +375,7 @@ export function createMultilingualCompletionEvidence(
 			qdrant,
 		},
 		implementation: {
+			producerSourceManifest: input.producerSourceManifest,
 			evaluationSourceSha256: input.evaluationSourceSha256,
 			runtimeMonitorSourceSha256: input.runtimeMonitorSourceSha256,
 			artifactStability,
