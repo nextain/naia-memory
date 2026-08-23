@@ -198,6 +198,24 @@ export async function writeExecutionFixture(
 				engine: run.engine,
 				executionSeed: run.caseExecutionSeed,
 				topK: 5,
+				endpoint: "https://provider.example/v1/",
+				...(run.engine === "mem0" || run.engine === "naia"
+					? {
+							embeddingModel: "embedding-model",
+							embeddingRevision: "embedding-revision",
+							embeddingDimensions: 768,
+							llmModel: "llm-model",
+							authScheme: "bearer",
+						}
+					: {
+							providerPolicy: "engine-server-native-configuration-v1",
+							hindsightRuntime: {
+								version: "1.0.0",
+								imageDigest: `sha256:${"d".repeat(64)}`,
+								llmProvider: "provider",
+								llmModel: "llm-model",
+							},
+						}),
 			},
 			cases,
 		};

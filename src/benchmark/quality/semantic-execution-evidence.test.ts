@@ -12,6 +12,7 @@ import { SUPPORTED_SEMANTIC_ENGINES } from "./semantic-campaign-cli.js";
 import {
 	type SemanticExecutionEvidenceBundle,
 	semanticEngineRunSetSha256,
+	validateSemanticConfigurationParity,
 	validateSemanticExecutionEvidence,
 } from "./semantic-execution-evidence.js";
 
@@ -91,6 +92,117 @@ async function fixture() {
 }
 
 describe("semantic execution evidence", () => {
+	it("verifies stable direct-comparator provider configuration", () => {
+		const shared = {
+			topK: 5,
+			embeddingModel: "embedding-model",
+			embeddingRevision: "embedding-revision",
+			embeddingDimensions: 768,
+			llmModel: "llm-model",
+			authScheme: "bearer",
+			endpoint: "https://provider.example/v1/",
+		};
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{ ...shared, engine: "naia", executionSeed: "naia-1" },
+				{ ...shared, engine: "naia", executionSeed: "naia-2" },
+				{ ...shared, engine: "mem0", executionSeed: "mem0-1" },
+				{ ...shared, engine: "mem0", executionSeed: "mem0-2" },
+			]),
+		).not.toThrow();
+	});
+
+	it("rejects missing disclosures, repetition drift, and favorable provider asymmetry", () => {
+		const shared = {
+			topK: 5,
+			embeddingModel: "embedding-model",
+			embeddingRevision: "embedding-revision",
+			embeddingDimensions: 768,
+			llmModel: "llm-model",
+			authScheme: "bearer",
+			endpoint: "https://provider.example/v1/",
+		};
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{ ...shared, engine: "naia", executionSeed: "naia" },
+				{
+					...shared,
+					engine: "mem0",
+					executionSeed: "mem0",
+					llmModel: "weaker-model",
+				},
+			]),
+		).toThrow("provider parity mismatch");
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{ ...shared, engine: "naia", executionSeed: "one" },
+				{
+					...shared,
+					engine: "naia",
+					executionSeed: "two",
+					embeddingDimensions: 384,
+				},
+			]),
+		).toThrow("drifted across repetitions");
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{
+					engine: "hindsight",
+					executionSeed: "hindsight",
+					topK: 5,
+					providerPolicy: "engine-server-native-configuration-v1",
+					endpoint: "http://127.0.0.1:18888/",
+				},
+			]),
+		).toThrow("hindsight/hindsightRuntime");
+	});
+
+	it("requires immutable server images and identical Graphiti lane runtimes", () => {
+		const runtime = {
+			revision: "a".repeat(40),
+			imageDigest: `sha256:${"b".repeat(64)}`,
+			coreVersion: "1.0.0",
+			llmModel: "llm-model",
+			embeddingModel: "embedding-model",
+		};
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{
+					engine: "graphiti",
+					executionSeed: "current",
+					providerPolicy: "engine-server-native-configuration-v1",
+					endpoint: "http://127.0.0.1:8000/",
+					graphitiRuntime: runtime,
+				},
+				{
+					engine: "graphiti-historical",
+					executionSeed: "historical",
+					providerPolicy: "engine-server-native-configuration-v1",
+					endpoint: "http://127.0.0.1:8000/",
+					graphitiRuntime: { ...runtime, coreVersion: "2.0.0" },
+				},
+			]),
+		).toThrow("lane runtime parity mismatch");
+	});
+
+	it("rejects unsafe endpoint disclosures", () => {
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{
+					engine: "naia",
+					executionSeed: "seed",
+					topK: 5,
+					embeddingModel: "embedding-model",
+					embeddingRevision: "embedding-revision",
+					embeddingDimensions: 768,
+					llmModel: "llm-model",
+					authScheme: "bearer",
+					endpoint: "https://secret@example.test/v1/?key=secret",
+				},
+			]),
+		).toThrow("endpoint disclosure is unsafe");
+	});
+
 	it("qualifies complete signed execution artifacts without claiming cost completeness", async () => {
 		const value = await fixture();
 		expect(

@@ -71,12 +71,195 @@ type CampaignManifest = {
 	runs: Array<SemanticCampaignRun & { artifactSha256: string }>;
 };
 
+type RawArtifactDisclosure = Record<string, unknown> & {
+	engine: string;
+	executionSeed: string;
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function sha256Bytes(value: string | Buffer): string {
 	return createHash("sha256").update(value).digest("hex");
+}
+
+function requiredNonemptyString(
+	disclosure: RawArtifactDisclosure,
+	field: string,
+): string {
+	const value = disclosure[field];
+	if (typeof value !== "string" || !value.trim())
+		throw new Error(
+			`semantic execution configuration disclosure is incomplete: ${disclosure.engine}/${field}`,
+		);
+	return value;
+}
+
+function requiredPositiveInteger(
+	disclosure: RawArtifactDisclosure,
+	field: string,
+): number {
+	const value = disclosure[field];
+	if (!Number.isInteger(value) || Number(value) < 1)
+		throw new Error(
+			`semantic execution configuration disclosure is incomplete: ${disclosure.engine}/${field}`,
+		);
+	return Number(value);
+}
+
+function requiredRuntime(
+	disclosure: RawArtifactDisclosure,
+	field: string,
+	requiredFields: string[],
+): Record<string, unknown> {
+	const runtime = disclosure[field];
+	if (!isRecord(runtime))
+		throw new Error(
+			`semantic execution configuration disclosure is incomplete: ${disclosure.engine}/${field}`,
+		);
+	for (const requiredField of requiredFields)
+		requiredNonemptyString(
+			{ ...runtime, engine: disclosure.engine, executionSeed: "runtime" },
+			requiredField,
+		);
+	return runtime;
+}
+
+function stableConfiguration(disclosure: RawArtifactDisclosure): string {
+	const { executionSeed: _executionSeed, ...configuration } = disclosure;
+	return evidenceObjectSha256(configuration);
+}
+
+function requiredSafeEndpoint(disclosure: RawArtifactDisclosure): void {
+	const value = requiredNonemptyString(disclosure, "endpoint");
+	let endpoint: URL;
+	try {
+		endpoint = new URL(value);
+	} catch {
+		throw new Error(
+			`semantic execution endpoint disclosure is invalid: ${disclosure.engine}`,
+		);
+	}
+	if (
+		!["http:", "https:"].includes(endpoint.protocol) ||
+		endpoint.username ||
+		endpoint.password ||
+		endpoint.search ||
+		endpoint.hash
+	)
+		throw new Error(
+			`semantic execution endpoint disclosure is unsafe: ${disclosure.engine}`,
+		);
+}
+
+export function validateSemanticConfigurationParity(
+	disclosures: RawArtifactDisclosure[],
+): void {
+	const byEngine = new Map<string, RawArtifactDisclosure[]>();
+	for (const disclosure of disclosures) {
+		const values = byEngine.get(disclosure.engine) ?? [];
+		values.push(disclosure);
+		byEngine.set(disclosure.engine, values);
+	}
+	for (const [engine, values] of byEngine) {
+		const configurations = new Set(values.map(stableConfiguration));
+		if (configurations.size !== 1)
+			throw new Error(
+				`semantic execution configuration drifted across repetitions: ${engine}`,
+			);
+		const disclosure = values[0];
+		if (!disclosure) continue;
+		requiredSafeEndpoint(disclosure);
+		if (engine === "naia" || engine === "mem0") {
+			for (const field of [
+				"embeddingModel",
+				"embeddingRevision",
+				"llmModel",
+				"authScheme",
+				"endpoint",
+			])
+				requiredNonemptyString(disclosure, field);
+			requiredPositiveInteger(disclosure, "embeddingDimensions");
+		} else if (engine === "graphiti" || engine === "graphiti-historical") {
+			if (
+				requiredNonemptyString(disclosure, "providerPolicy") !==
+				"engine-server-native-configuration-v1"
+			)
+				throw new Error("semantic Graphiti provider policy is invalid");
+			const runtime = requiredRuntime(disclosure, "graphitiRuntime", [
+				"revision",
+				"imageDigest",
+				"coreVersion",
+				"llmModel",
+				"embeddingModel",
+			]);
+			if (!/^[a-f0-9]{40}$/.test(String(runtime.revision)))
+				throw new Error("semantic Graphiti revision is not immutable");
+			if (!/^sha256:[a-f0-9]{64}$/.test(String(runtime.imageDigest)))
+				throw new Error("semantic Graphiti image digest is not immutable");
+		} else if (engine === "hindsight") {
+			if (
+				requiredNonemptyString(disclosure, "providerPolicy") !==
+				"engine-server-native-configuration-v1"
+			)
+				throw new Error("semantic Hindsight provider policy is invalid");
+			const runtime = requiredRuntime(disclosure, "hindsightRuntime", [
+				"version",
+				"imageDigest",
+				"llmProvider",
+				"llmModel",
+			]);
+			if (!/^sha256:[a-f0-9]{64}$/.test(String(runtime.imageDigest)))
+				throw new Error("semantic Hindsight image digest is not immutable");
+		} else if (engine === "letta") {
+			if (
+				requiredNonemptyString(disclosure, "providerPolicy") !==
+				"engine-server-native-configuration-v1"
+			)
+				throw new Error("semantic Letta provider policy is invalid");
+			const runtime = requiredRuntime(disclosure, "lettaRuntime", [
+				"version",
+				"imageDigest",
+				"llmModel",
+				"embeddingModel",
+			]);
+			if (!/^sha256:[a-f0-9]{64}$/.test(String(runtime.imageDigest)))
+				throw new Error("semantic Letta image digest is not immutable");
+			if (
+				!Number.isInteger(runtime.embeddingDimensions) ||
+				Number(runtime.embeddingDimensions) < 1
+			)
+				throw new Error(
+					"semantic execution configuration disclosure is incomplete: letta/embeddingDimensions",
+				);
+		}
+	}
+	const naia = byEngine.get("naia")?.[0];
+	const mem0 = byEngine.get("mem0")?.[0];
+	if (naia && mem0) {
+		for (const field of [
+			"embeddingModel",
+			"embeddingRevision",
+			"embeddingDimensions",
+			"llmModel",
+			"authScheme",
+			"endpoint",
+		])
+			if (naia[field] !== mem0[field])
+				throw new Error(
+					`semantic direct-comparator provider parity mismatch: naia/mem0/${field}`,
+				);
+	}
+	const graphiti = byEngine.get("graphiti")?.[0];
+	const historical = byEngine.get("graphiti-historical")?.[0];
+	if (
+		graphiti &&
+		historical &&
+		evidenceObjectSha256(graphiti.graphitiRuntime) !==
+			evidenceObjectSha256(historical.graphitiRuntime)
+	)
+		throw new Error("semantic Graphiti lane runtime parity mismatch");
 }
 
 function isEd25519Key(value: unknown): value is string {
@@ -234,6 +417,7 @@ function validateCampaign(
 	);
 	if (runs.length !== expected.length)
 		throw new Error("semantic execution campaign coverage is incomplete");
+	const disclosures: RawArtifactDisclosure[] = [];
 	for (const [index, run] of runs.entries()) {
 		const planned = expected[index];
 		if (
@@ -257,7 +441,21 @@ function validateCampaign(
 				`semantic execution artifact hash mismatch: ${run.outputFile}`,
 			);
 		validateRawArtifact(artifactPath, run, contract.cases, disclosure.topK);
+		if (
+			campaign.schemaVersion === "naia-memory-semantic-campaign-v5" &&
+			disclosure.eligibility === "competitive-candidate"
+		) {
+			const artifact = JSON.parse(bytes.toString("utf8")) as {
+				disclosure?: unknown;
+			};
+			if (!isRecord(artifact.disclosure))
+				throw new Error(
+					"semantic execution configuration disclosure is missing",
+				);
+			disclosures.push(artifact.disclosure as RawArtifactDisclosure);
+		}
 	}
+	if (disclosures.length > 0) validateSemanticConfigurationParity(disclosures);
 }
 
 export function semanticEngineRunSetSha256(
