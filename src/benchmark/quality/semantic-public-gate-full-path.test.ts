@@ -15,6 +15,11 @@ import {
 	evidenceObjectSha256,
 	evidenceSignaturePayload,
 } from "./public-evidence-crypto.js";
+import {
+	type SemanticCompetitiveQualification,
+	type SemanticQualificationSubjects,
+	validateSemanticCompetitiveQualification,
+} from "./semantic-competitive-qualification.js";
 import { buildSemanticPilotLaunch } from "./semantic-pilot-launch.js";
 import {
 	writeAdjudicationFixture,
@@ -49,13 +54,15 @@ function captureStdout(output: string[]): void {
 }
 afterEach(async () => {
 	vi.restoreAllMocks();
+	vi.doUnmock("./semantic-competitive-qualification-trust-anchor.js");
+	vi.resetModules();
 	await Promise.all(
 		roots.splice(0).map((path) => rm(path, { recursive: true, force: true })),
 	);
 });
 
 describe("semantic public gate CLI", () => {
-	it("loads the complete 37-artifact path and fails closed without a deployment trust anchor", async () => {
+	it("fails closed without an anchor and verifies a signed qualification with a pinned test anchor", async () => {
 		const output: string[] = [];
 		captureStdout(output);
 		const directory = await root();
@@ -96,9 +103,9 @@ describe("semantic public gate CLI", () => {
 			directory,
 			fixture.contract,
 			{
-				startedAt: "2099-01-05T00:00:00Z",
-				completedAt: "2099-01-05T00:01:00Z",
-				signedAt: "2099-01-05T00:02:00Z",
+				startedAt: "2099-01-05T00:00:00.000Z",
+				completedAt: "2099-01-05T00:01:00.000Z",
+				signedAt: "2099-01-05T00:02:00.000Z",
 			},
 			evidenceObjectSha256(analysisPlan),
 			{
@@ -114,8 +121,8 @@ describe("semantic public gate CLI", () => {
 			fixture.contract,
 			executionPaths[0],
 			undefined,
-			"2099-01-06T00:00:00Z",
-			"2099-01-06T00:01:00Z",
+			"2099-01-06T00:00:00.000Z",
+			"2099-01-06T00:01:00.000Z",
 		);
 		const planToken = await tsa.issue(
 			evidenceObjectSha256(power.collectionPlan),
@@ -437,41 +444,66 @@ describe("semantic public gate CLI", () => {
 			join(directory, "analysis-plan-timestamp-evidence.json"),
 			join(directory, "competitive-qualification.json"),
 		];
+		const { privateKey: gatePrivateKey, publicKey: gatePublicKey } =
+			generateKeyPairSync("ed25519");
+		const qualificationTrustAnchor = {
+			deploymentId: "fixture-deployment",
+			trustStoreSha256: "a".repeat(64),
+			gatePublicKeys: {
+				"fixture-gate": gatePublicKey
+					.export({ type: "spki", format: "pem" })
+					.toString(),
+			},
+		};
+		const qualificationSubjects: SemanticQualificationSubjects = {
+			contract: fixture.contract,
+			campaign: JSON.parse(await readFile(executionPaths[0], "utf8")),
+			analysisPlan,
+			authorization,
+			timestampEvidence: analysisPlanTimestampEvidence,
+			executionEvidence: JSON.parse(await readFile(executionPaths[1], "utf8")),
+			adjudicationEvidence: JSON.parse(
+				await readFile(adjudicationPaths[3], "utf8"),
+			),
+		};
+		const unsignedQualification = {
+			schemaVersion:
+				"naia-memory-semantic-competitive-qualification-v1" as const,
+			verdict: "qualified" as const,
+			deploymentId: qualificationTrustAnchor.deploymentId,
+			trustStoreSha256: qualificationTrustAnchor.trustStoreSha256,
+			gateKeyId: "fixture-gate",
+			subjects: Object.fromEntries(
+				Object.entries(qualificationSubjects).map(([subject, value]) => [
+					`${subject}Sha256`,
+					evidenceObjectSha256(value),
+				]),
+			),
+			authorizationWindow: {
+				authorizedAt: authorization.authorizedAt,
+				expiresAt: authorization.expiresAt,
+			},
+			issuedAt: "2099-01-05T00:02:00.000Z",
+			statement:
+				"COMPETITIVE_CANDIDATE_VERIFIED_AGAINST_DEPLOYMENT_TRUST_STORE" as const,
+		};
+		const qualification: SemanticCompetitiveQualification = {
+			...unsignedQualification,
+			subjects:
+				unsignedQualification.subjects as SemanticCompetitiveQualification["subjects"],
+			signatureBase64: sign(
+				null,
+				evidenceSignaturePayload(unsignedQualification),
+				gatePrivateKey,
+			).toString("base64"),
+		};
 		await Promise.all([
 			writeFile(qualificationPaths[0], JSON.stringify(authorization)),
 			writeFile(
 				qualificationPaths[1],
 				JSON.stringify(analysisPlanTimestampEvidence),
 			),
-			writeFile(
-				qualificationPaths[2],
-				JSON.stringify({
-					schemaVersion: "naia-memory-semantic-competitive-qualification-v1",
-					verdict: "qualified",
-					deploymentId: "fixture-deployment",
-					trustStoreSha256: "a".repeat(64),
-					gateKeyId: "fixture-gate",
-					subjects: Object.fromEntries(
-						[
-							"contract",
-							"campaign",
-							"analysisPlan",
-							"authorization",
-							"timestampEvidence",
-							"executionEvidence",
-							"adjudicationEvidence",
-						].map((subject) => [`${subject}Sha256`, "b".repeat(64)]),
-					),
-					authorizationWindow: {
-						authorizedAt: authorization.authorizedAt,
-						expiresAt: authorization.expiresAt,
-					},
-					issuedAt: "2099-01-05T00:02:00.000Z",
-					statement:
-						"COMPETITIVE_CANDIDATE_VERIFIED_AGAINST_DEPLOYMENT_TRUST_STORE",
-					signatureBase64: "fixture-signature",
-				}),
-			),
+			writeFile(qualificationPaths[2], JSON.stringify(qualification)),
 		]);
 
 		const gateArgs = [
@@ -517,5 +549,37 @@ describe("semantic public gate CLI", () => {
 			failure:
 				"semantic competitive qualification trust anchor is not provisioned",
 		});
+		expect(
+			validateSemanticCompetitiveQualification({
+				qualification,
+				trustAnchor: qualificationTrustAnchor,
+				subjects: qualificationSubjects,
+				executionReceipts: (
+					qualificationSubjects.executionEvidence as {
+						receipts: Array<{ startedAt: string; completedAt: string }>;
+					}
+				).receipts,
+			}),
+		).toMatchObject({
+			competitiveQualificationVerified: true,
+			deploymentId: qualificationTrustAnchor.deploymentId,
+			gateKeyId: "fixture-gate",
+		});
+
+		vi.resetModules();
+		vi.doMock("./semantic-competitive-qualification-trust-anchor.js", () => ({
+			SEMANTIC_COMPETITIVE_QUALIFICATION_TRUST_ANCHOR: qualificationTrustAnchor,
+		}));
+		const { runSemanticPublicGateManifestCli: runWithTrustAnchor } =
+			await import("./semantic-public-gate-manifest-cli.js");
+		expect(await runWithTrustAnchor([manifestPath])).toBe(1);
+		const qualifiedResult = JSON.parse(output.pop() ?? "{}");
+		expect(qualifiedResult.promotable).toBe(false);
+		expect(qualifiedResult.failure).toMatch(
+			/^pilot review, prior-assignment timing/u,
+		);
+		expect(qualifiedResult.failure).toContain(
+			"competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate",
+		);
 	}, 45_000);
 });
