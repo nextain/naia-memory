@@ -3,16 +3,16 @@ import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { sha256Bytes } from "./native-full-corpus-evidence.js";
 import {
+	resolveFullCorpusRuntimeMonitorPaths,
+	verifyFullCorpusRuntimeMonitorLanguage,
+} from "./native-full-corpus-runtime-monitor-config.js";
+import {
 	type FullCorpusLaunchIdentity,
 	observeLiveProcess,
 } from "./native-full-corpus-runtime-observation.js";
 
-const launchPath =
-	process.env.MIRACL_FULL_LAUNCH_RECEIPT ??
-	"reports/quality/miracl-ko-full-corpus-launch-receipt.json";
-const outputPath =
-	process.env.MIRACL_FULL_RUNTIME_OBSERVATION ??
-	"reports/quality/miracl-ko-full-corpus-runtime-observation.json";
+const { language, launchPath, outputPath } =
+	resolveFullCorpusRuntimeMonitorPaths();
 const pollMilliseconds = 5_000;
 
 const sleep = (milliseconds: number) =>
@@ -24,7 +24,8 @@ async function main() {
 	const launchBytes = readFileSync(launchPath);
 	const launch = JSON.parse(
 		launchBytes.toString("utf8"),
-	) as FullCorpusLaunchIdentity;
+	) as FullCorpusLaunchIdentity & { language?: unknown };
+	verifyFullCorpusRuntimeMonitorLanguage(language, launch);
 	if (existsSync(launch.outputPath))
 		throw new Error(
 			"declared benchmark output already exists before monitoring",
