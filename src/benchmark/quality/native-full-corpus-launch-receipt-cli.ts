@@ -2,12 +2,14 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { sha256Bytes } from "./native-full-corpus-evidence.js";
+import {
+	resolveFullCorpusLanguage,
+	resolveFullCorpusLaunchReceiptPath,
+	resolveFullCorpusOutputPath,
+} from "./native-full-corpus-launch-receipt.js";
 import { parseProcStartTicks } from "./native-full-corpus-runtime-observation.js";
 
 const pid = Number(process.env.MIRACL_FULL_PID);
-const output =
-	process.env.MIRACL_FULL_LAUNCH_RECEIPT ??
-	"reports/quality/miracl-ko-full-corpus-launch-receipt.json";
 if (!Number.isSafeInteger(pid) || pid < 1)
 	throw new Error("MIRACL_FULL_PID must identify the live benchmark process");
 
@@ -23,6 +25,8 @@ const environment = new Map(
 			return [entry.slice(0, separator), entry.slice(separator + 1)];
 		}),
 );
+const language = resolveFullCorpusLanguage(environment);
+const output = resolveFullCorpusLaunchReceiptPath(environment);
 if (
 	environment.get("CUDA_VISIBLE_DEVICES") !== "" ||
 	!cmdline.some((argument) =>
@@ -44,9 +48,8 @@ const receipt = {
 	cmdline,
 	cudaVisibleDevices: environment.get("CUDA_VISIBLE_DEVICES"),
 	qdrantUrl: environment.get("QDRANT_URL") ?? "http://127.0.0.1:6334",
-	outputPath:
-		environment.get("MIRACL_FULL_OUTPUT") ??
-		"reports/quality/miracl-ko-full-corpus-vector-exact.json",
+	language,
+	outputPath: resolveFullCorpusOutputPath(environment),
 	evaluationSource,
 	evaluationSourceSha256: sha256Bytes(readFileSync(evaluationSource)),
 	embeddingInferenceMode:
