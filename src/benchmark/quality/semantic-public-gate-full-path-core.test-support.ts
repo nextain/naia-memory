@@ -151,6 +151,11 @@ export async function writeExecutionFixture(
 		signedAt: "2026-01-05T00:02:00Z",
 	},
 	analysisPlanSha256?: string,
+	competitiveBinding?: {
+		confirmatoryAuthorizationSha256: string;
+		analysisPlanTimestampEvidenceSha256: string;
+		analysisPlanTimestampTrustPolicyIdentitySha256: string;
+	},
 ) {
 	const engines = ["hindsight", "mem0", "naia"] as const;
 	const plan = buildSemanticCampaignPlan("public-gate", 3, engines);
@@ -201,15 +206,23 @@ export async function writeExecutionFixture(
 		runs.push({ ...run, artifactSha256: hash(bytes) });
 	}
 	const campaign = {
-		schemaVersion: analysisPlanSha256
-			? ("naia-memory-semantic-campaign-v4" as const)
-			: ("naia-memory-semantic-campaign-v3" as const),
+		schemaVersion: competitiveBinding
+			? ("naia-memory-semantic-campaign-v5" as const)
+			: analysisPlanSha256
+				? ("naia-memory-semantic-campaign-v4" as const)
+				: ("naia-memory-semantic-campaign-v3" as const),
 		disclosure: {
 			executionSeed: "public-gate",
 			repetitions: 3,
 			topK: 5,
 			engines: [...engines],
 			...(analysisPlanSha256 ? { analysisPlanSha256 } : {}),
+			...(competitiveBinding
+				? {
+						eligibility: "competitive-candidate" as const,
+						...competitiveBinding,
+					}
+				: {}),
 			claimScope: "direct-lifecycle-competitive-report-v1",
 			comparisonLanes: {
 				directLifecycle: ["hindsight", "mem0"],

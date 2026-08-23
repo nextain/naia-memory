@@ -55,7 +55,7 @@ afterEach(async () => {
 });
 
 describe("semantic public gate CLI", () => {
-	it("verifies the complete 34-argument path with an externally timestamped execution registry", async () => {
+	it("loads the complete 37-artifact path and fails closed without a deployment trust anchor", async () => {
 		const output: string[] = [];
 		captureStdout(output);
 		const directory = await root();
@@ -75,6 +75,23 @@ describe("semantic public gate CLI", () => {
 		const analysisPlan = JSON.parse(
 			await readFile(analysisPlanPaths[0] as string, "utf8"),
 		);
+		const tsa = await writeRealTimestampFixture(directory);
+		const analysisPlanToken = await tsa.issue(
+			evidenceObjectSha256(analysisPlan),
+			"analysis-plan",
+		);
+		const analysisPlanTimestampEvidence = {
+			schemaVersion:
+				"naia-memory-rfc3161-digest-timestamp-evidence-v1" as const,
+			artifactSha256: evidenceObjectSha256(analysisPlan),
+			...analysisPlanToken,
+		};
+		const authorization = {
+			schemaVersion:
+				"naia-memory-semantic-confirmatory-execution-authorization-v1",
+			authorizedAt: "2099-01-04T00:02:00.000Z",
+			expiresAt: "2099-01-05T00:02:00.000Z",
+		};
 		const executionPaths = await writeExecutionFixture(
 			directory,
 			fixture.contract,
@@ -84,6 +101,13 @@ describe("semantic public gate CLI", () => {
 				signedAt: "2099-01-05T00:02:00Z",
 			},
 			evidenceObjectSha256(analysisPlan),
+			{
+				confirmatoryAuthorizationSha256: evidenceObjectSha256(authorization),
+				analysisPlanTimestampEvidenceSha256: evidenceObjectSha256(
+					analysisPlanTimestampEvidence,
+				),
+				analysisPlanTimestampTrustPolicyIdentitySha256: "f".repeat(64),
+			},
 		);
 		const adjudicationPaths = await writeAdjudicationFixture(
 			directory,
@@ -93,7 +117,6 @@ describe("semantic public gate CLI", () => {
 			"2099-01-06T00:00:00Z",
 			"2099-01-06T00:01:00Z",
 		);
-		const tsa = await writeRealTimestampFixture(directory);
 		const planToken = await tsa.issue(
 			evidenceObjectSha256(power.collectionPlan),
 			"collection-plan",
@@ -409,6 +432,47 @@ describe("semantic public gate CLI", () => {
 			writeFile(developmentPaths[4], JSON.stringify(registryEvidence)),
 			writeFile(developmentPaths[5], JSON.stringify(registryTrustPolicy)),
 		]);
+		const qualificationPaths = [
+			join(directory, "confirmatory-authorization.json"),
+			join(directory, "analysis-plan-timestamp-evidence.json"),
+			join(directory, "competitive-qualification.json"),
+		];
+		await Promise.all([
+			writeFile(qualificationPaths[0], JSON.stringify(authorization)),
+			writeFile(
+				qualificationPaths[1],
+				JSON.stringify(analysisPlanTimestampEvidence),
+			),
+			writeFile(
+				qualificationPaths[2],
+				JSON.stringify({
+					schemaVersion: "naia-memory-semantic-competitive-qualification-v1",
+					verdict: "qualified",
+					deploymentId: "fixture-deployment",
+					trustStoreSha256: "a".repeat(64),
+					gateKeyId: "fixture-gate",
+					subjects: Object.fromEntries(
+						[
+							"contract",
+							"campaign",
+							"analysisPlan",
+							"authorization",
+							"timestampEvidence",
+							"executionEvidence",
+							"adjudicationEvidence",
+						].map((subject) => [`${subject}Sha256`, "b".repeat(64)]),
+					),
+					authorizationWindow: {
+						authorizedAt: authorization.authorizedAt,
+						expiresAt: authorization.expiresAt,
+					},
+					issuedAt: "2099-01-05T00:02:00.000Z",
+					statement:
+						"COMPETITIVE_CANDIDATE_VERIFIED_AGAINST_DEPLOYMENT_TRUST_STORE",
+					signatureBase64: "fixture-signature",
+				}),
+			),
+		]);
 
 		const gateArgs = [
 			...fixture.paths,
@@ -419,6 +483,7 @@ describe("semantic public gate CLI", () => {
 			...extraPaths,
 			...selectionPaths,
 			...developmentPaths,
+			...qualificationPaths,
 		];
 		const filePaths = gateArgs.filter((_, index) => index !== 11);
 		const artifacts = Object.fromEntries(
@@ -431,7 +496,7 @@ describe("semantic public gate CLI", () => {
 		await writeFile(
 			draftPath,
 			JSON.stringify({
-				schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v4",
+				schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v5",
 				blindingSeed: gateArgs[11],
 				artifacts,
 			}),
@@ -447,30 +512,10 @@ describe("semantic public gate CLI", () => {
 
 		expect(await runSemanticPublicGateManifestCli([manifestPath])).toBe(1);
 		const result = JSON.parse(output.pop() ?? "{}");
-		expect(result).toMatchObject({
-			analysisPlanTrustedTimestampVerified: false,
-			collectionPlanTrustedTimestampVerified: true,
-			priorAssignmentTimingVerified: true,
-			launchReceiptInternalConsistencyVerified: true,
-			participantDeliveryAcknowledgementSignaturesVerified: true,
-			deliveryBundleTrustedTimestampVerified: true,
-			selectionHistoryQualified: true,
-			selectionDisclosureInternallyConsistent: true,
-			developmentObservationReceiptsExternallyVerified: true,
-			timestampedDevelopmentMatrixCoverageVerified: true,
-			developmentExecutionPlanTrustedTimestampVerified: true,
-			registeredDevelopmentExecutionChronologyExternallyVerified: true,
-			offRegistryDevelopmentExecutionAbsenceExternallyVerified: false,
-			selectionHistoryCompletenessExternallyVerified: false,
-			candidateCount: 2,
-			developmentObservationCount: 4,
-			selectedPolicySha256: "c".repeat(64),
+		expect(result).toEqual({
 			promotable: false,
+			failure:
+				"semantic competitive qualification trust anchor is not provisioned",
 		});
-		expect(result.failure).toContain(
-			"trusted prior existence of the complete acknowledgement bundle",
-		);
-		expect(result.failure).toContain("absence of off-registry executions");
-		expect(result.failure).toContain("absence of undisclosed shadow trials");
 	}, 45_000);
 });
