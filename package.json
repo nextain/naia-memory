@@ -62,6 +62,7 @@
 		"benchmark:semantic-collect-signatures": "tsx src/benchmark/quality/semantic-attestation-collector-cli.ts",
 		"benchmark:public-evidence": "tsx src/benchmark/quality/public-evidence-cli.ts",
 		"benchmark:miracl-source": "tsx src/benchmark/quality/public-miracl-source-cli.ts",
+		"benchmark:miracl-multilingual-source-lock": "tsx src/benchmark/quality/miracl-multilingual-source-lock-cli.ts",
 		"benchmark:miracl-native-candidates": "tsx src/benchmark/quality/native-candidate-pool-cli.ts",
 		"benchmark:miracl-native-evaluation": "tsx src/benchmark/quality/native-evaluation-cli.ts",
 		"benchmark:miracl-full-corpus": "tsx src/benchmark/quality/native-full-corpus-evaluation-cli.ts",
