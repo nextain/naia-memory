@@ -54,8 +54,10 @@ export async function runMultilingualCompletionEvidenceCli(
 			"src/benchmark/quality/miracl-multilingual-completion-evidence-cli.ts",
 		additionalInputs: ["package.json", "pnpm-lock.yaml", "tsconfig.json"],
 	});
-	const producerRuntimeIdentity =
-		captureNativeRuntimeExecutionIdentity(environment);
+	const producerRuntimeIdentity = captureNativeRuntimeExecutionIdentity(
+		environment,
+		[repositoryRoot],
+	);
 	const language = evidenceLanguage(environment.MIRACL_LANGUAGE);
 	const contract = MIRACL_MULTILINGUAL_CONTRACT[language];
 	const resultPath =

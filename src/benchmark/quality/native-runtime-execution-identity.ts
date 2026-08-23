@@ -2,9 +2,14 @@ import { createHash } from "node:crypto";
 import { readFileSync, realpathSync, statSync } from "node:fs";
 import { isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+	type NativeRuntimePackageManifest,
+	buildNativeRuntimePackageManifest,
+	validateNativeRuntimePackageManifestHooks,
+} from "./native-runtime-package-manifest.js";
 
 export const NATIVE_RUNTIME_EXECUTION_IDENTITY_SCHEMA =
-	"naia-native-runtime-execution-identity-v1";
+	"naia-native-runtime-execution-identity-v2";
 
 export interface NativeRuntimeHookIdentity {
 	flag: "--experimental-loader" | "--import" | "--loader" | "--require" | "-r";
@@ -20,6 +25,7 @@ export interface NativeRuntimeExecutionIdentity {
 	executable: { path: string; sha256: string };
 	execArgv: string[];
 	hooks: NativeRuntimeHookIdentity[];
+	packageManifest: NativeRuntimePackageManifest;
 	environment: {
 		nodeOptions: string | null;
 		nodePath: string | null;
@@ -37,6 +43,7 @@ interface RuntimeExecutionIdentityInput {
 		NODE_PATH?: string;
 		TSX_TSCONFIG_PATH?: string;
 	};
+	dependencyAnchorRoots?: readonly string[];
 }
 
 const sha256 = (bytes: Uint8Array | string) =>
@@ -57,6 +64,7 @@ function identityPayload(
 		executable: identity.executable,
 		execArgv: identity.execArgv,
 		hooks: identity.hooks,
+		packageManifest: identity.packageManifest,
 		environment: identity.environment,
 	};
 }
@@ -137,6 +145,7 @@ export function buildNativeRuntimeExecutionIdentity(
 	const executablePath = realpathSync(input.execPath);
 	if (!statSync(executablePath).isFile())
 		throw new Error("Node executable is not a file");
+	const hooks = discoverHooks(input.execArgv);
 	const payload = {
 		schemaVersion: NATIVE_RUNTIME_EXECUTION_IDENTITY_SCHEMA,
 		nodeVersion: input.nodeVersion,
@@ -145,7 +154,11 @@ export function buildNativeRuntimeExecutionIdentity(
 			sha256: sha256(readFileSync(executablePath)),
 		},
 		execArgv: [...input.execArgv],
-		hooks: discoverHooks(input.execArgv),
+		hooks,
+		packageManifest: buildNativeRuntimePackageManifest(
+			hooks.map(({ path }) => path),
+			input.dependencyAnchorRoots,
+		),
 		environment: {
 			nodeOptions: input.environment.NODE_OPTIONS ?? null,
 			nodePath: input.environment.NODE_PATH ?? null,
@@ -157,12 +170,14 @@ export function buildNativeRuntimeExecutionIdentity(
 
 export function captureNativeRuntimeExecutionIdentity(
 	environment = process.env,
+	dependencyAnchorRoots: readonly string[] = [],
 ): NativeRuntimeExecutionIdentity {
 	return buildNativeRuntimeExecutionIdentity({
 		nodeVersion: process.version,
 		execPath: process.execPath,
 		execArgv: process.execArgv,
 		environment,
+		dependencyAnchorRoots,
 	});
 }
 
@@ -172,6 +187,19 @@ export function validateNativeRuntimeExecutionIdentity(
 	let declared: ReturnType<typeof declaredHooks> = [];
 	try {
 		declared = declaredHooks(identity.execArgv);
+	} catch {
+		throw new Error("runtime execution identity is internally inconsistent");
+	}
+	try {
+		for (const hook of identity.hooks) {
+			const path = resolvedHookPath(hook.specifier);
+			if (path !== hook.path || sha256(readFileSync(path)) !== hook.sha256)
+				throw new Error("runtime hook declaration changed");
+		}
+		validateNativeRuntimePackageManifestHooks(
+			identity.packageManifest,
+			identity.hooks,
+		);
 	} catch {
 		throw new Error("runtime execution identity is internally inconsistent");
 	}
@@ -224,7 +252,10 @@ export function verifyNativeRuntimeExecutionIdentity(
 	environment = process.env,
 ): void {
 	validateNativeRuntimeExecutionIdentity(expected);
-	const actual = captureNativeRuntimeExecutionIdentity(environment);
+	const actual = captureNativeRuntimeExecutionIdentity(
+		environment,
+		expected.packageManifest.anchors.map(({ root }) => root),
+	);
 	if (
 		canonicalPayload(identityPayload(actual)) !==
 		canonicalPayload(identityPayload(expected))

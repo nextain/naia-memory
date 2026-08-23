@@ -309,7 +309,18 @@ describe("multilingual full-corpus evidence identity", () => {
 		const producerRuntimeIdentity = buildNativeRuntimeExecutionIdentity({
 			nodeVersion: process.version,
 			execPath: process.execPath,
-			execArgv: [],
+			execArgv: [
+				"--require",
+				resolve(
+					import.meta.dirname,
+					"../../../node_modules/tsx/dist/preflight.cjs",
+				),
+				"--import",
+				resolve(
+					import.meta.dirname,
+					"../../../node_modules/tsx/dist/loader.mjs",
+				),
+			],
 			environment: {},
 		});
 		const completion = createMultilingualCompletionEvidence({

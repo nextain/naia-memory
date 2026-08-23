@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -16,6 +17,10 @@ function fixture() {
 	writeFileSync(executable, "node-bytes");
 	writeFileSync(preload, "preload-bytes");
 	writeFileSync(loader, "loader-bytes");
+	writeFileSync(
+		join(root, "package.json"),
+		JSON.stringify({ name: "runtime-fixture", version: "1.0.0" }),
+	);
 	return { executable, preload, loader };
 }
 
@@ -91,7 +96,7 @@ describe("native runtime execution identity", () => {
 		const identity = buildNativeRuntimeExecutionIdentity({
 			nodeVersion: "v26.3.0",
 			execPath: files.executable,
-			execArgv: [],
+			execArgv: ["--require", files.preload],
 			environment: {},
 		});
 		expect(() =>
@@ -99,6 +104,35 @@ describe("native runtime execution identity", () => {
 				...identity,
 				nodeVersion: "v0.0.0",
 			}),
+		).toThrow("internally inconsistent");
+	});
+
+	it("rejects a rehashed receipt that substitutes the declared hook path", () => {
+		const files = fixture();
+		const identity = buildNativeRuntimeExecutionIdentity({
+			nodeVersion: "v26.3.0",
+			execPath: files.executable,
+			execArgv: ["--require", files.preload],
+			environment: {},
+		});
+		const hooks = identity.hooks.map((hook) => ({
+			...hook,
+			specifier: files.loader,
+		}));
+		const payload = {
+			schemaVersion: identity.schemaVersion,
+			nodeVersion: identity.nodeVersion,
+			executable: identity.executable,
+			execArgv: ["--require", files.loader],
+			hooks,
+			packageManifest: identity.packageManifest,
+			environment: identity.environment,
+		};
+		const identitySha256 = createHash("sha256")
+			.update(`${JSON.stringify(payload)}\n`)
+			.digest("hex");
+		expect(() =>
+			validateNativeRuntimeExecutionIdentity({ ...payload, identitySha256 }),
 		).toThrow("internally inconsistent");
 	});
 });
