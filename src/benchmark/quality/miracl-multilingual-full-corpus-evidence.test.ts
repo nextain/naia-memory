@@ -18,8 +18,9 @@ import {
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
-import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
+import { buildNativeRuntimeExecutionIdentity } from "./native-runtime-execution-identity.js";
 import { buildNativeRuntimeSourceManifest } from "./native-runtime-source-manifest.js";
+import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 
 const corpus = [
 	[
@@ -303,10 +304,17 @@ describe("multilingual full-corpus evidence identity", () => {
 			root: resolve(import.meta.dirname, "../../.."),
 			entryPoint:
 				"src/benchmark/quality/miracl-multilingual-completion-evidence-cli.ts",
-			additionalInputs: ["pnpm-lock.yaml"],
+			additionalInputs: ["package.json", "pnpm-lock.yaml", "tsconfig.json"],
+		});
+		const producerRuntimeIdentity = buildNativeRuntimeExecutionIdentity({
+			nodeVersion: process.version,
+			execPath: process.execPath,
+			execArgv: [],
+			environment: {},
 		});
 		const completion = createMultilingualCompletionEvidence({
 			producerSourceManifest,
+			producerRuntimeIdentity,
 			language: "ko",
 			resultPath,
 			resultText,
@@ -357,6 +365,9 @@ describe("multilingual full-corpus evidence identity", () => {
 		expect(completion.implementation.producerSourceManifest).toEqual(
 			producerSourceManifest,
 		);
+		expect(completion.implementation.producerRuntimeIdentity).toEqual(
+			producerRuntimeIdentity,
+		);
 		expect(() =>
 			createMultilingualCompletionEvidence({
 				...{
@@ -364,6 +375,7 @@ describe("multilingual full-corpus evidence identity", () => {
 						...producerSourceManifest,
 						manifestSha256: "0".repeat(64),
 					},
+					producerRuntimeIdentity,
 					language: "ko" as const,
 					resultPath,
 					resultText,
@@ -397,6 +409,7 @@ describe("multilingual full-corpus evidence identity", () => {
 			createMultilingualCompletionEvidence({
 				...{
 					producerSourceManifest,
+					producerRuntimeIdentity,
 					language: "ko" as const,
 					resultPath,
 					resultText,

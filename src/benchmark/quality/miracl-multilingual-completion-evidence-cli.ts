@@ -21,6 +21,10 @@ import {
 } from "./native-full-corpus-evidence.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
 import {
+	captureNativeRuntimeExecutionIdentity,
+	verifyNativeRuntimeExecutionIdentity,
+} from "./native-runtime-execution-identity.js";
+import {
 	buildNativeRuntimeSourceManifest,
 	verifyNativeRuntimeSourceManifest,
 } from "./native-runtime-source-manifest.js";
@@ -48,8 +52,10 @@ export async function runMultilingualCompletionEvidenceCli(
 		root: repositoryRoot,
 		entryPoint:
 			"src/benchmark/quality/miracl-multilingual-completion-evidence-cli.ts",
-		additionalInputs: ["pnpm-lock.yaml"],
+		additionalInputs: ["package.json", "pnpm-lock.yaml", "tsconfig.json"],
 	});
+	const producerRuntimeIdentity =
+		captureNativeRuntimeExecutionIdentity(environment);
 	const language = evidenceLanguage(environment.MIRACL_LANGUAGE);
 	const contract = MIRACL_MULTILINGUAL_CONTRACT[language];
 	const resultPath =
@@ -240,6 +246,7 @@ export async function runMultilingualCompletionEvidenceCli(
 	});
 	const evidence = createMultilingualCompletionEvidence({
 		producerSourceManifest,
+		producerRuntimeIdentity,
 		language,
 		resultPath,
 		resultText,
@@ -305,6 +312,7 @@ export async function runMultilingualCompletionEvidenceCli(
 		qdrant,
 	});
 	verifyNativeRuntimeSourceManifest(repositoryRoot, producerSourceManifest);
+	verifyNativeRuntimeExecutionIdentity(producerRuntimeIdentity, environment);
 	await publishFullCorpusEvidenceReceipt(outputPath, evidence);
 	process.stdout.write(`${JSON.stringify(evidence, null, 2)}\n`);
 }

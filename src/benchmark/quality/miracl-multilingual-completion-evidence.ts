@@ -15,6 +15,14 @@ import {
 	parseTrecEvalAll,
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
+import {
+	type NativeRuntimeExecutionIdentity,
+	validateNativeRuntimeExecutionIdentity,
+} from "./native-runtime-execution-identity.js";
+import {
+	type NativeRuntimeSourceManifest,
+	validateNativeRuntimeSourceManifest,
+} from "./native-runtime-source-manifest.js";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import {
 	type QdrantServiceBindingReceipt,
@@ -23,10 +31,6 @@ import {
 	verifyQdrantServiceCompletionBinding,
 	verifyQdrantServiceReceiptChain,
 } from "./qdrant-service-binding.js";
-import {
-	type NativeRuntimeSourceManifest,
-	validateNativeRuntimeSourceManifest,
-} from "./native-runtime-source-manifest.js";
 
 interface MultilingualLaunchReceipt {
 	schemaVersion: number;
@@ -82,6 +86,7 @@ export interface MultilingualQdrantEvidence {
 
 export interface MultilingualCompletionEvidenceInput {
 	producerSourceManifest: NativeRuntimeSourceManifest;
+	producerRuntimeIdentity: NativeRuntimeExecutionIdentity;
 	language: MiraclEvidenceLanguage;
 	resultPath: string;
 	resultText: string;
@@ -141,6 +146,7 @@ export function createMultilingualCompletionEvidence(
 	input: MultilingualCompletionEvidenceInput,
 ) {
 	validateNativeRuntimeSourceManifest(input.producerSourceManifest);
+	validateNativeRuntimeExecutionIdentity(input.producerRuntimeIdentity);
 	if (
 		input.producerSourceManifest.entryPoint !==
 		"src/benchmark/quality/miracl-multilingual-completion-evidence-cli.ts"
@@ -376,6 +382,7 @@ export function createMultilingualCompletionEvidence(
 		},
 		implementation: {
 			producerSourceManifest: input.producerSourceManifest,
+			producerRuntimeIdentity: input.producerRuntimeIdentity,
 			evaluationSourceSha256: input.evaluationSourceSha256,
 			runtimeMonitorSourceSha256: input.runtimeMonitorSourceSha256,
 			artifactStability,
