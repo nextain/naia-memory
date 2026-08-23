@@ -13,6 +13,15 @@ import {
 	OFFLINE_MODEL_REVISIONS,
 	OfflineEmbeddingProvider,
 } from "../../memory/embeddings.js";
+import {
+	MIRACL_MULTILINGUAL_CONTRACT,
+	type MiraclEvidenceLanguage,
+	miraclExecutionNamespace,
+} from "./miracl-multilingual-contract.js";
+import {
+	miraclSourceRoot,
+	parseMiraclSourceLockReceipt,
+} from "./miracl-multilingual-download.js";
 import { scanNativeCorpusDocuments } from "./native-corpus-extract.js";
 import { verifyTrueBatchLaunchAuthorizationFiles } from "./native-full-corpus-candidate-authorization.js";
 import {
@@ -35,22 +44,29 @@ import { verifyTrueBatchEquivalenceEvidenceFiles } from "./true-batch-equivalenc
 
 const MODEL = "multilingual-e5-large";
 const MODEL_REVISION = OFFLINE_MODEL_REVISIONS[MODEL];
-const EXPECTED_DOCUMENTS = 1_486_752;
-const EXPECTED_QUERIES = 213;
+const LANGUAGE = (process.env.MIRACL_LANGUAGE ??
+	"ko") as MiraclEvidenceLanguage;
+if (!(LANGUAGE in MIRACL_MULTILINGUAL_CONTRACT))
+	throw new Error(`unsupported MIRACL language: ${LANGUAGE}`);
+const LANGUAGE_CONTRACT = MIRACL_MULTILINGUAL_CONTRACT[LANGUAGE];
+const EXPECTED_DOCUMENTS = LANGUAGE_CONTRACT.corpus.expectedDocumentCount;
+const EXPECTED_DOCIDS_SHA256 = LANGUAGE_CONTRACT.corpus.expectedDocidsSha256;
+if (!EXPECTED_DOCUMENTS || !EXPECTED_DOCIDS_SHA256)
+	throw new Error(`MIRACL-${LANGUAGE} full-corpus identity is not qualified`);
+const EXPECTED_QUERIES = LANGUAGE_CONTRACT.topics.queryCount;
 const TOP_K = 100;
 const CHUNK_SIZE = 512;
 const EMBEDDING_BATCH_SIZE = 8;
 const UPSERT_BATCH_SIZE = 64;
 const QDRANT_URL = process.env.QDRANT_URL ?? "http://127.0.0.1:6334";
 const PASSAGE_COMPOSITION = 'title + "\\n" + text';
-const SOURCE_ROOT =
-	process.env.MIRACL_SOURCE_DIR ?? ".cache/benchmark-sources/miracl-ko-v1.0";
+const SOURCE_ROOT = process.env.MIRACL_SOURCE_DIR ?? miraclSourceRoot(LANGUAGE);
 const CHECKPOINT_ROOT =
 	process.env.MIRACL_FULL_CHECKPOINT_DIR ??
-	".cache/benchmark-runs/miracl-ko-full-v1";
+	`.cache/benchmark-runs/miracl-${LANGUAGE}-full-v1`;
 const OUTPUT =
 	process.env.MIRACL_FULL_OUTPUT ??
-	"reports/quality/miracl-ko-full-corpus-vector-exact.json";
+	`reports/quality/miracl-${LANGUAGE}-full-corpus-vector-exact.json`;
 
 function sha256(value: string | Uint8Array): string {
 	return createHash("sha256").update(value).digest("hex");
@@ -160,8 +176,21 @@ async function main(): Promise<void> {
 		verifyTrueBatchEquivalenceEvidenceFiles(process.env);
 	}
 	if (existsSync(OUTPUT)) throw new Error("full-corpus output already exists");
+	const receiptPath =
+		process.env.MIRACL_SOURCE_RECEIPT ??
+		join(SOURCE_ROOT, "source-lock-receipt.json");
+	const useLegacyKoreanLock =
+		LANGUAGE === "ko" &&
+		process.env.MIRACL_SOURCE_RECEIPT === undefined &&
+		!existsSync(receiptPath);
+	const sourceLock = useLegacyKoreanLock
+		? MIRACL_KO_LOCK
+		: parseMiraclSourceLockReceipt(
+				LANGUAGE,
+				JSON.parse(readFileSync(receiptPath, "utf8")) as unknown,
+			);
 	await Promise.all(
-		MIRACL_KO_LOCK.files.map(({ path, size, sha256: expectedSha256 }) =>
+		sourceLock.files.map(({ path, size, sha256: expectedSha256 }) =>
 			verifyLockedFile(join(SOURCE_ROOT, path), {
 				size,
 				sha256: expectedSha256,
@@ -169,7 +198,10 @@ async function main(): Promise<void> {
 		),
 	);
 
-	const sourceLockSha256 = sha256(canonical(MIRACL_KO_LOCK));
+	const sourceLockSha256 =
+		"sourceLockSha256" in sourceLock
+			? sourceLock.sourceLockSha256
+			: sha256(canonical(sourceLock));
 	const embedder = new OfflineEmbeddingProvider(
 		MODEL,
 		"cpu",
@@ -182,7 +214,11 @@ async function main(): Promise<void> {
 		batchInferenceMode,
 	);
 	const { embeddingPolicySha256 } = executionPolicy;
-	const collectionName = `naia_miracl_ko_${sourceLockSha256.slice(0, 8)}_${embeddingPolicySha256.slice(0, 8)}`;
+	const collectionName = miraclExecutionNamespace(
+		LANGUAGE,
+		sourceLockSha256,
+		embeddingPolicySha256,
+	);
 	const checkpointDirectory = join(
 		CHECKPOINT_ROOT,
 		executionPolicy.checkpointLeaf,
@@ -298,7 +334,7 @@ async function main(): Promise<void> {
 		batch = [];
 	};
 
-	const shards = MIRACL_KO_LOCK.files
+	const shards = sourceLock.files
 		.slice(2)
 		.map(({ path }) => join(SOURCE_ROOT, path));
 	const scanReceipt = await scanNativeCorpusDocuments(
@@ -315,6 +351,7 @@ async function main(): Promise<void> {
 	await processChunk();
 	if (
 		scanReceipt.documentCount !== EXPECTED_DOCUMENTS ||
+		scanReceipt.docidsSha256 !== EXPECTED_DOCIDS_SHA256 ||
 		indexedDocuments !== EXPECTED_DOCUMENTS
 	)
 		throw new Error("full corpus document count mismatch");
@@ -325,11 +362,11 @@ async function main(): Promise<void> {
 		);
 
 	const topicsText = readFileSync(
-		join(SOURCE_ROOT, MIRACL_KO_LOCK.files[0].path),
+		join(SOURCE_ROOT, sourceLock.files[0].path),
 		"utf8",
 	);
 	const qrelsText = readFileSync(
-		join(SOURCE_ROOT, MIRACL_KO_LOCK.files[1].path),
+		join(SOURCE_ROOT, sourceLock.files[1].path),
 		"utf8",
 	);
 	const topics = parseTopicsTsv(topicsText);
@@ -380,10 +417,11 @@ async function main(): Promise<void> {
 		)
 		.join("\n")}\n`;
 	const result = {
-		benchmark: "miracl-ko-full-corpus-naia-vector-exact-v1",
+		benchmark: `miracl-${LANGUAGE}-full-corpus-naia-vector-exact-v1`,
 		claimBoundary:
 			"full-corpus embedding retrieval only; excludes Naia lifecycle, lexical fusion, and ANN quality",
 		inputs: {
+			language: LANGUAGE,
 			sourceLockSha256,
 			topicsSha256: sha256(topicsText),
 			qrelsSha256: sha256(qrelsText),

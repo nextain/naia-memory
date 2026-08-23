@@ -57,6 +57,8 @@ export interface MiraclLanguageContract {
 		directory: string;
 		shardCount: number;
 		manifestSha256: string;
+		expectedDocumentCount?: number;
+		expectedDocidsSha256?: string;
 	};
 }
 
@@ -80,6 +82,9 @@ export const MIRACL_MULTILINGUAL_CONTRACT = {
 		corpus: {
 			directory: "miracl-corpus-v1.0-ko",
 			shardCount: 3,
+			expectedDocumentCount: 1_486_752,
+			expectedDocidsSha256:
+				"6024e30f6c7aed244a5451a9552163a86f74b4254775022f4d4829fcaa87e879",
 			manifestSha256:
 				"86a86e5958e106c2bb93ba0ea673fbf238bcf497397616db7657482279ba9d99",
 		},
@@ -126,6 +131,9 @@ export const MIRACL_MULTILINGUAL_CONTRACT = {
 		corpus: {
 			directory: "miracl-corpus-v1.0-ar",
 			shardCount: 5,
+			expectedDocumentCount: 2_061_414,
+			expectedDocidsSha256:
+				"b81389dd2afad4d0273ec92c25f446b478cb41afb8327c162f8919d93b3c3659",
 			manifestSha256:
 				"935b72bf2efde49bf09132145d35137c6e442a19223c765795878464967da4a9",
 		},
