@@ -285,6 +285,10 @@ describe("semantic campaign CLI", () => {
 				(current: typeof artifact) => {
 					current.disclosure.topK = 0;
 				},
+				(current: typeof artifact) => {
+					current.cases[0].retrievalSurface =
+						"engine-current-state-projected-semantic-memory-v1";
+				},
 			]) {
 				const tampered = structuredClone(artifact);
 				mutate(tampered);
@@ -292,6 +296,49 @@ describe("semantic campaign CLI", () => {
 				expect(() =>
 					validateRawArtifact(path, expected, [benchmarkCase], 1),
 				).toThrow("invalid semantic raw artifact");
+			}
+
+			const surfaceByEngine = {
+				graphiti: "engine-current-state-projected-semantic-memory-v1",
+				hindsight: "engine-native-semantic-memory-v1",
+				letta: "engine-native-core-first-and-semantic-archive-v1",
+				mem0: "engine-native-semantic-memory-v1",
+				naia: "engine-native-semantic-memory-v1",
+			} as const;
+			const allSurfaces = [
+				"engine-native-semantic-memory-v1",
+				"engine-current-state-projected-semantic-memory-v1",
+				"engine-native-core-state-v1",
+				"engine-native-core-first-and-semantic-archive-v1",
+			] as const;
+			for (const [engine, allowedSurface] of Object.entries(surfaceByEngine)) {
+				const matching = structuredClone(artifact);
+				matching.disclosure.engine = engine;
+				matching.cases[0].retrievalSurface = allowedSurface;
+				writeFileSync(path, JSON.stringify(matching));
+				expect(() =>
+					validateRawArtifact(
+						path,
+						{ ...expected, engine },
+						[benchmarkCase],
+						1,
+					),
+				).not.toThrow();
+
+				for (const rejectedSurface of allSurfaces) {
+					if (rejectedSurface === allowedSurface) continue;
+					const mislabeled = structuredClone(matching);
+					mislabeled.cases[0].retrievalSurface = rejectedSurface;
+					writeFileSync(path, JSON.stringify(mislabeled));
+					expect(() =>
+						validateRawArtifact(
+							path,
+							{ ...expected, engine },
+							[benchmarkCase],
+							1,
+						),
+					).toThrow("invalid semantic raw artifact");
+				}
 			}
 		} finally {
 			rmSync(directory, { recursive: true, force: true });

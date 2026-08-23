@@ -8,7 +8,10 @@ import {
 	type MemoryUpdateContract,
 	validateMemoryUpdateContract,
 } from "./memory-update-contract.js";
-import { runSemanticRawCli } from "./semantic-raw-cli.js";
+import {
+	expectedSemanticRetrievalSurface,
+	runSemanticRawCli,
+} from "./semantic-raw-cli.js";
 import type { SemanticEngine } from "./semantic-raw-cli.js";
 
 export const SUPPORTED_SEMANTIC_ENGINES = [
@@ -70,6 +73,15 @@ export function validateRawArtifact(
 	};
 	const expectedById = new Map(expectedCases.map((item) => [item.id, item]));
 	if (
+		!SUPPORTED_SEMANTIC_ENGINES.includes(
+			expected.engine as (typeof SUPPORTED_SEMANTIC_ENGINES)[number],
+		)
+	)
+		throw new Error("invalid semantic campaign engine");
+	const expectedRetrievalSurface = expectedSemanticRetrievalSurface(
+		expected.engine as SemanticEngine,
+	);
+	if (
 		artifact.schemaVersion !== "naia-memory-semantic-raw-artifact-v2" ||
 		artifact.disclosure?.engine !== expected.engine ||
 		artifact.disclosure.executionSeed !== expected.caseExecutionSeed ||
@@ -117,12 +129,7 @@ export function validateRawArtifact(
 				(item.ingestionPolicy !== "sequential-turn-commit-v1" &&
 					item.ingestionPolicy !== "sequential-turn-settled-bank-v1") ||
 				item.temporalInputPolicy !== "engine-default-ingest-time-v1" ||
-				(item.retrievalSurface !== "engine-native-semantic-memory-v1" &&
-					item.retrievalSurface !==
-						"engine-current-state-projected-semantic-memory-v1" &&
-					item.retrievalSurface !== "engine-native-core-state-v1" &&
-					item.retrievalSurface !==
-						"engine-native-core-first-and-semantic-archive-v1") ||
+				item.retrievalSurface !== expectedRetrievalSurface ||
 				!Array.isArray(item.ingestionReceipts) ||
 				!Array.isArray(item.nativeState) ||
 				!Array.isArray(item.retrieved) ||

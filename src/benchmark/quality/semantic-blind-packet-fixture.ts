@@ -6,6 +6,7 @@ import {
 	type SUPPORTED_SEMANTIC_ENGINES,
 	buildSemanticCampaignPlan,
 } from "./semantic-campaign-cli.js";
+import { expectedSemanticRetrievalSurface } from "./semantic-raw-cli.js";
 
 function sha256(value: string | Buffer): string {
 	return createHash("sha256").update(value).digest("hex");
@@ -85,7 +86,7 @@ export function semanticBlindFixture(
 					}),
 					ingestionPolicy: "sequential-turn-commit-v1",
 					temporalInputPolicy: "engine-default-ingest-time-v1",
-					retrievalSurface: "engine-native-semantic-memory-v1",
+					retrievalSurface: expectedSemanticRetrievalSurface(run.engine),
 					...output,
 					outputSha256: sha256Json(output),
 				},

@@ -20,7 +20,10 @@ import { createLettaSemanticBridge } from "./bridge-letta-semantic.js";
 import { createMem0SemanticBridge } from "./bridge-mem0-semantic.js";
 import { createNaiaSemanticBridge } from "./bridge-naia-semantic.js";
 import { GraphitiRestSemanticClient } from "./graphiti-rest-semantic-client.js";
-import { runSemanticRawContract } from "./memory-semantic-runner.js";
+import {
+	type SemanticEngineBridge,
+	runSemanticRawContract,
+} from "./memory-semantic-runner.js";
 import {
 	type MemoryUpdateContract,
 	validateMemoryUpdateContract,
@@ -32,6 +35,21 @@ export type SemanticEngine =
 	| "letta"
 	| "mem0"
 	| "naia";
+
+export function expectedSemanticRetrievalSurface(
+	engine: SemanticEngine,
+): SemanticEngineBridge["retrievalSurface"] {
+	switch (engine) {
+		case "graphiti":
+			return "engine-current-state-projected-semantic-memory-v1";
+		case "letta":
+			return "engine-native-core-first-and-semantic-archive-v1";
+		case "hindsight":
+		case "mem0":
+		case "naia":
+			return "engine-native-semantic-memory-v1";
+	}
+}
 export type SemanticRawCliArgs = {
 	engine: SemanticEngine;
 	contractPath: string;
@@ -351,6 +369,17 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 		parsed.topK,
 		executionSeed,
 	);
+	const expectedRetrievalSurface = expectedSemanticRetrievalSurface(
+		parsed.engine,
+	);
+	if (
+		receipts.some(
+			(receipt) => receipt.retrievalSurface !== expectedRetrievalSurface,
+		)
+	)
+		throw new Error(
+			`semantic ${parsed.engine} bridge disclosed an unexpected retrieval surface`,
+		);
 	const disclosure = {
 		engine: parsed.engine,
 		topK: parsed.topK,
