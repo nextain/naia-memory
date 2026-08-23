@@ -5,13 +5,23 @@ import type {
 } from "./bridge-graphiti-semantic.js";
 
 export type GraphitiBackendSmokeResult = {
-	schemaVersion: 2;
+	schemaVersion: 3;
 	passed: boolean;
 	checks: {
 		episodeCommit: boolean;
 		namespaceIsolation: boolean;
 		supersessionObserved: boolean;
-		searchStateIdentity: boolean;
+		projectedSearchStateIdentity: boolean;
+		rawSearchAuditAvailable: boolean;
+		rawSearchProbeObserved: boolean;
+	};
+	diagnostics: {
+		rawSearchStateIdentity: boolean;
+		rawSearchOutcome:
+			| "unavailable"
+			| "empty"
+			| "current-state-only"
+			| "contains-stale";
 	};
 	counts: {
 		beforeUpdate: number;
@@ -22,6 +32,7 @@ export type GraphitiBackendSmokeResult = {
 		searchResults: number;
 		rawSearchResults: number;
 		staleRawSearchResults: number;
+		staleProjectedSearchResults: number;
 		committedEpisodes: number;
 	};
 };
@@ -34,7 +45,7 @@ export type GraphitiBackendSmokeOptions = {
 
 export async function runGraphitiBackendSmoke(
 	client: GraphitiSemanticClient & {
-		searchFactsRaw?: GraphitiSemanticClient["searchCurrentFacts"];
+		searchFactsRaw: GraphitiSemanticClient["searchCurrentFacts"];
 	},
 	options: GraphitiBackendSmokeOptions = {},
 ): Promise<GraphitiBackendSmokeResult> {
@@ -81,13 +92,14 @@ export async function runGraphitiBackendSmoke(
 			groupIds: [groupA],
 			maxFacts: 10,
 		});
-		const rawSearch = client.searchFactsRaw
+		const rawSearchAuditAvailable = typeof client.searchFactsRaw === "function";
+		const rawSearch = rawSearchAuditAvailable
 			? await client.searchFactsRaw({
 					query: "지금 어디에 살고 있나요?",
 					groupIds: [groupA],
 					maxFacts: 10,
 				})
-			: search;
+			: [];
 
 		const beforeIds = new Set(before.map((fact) => fact.uuid));
 		const afterIds = new Set(after.map((fact) => fact.uuid));
@@ -105,19 +117,34 @@ export async function runGraphitiBackendSmoke(
 		const staleRawSearchResults = rawSearch.filter(
 			(fact) => state.get(fact.uuid) !== fact.fact,
 		).length;
-		const searchStateIdentity =
+		const staleProjectedSearchResults = search.filter(
+			(fact) => state.get(fact.uuid) !== fact.fact,
+		).length;
+		const projectedSearchStateIdentity =
+			search.length > 0 && staleProjectedSearchResults === 0;
+		const rawSearchStateIdentity =
 			rawSearch.length > 0 && staleRawSearchResults === 0;
+		const rawSearchOutcome = !rawSearchAuditAvailable
+			? "unavailable"
+			: rawSearch.length === 0
+				? "empty"
+				: rawSearchStateIdentity
+					? "current-state-only"
+					: "contains-stale";
 		const supersessionObserved = expired.length > 0 && created.length > 0;
 		const checks = {
 			episodeCommit: committedEpisodes === 3,
 			namespaceIsolation,
 			supersessionObserved,
-			searchStateIdentity,
+			projectedSearchStateIdentity,
+			rawSearchAuditAvailable,
+			rawSearchProbeObserved: rawSearch.length > 0,
 		};
 		outcome = {
-			schemaVersion: 2,
+			schemaVersion: 3,
 			passed: Object.values(checks).every(Boolean),
 			checks,
+			diagnostics: { rawSearchStateIdentity, rawSearchOutcome },
 			counts: {
 				beforeUpdate: before.length,
 				afterUpdate: after.length,
@@ -127,6 +154,7 @@ export async function runGraphitiBackendSmoke(
 				searchResults: search.length,
 				rawSearchResults: rawSearch.length,
 				staleRawSearchResults,
+				staleProjectedSearchResults,
 				committedEpisodes,
 			},
 		};

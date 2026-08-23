@@ -36,7 +36,7 @@ if (!/^[a-f0-9]{64}$/.test(runtime.GRAPHITI_SERVER_LOCK_SHA256))
 if (!/^[a-f0-9]{64}$/.test(runtime.GRAPHITI_DEPLOYED_SIDECAR_SHA256))
 	throw new Error("GRAPHITI_DEPLOYED_SIDECAR_SHA256 must be a sha256 hash");
 const result = {
-	schemaVersion: "naia-memory-graphiti-backend-smoke-v2",
+	schemaVersion: "naia-memory-graphiti-backend-smoke-v3",
 	evidenceClass: "local-backend-integration-smoke",
 	publicCompetitiveEvidence: false,
 	receipt: benchmarkReceipt([], { runtime }, [
