@@ -79,6 +79,9 @@ describe("benchmark selection disclosure", () => {
 			candidateCount: 2,
 			developmentObservationCount: 2,
 			selectedPolicySha256: "b".repeat(64),
+			selectionDisclosureInternallyConsistent: true,
+			developmentObservationReceiptsExternallyVerified: false,
+			selectionHistoryCompletenessExternallyVerified: false,
 		});
 	});
 

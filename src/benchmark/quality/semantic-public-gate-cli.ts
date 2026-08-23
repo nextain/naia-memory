@@ -1,9 +1,15 @@
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
+	isBenchmarkSelectionDisclosure,
+	isBenchmarkSelectionDisclosureTrustPolicy,
+	validateBenchmarkSelectionDisclosure,
+} from "./benchmark-selection-disclosure.js";
+import {
 	type MemoryUpdateContract,
 	validateSemanticPublicEvidenceCoverage,
 } from "./memory-update-contract.js";
+import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import {
 	PublicEvidenceFileTooLargeError,
 	readBoundedEvidenceFile,
@@ -59,12 +65,13 @@ async function runSemanticEvidenceGateCli(
 			args.length !== 14 &&
 			args.length !== 19 &&
 			args.length !== 22 &&
-			args.length !== 26)
+			args.length !== 26 &&
+			args.length !== 28)
 	) {
 		process.stderr.write(
 			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>${
 				mode === "public"
-					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-collection-plan.json> <pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json> [<rfc3161-timestamp-evidence.json> <rfc3161-timestamp-trust-policy.json> <pilot-launch-receipt.json> [<delivery-acknowledgements.json> <participant-trust-policy.json> <delivery-rfc3161-evidence.json> <delivery-rfc3161-trust-policy.json>]]]]]]"
+					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-collection-plan.json> <pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json> [<rfc3161-timestamp-evidence.json> <rfc3161-timestamp-trust-policy.json> <pilot-launch-receipt.json> [<delivery-acknowledgements.json> <participant-trust-policy.json> <delivery-rfc3161-evidence.json> <delivery-rfc3161-trust-policy.json> [<selection-disclosure.json> <selection-disclosure-trust-policy.json>]]]]]]]"
 					: ""
 			}\n`,
 		);
@@ -229,6 +236,7 @@ async function runSemanticEvidenceGateCli(
 				});
 				let analysisPlan = {};
 				let competitiveInference = {};
+				let selectionHistory = {};
 				if (args.length >= 14) {
 					const parsedPlan = await readJson(args[12], "analysis plan");
 					if (!isSemanticAnalysisPlan(parsedPlan))
@@ -337,14 +345,14 @@ async function runSemanticEvidenceGateCli(
 									)) as SemanticPilotLaunchReceipt)
 								: undefined;
 						const deliveryAcknowledgements =
-							args.length === 26
+							args.length >= 26
 								? ((await readJson(
 										args[22],
 										"delivery acknowledgement bundle",
 									)) as SemanticPilotDeliveryAcknowledgementBundle)
 								: undefined;
 						const participantTrustPolicy =
-							args.length === 26
+							args.length >= 26
 								? await readJson(args[23], "participant trust policy")
 								: undefined;
 						if (
@@ -353,14 +361,14 @@ async function runSemanticEvidenceGateCli(
 						)
 							throw new Error("participant trust policy shape is invalid");
 						const deliveryTimestampEvidence =
-							args.length === 26
+							args.length >= 26
 								? ((await readJson(
 										args[24],
 										"delivery RFC 3161 timestamp evidence",
 									)) as Rfc3161DigestTimestampEvidence)
 								: undefined;
 						const deliveryTimestampTrustPolicy =
-							args.length === 26
+							args.length >= 26
 								? ((await readJson(
 										args[25],
 										"delivery RFC 3161 timestamp trust policy",
@@ -409,6 +417,77 @@ async function runSemanticEvidenceGateCli(
 								],
 							}),
 						};
+						if (args.length === 28) {
+							const disclosure = await readJson(
+								args[26],
+								"selection disclosure",
+							);
+							if (!isBenchmarkSelectionDisclosure(disclosure))
+								throw new Error("selection disclosure shape is invalid");
+							const selectionTrust = await readJson(
+								args[27],
+								"selection disclosure trust policy",
+							);
+							if (!isBenchmarkSelectionDisclosureTrustPolicy(selectionTrust))
+								throw new Error(
+									"selection disclosure trust policy shape is invalid",
+								);
+							const firstExecutionStartedAt = executionBundle.receipts
+								.map((receipt) => receipt.startedAt)
+								.sort()[0];
+							const naiaReceipt = executionBundle.receipts.find(
+								(receipt) => receipt.engine === "naia",
+							);
+							if (!firstExecutionStartedAt || !naiaReceipt)
+								throw new Error(
+									"selection disclosure requires a Naia confirmatory execution",
+								);
+							const contractSha256 = evidenceObjectSha256(contract);
+							if (disclosure.confirmatoryDatasetSha256 !== contractSha256)
+								throw new Error(
+									"selection disclosure confirmatory dataset binding is invalid",
+								);
+							selectionHistory = validateBenchmarkSelectionDisclosure({
+								disclosure,
+								trustPolicy: selectionTrust,
+								expectedContractSha256: contractSha256,
+								expectedAnalysisPlanSha256: evidenceObjectSha256(parsedPlan),
+								firstConfirmatoryExecutionStartedAt: firstExecutionStartedAt,
+								forbiddenTrustIdentities: [
+									...Object.values(
+										trustPolicy.authorPublicKeysByLanguage,
+									).flatMap((keys) => Object.keys(keys)),
+									...Object.values(
+										trustPolicy.nativeReviewerPublicKeysByLanguage,
+									).flatMap((keys) => Object.keys(keys)),
+									...Object.keys(executionTrustPolicy.executorPublicKeys),
+									...Object.keys(adjudicationTrust.adjudicators),
+									...Object.keys(analysisTrust.administratorPublicKeys),
+									...Object.keys(powerTrust.reviewerPublicKeys),
+								],
+								forbiddenTrustPublicKeys: [
+									...Object.values(
+										trustPolicy.authorPublicKeysByLanguage,
+									).flatMap((keys) => Object.values(keys)),
+									...Object.values(
+										trustPolicy.nativeReviewerPublicKeysByLanguage,
+									).flatMap((keys) => Object.values(keys)),
+									...Object.values(executionTrustPolicy.executorPublicKeys),
+									...Object.values(adjudicationTrust.adjudicators).map(
+										(policy) => policy.publicKey,
+									),
+									...Object.values(analysisTrust.administratorPublicKeys),
+									...Object.values(powerTrust.reviewerPublicKeys),
+								],
+							});
+							if (
+								selectionHistory.selectedPolicySha256 !==
+								naiaReceipt.configurationSha256
+							)
+								throw new Error(
+									"selected benchmark policy does not match the executed Naia configuration",
+								);
+						}
 					}
 					const caseById = new Map(
 						contract.cases.map((item) => [item.id, item]),
@@ -445,13 +524,16 @@ async function runSemanticEvidenceGateCli(
 						adjudicationEvidenceQualified: true,
 						...adjudication,
 						...analysisPlan,
+						...selectionHistory,
 						...competitiveInference,
 						promotable: false,
 						failure:
 							args.length >= 14
 								? args.length >= 19
-									? args.length === 26
-										? "pilot review, prior-assignment timing, participant acknowledgement signatures, and trusted prior existence of the complete acknowledgement bundle are verified; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+									? args.length >= 26
+										? args.length === 28
+											? "pilot review, prior-assignment timing, participant acknowledgement signatures, trusted prior existence of the complete acknowledgement bundle, signed candidate-selection disclosure internal consistency, and executed Naia policy binding are verified; development observation receipts and selection-history completeness are not externally verified; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+											: "pilot review, prior-assignment timing, participant acknowledgement signatures, and trusted prior existence of the complete acknowledgement bundle are verified; candidate-selection history and executed-policy binding are not evaluated by this gate; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 										: args.length === 22
 											? "pilot review and prior-assignment timing are verified, and the operator-created launch receipt is internally consistent with the plan and timestamp token; participant delivery and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 											: "pilot review is attested but construction-cause independence and prior-assignment timing are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"

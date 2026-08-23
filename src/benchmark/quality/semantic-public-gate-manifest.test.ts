@@ -30,7 +30,7 @@ async function fixture() {
 		};
 	}
 	const manifest = {
-		schemaVersion: "naia-memory-semantic-public-gate-manifest-v1",
+		schemaVersion: "naia-memory-semantic-public-gate-manifest-v2",
 		blindingSeed: "frozen-seed",
 		artifacts,
 	};
@@ -40,10 +40,10 @@ async function fixture() {
 }
 
 describe("semantic public gate manifest", () => {
-	it("resolves one hash-pinned manifest into the canonical 26 arguments", async () => {
+	it("resolves one hash-pinned manifest into the canonical 28 arguments", async () => {
 		const current = await fixture();
 		const loaded = await loadSemanticPublicGateManifest(current.manifestPath);
-		expect(loaded.args).toHaveLength(26);
+		expect(loaded.args).toHaveLength(28);
 		expect(loaded.args[SEMANTIC_PUBLIC_GATE_BLINDING_SEED_INDEX]).toBe(
 			"frozen-seed",
 		);
@@ -73,6 +73,8 @@ describe("semantic public gate manifest", () => {
 			"participantTrustPolicy",
 			"deliveryTimestampEvidence",
 			"deliveryTimestampTrustPolicy",
+			"selectionDisclosure",
+			"selectionDisclosureTrustPolicy",
 		];
 		expect(SEMANTIC_PUBLIC_GATE_ARTIFACT_NAMES).toEqual(expectedNames);
 		expect(loaded.args.filter((_, index) => index !== 11)).toEqual(

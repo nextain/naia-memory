@@ -1,8 +1,16 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { generateKeyPairSync, sign } from "node:crypto";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
+import {
+	type BenchmarkDevelopmentObservation,
+	benchmarkObservationSha256,
+} from "./benchmark-selection-disclosure.js";
+import {
+	evidenceObjectSha256,
+	evidenceSignaturePayload,
+} from "./public-evidence-crypto.js";
 import { buildSemanticPilotLaunch } from "./semantic-pilot-launch.js";
 import {
 	writeAdjudicationFixture,
@@ -43,7 +51,7 @@ afterEach(async () => {
 });
 
 describe("semantic public gate CLI", () => {
-	it("verifies the complete 26-artifact path with real signatures and RFC 3161 tokens", async () => {
+	it("verifies the complete 28-artifact path with selection history, real signatures, and RFC 3161 tokens", async () => {
 		const output: string[] = [];
 		captureStdout(output);
 		const directory = await root();
@@ -76,6 +84,9 @@ describe("semantic public gate CLI", () => {
 			power.assumptionsSha256,
 			"2099-01-04T00:00:00Z",
 			"2099-01-04T00:01:00Z",
+		);
+		const analysisPlan = JSON.parse(
+			await readFile(analysisPlanPaths[0] as string, "utf8"),
 		);
 		const tsa = await writeRealTimestampFixture(directory);
 		const planToken = await tsa.issue(
@@ -125,6 +136,89 @@ describe("semantic public gate CLI", () => {
 			writeFile(extraPaths[5], JSON.stringify(deliveryEvidence)),
 			writeFile(extraPaths[6], JSON.stringify(tsa.trustPolicy)),
 		]);
+		const { privateKey: selectionPrivateKey, publicKey: selectionPublicKey } =
+			generateKeyPairSync("ed25519");
+		const candidates = [
+			{
+				id: "baseline",
+				policySha256: "d".repeat(64),
+				declaredAt: "2099-01-02T00:00:00Z",
+			},
+			{
+				id: "selected",
+				policySha256: "c".repeat(64),
+				declaredAt: "2099-01-02T00:00:00Z",
+			},
+		];
+		const observations: BenchmarkDevelopmentObservation[] = [];
+		for (const [index, [candidateId, datasetSha256, metric]] of [
+			["baseline", "e".repeat(64), 0.6],
+			["selected", "e".repeat(64), 0.8],
+			["baseline", "f".repeat(64), 0.7],
+			["selected", "f".repeat(64), 0.9],
+		].entries()) {
+			observations.push({
+				id: `observation-${index + 1}`,
+				candidateId: candidateId as string,
+				datasetSha256: datasetSha256 as string,
+				receiptSha256: (index + 1).toString(16).repeat(64),
+				primaryMetricValue: metric as number,
+				startedAt: `2099-01-03T0${index}:00:00Z`,
+				finishedAt: `2099-01-03T0${index}:30:00Z`,
+				previousObservationSha256:
+					index === 0
+						? null
+						: benchmarkObservationSha256(
+								observations[index - 1] as BenchmarkDevelopmentObservation,
+							),
+			});
+		}
+		const unsignedSelection = {
+			schemaVersion: "naia-memory-benchmark-selection-disclosure-v1" as const,
+			auditor: "independent-selection-auditor",
+			contractSha256: evidenceObjectSha256(fixture.contract),
+			analysisPlanSha256: evidenceObjectSha256(analysisPlan),
+			confirmatoryDatasetSha256: evidenceObjectSha256(fixture.contract),
+			candidates,
+			developmentObservations: observations,
+			selectedCandidateId: "selected",
+			selectionRule: "frozen-rule-applied-to-development-only" as const,
+			selectionAggregation:
+				"unweighted-mean-over-identical-development-datasets" as const,
+			selectionObjective: "maximize" as const,
+			selectionRuleSha256: "a".repeat(64),
+			selectedAt: "2099-01-04T02:00:00Z",
+			signedAt: "2099-01-04T03:00:00Z",
+			statement:
+				"ALL_KNOWN_SELECTION_TRIALS_DISCLOSED_BEFORE_CONFIRMATORY_RUN" as const,
+		};
+		const selectionPaths = [
+			join(directory, "selection-disclosure.json"),
+			join(directory, "selection-disclosure-trust-policy.json"),
+		];
+		await Promise.all([
+			writeFile(
+				selectionPaths[0],
+				JSON.stringify({
+					...unsignedSelection,
+					signatureBase64: sign(
+						null,
+						evidenceSignaturePayload(unsignedSelection),
+						selectionPrivateKey,
+					).toString("base64"),
+				}),
+			),
+			writeFile(
+				selectionPaths[1],
+				JSON.stringify({
+					auditorPublicKeys: {
+						"independent-selection-auditor": selectionPublicKey
+							.export({ type: "spki", format: "pem" })
+							.toString(),
+					},
+				}),
+			),
+		]);
 
 		const gateArgs = [
 			...fixture.paths,
@@ -133,6 +227,7 @@ describe("semantic public gate CLI", () => {
 			...analysisPlanPaths,
 			...power.paths,
 			...extraPaths,
+			...selectionPaths,
 		];
 		const filePaths = gateArgs.filter((_, index) => index !== 11);
 		const artifacts = Object.fromEntries(
@@ -145,7 +240,7 @@ describe("semantic public gate CLI", () => {
 		await writeFile(
 			draftPath,
 			JSON.stringify({
-				schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v1",
+				schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v2",
 				blindingSeed: gateArgs[11],
 				artifacts,
 			}),
@@ -167,10 +262,20 @@ describe("semantic public gate CLI", () => {
 			launchReceiptInternalConsistencyVerified: true,
 			participantDeliveryAcknowledgementSignaturesVerified: true,
 			deliveryBundleTrustedTimestampVerified: true,
+			selectionHistoryQualified: true,
+			selectionDisclosureInternallyConsistent: true,
+			developmentObservationReceiptsExternallyVerified: false,
+			selectionHistoryCompletenessExternallyVerified: false,
+			candidateCount: 2,
+			developmentObservationCount: 4,
+			selectedPolicySha256: "c".repeat(64),
 			promotable: false,
 		});
 		expect(result.failure).toContain(
 			"trusted prior existence of the complete acknowledgement bundle",
+		);
+		expect(result.failure).toContain(
+			"development observation receipts and selection-history completeness are not externally verified",
 		);
 	}, 30_000);
 });

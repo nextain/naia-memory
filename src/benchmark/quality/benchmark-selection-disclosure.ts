@@ -48,16 +48,57 @@ export type BenchmarkSelectionDisclosureTrustPolicy = {
 
 function validTime(value: string): number {
 	const parsed = Date.parse(value);
-	if (!Number.isFinite(parsed)) throw new Error("selection disclosure timestamp is invalid");
+	if (!Number.isFinite(parsed))
+		throw new Error("selection disclosure timestamp is invalid");
 	return parsed;
 }
 
 function validId(value: unknown): value is string {
-	return typeof value === "string" && value.trim() === value && value.length > 0;
+	return (
+		typeof value === "string" && value.trim() === value && value.length > 0
+	);
 }
 
 function validHash(value: unknown): value is string {
 	return typeof value === "string" && SHA256.test(value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isEd25519Key(value: unknown): value is string {
+	if (typeof value !== "string") return false;
+	try {
+		return createPublicKey(value).asymmetricKeyType === "ed25519";
+	} catch {
+		return false;
+	}
+}
+
+export function isBenchmarkSelectionDisclosure(
+	value: unknown,
+): value is BenchmarkSelectionDisclosure {
+	return (
+		isRecord(value) &&
+		value.schemaVersion === "naia-memory-benchmark-selection-disclosure-v1" &&
+		Array.isArray(value.candidates) &&
+		Array.isArray(value.developmentObservations) &&
+		typeof value.signatureBase64 === "string"
+	);
+}
+
+export function isBenchmarkSelectionDisclosureTrustPolicy(
+	value: unknown,
+): value is BenchmarkSelectionDisclosureTrustPolicy {
+	return (
+		isRecord(value) &&
+		isRecord(value.auditorPublicKeys) &&
+		Object.keys(value.auditorPublicKeys).length > 0 &&
+		Object.entries(value.auditorPublicKeys).every(
+			([identity, key]) => identity.trim().length > 0 && isEd25519Key(key),
+		)
+	);
 }
 
 export function benchmarkObservationSha256(
@@ -76,13 +117,17 @@ export function validateBenchmarkSelectionDisclosure(input: {
 	forbiddenTrustPublicKeys?: Iterable<string>;
 }): {
 	selectionHistoryQualified: true;
+	selectionDisclosureInternallyConsistent: true;
+	developmentObservationReceiptsExternallyVerified: false;
+	selectionHistoryCompletenessExternallyVerified: false;
 	candidateCount: number;
 	developmentObservationCount: number;
 	selectedPolicySha256: string;
 } {
 	const { disclosure } = input;
 	if (
-		disclosure.schemaVersion !== "naia-memory-benchmark-selection-disclosure-v1" ||
+		disclosure.schemaVersion !==
+			"naia-memory-benchmark-selection-disclosure-v1" ||
 		!validId(disclosure.auditor) ||
 		!validHash(disclosure.contractSha256) ||
 		!validHash(disclosure.analysisPlanSha256) ||
@@ -124,7 +169,8 @@ export function validateBenchmarkSelectionDisclosure(input: {
 		candidates.set(candidate.id, candidate);
 	}
 	const selected = candidates.get(disclosure.selectedCandidateId);
-	if (!selected) throw new Error("selected benchmark candidate is not declared");
+	if (!selected)
+		throw new Error("selected benchmark candidate is not declared");
 
 	let previousHash: string | null = null;
 	let previousFinishedAt = Number.NEGATIVE_INFINITY;
@@ -148,7 +194,9 @@ export function validateBenchmarkSelectionDisclosure(input: {
 			throw new Error("selection disclosure observation chain is invalid");
 		const startedAt = validTime(observation.startedAt);
 		const finishedAt = validTime(observation.finishedAt);
-		const candidate = candidates.get(observation.candidateId) as BenchmarkSelectionCandidate;
+		const candidate = candidates.get(
+			observation.candidateId,
+		) as BenchmarkSelectionCandidate;
 		if (
 			finishedAt < startedAt ||
 			startedAt < validTime(candidate.declaredAt) ||
@@ -157,17 +205,23 @@ export function validateBenchmarkSelectionDisclosure(input: {
 			throw new Error("selection disclosure observation chronology is invalid");
 		const replayKey = `${observation.candidateId}\0${observation.datasetSha256}`;
 		if (replayKeys.has(replayKey))
-			throw new Error("selection disclosure contains a repeated candidate/dataset trial");
+			throw new Error(
+				"selection disclosure contains a repeated candidate/dataset trial",
+			);
 		if (receiptHashes.has(observation.receiptSha256))
 			throw new Error("selection disclosure reuses an observation receipt");
 		replayKeys.add(replayKey);
 		receiptHashes.add(observation.receiptSha256);
 		observationIds.add(observation.id);
 		observedCandidates.add(observation.candidateId);
-		const datasets = datasetsByCandidate.get(observation.candidateId) ?? new Set<string>();
+		const datasets =
+			datasetsByCandidate.get(observation.candidateId) ?? new Set<string>();
 		datasets.add(observation.datasetSha256);
 		datasetsByCandidate.set(observation.candidateId, datasets);
-		const metric = metricSums.get(observation.candidateId) ?? { sum: 0, count: 0 };
+		const metric = metricSums.get(observation.candidateId) ?? {
+			sum: 0,
+			count: 0,
+		};
 		metric.sum += observation.primaryMetricValue;
 		metric.count += 1;
 		metricSums.set(observation.candidateId, metric);
@@ -176,7 +230,9 @@ export function validateBenchmarkSelectionDisclosure(input: {
 	}
 	if (!observedCandidates.has(disclosure.selectedCandidateId))
 		throw new Error("selected benchmark candidate lacks development evidence");
-	const canonicalCoverage = [...(datasetsByCandidate.values().next().value ?? [])]
+	const canonicalCoverage = [
+		...(datasetsByCandidate.values().next().value ?? []),
+	]
 		.sort()
 		.join("\0");
 	if (
@@ -193,14 +249,18 @@ export function validateBenchmarkSelectionDisclosure(input: {
 			disclosure.selectionObjective === "maximize"
 				? rightMean - leftMean
 				: leftMean - rightMean;
-		return metricOrder || (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0);
+		return (
+			metricOrder || (left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0)
+		);
 	});
 	if (ranked[0]?.[0] !== disclosure.selectedCandidateId)
 		throw new Error("selected benchmark candidate violates the frozen rule");
 
 	const selectedAt = validTime(disclosure.selectedAt);
 	const signedAt = validTime(disclosure.signedAt);
-	const confirmatoryStartedAt = validTime(input.firstConfirmatoryExecutionStartedAt);
+	const confirmatoryStartedAt = validTime(
+		input.firstConfirmatoryExecutionStartedAt,
+	);
 	if (
 		selectedAt < previousFinishedAt ||
 		signedAt < selectedAt ||
@@ -222,11 +282,17 @@ export function validateBenchmarkSelectionDisclosure(input: {
 				.toString("base64"),
 		),
 	);
-	if (forbiddenIdentities.has(disclosure.auditor) || forbiddenKeys.has(normalizedKey))
+	if (
+		forbiddenIdentities.has(disclosure.auditor) ||
+		forbiddenKeys.has(normalizedKey)
+	)
 		throw new Error("selection disclosure auditor overlaps another role");
 
 	return {
 		selectionHistoryQualified: true,
+		selectionDisclosureInternallyConsistent: true,
+		developmentObservationReceiptsExternallyVerified: false,
+		selectionHistoryCompletenessExternallyVerified: false,
 		candidateCount: candidates.size,
 		developmentObservationCount: disclosure.developmentObservations.length,
 		selectedPolicySha256: selected.policySha256,
