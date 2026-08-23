@@ -31,6 +31,10 @@ export function isPublicDatasetCustodySeal(
 		"statement",
 		"signatureBase64",
 	];
+	const signature =
+		typeof seal.signatureBase64 === "string"
+			? Buffer.from(seal.signatureBase64, "base64")
+			: undefined;
 	return (
 		Object.keys(seal).length === expectedKeys.length &&
 		expectedKeys.every((key) => key in seal) &&
@@ -39,7 +43,8 @@ export function isPublicDatasetCustodySeal(
 		typeof seal.datasetSha256 === "string" &&
 		typeof seal.sealedAt === "string" &&
 		seal.statement === "NO_BENCHMARK_OPERATOR_ACCESS_BEFORE_DISCLOSURE" &&
-		typeof seal.signatureBase64 === "string"
+		signature?.length === 64 &&
+		signature.toString("base64") === seal.signatureBase64
 	);
 }
 

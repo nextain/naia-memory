@@ -51,7 +51,7 @@ describe("public evidence v10 verifier intake", () => {
 			datasetSha256,
 			sealedAt: "2026-08-23T00:00:00.000Z",
 			statement: "NO_BENCHMARK_OPERATOR_ACCESS_BEFORE_DISCLOSURE" as const,
-			signatureBase64: "signature",
+			signatureBase64: Buffer.alloc(64).toString("base64"),
 		};
 		const token = Buffer.from("artifact-4");
 		await writeFile(
@@ -105,6 +105,26 @@ describe("public evidence v10 verifier intake", () => {
 				custodyTimestampTokenPath: paths[4] as string,
 			}),
 		).rejects.toThrow("core manifest is invalid");
+		seal.signatureBase64 = "signature";
+		await writeFile(
+			join(evidence, paths[0] as string),
+			JSON.stringify(manifest),
+		);
+		await writeFile(join(evidence, paths[2] as string), JSON.stringify(seal));
+		await expect(
+			preparePublicEvidenceV10LaunchPacket({
+				evidenceRoot: evidence,
+				publisher: "external-publisher",
+				publisherPublicKeyPath: keyPath,
+				coreManifestPath: paths[0] as string,
+				datasetPath: paths[1] as string,
+				custodySealPath: paths[2] as string,
+				custodyTimestampEvidencePath: paths[3] as string,
+				custodyTimestampTokenPath: paths[4] as string,
+			}),
+		).rejects.toThrow("custody seal binding mismatch");
+		seal.signatureBase64 = Buffer.alloc(64).toString("base64");
+		await writeFile(join(evidence, paths[2] as string), JSON.stringify(seal));
 		manifest.dataset.path = "other-dataset.json";
 		manifest.adversarialReview.evidenceScopeSha256 =
 			publicEvidenceScopeSha256(manifest);
