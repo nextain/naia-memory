@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdtemp, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -116,6 +117,56 @@ describe("native MIRACL corpus extraction", () => {
 				name.startsWith("naia-corpus-docids-"),
 			),
 		).toEqual([]);
+	});
+
+	it("binds the compressed bytes consumed by a full scan to the source lock", async () => {
+		const directory = await mkdtemp(join(tmpdir(), "naia-native-corpus-"));
+		const shard = join(directory, "docs.jsonl.gz");
+		const compressed = gzipSync(
+			JSON.stringify({ docid: "a", title: "A", text: "text" }),
+		);
+		await writeFile(shard, compressed);
+		await expect(
+			scanNativeCorpusDocuments([shard], () => undefined, {
+				duplicateWorkDirectory: directory,
+				expectedCompressedShards: [
+					{ size: compressed.length, sha256: "0".repeat(64) },
+				],
+			}),
+		).rejects.toThrow("compressed source lock mismatch");
+		await expect(
+			scanNativeCorpusDocuments([shard], () => undefined, {
+				duplicateWorkDirectory: directory,
+				expectedCompressedShards: [
+					{
+						size: compressed.length + 1,
+						sha256: createHash("sha256").update(compressed).digest("hex"),
+					},
+				],
+			}),
+		).rejects.toThrow("compressed source lock mismatch");
+	});
+
+	it("rejects a compressed lock count mismatch before scanning", async () => {
+		await expect(
+			scanNativeCorpusDocuments(["unused"], () => undefined, {
+				expectedCompressedShards: [],
+			}),
+		).rejects.toThrow("compressed shard lock count mismatch");
+	});
+
+	it("fails closed on a truncated gzip shard", async () => {
+		const directory = await mkdtemp(join(tmpdir(), "naia-native-corpus-"));
+		const shard = join(directory, "docs.jsonl.gz");
+		const compressed = gzipSync(
+			JSON.stringify({ docid: "a", title: "A", text: "text" }),
+		);
+		await writeFile(shard, compressed.subarray(0, compressed.length - 4));
+		await expect(
+			scanNativeCorpusDocuments([shard], () => undefined, {
+				duplicateWorkDirectory: directory,
+			}),
+		).rejects.toThrow();
 	});
 
 	it("detects a non-adjacent duplicate before consuming that row", async () => {

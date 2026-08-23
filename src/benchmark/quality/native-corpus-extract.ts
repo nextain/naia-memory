@@ -3,6 +3,7 @@ import { createReadStream } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { Transform } from "node:stream";
 import { StringDecoder } from "node:string_decoder";
 import { createGunzip } from "node:zlib";
 import Database from "better-sqlite3";
@@ -20,6 +21,10 @@ export interface NativeCorpusScanReceipt {
 
 export interface NativeCorpusScanOptions {
 	duplicateWorkDirectory?: string;
+	expectedCompressedShards?: readonly {
+		size: number;
+		sha256: string;
+	}[];
 }
 
 class ExactDiskDuplicateTracker {
@@ -77,6 +82,11 @@ export async function scanNativeCorpusDocuments(
 	) => Promise<void> | void,
 	options: NativeCorpusScanOptions = {},
 ): Promise<NativeCorpusScanReceipt> {
+	if (
+		options.expectedCompressedShards &&
+		options.expectedCompressedShards.length !== shards.length
+	)
+		throw new Error("compressed shard lock count mismatch");
 	const duplicateTracker = new ExactDiskDuplicateTracker(
 		options.duplicateWorkDirectory ?? tmpdir(),
 	);
@@ -84,10 +94,19 @@ export async function scanNativeCorpusDocuments(
 	let documentCount = 0;
 	try {
 		await duplicateTracker.open();
-		for (const shard of shards) {
+		for (const [shardIndex, shard] of shards.entries()) {
 			let lineNumber = 0;
 			let pending = "";
 			const decoder = new StringDecoder("utf8");
+			const compressedHash = createHash("sha256");
+			let compressedSize = 0;
+			const observeCompressedBytes = new Transform({
+				transform(chunk, _encoding, callback) {
+					compressedSize += chunk.length;
+					compressedHash.update(chunk);
+					callback(null, chunk);
+				},
+			});
 			const consume = async (rawLine: string) => {
 				lineNumber++;
 				const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
@@ -106,7 +125,9 @@ export async function scanNativeCorpusDocuments(
 				await consumeDocument(parsed, documentCount);
 				documentCount++;
 			};
-			for await (const chunk of createReadStream(shard).pipe(createGunzip())) {
+			for await (const chunk of createReadStream(shard)
+				.pipe(observeCompressedBytes)
+				.pipe(createGunzip())) {
 				pending += decoder.write(chunk);
 				let separator = pending.indexOf("\n");
 				while (separator >= 0) {
@@ -117,6 +138,13 @@ export async function scanNativeCorpusDocuments(
 			}
 			pending += decoder.end();
 			if (pending.length > 0) await consume(pending);
+			const expected = options.expectedCompressedShards?.[shardIndex];
+			if (
+				expected &&
+				(compressedSize !== expected.size ||
+					compressedHash.digest("hex") !== expected.sha256)
+			)
+				throw new Error(`${shard}: compressed source lock mismatch`);
 		}
 		return { documentCount, docidsSha256: docidsHash.digest("hex") };
 	} finally {
