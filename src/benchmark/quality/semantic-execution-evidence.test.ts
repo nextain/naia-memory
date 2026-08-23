@@ -102,7 +102,7 @@ describe("semantic execution evidence", () => {
 				bundle: value.bundle,
 				trustPolicy: value.trustPolicy,
 			}),
-		).toEqual({ engineCount: 5, runCount: 25, costComplete: false });
+		).toEqual({ engineCount: 6, runCount: 36, costComplete: false });
 	});
 
 	it("rejects forged signatures and incomplete engine coverage", async () => {

@@ -30,7 +30,7 @@ describe("semantic campaign CLI", () => {
 				"--seed=frozen",
 				"--repetitions=2",
 			]),
-		).toThrow("5-engine matrix");
+		).toThrow("6-engine matrix");
 		expect(() =>
 			parseSemanticCampaignCliArgs([
 				"--contract=contract.json",
@@ -81,12 +81,13 @@ describe("semantic campaign CLI", () => {
 		}
 	});
 
-	it("builds a reproducible five-engine position-balanced schedule", () => {
-		const first = buildSemanticCampaignPlan("frozen-campaign", 10);
-		expect(first).toEqual(buildSemanticCampaignPlan("frozen-campaign", 10));
-		expect(first).toHaveLength(50);
+	it("builds a reproducible six-engine position-balanced schedule", () => {
+		const first = buildSemanticCampaignPlan("frozen-campaign", 12);
+		expect(first).toEqual(buildSemanticCampaignPlan("frozen-campaign", 12));
+		expect(first).toHaveLength(72);
 		for (const engine of [
 			"graphiti",
+			"graphiti-historical",
 			"hindsight",
 			"letta",
 			"mem0",
@@ -112,11 +113,13 @@ describe("semantic campaign CLI", () => {
 					(run) => run.engine === engine && run.enginePosition === 4,
 				),
 			).toHaveLength(2);
-			expect(
-				first.filter(
-					(run) => run.engine === engine && run.enginePosition === 5,
-				),
-			).toHaveLength(2);
+			for (const enginePosition of [5, 6])
+				expect(
+					first.filter(
+						(run) =>
+							run.engine === engine && run.enginePosition === enginePosition,
+					),
+				).toHaveLength(2);
 		}
 	});
 
@@ -162,7 +165,7 @@ describe("semantic campaign CLI", () => {
 	});
 
 	it("shares one case seed between engines and changes it per repetition", () => {
-		const plan = buildSemanticCampaignPlan("frozen-campaign", 5);
+		const plan = buildSemanticCampaignPlan("frozen-campaign", 6);
 		const first = plan.filter((run) => run.repetition === 1);
 		const second = plan.filter((run) => run.repetition === 2);
 		expect(new Set(first.map((run) => run.caseExecutionSeed))).toHaveLength(1);

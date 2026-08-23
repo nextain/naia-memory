@@ -33,6 +33,7 @@ export type SemanticEngineBridge = {
 	readonly retrievalSurface:
 		| "engine-native-semantic-memory-v1"
 		| "engine-current-state-projected-semantic-memory-v1"
+		| "engine-native-historical-search-v1"
 		| "engine-native-core-state-v1"
 		| "engine-native-core-first-and-semantic-archive-v1";
 	ingestTurn(turn: { content: string }): Promise<SemanticIngestReceipt>;
@@ -128,6 +129,7 @@ export async function runSemanticRawContract(
 				bridge.retrievalSurface !== "engine-native-semantic-memory-v1" &&
 				bridge.retrievalSurface !==
 					"engine-current-state-projected-semantic-memory-v1" &&
+				bridge.retrievalSurface !== "engine-native-historical-search-v1" &&
 				bridge.retrievalSurface !== "engine-native-core-state-v1" &&
 				bridge.retrievalSurface !==
 					"engine-native-core-first-and-semantic-archive-v1"

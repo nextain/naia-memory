@@ -75,6 +75,28 @@ async def has_episode(
 
 @router.get("/current-facts/{group_id}")
 async def current_facts(group_id: str, graphiti: ZepGraphitiDep) -> CurrentFacts:
+    edges = await _group_edges(group_id, graphiti)
+    return CurrentFacts(
+        facts=[
+            NativeFact(uuid=edge.uuid, fact=edge.fact)
+            for edge in edges
+            if edge.expired_at is None
+        ]
+    )
+
+
+@router.get("/historical-facts/{group_id}")
+async def historical_facts(group_id: str, graphiti: ZepGraphitiDep) -> CurrentFacts:
+    """Return complete group history independently of query output."""
+    edges = await _group_edges(group_id, graphiti)
+    return CurrentFacts(
+        facts=[NativeFact(uuid=edge.uuid, fact=edge.fact) for edge in edges]
+    )
+
+
+async def _group_edges(
+    group_id: str, graphiti: ZepGraphitiDep
+) -> list[EntityEdge]:
     edges: list[EntityEdge] = []
     cursor: str | None = None
     while True:
@@ -92,8 +114,4 @@ async def current_facts(group_id: str, graphiti: ZepGraphitiDep) -> CurrentFacts
             break
         cursor = page[-1].uuid
 
-    # Graphiti marks superseded/terminated edges with expired_at. invalid_at is
-    # temporal interval metadata and is therefore not an independent state gate.
-    return CurrentFacts(
-        facts=[NativeFact(uuid=edge.uuid, fact=edge.fact) for edge in edges if edge.expired_at is None]
-    )
+    return edges

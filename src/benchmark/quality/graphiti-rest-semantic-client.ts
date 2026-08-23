@@ -1,3 +1,4 @@
+import type { GraphitiHistoricalSemanticClient } from "./bridge-graphiti-historical-semantic.js";
 import type {
 	GraphitiNativeFact,
 	GraphitiSemanticClient,
@@ -12,7 +13,9 @@ export type GraphitiRestSemanticClientOptions = {
 	allowUnsafeRemote?: boolean;
 };
 
-export class GraphitiRestSemanticClient implements GraphitiSemanticClient {
+export class GraphitiRestSemanticClient
+	implements GraphitiSemanticClient, GraphitiHistoricalSemanticClient
+{
 	private readonly baseUrl: URL;
 	private readonly request: FetchLike;
 	private readonly episodeIds = new Map<string, string>();
@@ -108,6 +111,13 @@ export class GraphitiRestSemanticClient implements GraphitiSemanticClient {
 			`benchmark/current-facts/${encodeURIComponent(groupId)}`,
 		);
 		return parseFacts(value, "current-facts");
+	}
+
+	async listHistoricalFacts(groupId: string): Promise<GraphitiNativeFact[]> {
+		const value = await this.fetchJson(
+			`benchmark/historical-facts/${encodeURIComponent(groupId)}`,
+		);
+		return parseFacts(value, "historical-facts");
 	}
 
 	async deleteGroup(groupId: string): Promise<void> {

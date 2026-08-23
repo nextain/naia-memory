@@ -107,4 +107,20 @@ describe("GraphitiRestSemanticClient", () => {
 		).resolves.toEqual([{ uuid: "edge-old", fact: "라면을 좋아한다" }]);
 		await expect(client.deleteGroup("g")).rejects.toThrow(/422/);
 	});
+
+	it("loads complete historical identity from a route separate from search", async () => {
+		const request = vi.fn(async () =>
+			json({ facts: [{ uuid: "edge-old", fact: "서울에 산다" }] }),
+		);
+		const client = new GraphitiRestSemanticClient({
+			baseUrl: "http://127.0.0.1:8000",
+			fetch: request,
+		});
+		await expect(client.listHistoricalFacts("case ko")).resolves.toEqual([
+			{ uuid: "edge-old", fact: "서울에 산다" },
+		]);
+		expect(String(request.mock.calls[0]?.[0])).toContain(
+			"benchmark/historical-facts/case%20ko",
+		);
+	});
 });

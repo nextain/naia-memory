@@ -16,6 +16,7 @@ import type { SemanticEngine } from "./semantic-raw-cli.js";
 
 export const SUPPORTED_SEMANTIC_ENGINES = [
 	"graphiti",
+	"graphiti-historical",
 	"hindsight",
 	"letta",
 	"mem0",
@@ -345,7 +346,7 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 		generalizationBoundary:
 			"Generated diagnostic cases only; repetitions measure execution stability, not held-out generalization.",
 		configurationPolicy:
-			"Engine-native surfaces are observed with disclosed native configurations. Letta exposes always-active non-persona core blocks first, followed by its query-ranked archival search results, and preserves the complete core-plus-archive state for identity validation. Graphiti retrieval is projected onto complete current native edges and may return fewer than top-k. A 2026-08-23 local smoke observed 2 stale results among 3 raw native search results; projected scores therefore do not establish Graphiti-native retrieval quality. Component-level parity and a single retrieval leaderboard are not claimed.",
+			"Engine-native surfaces are observed with disclosed native configurations. Letta exposes always-active non-persona core blocks first, followed by its query-ranked archival search results, and preserves the complete core-plus-archive state for identity validation. Graphiti is split into projected-current and native-historical comparator IDs; their scores must not be merged. Historical retrieval is validated against complete group history obtained independently from query output. Component-level parity and a single retrieval leaderboard are not claimed.",
 	};
 	const manifest = {
 		schemaVersion: "naia-memory-semantic-campaign-v3",
@@ -356,7 +357,10 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 			"src/benchmark/quality/semantic-raw-cli.ts",
 			"src/benchmark/quality/memory-semantic-runner.ts",
 			"src/benchmark/quality/bridge-graphiti-semantic.ts",
+			"src/benchmark/quality/bridge-graphiti-historical-semantic.ts",
 			"src/benchmark/quality/graphiti-rest-semantic-client.ts",
+			"tools/graphiti-benchmark-sidecar/router.py",
+			"tools/graphiti-benchmark-sidecar/pin.json",
 			"src/benchmark/quality/bridge-hindsight-semantic.ts",
 			"src/benchmark/quality/bridge-letta-semantic.ts",
 			"src/benchmark/quality/bridge-mem0-semantic.ts",

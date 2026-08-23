@@ -52,6 +52,16 @@ describe("semantic raw CLI", () => {
 		).toMatchObject({ engine: "graphiti" });
 	});
 
+	it("keeps Graphiti native historical search under a separate engine ID", () => {
+		expect(
+			parseSemanticRawCliArgs([
+				"--engine=graphiti-historical",
+				"--contract=contract.json",
+				"--output=receipt.json",
+			]),
+		).toMatchObject({ engine: "graphiti-historical" });
+	});
+
 	it("accepts Letta as an agent-managed memory engine", () => {
 		expect(
 			parseSemanticRawCliArgs([

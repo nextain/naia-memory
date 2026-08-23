@@ -6,7 +6,8 @@ needed for a fail-closed comparison:
 
 - sequential episode commit before acknowledgement;
 - exact episode/group commit acknowledgement;
-- complete group-scoped current entity-edge state.
+- complete group-scoped current entity-edge state;
+- complete group-scoped historical entity-edge state, independently of search.
 
 Copy `router.py` to
 `server/graph_service/graphiti_benchmark_sidecar.py` in the pinned checkout, then
@@ -59,6 +60,10 @@ returns it in the commit receipt.
 `current-facts` pages through Graphiti core's native group operation and returns
 only edges whose `expired_at` is null. `invalid_at` is retained as temporal
 metadata in Graphiti and is not treated as a separate benchmark deletion signal.
+`historical-facts` uses the same complete paginated group operation without the
+expiry filter. It is the independent identity source for the separately named
+native-historical search track; query output must never be used as its own state
+evidence.
 
 Native search may return expired historical edges. Normal benchmark recall
 intersects

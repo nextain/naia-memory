@@ -14,6 +14,7 @@ import { OpenAICompatEmbeddingProvider } from "../../memory/embeddings.js";
 import { buildLLMDeleteVerifier } from "../../memory/llm-delete-verifier.js";
 import { buildLLMFactExtractor } from "../../memory/llm-fact-extractor.js";
 import { benchmarkReceipt } from "../provenance.js";
+import { createGraphitiHistoricalSemanticBridge } from "./bridge-graphiti-historical-semantic.js";
 import { createGraphitiSemanticBridge } from "./bridge-graphiti-semantic.js";
 import { createHindsightSemanticBridge } from "./bridge-hindsight-semantic.js";
 import { createLettaSemanticBridge } from "./bridge-letta-semantic.js";
@@ -31,6 +32,7 @@ import {
 
 export type SemanticEngine =
 	| "graphiti"
+	| "graphiti-historical"
 	| "hindsight"
 	| "letta"
 	| "mem0"
@@ -42,6 +44,8 @@ export function expectedSemanticRetrievalSurface(
 	switch (engine) {
 		case "graphiti":
 			return "engine-current-state-projected-semantic-memory-v1";
+		case "graphiti-historical":
+			return "engine-native-historical-search-v1";
 		case "letta":
 			return "engine-native-core-first-and-semantic-archive-v1";
 		case "hindsight":
@@ -74,13 +78,14 @@ export function parseSemanticRawCliArgs(args: string[]): SemanticRawCliArgs {
 	const engine = values.get("engine");
 	if (
 		engine !== "graphiti" &&
+		engine !== "graphiti-historical" &&
 		engine !== "hindsight" &&
 		engine !== "letta" &&
 		engine !== "mem0" &&
 		engine !== "naia"
 	)
 		throw new Error(
-			"--engine must be graphiti, hindsight, letta, mem0, or naia",
+			"--engine must be graphiti, graphiti-historical, hindsight, letta, mem0, or naia",
 		);
 	const contractPath = values.get("contract");
 	const outputPath = values.get("output");
@@ -179,6 +184,7 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 	validateMemoryUpdateContract(contract);
 	const provider =
 		parsed.engine === "graphiti" ||
+		parsed.engine === "graphiti-historical" ||
 		parsed.engine === "hindsight" ||
 		parsed.engine === "letta"
 			? undefined
@@ -224,9 +230,11 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 						}),
 					});
 				}
-			: parsed.engine === "graphiti"
+			: parsed.engine === "graphiti" || parsed.engine === "graphiti-historical"
 				? async () =>
-						createGraphitiSemanticBridge(
+						(parsed.engine === "graphiti"
+							? createGraphitiSemanticBridge
+							: createGraphitiHistoricalSemanticBridge)(
 							new GraphitiRestSemanticClient({
 								baseUrl: process.env.GRAPHITI_URL ?? "http://127.0.0.1:8000",
 							}),
@@ -358,7 +366,9 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 		};
 	};
 	const graphitiRuntimeReceipt =
-		parsed.engine === "graphiti" ? graphitiRuntime() : undefined;
+		parsed.engine === "graphiti" || parsed.engine === "graphiti-historical"
+			? graphitiRuntime()
+			: undefined;
 	const hindsightRuntimeReceipt =
 		parsed.engine === "hindsight" ? hindsightRuntime() : undefined;
 	const lettaRuntimeReceipt =
@@ -397,13 +407,18 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 					authScheme: provider.auth,
 					endpoint: discloseEndpoint(provider.baseURL),
 				}
-			: parsed.engine === "graphiti"
+			: parsed.engine === "graphiti" || parsed.engine === "graphiti-historical"
 				? {
 						providerPolicy: "engine-server-native-configuration-v1",
 						ingestionSurface: "synchronous-native-episode-v1",
-						stateObservationPolicy: "complete-current-native-edges-v1",
+						stateObservationPolicy:
+							parsed.engine === "graphiti"
+								? "complete-current-native-edges-v1"
+								: "complete-historical-native-edges-independent-of-query-v1",
 						searchValidityPolicy:
-							"native-search-intersect-current-native-edges-v1",
+							parsed.engine === "graphiti"
+								? "native-search-intersect-current-native-edges-v1"
+								: "unprojected-native-historical-search-v1",
 						endpoint: discloseEndpoint(graphitiEndpoint),
 						graphitiRuntime: graphitiRuntimeReceipt,
 					}
@@ -432,7 +447,17 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 		receipt: benchmarkReceipt([contractPath], disclosure, [
 			"src/benchmark/quality/semantic-raw-cli.ts",
 			"src/benchmark/quality/memory-semantic-runner.ts",
-			`src/benchmark/quality/bridge-${parsed.engine}-semantic.ts`,
+			parsed.engine === "graphiti-historical"
+				? "src/benchmark/quality/bridge-graphiti-historical-semantic.ts"
+				: `src/benchmark/quality/bridge-${parsed.engine}-semantic.ts`,
+			...(parsed.engine === "graphiti" ||
+			parsed.engine === "graphiti-historical"
+				? [
+						"src/benchmark/quality/graphiti-rest-semantic-client.ts",
+						"tools/graphiti-benchmark-sidecar/router.py",
+						"tools/graphiti-benchmark-sidecar/pin.json",
+					]
+				: []),
 		]),
 		disclosure,
 		cases: receipts,
