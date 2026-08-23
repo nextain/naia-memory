@@ -150,6 +150,7 @@ export async function writeExecutionFixture(
 		completedAt: "2026-01-05T00:01:00Z",
 		signedAt: "2026-01-05T00:02:00Z",
 	},
+	analysisPlanSha256?: string,
 ) {
 	const engines = ["hindsight", "mem0", "naia"] as const;
 	const plan = buildSemanticCampaignPlan("public-gate", 3, engines);
@@ -200,12 +201,23 @@ export async function writeExecutionFixture(
 		runs.push({ ...run, artifactSha256: hash(bytes) });
 	}
 	const campaign = {
-		schemaVersion: "naia-memory-semantic-campaign-v3" as const,
+		schemaVersion: analysisPlanSha256
+			? ("naia-memory-semantic-campaign-v4" as const)
+			: ("naia-memory-semantic-campaign-v3" as const),
 		disclosure: {
 			executionSeed: "public-gate",
 			repetitions: 3,
 			topK: 5,
 			engines: [...engines],
+			...(analysisPlanSha256 ? { analysisPlanSha256 } : {}),
+			claimScope: "direct-lifecycle-competitive-report-v1",
+			comparisonLanes: {
+				directLifecycle: ["hindsight", "mem0"],
+				nativeTemporalCharacterization: [],
+				agentManagedCharacterization: [],
+				productIntegrationDiagnostic: [],
+			},
+			crossLaneAggregation: "prohibited",
 		},
 		runs,
 	};

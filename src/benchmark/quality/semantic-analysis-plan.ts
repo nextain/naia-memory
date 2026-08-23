@@ -61,7 +61,7 @@ function validUniqueStrings(value: unknown): value is string[] {
 	);
 }
 
-function hasValidComparisonLanes(
+export function hasValidSemanticComparisonLanes(
 	value: unknown,
 	claimScope: unknown,
 ): value is SemanticAnalysisPlan["comparisonLanes"] {
@@ -126,7 +126,7 @@ export function isSemanticAnalysisPlan(
 			"direct-lifecycle-competitive-report-v1",
 			"declared-multi-class-competitive-report-v1",
 		].includes(value.claimScope as string) &&
-		hasValidComparisonLanes(value.comparisonLanes, value.claimScope) &&
+		hasValidSemanticComparisonLanes(value.comparisonLanes, value.claimScope) &&
 		value.crossLaneAggregation === "prohibited" &&
 		typeof value.familyWiseAlpha === "number" &&
 		Number.isFinite(value.familyWiseAlpha) &&
@@ -201,12 +201,15 @@ export function validateSemanticAnalysisPlan(input: {
 	plannedIndependentAuthorClusterCount: number;
 	plannedIndependentConstructionClusterCount: number;
 	sampleSizeAdequacyVerified: false;
-	trustedTimestampVerified: false;
+	analysisPlanTrustedTimestampVerified: false;
 } {
 	const disclosure = input.campaign.disclosure;
+	const planSha256 = evidenceObjectSha256(input.plan);
 	if (
 		!isRecord(disclosure) ||
 		!validUniqueStrings(disclosure.engines) ||
+		input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v4" ||
+		disclosure.analysisPlanSha256 !== planSha256 ||
 		disclosure.claimScope !== input.plan.claimScope ||
 		JSON.stringify(disclosure.comparisonLanes) !==
 			JSON.stringify(input.plan.comparisonLanes) ||
@@ -357,6 +360,6 @@ export function validateSemanticAnalysisPlan(input: {
 			plan.requiredIndependentConstructionClustersByLanguage,
 		).reduce((sum, count) => sum + count, 0),
 		sampleSizeAdequacyVerified: false,
-		trustedTimestampVerified: false,
+		analysisPlanTrustedTimestampVerified: false,
 	};
 }

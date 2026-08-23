@@ -168,6 +168,35 @@ describe("semantic blind packet CLI", () => {
 		}
 	});
 
+	it("rejects an empty v4 competitive comparison-lane disclosure", () => {
+		const directory = mkdtempSync(
+			resolve(tmpdir(), "semantic-blind-v4-lanes-"),
+		);
+		try {
+			const current = semanticBlindFixture(directory, {
+				engines: ["naia", "mem0"],
+				schemaVersion: "naia-memory-semantic-campaign-v4",
+			});
+			current.campaign.disclosure.analysisPlanSha256 = "a".repeat(64);
+			current.campaign.disclosure.claimScope =
+				"direct-lifecycle-competitive-report-v1";
+			current.campaign.disclosure.comparisonLanes = {};
+			current.campaign.disclosure.crossLaneAggregation = "prohibited";
+			expect(() =>
+				buildSemanticBlindArtifacts({
+					contract: current.contract,
+					campaign: current.campaign,
+					campaignDirectory: directory,
+					blindingSeed: "seed",
+					contractSha256: "contract",
+					campaignSha256: "campaign",
+				}),
+			).toThrow("invalid semantic campaign manifest");
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
+
 	it("accepts a legacy v2 manifest that explicitly declares the canonical engines", () => {
 		const directory = mkdtempSync(resolve(tmpdir(), "semantic-blind-v2-"));
 		try {

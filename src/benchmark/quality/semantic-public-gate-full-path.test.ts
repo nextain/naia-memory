@@ -60,23 +60,6 @@ describe("semantic public gate CLI", () => {
 		captureStdout(output);
 		const directory = await root();
 		const fixture = await writeFixture(directory);
-		const executionPaths = await writeExecutionFixture(
-			directory,
-			fixture.contract,
-			{
-				startedAt: "2099-01-05T00:00:00Z",
-				completedAt: "2099-01-05T00:01:00Z",
-				signedAt: "2099-01-05T00:02:00Z",
-			},
-		);
-		const adjudicationPaths = await writeAdjudicationFixture(
-			directory,
-			fixture.contract,
-			executionPaths[0],
-			undefined,
-			"2099-01-06T00:00:00Z",
-			"2099-01-06T00:01:00Z",
-		);
 		const power = await writePowerReviewFixture(
 			directory,
 			fixture.contract,
@@ -91,6 +74,24 @@ describe("semantic public gate CLI", () => {
 		);
 		const analysisPlan = JSON.parse(
 			await readFile(analysisPlanPaths[0] as string, "utf8"),
+		);
+		const executionPaths = await writeExecutionFixture(
+			directory,
+			fixture.contract,
+			{
+				startedAt: "2099-01-05T00:00:00Z",
+				completedAt: "2099-01-05T00:01:00Z",
+				signedAt: "2099-01-05T00:02:00Z",
+			},
+			evidenceObjectSha256(analysisPlan),
+		);
+		const adjudicationPaths = await writeAdjudicationFixture(
+			directory,
+			fixture.contract,
+			executionPaths[0],
+			undefined,
+			"2099-01-06T00:00:00Z",
+			"2099-01-06T00:01:00Z",
 		);
 		const tsa = await writeRealTimestampFixture(directory);
 		const planToken = await tsa.issue(
@@ -447,7 +448,8 @@ describe("semantic public gate CLI", () => {
 		expect(await runSemanticPublicGateManifestCli([manifestPath])).toBe(1);
 		const result = JSON.parse(output.pop() ?? "{}");
 		expect(result).toMatchObject({
-			trustedTimestampVerified: true,
+			analysisPlanTrustedTimestampVerified: false,
+			collectionPlanTrustedTimestampVerified: true,
 			priorAssignmentTimingVerified: true,
 			launchReceiptInternalConsistencyVerified: true,
 			participantDeliveryAcknowledgementSignaturesVerified: true,

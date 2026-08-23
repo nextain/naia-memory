@@ -170,4 +170,42 @@ describe("semantic execution evidence", () => {
 			}),
 		).toThrow("campaign plan is invalid");
 	});
+
+	it("rejects a v4 competitive campaign without a preregistered plan hash", async () => {
+		const value = await fixture();
+		const campaign = value.campaign as unknown as Record<string, unknown>;
+		campaign.schemaVersion = "naia-memory-semantic-campaign-v4";
+		const disclosure = campaign.disclosure as Record<string, unknown>;
+		disclosure.claimScope = "direct-lifecycle-competitive-report-v1";
+		disclosure.comparisonLanes = {
+			directLifecycle: ["hindsight", "mem0"],
+			nativeTemporalCharacterization: [],
+			agentManagedCharacterization: [],
+			productIntegrationDiagnostic: [],
+		};
+		disclosure.crossLaneAggregation = "prohibited";
+		disclosure.analysisPlanSha256 = null;
+		expect(() =>
+			validateSemanticExecutionEvidence({
+				contract: value.contract,
+				campaign,
+				campaignBytes: value.campaignBytes,
+				campaignDirectory: value.directory,
+				bundle: value.bundle,
+				trustPolicy: value.trustPolicy,
+			}),
+		).toThrow("semantic execution campaign shape is invalid");
+		disclosure.analysisPlanSha256 = "a".repeat(64);
+		disclosure.comparisonLanes = {};
+		expect(() =>
+			validateSemanticExecutionEvidence({
+				contract: value.contract,
+				campaign,
+				campaignBytes: value.campaignBytes,
+				campaignDirectory: value.directory,
+				bundle: value.bundle,
+				trustPolicy: value.trustPolicy,
+			}),
+		).toThrow("semantic execution campaign shape is invalid");
+	});
 });

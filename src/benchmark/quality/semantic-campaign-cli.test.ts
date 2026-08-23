@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -8,6 +8,7 @@ import {
 	type SemanticCampaignRun,
 	buildSemanticCampaignPlan,
 	parseSemanticCampaignCliArgs,
+	runSemanticCampaignCli,
 	validateRawArtifact,
 } from "./semantic-campaign-cli.js";
 
@@ -78,6 +79,76 @@ describe("semantic campaign CLI", () => {
 					`--engines=${engines}`,
 				]),
 			).toThrow("at least two unique engines");
+		}
+	});
+
+	it("accepts an explicit preregistered analysis plan path", () => {
+		const parsed = parseSemanticCampaignCliArgs([
+			"--contract=contract.json",
+			"--output-dir=out",
+			"--seed=frozen",
+			"--engines=naia,mem0",
+			"--analysis-plan=analysis-plan.json",
+			"--analysis-plan-trust-policy=analysis-plan-trust-policy.json",
+		]);
+		expect(parsed.analysisPlanPath).toBe("analysis-plan.json");
+		expect(parsed.analysisPlanTrustPolicyPath).toBe(
+			"analysis-plan-trust-policy.json",
+		);
+	});
+
+	it("rejects a malformed analysis plan before creating campaign output", async () => {
+		const directory = mkdtempSync(resolve(tmpdir(), "semantic-campaign-plan-"));
+		const contractPath = resolve(directory, "contract.json");
+		const analysisPlanPath = resolve(directory, "analysis-plan.json");
+		const analysisPlanTrustPolicyPath = resolve(
+			directory,
+			"analysis-plan-trust-policy.json",
+		);
+		const outputDir = resolve(directory, "output");
+		writeFileSync(
+			contractPath,
+			JSON.stringify({
+				schemaVersion: "naia-memory-update-contract-v1",
+				tier: "semantic-update-interpretation",
+				construction: "generated-diagnostic",
+				familySplitFreeze: {
+					frozenAt: "2026-01-01T00:00:00Z",
+					digest: `sha256:${"0".repeat(64)}`,
+				},
+				cases: [
+					{
+						id: "case-ko",
+						familyId: "family-ko",
+						split: "diagnostic",
+						language: "ko",
+						turns: [{ content: "기억", at: "2026-01-01T00:00:00Z" }],
+						query: "현재 기억은?",
+						expectedCurrentIds: ["current"],
+						forbiddenStaleIds: ["stale"],
+						expectedDeletedIds: [],
+						noUpdateIds: [],
+						expectedDecision: "update",
+					},
+				],
+			}),
+		);
+		writeFileSync(analysisPlanPath, JSON.stringify({ schemaVersion: "wrong" }));
+		writeFileSync(analysisPlanTrustPolicyPath, JSON.stringify({}));
+		try {
+			await expect(
+				runSemanticCampaignCli([
+					`--contract=${contractPath}`,
+					`--output-dir=${outputDir}`,
+					"--seed=frozen",
+					"--engines=naia,mem0",
+					`--analysis-plan=${analysisPlanPath}`,
+					`--analysis-plan-trust-policy=${analysisPlanTrustPolicyPath}`,
+				]),
+			).rejects.toThrow("valid semantic analysis plan");
+			expect(existsSync(outputDir)).toBe(false);
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
 		}
 	});
 

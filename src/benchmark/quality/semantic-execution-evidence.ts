@@ -6,6 +6,7 @@ import {
 	evidenceObjectSha256,
 	hasValidEvidenceSignature,
 } from "./public-evidence-crypto.js";
+import { hasValidSemanticComparisonLanes } from "./semantic-analysis-plan.js";
 import {
 	SUPPORTED_SEMANTIC_ENGINES,
 	type SemanticCampaignRun,
@@ -49,12 +50,18 @@ export type SemanticExecutionTrustPolicy = {
 };
 
 type CampaignManifest = {
-	schemaVersion: "naia-memory-semantic-campaign-v3";
+	schemaVersion:
+		| "naia-memory-semantic-campaign-v3"
+		| "naia-memory-semantic-campaign-v4";
 	disclosure: {
 		executionSeed: string;
 		repetitions: number;
 		topK: number;
 		engines: string[];
+		analysisPlanSha256?: string | null;
+		claimScope?: string;
+		comparisonLanes?: unknown;
+		crossLaneAggregation?: "prohibited";
 	};
 	runs: Array<SemanticCampaignRun & { artifactSha256: string }>;
 };
@@ -150,7 +157,10 @@ function validateCampaign(
 ): void {
 	const { disclosure, runs } = campaign;
 	if (
-		campaign.schemaVersion !== "naia-memory-semantic-campaign-v3" ||
+		![
+			"naia-memory-semantic-campaign-v3",
+			"naia-memory-semantic-campaign-v4",
+		].includes(campaign.schemaVersion) ||
 		!disclosure?.executionSeed?.trim() ||
 		!Array.isArray(disclosure.engines) ||
 		disclosure.engines.length < 2 ||
@@ -166,6 +176,23 @@ function validateCampaign(
 		disclosure.repetitions % disclosure.engines.length !== 0 ||
 		!Number.isInteger(disclosure.topK) ||
 		disclosure.topK < 1 ||
+		(campaign.schemaVersion === "naia-memory-semantic-campaign-v4" &&
+			((disclosure.analysisPlanSha256 !== null &&
+				(typeof disclosure.analysisPlanSha256 !== "string" ||
+					!SHA256.test(disclosure.analysisPlanSha256))) ||
+				(disclosure.claimScope === "diagnostic-characterization-only-v1"
+					? disclosure.analysisPlanSha256 !== null ||
+						disclosure.comparisonLanes !== null
+					: ![
+							"direct-lifecycle-competitive-report-v1",
+							"declared-multi-class-competitive-report-v1",
+						].includes(disclosure.claimScope ?? "") ||
+						disclosure.analysisPlanSha256 == null ||
+						!hasValidSemanticComparisonLanes(
+							disclosure.comparisonLanes,
+							disclosure.claimScope,
+						)) ||
+				disclosure.crossLaneAggregation !== "prohibited")) ||
 		!Array.isArray(runs)
 	)
 		throw new Error("semantic execution campaign shape is invalid");

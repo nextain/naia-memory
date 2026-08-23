@@ -13,6 +13,7 @@ import {
 	type MemoryUpdateContract,
 	validateMemoryUpdateContract,
 } from "./memory-update-contract.js";
+import { hasValidSemanticComparisonLanes } from "./semantic-analysis-plan.js";
 import {
 	SUPPORTED_SEMANTIC_ENGINES,
 	type SemanticCampaignRun,
@@ -25,12 +26,17 @@ const LEGACY_V2_SEMANTIC_ENGINES = ["hindsight", "mem0", "naia"] as const;
 type CampaignManifest = {
 	schemaVersion:
 		| "naia-memory-semantic-campaign-v2"
-		| "naia-memory-semantic-campaign-v3";
+		| "naia-memory-semantic-campaign-v3"
+		| "naia-memory-semantic-campaign-v4";
 	disclosure: {
 		executionSeed: string;
 		repetitions: number;
 		topK: number;
 		engines?: string[];
+		analysisPlanSha256?: string | null;
+		claimScope?: string;
+		comparisonLanes?: unknown;
+		crossLaneAggregation?: "prohibited";
 	};
 	runs: Array<SemanticCampaignRun & { artifactSha256: string }>;
 };
@@ -111,7 +117,8 @@ export function buildSemanticBlindArtifacts(input: {
 			: disclosure?.engines;
 	if (
 		(input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v2" &&
-			input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v3") ||
+			input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v3" &&
+			input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v4") ||
 		(input.campaign.schemaVersion === "naia-memory-semantic-campaign-v2" &&
 			disclosure?.engines !== undefined &&
 			(!Array.isArray(disclosure.engines) ||
@@ -135,6 +142,21 @@ export function buildSemanticBlindArtifacts(input: {
 		disclosure.repetitions % engines.length !== 0 ||
 		!Number.isInteger(disclosure.topK) ||
 		disclosure.topK < 1 ||
+		(input.campaign.schemaVersion === "naia-memory-semantic-campaign-v4" &&
+			(disclosure.claimScope === "diagnostic-characterization-only-v1"
+				? disclosure.analysisPlanSha256 !== null ||
+					disclosure.comparisonLanes !== null
+				: ![
+						"direct-lifecycle-competitive-report-v1",
+						"declared-multi-class-competitive-report-v1",
+					].includes(disclosure.claimScope ?? "") ||
+					typeof disclosure.analysisPlanSha256 !== "string" ||
+					!/^[a-f0-9]{64}$/.test(disclosure.analysisPlanSha256) ||
+					!hasValidSemanticComparisonLanes(
+						disclosure.comparisonLanes,
+						disclosure.claimScope,
+					) ||
+					disclosure.crossLaneAggregation !== "prohibited")) ||
 		!Array.isArray(input.campaign.runs) ||
 		input.campaign.runs.length !== disclosure.repetitions * engines.length
 	)

@@ -156,6 +156,7 @@ function hash(value: string | Buffer): string {
 async function writeExecutionFixture(
 	directory: string,
 	contract: MemoryUpdateContract,
+	analysisPlanSha256?: string,
 ) {
 	const engines = ["hindsight", "mem0", "naia"] as const;
 	const plan = buildSemanticCampaignPlan("public-gate", 3, engines);
@@ -206,12 +207,15 @@ async function writeExecutionFixture(
 		runs.push({ ...run, artifactSha256: hash(bytes) });
 	}
 	const campaign = {
-		schemaVersion: "naia-memory-semantic-campaign-v3" as const,
+		schemaVersion: analysisPlanSha256
+			? ("naia-memory-semantic-campaign-v4" as const)
+			: ("naia-memory-semantic-campaign-v3" as const),
 		disclosure: {
 			executionSeed: "public-gate",
 			repetitions: 3,
 			topK: 5,
 			engines: [...engines],
+			...(analysisPlanSha256 ? { analysisPlanSha256 } : {}),
 			claimScope: "direct-lifecycle-competitive-report-v1",
 			comparisonLanes: {
 				directLifecycle: ["hindsight", "mem0"],
@@ -631,20 +635,24 @@ describe("semantic public gate CLI", () => {
 		captureStdout(output);
 		const directory = await root();
 		const fixture = await writeFixture(directory);
-		const executionPaths = await writeExecutionFixture(
-			directory,
-			fixture.contract,
-		);
-		const adjudicationPaths = await writeAdjudicationFixture(
-			directory,
-			fixture.contract,
-			executionPaths[0],
-		);
 		const power = await writePowerReviewFixture(directory, fixture.contract);
 		const analysisPlanPaths = await writeAnalysisPlanFixture(
 			directory,
 			fixture.contract,
 			power.assumptionsSha256,
+		);
+		const analysisPlan = JSON.parse(
+			await readFile(first(analysisPlanPaths, "analysis plan path"), "utf8"),
+		);
+		const executionPaths = await writeExecutionFixture(
+			directory,
+			fixture.contract,
+			evidenceObjectSha256(analysisPlan),
+		);
+		const adjudicationPaths = await writeAdjudicationFixture(
+			directory,
+			fixture.contract,
+			executionPaths[0],
 		);
 		expect(
 			await runSemanticPublicGateCli([
@@ -671,18 +679,22 @@ describe("semantic public gate CLI", () => {
 		captureStdout(output);
 		const directory = await root();
 		const fixture = await writeFixture(directory);
+		const analysisPlanPaths = await writeAnalysisPlanFixture(
+			directory,
+			fixture.contract,
+		);
+		const analysisPlan = JSON.parse(
+			await readFile(first(analysisPlanPaths, "analysis plan path"), "utf8"),
+		);
 		const executionPaths = await writeExecutionFixture(
 			directory,
 			fixture.contract,
+			evidenceObjectSha256(analysisPlan),
 		);
 		const adjudicationPaths = await writeAdjudicationFixture(
 			directory,
 			fixture.contract,
 			executionPaths[0],
-		);
-		const analysisPlanPaths = await writeAnalysisPlanFixture(
-			directory,
-			fixture.contract,
 		);
 		expect(
 			await runSemanticPublicGateCli([
@@ -699,7 +711,7 @@ describe("semantic public gate CLI", () => {
 			analysisPlanIntegrityQualified: true,
 			plannedIndependentAuthorClusterCount: 3,
 			sampleSizeAdequacyVerified: false,
-			trustedTimestampVerified: false,
+			analysisPlanTrustedTimestampVerified: false,
 			adjudicatorCount: 3,
 			humanJudgedLanguages: ["en", "ja", "ko"],
 			modelOnlyLanguages: [],

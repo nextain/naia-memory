@@ -8,6 +8,14 @@ import {
 	type MemoryUpdateContract,
 	validateMemoryUpdateContract,
 } from "./memory-update-contract.js";
+import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
+import {
+	type SemanticAnalysisPlan,
+	type SemanticAnalysisPlanTrustPolicy,
+	isSemanticAnalysisPlan,
+	isSemanticAnalysisPlanTrustPolicy,
+	validateSemanticAnalysisPlan,
+} from "./semantic-analysis-plan.js";
 import {
 	expectedSemanticRetrievalSurface,
 	runSemanticRawCli,
@@ -30,6 +38,8 @@ export type SemanticCampaignCliArgs = {
 	executionSeed: string;
 	repetitions: number;
 	engines: SemanticEngine[];
+	analysisPlanPath?: string;
+	analysisPlanTrustPolicyPath?: string;
 };
 
 export type SemanticCampaignRun = {
@@ -175,6 +185,8 @@ export function parseSemanticCampaignCliArgs(
 				"seed",
 				"repetitions",
 				"engines",
+				"analysis-plan",
+				"analysis-plan-trust-policy",
 			].includes(match[1])
 		)
 			throw new Error(`unknown argument: --${match[1]}`);
@@ -229,7 +241,53 @@ export function parseSemanticCampaignCliArgs(
 		executionSeed,
 		repetitions,
 		engines,
+		analysisPlanPath: values.get("analysis-plan"),
+		analysisPlanTrustPolicyPath: values.get("analysis-plan-trust-policy"),
 	};
+}
+
+function loadCampaignAnalysisPlan(
+	path: string | undefined,
+	trustPolicyPath: string | undefined,
+	contract: MemoryUpdateContract,
+	engines: readonly string[],
+): SemanticAnalysisPlan | undefined {
+	if (!path && !trustPolicyPath) return undefined;
+	if (!path || !trustPolicyPath)
+		throw new Error(
+			"--analysis-plan and --analysis-plan-trust-policy must be supplied together",
+		);
+	const plan = JSON.parse(readFileSync(path, "utf8")) as unknown;
+	if (!isSemanticAnalysisPlan(plan))
+		throw new Error(
+			"--analysis-plan must contain a valid semantic analysis plan",
+		);
+	if (plan.contractSha256 !== evidenceObjectSha256(contract))
+		throw new Error("semantic analysis plan contract binding is invalid");
+	if (JSON.stringify(plan.engines) !== JSON.stringify(engines))
+		throw new Error("semantic analysis plan engine order is invalid");
+	const trustPolicy = JSON.parse(
+		readFileSync(trustPolicyPath, "utf8"),
+	) as unknown;
+	if (!isSemanticAnalysisPlanTrustPolicy(trustPolicy))
+		throw new Error("semantic analysis plan trust policy is invalid");
+	validateSemanticAnalysisPlan({
+		contract,
+		plan,
+		trustPolicy: trustPolicy as SemanticAnalysisPlanTrustPolicy,
+		campaign: {
+			schemaVersion: "naia-memory-semantic-campaign-v4",
+			disclosure: {
+				engines: [...engines],
+				analysisPlanSha256: evidenceObjectSha256(plan),
+				claimScope: plan.claimScope,
+				comparisonLanes: plan.comparisonLanes,
+				crossLaneAggregation: plan.crossLaneAggregation,
+			},
+		},
+		firstExecutionStartedAt: new Date().toISOString(),
+	});
+	return plan;
 }
 
 export function buildSemanticCampaignPlan(
@@ -294,6 +352,18 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 	validateMemoryUpdateContract(contract);
 	if (contract.tier !== "semantic-update-interpretation")
 		throw new Error("semantic campaign requires a semantic-update contract");
+	const analysisPlanPath = parsed.analysisPlanPath
+		? resolve(parsed.analysisPlanPath)
+		: undefined;
+	const analysisPlanTrustPolicyPath = parsed.analysisPlanTrustPolicyPath
+		? resolve(parsed.analysisPlanTrustPolicyPath)
+		: undefined;
+	const analysisPlan = loadCampaignAnalysisPlan(
+		analysisPlanPath,
+		analysisPlanTrustPolicyPath,
+		contract,
+		parsed.engines,
+	);
 	const plan = buildSemanticCampaignPlan(
 		parsed.executionSeed,
 		parsed.repetitions,
@@ -334,6 +404,13 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 		repetitions: parsed.repetitions,
 		topK: parsed.topK,
 		engines: parsed.engines,
+		analysisPlanSha256: analysisPlan
+			? evidenceObjectSha256(analysisPlan)
+			: null,
+		claimScope:
+			analysisPlan?.claimScope ?? "diagnostic-characterization-only-v1",
+		comparisonLanes: analysisPlan?.comparisonLanes ?? null,
+		crossLaneAggregation: analysisPlan?.crossLaneAggregation ?? "prohibited",
 		engineOrderPolicy: "seeded-n-engine-latin-rotation-v2",
 		caseOrderPolicy: "shared-seeded-per-repetition-v1",
 		enginePositionCounts,
@@ -349,23 +426,29 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 			"Engine-native surfaces are observed with disclosed native configurations. Letta exposes always-active non-persona core blocks first, followed by its query-ranked archival search results, and preserves the complete core-plus-archive state for identity validation. Graphiti is split into projected-current and native-historical comparator IDs; their scores must not be merged. Historical retrieval is validated against complete group history obtained independently from query output. Component-level parity and a single retrieval leaderboard are not claimed.",
 	};
 	const manifest = {
-		schemaVersion: "naia-memory-semantic-campaign-v3",
+		schemaVersion: "naia-memory-semantic-campaign-v4",
 		interpretation:
 			"Balanced execution manifest over unscored raw artifacts; not quality evidence by itself.",
-		receipt: benchmarkReceipt([contractPath], disclosure, [
-			"src/benchmark/quality/semantic-campaign-cli.ts",
-			"src/benchmark/quality/semantic-raw-cli.ts",
-			"src/benchmark/quality/memory-semantic-runner.ts",
-			"src/benchmark/quality/bridge-graphiti-semantic.ts",
-			"src/benchmark/quality/bridge-graphiti-historical-semantic.ts",
-			"src/benchmark/quality/graphiti-rest-semantic-client.ts",
-			"tools/graphiti-benchmark-sidecar/router.py",
-			"tools/graphiti-benchmark-sidecar/pin.json",
-			"src/benchmark/quality/bridge-hindsight-semantic.ts",
-			"src/benchmark/quality/bridge-letta-semantic.ts",
-			"src/benchmark/quality/bridge-mem0-semantic.ts",
-			"src/benchmark/quality/bridge-naia-semantic.ts",
-		]),
+		receipt: benchmarkReceipt(
+			analysisPlanPath && analysisPlanTrustPolicyPath
+				? [contractPath, analysisPlanPath, analysisPlanTrustPolicyPath]
+				: [contractPath],
+			disclosure,
+			[
+				"src/benchmark/quality/semantic-campaign-cli.ts",
+				"src/benchmark/quality/semantic-raw-cli.ts",
+				"src/benchmark/quality/memory-semantic-runner.ts",
+				"src/benchmark/quality/bridge-graphiti-semantic.ts",
+				"src/benchmark/quality/bridge-graphiti-historical-semantic.ts",
+				"src/benchmark/quality/graphiti-rest-semantic-client.ts",
+				"tools/graphiti-benchmark-sidecar/router.py",
+				"tools/graphiti-benchmark-sidecar/pin.json",
+				"src/benchmark/quality/bridge-hindsight-semantic.ts",
+				"src/benchmark/quality/bridge-letta-semantic.ts",
+				"src/benchmark/quality/bridge-mem0-semantic.ts",
+				"src/benchmark/quality/bridge-naia-semantic.ts",
+			],
+		),
 		disclosure,
 		runs: plan.map((run) => ({
 			...run,

@@ -103,8 +103,10 @@ function fixture() {
 		},
 	};
 	const campaign = {
+		schemaVersion: "naia-memory-semantic-campaign-v4",
 		disclosure: {
 			engines: ["hindsight", "mem0", "graphiti-historical", "letta", "naia"],
+			analysisPlanSha256: evidenceObjectSha256(plan),
 			claimScope: unsigned.claimScope,
 			comparisonLanes: unsigned.comparisonLanes,
 			crossLaneAggregation: unsigned.crossLaneAggregation,
@@ -119,6 +121,9 @@ function resign(current: ReturnType<typeof fixture>): void {
 		evidenceSignaturePayload(current.plan),
 		current.privateKey,
 	).toString("base64");
+	current.campaign.disclosure.analysisPlanSha256 = evidenceObjectSha256(
+		current.plan,
+	);
 }
 
 describe("semantic analysis plan", () => {
@@ -139,7 +144,7 @@ describe("semantic analysis plan", () => {
 			plannedIndependentAuthorClusterCount: 3,
 			plannedIndependentConstructionClusterCount: 3,
 			sampleSizeAdequacyVerified: false,
-			trustedTimestampVerified: false,
+			analysisPlanTrustedTimestampVerified: false,
 		});
 	});
 
@@ -164,6 +169,9 @@ describe("semantic analysis plan", () => {
 
 		const mutated = fixture();
 		mutated.plan.primaryMetric = "deletionLeakageRate";
+		mutated.campaign.disclosure.analysisPlanSha256 = evidenceObjectSha256(
+			mutated.plan,
+		);
 		expect(() =>
 			validateSemanticAnalysisPlan({
 				...mutated,
@@ -248,6 +256,25 @@ describe("semantic analysis plan", () => {
 		const current = fixture();
 		current.campaign.disclosure.claimScope =
 			"direct-lifecycle-competitive-report-v1";
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan campaign shape is invalid");
+	});
+
+	it("rejects schema downgrade and a mutated preregistered plan hash", () => {
+		const current = fixture();
+		current.campaign.schemaVersion = "naia-memory-semantic-campaign-v3";
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan campaign shape is invalid");
+		current.campaign.schemaVersion = "naia-memory-semantic-campaign-v4";
+		current.campaign.disclosure.analysisPlanSha256 = "0".repeat(64);
 		expect(() =>
 			validateSemanticAnalysisPlan({
 				...current,

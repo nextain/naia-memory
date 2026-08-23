@@ -279,7 +279,12 @@ export function validateSemanticPilotResultBinding(
 		...power,
 		pilotCollectionBindingQualified: true,
 		boundAssignmentCount: assignments.size,
-		...timestamp,
+		collectionPlanTrustedTimestampVerified:
+			"trustedTimestampVerified" in timestamp
+				? timestamp.trustedTimestampVerified
+				: false,
+		collectionPlanTimestampedAt: timestamp.timestampedAt,
+		priorAssignmentTimingVerified: timestamp.priorAssignmentTimingVerified,
 		...launch,
 		...delivery,
 		deliveryBundleTrustedTimestampVerified:
