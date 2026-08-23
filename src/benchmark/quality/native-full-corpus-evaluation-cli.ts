@@ -1,6 +1,8 @@
 #!/usr/bin/env node
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
+	MIRACL_EN_QDRANT_MINIMUM_FREE_BYTES,
 	existsSync,
 	mkdirSync,
 	readFileSync,
@@ -39,6 +41,13 @@ import {
 	parseTopicsTsv,
 	verifyLockedFile,
 } from "./public-miracl-source.js";
+import {
+	type QdrantServiceBindingReceipt,
+	parsePodmanInspect,
+	parseQdrantServiceBindingReceipt,
+	qdrantServiceBindingSha256,
+	verifyLiveQdrantServiceBinding,
+} from "./qdrant-service-binding.js";
 import { summarizeRetrievalMetrics } from "./retrieval-metrics.js";
 import { verifyTrueBatchEquivalenceEvidenceFiles } from "./true-batch-equivalence.js";
 
@@ -58,9 +67,55 @@ const TOP_K = 100;
 const CHUNK_SIZE = 512;
 const EMBEDDING_BATCH_SIZE = 8;
 const UPSERT_BATCH_SIZE = 64;
+if (LANGUAGE === "en" && !process.env.QDRANT_URL)
+	throw new Error(
+		"English full-corpus evaluation requires an explicit QDRANT_URL",
+	);
+if (LANGUAGE !== "en" && process.env.MIRACL_QDRANT_SERVICE_RECEIPT)
+	throw new Error(
+		"Qdrant service binding receipts are reserved for English evaluation",
+	);
 const QDRANT_URL = process.env.QDRANT_URL ?? "http://127.0.0.1:6334";
 const PASSAGE_COMPOSITION = 'title + "\\n" + text';
 const SOURCE_ROOT = process.env.MIRACL_SOURCE_DIR ?? miraclSourceRoot(LANGUAGE);
+
+async function verifyEnglishQdrantLive(
+	binding: QdrantServiceBindingReceipt,
+): Promise<void> {
+	if (binding.qdrantUrl !== QDRANT_URL)
+		throw new Error("Qdrant service binding URL does not match QDRANT_URL");
+	const inspect = parsePodmanInspect(
+		JSON.parse(
+			execFileSync(
+				"podman",
+				["inspect", binding.container.id, "--format", "json"],
+				{ encoding: "utf8", timeout: 10_000 },
+			),
+		) as unknown,
+	);
+	const response = await fetch(QDRANT_URL, {
+		redirect: "error",
+		signal: AbortSignal.timeout(10_000),
+	});
+	if (!response.ok)
+		throw new Error(`Qdrant identity request failed: ${response.status}`);
+	const liveService = (await response.json()) as {
+		version?: unknown;
+		commit?: unknown;
+	};
+	if (
+		typeof liveService.version !== "string" ||
+		typeof liveService.commit !== "string"
+	)
+		throw new Error("Qdrant identity response is incomplete");
+	verifyLiveQdrantServiceBinding({
+		receipt: binding,
+		inspect,
+		allowedStorageRoot: "/var/mnt/hdd",
+		service: { version: liveService.version, commit: liveService.commit },
+		requiredMinimumFreeBytes: MIRACL_EN_QDRANT_MINIMUM_FREE_BYTES,
+	});
+}
 const CHECKPOINT_ROOT =
 	process.env.MIRACL_FULL_CHECKPOINT_DIR ??
 	`.cache/benchmark-runs/miracl-${LANGUAGE}-full-v1`;
@@ -176,6 +231,20 @@ async function main(): Promise<void> {
 		verifyTrueBatchEquivalenceEvidenceFiles(process.env);
 	}
 	if (existsSync(OUTPUT)) throw new Error("full-corpus output already exists");
+	let qdrantBinding: QdrantServiceBindingReceipt | null = null;
+	let qdrantServiceReceiptSha256: string | null = null;
+	if (LANGUAGE === "en") {
+		const bindingPath = process.env.MIRACL_QDRANT_SERVICE_RECEIPT;
+		if (!bindingPath)
+			throw new Error(
+				"English full-corpus evaluation requires a Qdrant service binding receipt",
+			);
+		qdrantBinding = parseQdrantServiceBindingReceipt(
+			JSON.parse(readFileSync(bindingPath, "utf8")) as unknown,
+		);
+		await verifyEnglishQdrantLive(qdrantBinding);
+		qdrantServiceReceiptSha256 = qdrantServiceBindingSha256(qdrantBinding);
+	}
 	const receiptPath =
 		process.env.MIRACL_SOURCE_RECEIPT ??
 		join(SOURCE_ROOT, "source-lock-receipt.json");
@@ -416,6 +485,7 @@ async function main(): Promise<void> {
 			),
 		)
 		.join("\n")}\n`;
+	if (qdrantBinding) await verifyEnglishQdrantLive(qdrantBinding);
 	const result = {
 		benchmark: `miracl-${LANGUAGE}-full-corpus-naia-vector-exact-v1`,
 		claimBoundary:
@@ -440,6 +510,7 @@ async function main(): Promise<void> {
 			topK: TOP_K,
 			cpuOnly: true,
 			collectionName,
+			qdrantServiceReceiptSha256,
 		},
 		metrics: { ...metrics, recallAt100 },
 		latencyMilliseconds: {

@@ -57,6 +57,11 @@ export async function runMultilingualCompletionEvidenceCli(
 	const outputPath =
 		environment.MIRACL_FULL_EVIDENCE_OUTPUT ?? `${resultPath}.evidence.json`;
 	const qdrantUrl = environment.QDRANT_URL ?? "http://127.0.0.1:6334";
+	const qdrantServiceReceiptPath = environment.MIRACL_QDRANT_SERVICE_RECEIPT;
+	if (language !== "en" && qdrantServiceReceiptPath)
+		throw new Error(
+			"Qdrant service binding receipts are reserved for English evidence",
+		);
 	const checkpointRoot =
 		environment.MIRACL_FULL_CHECKPOINT_DIR ??
 		`.cache/benchmark-runs/miracl-${language}-full-v1`;
@@ -74,6 +79,12 @@ export async function runMultilingualCompletionEvidenceCli(
 		if (!existsSync(path))
 			throw new Error(`required evidence input missing: ${path}`);
 	}
+	if (language === "en" && !qdrantServiceReceiptPath)
+		throw new Error("English Qdrant service receipt input is missing");
+	if (qdrantServiceReceiptPath && !existsSync(qdrantServiceReceiptPath))
+		throw new Error(
+			`required evidence input missing: ${qdrantServiceReceiptPath}`,
+		);
 	const resultText = readFileSync(resultPath, "utf8");
 	const result = JSON.parse(resultText) as FullCorpusResult;
 	const trecRunText = readFileSync(trecPath, "utf8");
@@ -86,6 +97,9 @@ export async function runMultilingualCompletionEvidenceCli(
 		evaluationSourceSha256: string;
 	};
 	const runtimeObservationText = readFileSync(runtimeObservationPath, "utf8");
+	const qdrantServiceReceiptText = qdrantServiceReceiptPath
+		? readFileSync(qdrantServiceReceiptPath, "utf8")
+		: undefined;
 	const runtimeObservation = JSON.parse(runtimeObservationText) as {
 		monitor: { sourceSha256: string };
 	};
@@ -194,6 +208,8 @@ export async function runMultilingualCompletionEvidenceCli(
 		launchReceiptText,
 		runtimeObservationPath,
 		runtimeObservationText,
+		qdrantServiceReceiptPath,
+		qdrantServiceReceiptText,
 		trecEvalPath: evaluatorPath,
 		trecEvalStdout,
 		trecEvalBinarySha256: binaryBeforeSha256,
@@ -220,6 +236,9 @@ export async function runMultilingualCompletionEvidenceCli(
 			runtimeObservationAfterSha256: sha256Bytes(
 				readFileSync(runtimeObservationPath),
 			),
+			qdrantServiceReceiptAfterSha256: qdrantServiceReceiptPath
+				? sha256Bytes(readFileSync(qdrantServiceReceiptPath))
+				: undefined,
 			checkpointChainAfterSha256: evidenceObjectSha256(checkpointChainAfter),
 		},
 		evaluationSourceSha256: sha256Bytes(

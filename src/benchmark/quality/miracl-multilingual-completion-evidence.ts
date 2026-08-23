@@ -16,6 +16,12 @@ import {
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
+import {
+	type QdrantServiceBindingReceipt,
+	parseQdrantServiceBindingReceipt,
+	qdrantServiceBindingSha256,
+	verifyQdrantServiceReceiptChain,
+} from "./qdrant-service-binding.js";
 
 interface MultilingualLaunchReceipt {
 	schemaVersion: number;
@@ -29,6 +35,7 @@ interface MultilingualLaunchReceipt {
 	language: string;
 	outputPath: string;
 	evaluationSourceSha256: string;
+	qdrantServiceReceiptSha256?: string | null;
 }
 
 interface MultilingualRuntimeObservation {
@@ -85,6 +92,8 @@ export interface MultilingualCompletionEvidenceInput {
 	launchReceiptText: string;
 	runtimeObservationPath: string;
 	runtimeObservationText: string;
+	qdrantServiceReceiptPath?: string;
+	qdrantServiceReceiptText?: string;
 	trecEvalPath: string;
 	trecEvalStdout: string;
 	trecEvalBinarySha256: string;
@@ -105,6 +114,7 @@ export interface MultilingualCompletionEvidenceInput {
 		sourceReceiptAfterSha256: string;
 		launchReceiptAfterSha256: string;
 		runtimeObservationAfterSha256: string;
+		qdrantServiceReceiptAfterSha256?: string;
 		checkpointChainAfterSha256: string;
 	};
 	evaluationSourceSha256: string;
@@ -172,6 +182,40 @@ export function createMultilingualCompletionEvidence(
 		throw new Error("multilingual benchmark launch evidence mismatch");
 	if (launch.evaluationSourceSha256 !== input.evaluationSourceSha256)
 		throw new Error("evaluation source changed after launch");
+	verifyQdrantServiceReceiptChain({
+		language: input.language,
+		launchReceiptSha256: launch.qdrantServiceReceiptSha256,
+		resultReceiptSha256: result.configuration.qdrantServiceReceiptSha256,
+	});
+	let qdrantServiceReceiptArtifact:
+		| {
+				path: string;
+				sha256: string;
+				receipt: QdrantServiceBindingReceipt;
+		  }
+		| undefined;
+	if (input.language === "en") {
+		if (!input.qdrantServiceReceiptPath || !input.qdrantServiceReceiptText)
+			throw new Error("English Qdrant service receipt artifact is missing");
+		const serviceReceipt = parseQdrantServiceBindingReceipt(
+			parseJson<unknown>(
+				input.qdrantServiceReceiptText,
+				"Qdrant service receipt",
+			),
+		);
+		const serviceReceiptSha256 = qdrantServiceBindingSha256(serviceReceipt);
+		if (
+			serviceReceiptSha256 !== launch.qdrantServiceReceiptSha256 ||
+			input.artifactStability.qdrantServiceReceiptAfterSha256 !==
+				serviceReceiptSha256
+		)
+			throw new Error("Qdrant service receipt artifact stability mismatch");
+		qdrantServiceReceiptArtifact = {
+			path: input.qdrantServiceReceiptPath,
+			sha256: serviceReceiptSha256,
+			receipt: serviceReceipt,
+		};
+	}
 	if (
 		runtime.schemaVersion !== 1 ||
 		runtime.monitor.sourceSha256 !== input.runtimeMonitorSourceSha256 ||
@@ -265,6 +309,7 @@ export function createMultilingualCompletionEvidence(
 			sha256: runtimeObservationSha256,
 		},
 		checkpointChain: input.checkpointChain,
+		qdrantServiceReceipt: qdrantServiceReceiptArtifact,
 	};
 	return {
 		schemaVersion: "naia-memory-miracl-multilingual-completion-evidence-v1",
@@ -278,6 +323,8 @@ export function createMultilingualCompletionEvidence(
 				"operator-captured after process start; proves attachment identity, not preregistration",
 			runtimeSnapshot:
 				"local Qdrant configuration and membership observations are sequential, not an atomic external attestation",
+			storageMedium:
+				"HDD placement is a self-observed host guarantee rooted at /var/mnt/hdd; the receipt proves the exact mounted filesystem and device, not independent hardware attestation",
 		},
 		language: input.language,
 		benchmark: result.benchmark,

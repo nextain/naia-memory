@@ -111,6 +111,7 @@ export interface FullCorpusResult {
 		topK: number;
 		cpuOnly: boolean;
 		collectionName: string;
+		qdrantServiceReceiptSha256?: string | null;
 	};
 	metrics: { ndcgAt10: number; recallAt100: number };
 	ingestion: {
