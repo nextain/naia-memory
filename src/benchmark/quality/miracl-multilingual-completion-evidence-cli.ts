@@ -22,6 +22,12 @@ import {
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import { auditQdrantCollectionMembership } from "./qdrant-collection-membership.js";
+import {
+	MIRACL_EN_QDRANT_MINIMUM_FREE_BYTES,
+	parsePodmanInspect,
+	parseQdrantServiceBindingReceipt,
+	verifyLiveQdrantServiceBinding,
+} from "./qdrant-service-binding.js";
 
 function evidenceLanguage(value: string | undefined): MiraclEvidenceLanguage {
 	const language = value ?? "ko";
@@ -131,10 +137,40 @@ export async function runMultilingualCompletionEvidenceCli(
 	const rootResponse = await fetch(`${qdrantUrl}/`);
 	if (!rootResponse.ok)
 		throw new Error(`Qdrant root HTTP ${rootResponse.status}`);
-	const qdrantIdentity = (await rootResponse.json()) as {
-		version: string;
-		commit: string;
+	const qdrantIdentityJson = (await rootResponse.json()) as {
+		version?: unknown;
+		commit?: unknown;
 	};
+	if (
+		typeof qdrantIdentityJson.version !== "string" ||
+		typeof qdrantIdentityJson.commit !== "string"
+	)
+		throw new Error("Qdrant root identity is incomplete");
+	const qdrantIdentity = {
+		version: qdrantIdentityJson.version,
+		commit: qdrantIdentityJson.commit,
+	};
+	if (language === "en") {
+		const serviceReceipt = parseQdrantServiceBindingReceipt(
+			JSON.parse(qdrantServiceReceiptText as string) as unknown,
+		);
+		const inspect = parsePodmanInspect(
+			JSON.parse(
+				execFileSync(
+					"podman",
+					["inspect", serviceReceipt.container.id, "--format", "json"],
+					{ encoding: "utf8", timeout: 10_000 },
+				),
+			) as unknown,
+		);
+		verifyLiveQdrantServiceBinding({
+			receipt: serviceReceipt,
+			inspect,
+			allowedStorageRoot: "/var/mnt/hdd",
+			service: qdrantIdentity,
+			requiredMinimumFreeBytes: MIRACL_EN_QDRANT_MINIMUM_FREE_BYTES,
+		});
+	}
 	const collectionResponse = await fetch(
 		`${qdrantUrl}/collections/${encodeURIComponent(result.configuration.collectionName)}`,
 	);

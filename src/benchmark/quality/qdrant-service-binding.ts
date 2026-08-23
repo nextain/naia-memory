@@ -295,6 +295,22 @@ export function verifyLiveQdrantServiceBinding(input: {
 		throw new Error("live Qdrant service does not match its binding receipt");
 }
 
+export function verifyQdrantServiceCompletionBinding(input: {
+	receipt: QdrantServiceBindingReceipt;
+	qdrantUrl: string;
+	service: QdrantServiceIdentity;
+}): void {
+	if (input.receipt.qdrantUrl !== input.qdrantUrl)
+		throw new Error("Qdrant completion URL does not match its service receipt");
+	if (
+		input.receipt.service.version !== input.service.version ||
+		input.receipt.service.commit !== input.service.commit
+	)
+		throw new Error(
+			"Qdrant completion identity does not match its service receipt",
+		);
+}
+
 export function qdrantServiceBindingSha256(
 	receipt: QdrantServiceBindingReceipt,
 ): string {

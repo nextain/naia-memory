@@ -20,6 +20,7 @@ import {
 	type QdrantServiceBindingReceipt,
 	parseQdrantServiceBindingReceipt,
 	qdrantServiceBindingSha256,
+	verifyQdrantServiceCompletionBinding,
 	verifyQdrantServiceReceiptChain,
 } from "./qdrant-service-binding.js";
 
@@ -210,6 +211,14 @@ export function createMultilingualCompletionEvidence(
 				serviceReceiptSha256
 		)
 			throw new Error("Qdrant service receipt artifact stability mismatch");
+		verifyQdrantServiceCompletionBinding({
+			receipt: serviceReceipt,
+			qdrantUrl: input.qdrantUrl,
+			service: {
+				version: input.qdrant.version,
+				commit: input.qdrant.commit,
+			},
+		});
 		qdrantServiceReceiptArtifact = {
 			path: input.qdrantServiceReceiptPath,
 			sha256: serviceReceiptSha256,

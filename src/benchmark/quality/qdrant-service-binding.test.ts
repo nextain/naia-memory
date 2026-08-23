@@ -8,6 +8,7 @@ import {
 	parsePodmanInspect,
 	parseQdrantServiceBindingReceipt,
 	verifyLiveQdrantServiceBinding,
+	verifyQdrantServiceCompletionBinding,
 	verifyQdrantServiceReceiptChain,
 } from "./qdrant-service-binding.js";
 
@@ -142,6 +143,30 @@ describe("Qdrant service storage binding", () => {
 				requiredMinimumFreeBytes: 1,
 			}),
 		).toThrow("does not match");
+		const replaced = fixture(storage);
+		replaced.Id = "replacement-container";
+		expect(() =>
+			verifyLiveQdrantServiceBinding({
+				receipt,
+				inspect: replaced,
+				allowedStorageRoot: root,
+				service,
+				requiredMinimumFreeBytes: 1,
+			}),
+		).toThrow("does not match");
+		const rerouted = fixture(storage);
+		rerouted.HostConfig.PortBindings["6333/tcp"] = [
+			{ HostIp: "127.0.0.1", HostPort: "6345" },
+		];
+		expect(() =>
+			verifyLiveQdrantServiceBinding({
+				receipt,
+				inspect: rerouted,
+				allowedStorageRoot: root,
+				service,
+				requiredMinimumFreeBytes: 1,
+			}),
+		).toThrow("port does not match");
 		expect(() =>
 			verifyLiveQdrantServiceBinding({
 				receipt,
@@ -213,6 +238,41 @@ describe("Qdrant service storage binding", () => {
 		expect(() =>
 			verifyQdrantServiceReceiptChain({ language: "ar" }),
 		).not.toThrow();
+	});
+
+	it("rejects a different service at completion even when the receipt chain hashes match", () => {
+		const root = mkdtempSync(join(tmpdir(), "qdrant-binding-"));
+		const storage = join(root, "en");
+		mkdirSync(storage);
+		const receipt = createQdrantServiceBindingReceipt({
+			inspect: fixture(storage),
+			qdrantUrl: "http://127.0.0.1:6344",
+			allowedStorageRoot: root,
+			minimumFreeBytes: 1,
+			service: { version: "1.15.5", commit: "locked-commit" },
+			capturedAt: "2026-08-23T00:00:01Z",
+		});
+		expect(() =>
+			verifyQdrantServiceCompletionBinding({
+				receipt,
+				qdrantUrl: "http://127.0.0.1:6344",
+				service: { version: "1.15.5", commit: "locked-commit" },
+			}),
+		).not.toThrow();
+		expect(() =>
+			verifyQdrantServiceCompletionBinding({
+				receipt,
+				qdrantUrl: "http://127.0.0.1:6345",
+				service: receipt.service,
+			}),
+		).toThrow("completion URL");
+		expect(() =>
+			verifyQdrantServiceCompletionBinding({
+				receipt,
+				qdrantUrl: receipt.qdrantUrl,
+				service: { ...receipt.service, commit: "replacement-service" },
+			}),
+		).toThrow("completion identity");
 	});
 
 	it("rejects incomplete or impossible storage evidence at the parse boundary", () => {
