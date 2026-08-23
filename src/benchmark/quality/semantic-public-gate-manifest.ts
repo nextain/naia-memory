@@ -42,6 +42,8 @@ export const SEMANTIC_PUBLIC_GATE_ARTIFACT_NAMES = [
 	"developmentExecutionTrustPolicy",
 	"developmentPlanTimestampEvidence",
 	"developmentPlanTimestampTrustPolicy",
+	"developmentExecutionRegistry",
+	"developmentExecutionRegistryTrustPolicy",
 ] as const;
 
 export const SEMANTIC_PUBLIC_GATE_BLINDING_SEED_INDEX = 11;
@@ -51,7 +53,7 @@ export type SemanticPublicGateArtifactName =
 type ArtifactReference = { path: string; sha256: string };
 
 export type SemanticPublicGateManifest = {
-	schemaVersion: "naia-memory-semantic-public-gate-manifest-v3";
+	schemaVersion: "naia-memory-semantic-public-gate-manifest-v4";
 	blindingSeed: string;
 	artifacts: Record<SemanticPublicGateArtifactName, ArtifactReference>;
 };
@@ -141,7 +143,11 @@ export async function loadSemanticPublicGateManifest(
 		["schemaVersion", "blindingSeed", "artifacts"],
 		"semantic public gate manifest",
 	);
-	if (root.schemaVersion !== "naia-memory-semantic-public-gate-manifest-v3")
+	if (root.schemaVersion === "naia-memory-semantic-public-gate-manifest-v3")
+		throw new Error(
+			"semantic public gate manifest v3 must be regenerated as v4 with development execution registry artifacts",
+		);
+	if (root.schemaVersion !== "naia-memory-semantic-public-gate-manifest-v4")
 		throw new Error("semantic public gate manifest schema version is invalid");
 	if (typeof root.blindingSeed !== "string" || !root.blindingSeed)
 		throw new Error("semantic public gate manifest blinding seed is invalid");

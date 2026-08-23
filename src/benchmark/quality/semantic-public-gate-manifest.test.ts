@@ -30,7 +30,7 @@ async function fixture() {
 		};
 	}
 	const manifest = {
-		schemaVersion: "naia-memory-semantic-public-gate-manifest-v3",
+		schemaVersion: "naia-memory-semantic-public-gate-manifest-v4",
 		blindingSeed: "frozen-seed",
 		artifacts,
 	};
@@ -40,10 +40,10 @@ async function fixture() {
 }
 
 describe("semantic public gate manifest", () => {
-	it("resolves one hash-pinned manifest into the canonical 32 arguments", async () => {
+	it("resolves one hash-pinned manifest into the canonical 34 arguments", async () => {
 		const current = await fixture();
 		const loaded = await loadSemanticPublicGateManifest(current.manifestPath);
-		expect(loaded.args).toHaveLength(32);
+		expect(loaded.args).toHaveLength(34);
 		expect(loaded.args[SEMANTIC_PUBLIC_GATE_BLINDING_SEED_INDEX]).toBe(
 			"frozen-seed",
 		);
@@ -79,6 +79,8 @@ describe("semantic public gate manifest", () => {
 			"developmentExecutionTrustPolicy",
 			"developmentPlanTimestampEvidence",
 			"developmentPlanTimestampTrustPolicy",
+			"developmentExecutionRegistry",
+			"developmentExecutionRegistryTrustPolicy",
 		];
 		expect(SEMANTIC_PUBLIC_GATE_ARTIFACT_NAMES).toEqual(expectedNames);
 		expect(loaded.args.filter((_, index) => index !== 11)).toEqual(
@@ -112,6 +114,18 @@ describe("semantic public gate manifest", () => {
 		await expect(
 			loadSemanticPublicGateManifest(extra.manifestPath),
 		).rejects.toThrow("manifest fields are invalid");
+	});
+
+	it("rejects v3 with an actionable v4 migration error", async () => {
+		const current = await fixture();
+		current.manifest.schemaVersion =
+			"naia-memory-semantic-public-gate-manifest-v3";
+		await writeFile(current.manifestPath, JSON.stringify(current.manifest));
+		await expect(
+			loadSemanticPublicGateManifest(current.manifestPath),
+		).rejects.toThrow(
+			"manifest v3 must be regenerated as v4 with development execution registry artifacts",
+		);
 	});
 
 	it("rejects an intermediate symbolic-link escape", async () => {

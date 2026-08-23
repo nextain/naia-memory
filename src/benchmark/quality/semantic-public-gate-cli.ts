@@ -6,6 +6,11 @@ import {
 	validateBenchmarkDevelopmentExecutionEvidence,
 } from "./benchmark-development-execution-evidence.js";
 import {
+	isBenchmarkDevelopmentExecutionRegistryEvidence,
+	isBenchmarkDevelopmentExecutionRegistryTrustPolicy,
+	validateBenchmarkDevelopmentExecutionRegistry,
+} from "./benchmark-development-execution-registry.js";
+import {
 	isBenchmarkSelectionDisclosure,
 	isBenchmarkSelectionDisclosureTrustPolicy,
 	validateBenchmarkSelectionDisclosure,
@@ -77,12 +82,13 @@ async function runSemanticEvidenceGateCli(
 			args.length !== 22 &&
 			args.length !== 26 &&
 			args.length !== 28 &&
-			args.length !== 32)
+			args.length !== 32 &&
+			args.length !== 34)
 	) {
 		process.stderr.write(
 			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>${
 				mode === "public"
-					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-collection-plan.json> <pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json> [<rfc3161-timestamp-evidence.json> <rfc3161-timestamp-trust-policy.json> <pilot-launch-receipt.json> [<delivery-acknowledgements.json> <participant-trust-policy.json> <delivery-rfc3161-evidence.json> <delivery-rfc3161-trust-policy.json> [<selection-disclosure.json> <selection-disclosure-trust-policy.json> [<development-execution-evidence.json> <development-execution-trust-policy.json> <development-plan-rfc3161-evidence.json> <development-plan-rfc3161-trust-policy.json>]]]]]]]]"
+					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-collection-plan.json> <pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json> [<rfc3161-timestamp-evidence.json> <rfc3161-timestamp-trust-policy.json> <pilot-launch-receipt.json> [<delivery-acknowledgements.json> <participant-trust-policy.json> <delivery-rfc3161-evidence.json> <delivery-rfc3161-trust-policy.json> [<selection-disclosure.json> <selection-disclosure-trust-policy.json> [<development-execution-evidence.json> <development-execution-trust-policy.json> <development-plan-rfc3161-evidence.json> <development-plan-rfc3161-trust-policy.json> [<development-execution-registry.json> <development-execution-registry-trust-policy.json>]]]]]]]]]"
 					: ""
 			}\n`,
 		);
@@ -498,7 +504,7 @@ async function runSemanticEvidenceGateCli(
 								throw new Error(
 									"selected benchmark policy does not match the executed Naia configuration",
 								);
-							if (args.length === 32) {
+							if (args.length === 32 || args.length === 34) {
 								const developmentEvidence = await readJson(
 									args[28],
 									"development execution evidence",
@@ -572,6 +578,59 @@ async function runSemanticEvidenceGateCli(
 										],
 									}),
 								};
+								if (args.length === 34) {
+									const registryEvidence = await readJson(
+										args[32],
+										"development execution registry",
+									);
+									if (
+										!isBenchmarkDevelopmentExecutionRegistryEvidence(
+											registryEvidence,
+										)
+									)
+										throw new Error(
+											"development execution registry shape is invalid",
+										);
+									const registryTrust = await readJson(
+										args[33],
+										"development execution registry trust policy",
+									);
+									if (
+										!isBenchmarkDevelopmentExecutionRegistryTrustPolicy(
+											registryTrust,
+										)
+									)
+										throw new Error(
+											"development execution registry trust policy shape is invalid",
+										);
+									selectionHistory = {
+										...selectionHistory,
+										...validateBenchmarkDevelopmentExecutionRegistry({
+											evidence: registryEvidence,
+											trustPolicy: registryTrust,
+											developmentTrustPolicy: developmentTrust,
+											timestampTrustPolicy: developmentTimestampTrust,
+											plan: developmentEvidence.plan,
+											receipts: developmentEvidence.receipts,
+											trustedPlanTimestampedAt:
+												developmentTimestamp.timestampedAt,
+											forbiddenTrustIdentities: [
+												...Object.keys(selectionTrust.auditorPublicKeys),
+												...Object.keys(executionTrustPolicy.executorPublicKeys),
+												...Object.keys(adjudicationTrust.adjudicators),
+											],
+											forbiddenTrustPublicKeys: [
+												...Object.values(selectionTrust.auditorPublicKeys),
+												...Object.values(
+													executionTrustPolicy.executorPublicKeys,
+												),
+												...Object.values(adjudicationTrust.adjudicators).map(
+													(policy) => policy.publicKey,
+												),
+											],
+										}),
+									};
+								}
 							}
 						}
 					}
@@ -618,9 +677,11 @@ async function runSemanticEvidenceGateCli(
 								? args.length >= 19
 									? args.length >= 26
 										? args.length >= 28
-											? args.length === 32
-												? "pilot review, prior-assignment timing, participant acknowledgement signatures, trusted prior existence of the complete acknowledgement bundle, signed candidate-selection disclosure internal consistency, executed Naia policy binding, a trusted timestamp on the development matrix, complete timestamped-matrix coverage, and development receipt binding are verified; receipt event times, absence of undisclosed shadow trials, and selection-history completeness are not externally verified; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
-												: "pilot review, prior-assignment timing, participant acknowledgement signatures, trusted prior existence of the complete acknowledgement bundle, signed candidate-selection disclosure internal consistency, and executed Naia policy binding are verified; development observation receipts and selection-history completeness are not externally verified; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+											? args.length === 34
+												? "pilot review, prior-assignment timing, participant acknowledgement signatures, trusted prior existence of the complete acknowledgement bundle, signed selection disclosure, development receipt binding, and registered development execution start/finish chronology are verified; absence of off-registry executions, absence of undisclosed shadow trials, and selection-history completeness remain unverified; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+												: args.length === 32
+													? "pilot review, prior-assignment timing, participant acknowledgement signatures, trusted prior existence of the complete acknowledgement bundle, signed candidate-selection disclosure internal consistency, executed Naia policy binding, a trusted timestamp on the development matrix, complete timestamped-matrix coverage, and development receipt binding are verified; receipt event times, absence of undisclosed shadow trials, and selection-history completeness are not externally verified; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
+													: "pilot review, prior-assignment timing, participant acknowledgement signatures, trusted prior existence of the complete acknowledgement bundle, signed candidate-selection disclosure internal consistency, and executed Naia policy binding are verified; development observation receipts and selection-history completeness are not externally verified; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 											: "pilot review, prior-assignment timing, participant acknowledgement signatures, and trusted prior existence of the complete acknowledgement bundle are verified; candidate-selection history and executed-policy binding are not evaluated by this gate; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 										: args.length === 22
 											? "pilot review and prior-assignment timing are verified, and the operator-created launch receipt is internally consistent with the plan and timestamp token; participant delivery and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"

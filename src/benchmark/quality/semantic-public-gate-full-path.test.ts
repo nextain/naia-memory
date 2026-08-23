@@ -55,7 +55,7 @@ afterEach(async () => {
 });
 
 describe("semantic public gate CLI", () => {
-	it("verifies the complete 32-artifact path with signed development receipts and RFC 3161 tokens", async () => {
+	it("verifies the complete 34-argument path with an externally timestamped execution registry", async () => {
 		const output: string[] = [];
 		captureStdout(output);
 		const directory = await root();
@@ -146,12 +146,12 @@ describe("semantic public gate CLI", () => {
 			{
 				id: "baseline",
 				policySha256: "d".repeat(64),
-				declaredAt: "2099-01-02T00:00:00Z",
+				declaredAt: "2026-01-02T00:00:00Z",
 			},
 			{
 				id: "selected",
 				policySha256: "c".repeat(64),
-				declaredAt: "2099-01-02T00:00:00Z",
+				declaredAt: "2026-01-02T00:00:00Z",
 			},
 		];
 		const {
@@ -195,6 +195,7 @@ describe("semantic public gate CLI", () => {
 			["baseline", "f".repeat(64), 0.7],
 			["selected", "f".repeat(64), 0.9],
 		] as const;
+		const registrySequenceStartedAt = Date.now() + 8_000;
 		const developmentReceipts = developmentRows.map(
 			([candidateId, datasetSha256, primaryMetricValue], index) => {
 				const unsignedReceipt = {
@@ -207,9 +208,15 @@ describe("semantic public gate CLI", () => {
 						?.policySha256 as string,
 					datasetSha256,
 					primaryMetricValue,
-					startedAt: `2099-01-03T0${index}:00:00Z`,
-					finishedAt: `2099-01-03T0${index}:30:00Z`,
-					signedAt: `2099-01-03T0${index}:31:00Z`,
+					startedAt: new Date(
+						registrySequenceStartedAt + index * 500,
+					).toISOString(),
+					finishedAt: new Date(
+						registrySequenceStartedAt + index * 500 + 250,
+					).toISOString(),
+					signedAt: new Date(
+						registrySequenceStartedAt + index * 500 + 400,
+					).toISOString(),
 					statement: "DEVELOPMENT_EXECUTION_CONFIRMED" as const,
 				};
 				return {
@@ -263,6 +270,79 @@ describe("semantic public gate CLI", () => {
 			artifactSha256: evidenceObjectSha256(developmentPlan),
 			...developmentPlanToken,
 		};
+		const { privateKey: registrarPrivateKey, publicKey: registrarPublicKey } =
+			generateKeyPairSync("ed25519");
+		let previousRegistryEntrySha256: string | null = null;
+		let registryOrdinal = 0;
+		const registryRecords: Array<{
+			entry: Record<string, unknown>;
+			timestampEvidence: Record<string, unknown>;
+		}> = [];
+		const appendRegistryEntry = async (
+			receipt: (typeof developmentReceipts)[number],
+			event: "started" | "finished",
+		) => {
+			registryOrdinal += 1;
+			const eventTime = new Date(
+				Math.floor(Date.now() / 1000) * 1000 - 1_000,
+			).toISOString();
+			const unsignedEntry = {
+				schemaVersion:
+					"naia-memory-benchmark-development-execution-registry-entry-v1" as const,
+				registrar: "independent-execution-registrar",
+				ordinal: registryOrdinal,
+				previousEntrySha256: previousRegistryEntrySha256,
+				planSha256: evidenceObjectSha256(developmentPlan),
+				event,
+				candidateId: receipt.candidateId,
+				policySha256: receipt.policySha256,
+				datasetSha256: receipt.datasetSha256,
+				executor: receipt.executor,
+				receiptSha256:
+					event === "finished" ? evidenceObjectSha256(receipt) : null,
+				declaredAt: eventTime,
+				signedAt: eventTime,
+				statement: "DEVELOPMENT_EXECUTION_REGISTRY_EVENT" as const,
+			};
+			const entry = {
+				...unsignedEntry,
+				signatureBase64: sign(
+					null,
+					evidenceSignaturePayload(unsignedEntry),
+					registrarPrivateKey,
+				).toString("base64"),
+			};
+			previousRegistryEntrySha256 = evidenceObjectSha256(entry);
+			const token = await tsa.issue(
+				previousRegistryEntrySha256,
+				`development-registry-${registryOrdinal}`,
+			);
+			registryRecords.push({
+				entry,
+				timestampEvidence: {
+					schemaVersion: "naia-memory-rfc3161-digest-timestamp-evidence-v1",
+					artifactSha256: previousRegistryEntrySha256,
+					...token,
+				},
+			});
+		};
+		for (const receipt of developmentReceipts)
+			await appendRegistryEntry(receipt, "started");
+		await new Promise((resolve) => setTimeout(resolve, 13_000));
+		for (const receipt of developmentReceipts)
+			await appendRegistryEntry(receipt, "finished");
+		const registryEvidence = {
+			schemaVersion:
+				"naia-memory-benchmark-development-execution-registry-evidence-v1",
+			records: registryRecords,
+		};
+		const registryTrustPolicy = {
+			registrarPublicKeys: {
+				"independent-execution-registrar": registrarPublicKey
+					.export({ type: "spki", format: "pem" })
+					.toString(),
+			},
+		};
 		const unsignedSelection = {
 			schemaVersion: "naia-memory-benchmark-selection-disclosure-v1" as const,
 			auditor: "independent-selection-auditor",
@@ -314,6 +394,8 @@ describe("semantic public gate CLI", () => {
 			join(directory, "development-execution-trust-policy.json"),
 			join(directory, "development-plan-timestamp-evidence.json"),
 			join(directory, "development-plan-timestamp-trust-policy.json"),
+			join(directory, "development-execution-registry.json"),
+			join(directory, "development-execution-registry-trust-policy.json"),
 		];
 		await Promise.all([
 			writeFile(developmentPaths[0], JSON.stringify(developmentEvidence)),
@@ -323,6 +405,8 @@ describe("semantic public gate CLI", () => {
 				JSON.stringify(developmentTimestampEvidence),
 			),
 			writeFile(developmentPaths[3], JSON.stringify(tsa.trustPolicy)),
+			writeFile(developmentPaths[4], JSON.stringify(registryEvidence)),
+			writeFile(developmentPaths[5], JSON.stringify(registryTrustPolicy)),
 		]);
 
 		const gateArgs = [
@@ -346,7 +430,7 @@ describe("semantic public gate CLI", () => {
 		await writeFile(
 			draftPath,
 			JSON.stringify({
-				schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v3",
+				schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v4",
 				blindingSeed: gateArgs[11],
 				artifacts,
 			}),
@@ -373,6 +457,8 @@ describe("semantic public gate CLI", () => {
 			developmentObservationReceiptsExternallyVerified: true,
 			timestampedDevelopmentMatrixCoverageVerified: true,
 			developmentExecutionPlanTrustedTimestampVerified: true,
+			registeredDevelopmentExecutionChronologyExternallyVerified: true,
+			offRegistryDevelopmentExecutionAbsenceExternallyVerified: false,
 			selectionHistoryCompletenessExternallyVerified: false,
 			candidateCount: 2,
 			developmentObservationCount: 4,
@@ -382,7 +468,7 @@ describe("semantic public gate CLI", () => {
 		expect(result.failure).toContain(
 			"trusted prior existence of the complete acknowledgement bundle",
 		);
-		expect(result.failure).toContain("receipt event times");
+		expect(result.failure).toContain("absence of off-registry executions");
 		expect(result.failure).toContain("absence of undisclosed shadow trials");
-	}, 30_000);
+	}, 45_000);
 });
