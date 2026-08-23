@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	resolveFullCorpusLanguage,
+	resolveFullCorpusLaunchReceiptOutput,
 	resolveFullCorpusLaunchReceiptPath,
 	resolveFullCorpusOutputPath,
 } from "./native-full-corpus-launch-receipt.js";
@@ -67,5 +68,39 @@ describe("full-corpus launch receipt defaults", () => {
 				]),
 			),
 		).toThrow("not language scoped");
+	});
+
+	it("accepts only a language-scoped, non-colliding local override", () => {
+		const environment = new Map([["MIRACL_LANGUAGE", "ar"]]);
+		expect(
+			resolveFullCorpusLaunchReceiptOutput(
+				environment,
+				"reports/quality/miracl-ar-full-corpus-launch-receipt-v2.json",
+			),
+		).toContain("miracl-ar-full-corpus");
+		expect(() =>
+			resolveFullCorpusLaunchReceiptOutput(
+				environment,
+				"reports/quality/miracl-ko-full-corpus-launch-receipt.json",
+			),
+		).toThrow("not language scoped");
+		expect(() =>
+			resolveFullCorpusLaunchReceiptOutput(
+				environment,
+				"reports/quality/miracl-ar-full-corpus-proof/../miracl-ko-full-corpus-launch-receipt.json",
+			),
+		).toThrow("not language scoped");
+		expect(() =>
+			resolveFullCorpusLaunchReceiptOutput(
+				environment,
+				"../../tmp/miracl-ar-full-corpus-launch-receipt-v2.json",
+			),
+		).toThrow("not language scoped");
+		expect(() =>
+			resolveFullCorpusLaunchReceiptOutput(
+				environment,
+				"reports/quality/miracl-ar-full-corpus-vector-exact.json",
+			),
+		).toThrow("collide");
 	});
 });

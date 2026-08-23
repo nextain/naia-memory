@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { createMultilingualCompletionEvidence } from "./miracl-multilingual-completion-evidence.js";
 import { MIRACL_MULTILINGUAL_CONTRACT } from "./miracl-multilingual-contract.js";
 import { miraclSourceLockReceipt } from "./miracl-multilingual-download.js";
 import {
@@ -8,11 +9,15 @@ import {
 	verifyMultilingualFullCorpusIdentity,
 } from "./miracl-multilingual-full-corpus-evidence.js";
 import {
+	EXPECTED_QDRANT_COMMIT,
+	EXPECTED_QDRANT_VERSION,
+	EXPECTED_TREC_EVAL_BINARY_SHA256,
 	MIRACL_EMBEDDING_POLICY,
 	MIRACL_PASSAGE_COMPOSITION,
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
+import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 
 const corpus = [
 	[
@@ -223,6 +228,155 @@ describe("multilingual full-corpus evidence identity", () => {
 				checkpointChain,
 			}),
 		).toMatchObject({ language: "ko", role: "anchor" });
+
+		const resultPath =
+			"reports/quality/miracl-ko-full-corpus-vector-exact.json";
+		const resultText = JSON.stringify(result);
+		const launchReceiptPath = "reports/quality/launch.json";
+		const evaluationSourceSha256 = "b".repeat(64);
+		const launchReceiptText = JSON.stringify({
+			schemaVersion: 1,
+			pid: 123,
+			capturedAt: "2026-08-23T00:00:00.000Z",
+			procStartTicks: "456",
+			bootId: "boot",
+			cmdline: ["node", "native-full-corpus-evaluation-cli.ts"],
+			cudaVisibleDevices: "",
+			qdrantUrl: "http://127.0.0.1:6334",
+			language: "ko",
+			outputPath: resultPath,
+			evaluationSourceSha256,
+		});
+		const runtimeMonitorSourceSha256 = "c".repeat(64);
+		const runtimeObservationText = JSON.stringify({
+			schemaVersion: 1,
+			monitor: {
+				source: "/repo/native-full-corpus-runtime-monitor-cli.ts",
+				sourceSha256: runtimeMonitorSourceSha256,
+			},
+			launchReceipt: {
+				path: launchReceiptPath,
+				sha256: sha256Bytes(launchReceiptText),
+			},
+			process: {
+				pid: 123,
+				bootId: "boot",
+				procStartTicks: "456",
+				cmdlineSha256: sha256Bytes(
+					["node", "native-full-corpus-evaluation-cli.ts"].join("\0"),
+				),
+			},
+			observation: {
+				startedAt: "2026-08-23T00:00:05.000Z",
+				completedAt: "2026-08-23T01:00:00.000Z",
+				pollMilliseconds: 5_000,
+				samples: 720,
+				peakRssBytes: 1024,
+			},
+			result: { path: resultPath, sha256: sha256Bytes(resultText) },
+		});
+		const qrelsSha256 = sha256Bytes(qrelsText);
+		const trecSha256 = sha256Bytes(trecRunText);
+		const evaluatorCommit = "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c";
+		const stability = {
+			trecBeforeSha256: trecSha256,
+			trecAfterSha256: trecSha256,
+			qrelsBeforeSha256: qrelsSha256,
+			qrelsAfterSha256: qrelsSha256,
+			binaryBeforeSha256: EXPECTED_TREC_EVAL_BINARY_SHA256,
+			binaryAfterSha256: EXPECTED_TREC_EVAL_BINARY_SHA256,
+			sourceCommitBefore: evaluatorCommit,
+			sourceCommitAfter: evaluatorCommit,
+		};
+		const sourceReceiptText = `${JSON.stringify(sourceReceipt, null, 2)}\n`;
+		const artifactStability = {
+			resultAfterSha256: sha256Bytes(resultText),
+			topicsAfterSha256: sha256Bytes(topicsText),
+			sourceReceiptAfterSha256: sha256Bytes(sourceReceiptText),
+			launchReceiptAfterSha256: sha256Bytes(launchReceiptText),
+			runtimeObservationAfterSha256: sha256Bytes(runtimeObservationText),
+			checkpointChainAfterSha256: evidenceObjectSha256(checkpointChain),
+		};
+		const completion = createMultilingualCompletionEvidence({
+			language: "ko",
+			resultPath,
+			resultText,
+			trecPath: `${resultPath}.trec`,
+			trecRunText,
+			topicsPath: contract.topics.path,
+			topicsText,
+			qrelsPath: contract.qrels.path,
+			qrelsText,
+			sourceReceiptPath: "source-lock-receipt.json",
+			sourceReceiptText,
+			checkpointChain,
+			launchReceiptPath,
+			launchReceiptText,
+			runtimeObservationPath: "reports/quality/runtime.json",
+			runtimeObservationText,
+			trecEvalPath: "/tools/trec_eval",
+			trecEvalStdout: `ndcg_cut_10 all ${result.metrics.ndcgAt10.toFixed(4)}\nrecall_100 all ${result.metrics.recallAt100.toFixed(4)}\n`,
+			trecEvalBinarySha256: EXPECTED_TREC_EVAL_BINARY_SHA256,
+			trecEvalSourceCommit: evaluatorCommit,
+			evaluationStability: stability,
+			artifactStability,
+			evaluationSourceSha256,
+			runtimeMonitorSourceSha256,
+			qdrantUrl: "http://127.0.0.1:6334",
+			qdrant: {
+				version: EXPECTED_QDRANT_VERSION,
+				commit: EXPECTED_QDRANT_COMMIT,
+				pointsCount: result.inputs.documentCount,
+				status: "green",
+				vectorSize: 1024,
+				distance: "Cosine",
+				hnswM: 0,
+				indexingThreshold: 0,
+				membership: {
+					documentCount: result.inputs.documentCount,
+					docidsSha256: result.inputs.corpusDocidsSha256,
+					firstPointId: 1,
+					lastPointId: result.inputs.documentCount,
+				},
+			},
+		});
+		expect(completion).toMatchObject({
+			verdict: "LOCAL_PASS",
+			language: "ko",
+			publicClaimEligible: false,
+		});
+		expect(() =>
+			createMultilingualCompletionEvidence({
+				...{
+					language: "ko" as const,
+					resultPath,
+					resultText,
+					trecPath: `${resultPath}.trec`,
+					trecRunText,
+					topicsPath: contract.topics.path,
+					topicsText,
+					qrelsPath: contract.qrels.path,
+					qrelsText,
+					sourceReceiptPath: "source-lock-receipt.json",
+					sourceReceiptText,
+					checkpointChain,
+					launchReceiptPath,
+					launchReceiptText,
+					runtimeObservationPath: "reports/quality/runtime.json",
+					runtimeObservationText,
+					trecEvalPath: "/tools/trec_eval",
+					trecEvalStdout: `ndcg_cut_10 all ${result.metrics.ndcgAt10.toFixed(4)}\nrecall_100 all ${result.metrics.recallAt100.toFixed(4)}\n`,
+					trecEvalBinarySha256: EXPECTED_TREC_EVAL_BINARY_SHA256,
+					trecEvalSourceCommit: evaluatorCommit,
+					evaluationStability: stability,
+					artifactStability,
+					evaluationSourceSha256: "d".repeat(64),
+					runtimeMonitorSourceSha256,
+					qdrantUrl: "http://127.0.0.1:6334",
+					qdrant: completion.runtime.qdrant,
+				},
+			}),
+		).toThrow("evaluation source changed after launch");
 	});
 
 	it("keeps the preflight receipt outside score and public-claim authority", () => {

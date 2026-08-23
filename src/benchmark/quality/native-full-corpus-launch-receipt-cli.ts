@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { sha256Bytes } from "./native-full-corpus-evidence.js";
 import {
 	resolveFullCorpusLanguage,
-	resolveFullCorpusLaunchReceiptPath,
+	resolveFullCorpusLaunchReceiptOutput,
 	resolveFullCorpusOutputPath,
 } from "./native-full-corpus-launch-receipt.js";
 import { parseProcStartTicks } from "./native-full-corpus-runtime-observation.js";
@@ -26,7 +26,10 @@ const environment = new Map(
 		}),
 );
 const language = resolveFullCorpusLanguage(environment);
-const output = resolveFullCorpusLaunchReceiptPath(environment);
+const output = resolveFullCorpusLaunchReceiptOutput(
+	environment,
+	process.env.MIRACL_FULL_LAUNCH_RECEIPT_OVERRIDE,
+);
 if (
 	environment.get("CUDA_VISIBLE_DEVICES") !== "" ||
 	!cmdline.some((argument) =>
