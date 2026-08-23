@@ -1,9 +1,16 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+	existsSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { MemoryUpdateCase } from "./memory-update-contract.js";
+import { buildSemanticBlindArtifacts } from "./semantic-blind-packet-cli.js";
 import {
 	type SemanticCampaignRun,
 	buildSemanticCampaignPlan,
@@ -11,6 +18,7 @@ import {
 	runSemanticCampaignCli,
 	validateRawArtifact,
 } from "./semantic-campaign-cli.js";
+import { expectedSemanticRetrievalSurface } from "./semantic-raw-cli.js";
 
 function sha256(value: unknown): string {
 	return createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -147,6 +155,116 @@ describe("semantic campaign CLI", () => {
 				]),
 			).rejects.toThrow("valid semantic analysis plan");
 			expect(existsSync(outputDir)).toBe(false);
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
+
+	it("runs the production campaign launcher into the blind-packet gate", async () => {
+		const directory = mkdtempSync(resolve(tmpdir(), "semantic-launcher-path-"));
+		const contractPath = resolve(directory, "contract.json");
+		const outputDir = resolve(directory, "campaign");
+		const benchmarkCase: MemoryUpdateCase = {
+			id: "case-ko",
+			familyId: "family-ko",
+			split: "diagnostic",
+			language: "ko",
+			turns: [
+				{ content: "부산에서 서울로 이사했어요.", at: "2026-01-01T00:00:00Z" },
+			],
+			query: "지금 어디에 살고 있나요?",
+			expectedCurrentIds: ["seoul"],
+			forbiddenStaleIds: ["busan"],
+			expectedDeletedIds: [],
+			noUpdateIds: [],
+			expectedDecision: "update",
+		};
+		const contract = {
+			schemaVersion: "naia-memory-update-contract-v1" as const,
+			tier: "semantic-update-interpretation" as const,
+			construction: "generated-diagnostic" as const,
+			cases: [benchmarkCase],
+		};
+		writeFileSync(contractPath, JSON.stringify(contract));
+		try {
+			await runSemanticCampaignCli(
+				[
+					`--contract=${contractPath}`,
+					`--output-dir=${outputDir}`,
+					"--seed=frozen",
+					"--engines=naia,mem0",
+				],
+				{
+					runSemanticRawCli: async (args) => {
+						const values = new Map(
+							args.map((arg) => {
+								const [key, ...parts] = arg.split("=");
+								return [key, parts.join("=")] as const;
+							}),
+						);
+						const engine = values.get("--engine");
+						const seed = values.get("--seed");
+						const output = values.get("--output");
+						if (!engine || !seed || !output)
+							throw new Error("invalid injected raw arguments");
+						const result = {
+							ingestionReceipts: [{ outcome: "test-adapter" }],
+							nativeState: [
+								{ nativeId: `${engine}-current`, content: "서울 거주" },
+							],
+							retrieved: [
+								{ nativeId: `${engine}-current`, content: "서울 거주" },
+							],
+						};
+						writeFileSync(
+							output,
+							JSON.stringify({
+								schemaVersion: "naia-memory-semantic-raw-artifact-v2",
+								disclosure: { engine, executionSeed: seed, topK: 5 },
+								cases: [
+									{
+										caseId: benchmarkCase.id,
+										executionPosition: 1,
+										language: benchmarkCase.language,
+										fixtureSha256: sha256({
+											language: benchmarkCase.language,
+											turns: benchmarkCase.turns,
+											query: benchmarkCase.query,
+										}),
+										engineInputSha256: sha256({
+											language: benchmarkCase.language,
+											turns: benchmarkCase.turns.map(({ content }) => ({
+												content,
+											})),
+											query: benchmarkCase.query,
+										}),
+										ingestionPolicy: "sequential-turn-commit-v1",
+										temporalInputPolicy: "engine-default-ingest-time-v1",
+										retrievalSurface: expectedSemanticRetrievalSurface(
+											engine as "naia" | "mem0",
+										),
+										...result,
+										outputSha256: sha256(result),
+									},
+								],
+							}),
+						);
+					},
+				},
+			);
+			const campaign = JSON.parse(
+				readFileSync(resolve(outputDir, "campaign.json"), "utf8"),
+			);
+			const artifacts = buildSemanticBlindArtifacts({
+				contract,
+				campaign,
+				campaignDirectory: outputDir,
+				blindingSeed: "blind-seed",
+				contractSha256: "contract",
+				campaignSha256: "campaign",
+			});
+			expect(campaign.runs).toHaveLength(4);
+			expect(artifacts.packet.samples).toHaveLength(4);
 		} finally {
 			rmSync(directory, { recursive: true, force: true });
 		}

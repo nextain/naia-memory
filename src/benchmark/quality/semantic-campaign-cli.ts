@@ -50,6 +50,10 @@ export type SemanticCampaignRun = {
 	outputFile: string;
 };
 
+export type SemanticCampaignDependencies = {
+	runSemanticRawCli: typeof runSemanticRawCli;
+};
+
 function sha256(value: unknown): string {
 	return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
@@ -342,7 +346,10 @@ export function buildSemanticCampaignPlan(
 	return plan;
 }
 
-export async function runSemanticCampaignCli(args: string[]): Promise<void> {
+export async function runSemanticCampaignCli(
+	args: string[],
+	dependencies: SemanticCampaignDependencies = { runSemanticRawCli },
+): Promise<void> {
 	const parsed = parseSemanticCampaignCliArgs(args);
 	const contractPath = resolve(parsed.contractPath);
 	const outputDir = resolve(parsed.outputDir);
@@ -372,7 +379,7 @@ export async function runSemanticCampaignCli(args: string[]): Promise<void> {
 	mkdirSync(dirname(outputDir), { recursive: true });
 	mkdirSync(outputDir, { mode: 0o700 });
 	for (const run of plan) {
-		await runSemanticRawCli([
+		await dependencies.runSemanticRawCli([
 			`--engine=${run.engine}`,
 			`--contract=${contractPath}`,
 			`--output=${resolve(outputDir, run.outputFile)}`,
