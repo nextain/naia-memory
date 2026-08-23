@@ -125,6 +125,26 @@ describe("public evidence v10 promotion gate", () => {
 		expect(decision.failures).toContain("v10 evidence content hash mismatch");
 	});
 
+	it("rejects a signed envelope with a non-canonical evidence path", async () => {
+		const value = await fixture();
+		const { signatureBase64: _signature, ...unsignedEnvelope } = value.envelope;
+		const envelope = signed(
+			{ ...unsignedEnvelope, coreManifestPath: "./manifest-v9.json" },
+			"nextain-release",
+		) as PublicEvidenceV10Envelope;
+		const decision = await evaluatePublicEvidenceV10({
+			envelope,
+			evidenceRoot: value.root,
+			trustPolicy: value.policy,
+			commandRunner: value.commandRunner,
+			trustedCaBytes: value.ca,
+		});
+		expect(decision.promotable).toBe(false);
+		expect(decision.failures).toContain(
+			"v10 evidence path must be canonical and relative",
+		);
+	});
+
 	it("rejects a backdated seal whose TSA time is not before the challenge", async () => {
 		const value = await fixture();
 		const decision = await evaluatePublicEvidenceV10({

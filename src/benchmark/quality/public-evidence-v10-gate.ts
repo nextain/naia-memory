@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { realpath } from "node:fs/promises";
-import { isAbsolute, relative, resolve } from "node:path";
+import { isAbsolute, normalize, relative, resolve, sep } from "node:path";
 import {
 	isPublicDatasetCustodySeal,
 	verifyPublicDatasetCustodySeal,
@@ -100,11 +100,7 @@ export function isPublicEvidenceV10TrustPolicy(
 
 function escapesRoot(root: string, candidate: string): boolean {
 	const path = relative(root, candidate);
-	return (
-		path === ".." ||
-		path.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`) ||
-		isAbsolute(path)
-	);
+	return path === ".." || path.startsWith(`..${sep}`) || isAbsolute(path);
 }
 
 async function readBound(
@@ -112,8 +108,13 @@ async function readBound(
 	path: string,
 	expectedSha256: string,
 ): Promise<Buffer> {
-	if (isAbsolute(path))
-		throw new Error("v10 evidence path escapes evidence root");
+	if (
+		path.length === 0 ||
+		isAbsolute(path) ||
+		normalize(path) !== path ||
+		path.includes("\\")
+	)
+		throw new Error("v10 evidence path must be canonical and relative");
 	const candidate = resolve(root, path);
 	if (escapesRoot(root, candidate))
 		throw new Error("v10 evidence path escapes evidence root");
