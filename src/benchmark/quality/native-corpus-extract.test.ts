@@ -1,4 +1,4 @@
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -104,8 +104,62 @@ describe("native MIRACL corpus extraction", () => {
 				].join("\n"),
 			),
 		);
+		let consumed = 0;
 		await expect(
-			scanNativeCorpusDocuments([shard], () => undefined),
+			scanNativeCorpusDocuments([shard], () => consumed++, {
+				duplicateWorkDirectory: directory,
+			}),
 		).rejects.toThrow("duplicate corpus document: same");
+		expect(consumed).toBe(1);
+		expect(
+			(await readdir(directory)).filter((name) =>
+				name.startsWith("naia-corpus-docids-"),
+			),
+		).toEqual([]);
+	});
+
+	it("detects a non-adjacent duplicate before consuming that row", async () => {
+		const directory = await mkdtemp(join(tmpdir(), "naia-native-corpus-"));
+		const shard = join(directory, "docs.jsonl.gz");
+		await writeFile(
+			shard,
+			gzipSync(
+				[
+					JSON.stringify({ docid: "repeat", title: "A", text: "one" }),
+					JSON.stringify({ docid: "between", title: "B", text: "two" }),
+					JSON.stringify({ docid: "repeat", title: "C", text: "three" }),
+				].join("\n"),
+			),
+		);
+		const consumed: string[] = [];
+		await expect(
+			scanNativeCorpusDocuments(
+				[shard],
+				(document) => consumed.push(document.docid),
+				{ duplicateWorkDirectory: directory },
+			),
+		).rejects.toThrow("duplicate corpus document: repeat");
+		expect(consumed).toEqual(["repeat", "between"]);
+	});
+
+	it("detects a duplicate carried across corpus shards", async () => {
+		const directory = await mkdtemp(join(tmpdir(), "naia-native-corpus-"));
+		const first = join(directory, "docs-0.jsonl.gz");
+		const second = join(directory, "docs-1.jsonl.gz");
+		await writeFile(
+			first,
+			gzipSync(JSON.stringify({ docid: "shared", title: "A", text: "one" })),
+		);
+		await writeFile(
+			second,
+			gzipSync(JSON.stringify({ docid: "shared", title: "B", text: "two" })),
+		);
+		let consumed = 0;
+		await expect(
+			scanNativeCorpusDocuments([first, second], () => consumed++, {
+				duplicateWorkDirectory: directory,
+			}),
+		).rejects.toThrow("duplicate corpus document: shared");
+		expect(consumed).toBe(1);
 	});
 });

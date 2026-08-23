@@ -416,6 +416,7 @@ async function main(): Promise<void> {
 			});
 			if (batch.length === CHUNK_SIZE) await processChunk();
 		},
+		{ duplicateWorkDirectory: checkpointDirectory },
 	);
 	await processChunk();
 	if (
