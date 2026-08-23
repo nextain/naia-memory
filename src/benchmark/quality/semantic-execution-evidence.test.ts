@@ -1,5 +1,5 @@
 import { generateKeyPairSync, sign } from "node:crypto";
-import { mkdtemp, readFile, rm, symlink } from "node:fs/promises";
+import { mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -11,6 +11,7 @@ import { semanticBlindFixture } from "./semantic-blind-packet-fixture.js";
 import { SUPPORTED_SEMANTIC_ENGINES } from "./semantic-campaign-cli.js";
 import {
 	type SemanticExecutionEvidenceBundle,
+	semanticConfigurationSha256,
 	semanticEngineRunSetSha256,
 	validateSemanticConfigurationParity,
 	validateSemanticExecutionEvidence,
@@ -24,7 +25,9 @@ afterEach(async () => {
 	);
 });
 
-async function fixture() {
+async function fixture(
+	options: { competitive?: boolean; mismatch?: boolean } = {},
+) {
 	const directory = await mkdtemp(join(tmpdir(), "semantic-execution-"));
 	roots.push(directory);
 	const source = semanticBlindFixture(directory, {
@@ -35,6 +38,86 @@ async function fixture() {
 		frozenAt: "2026-01-01T00:00:00Z",
 		digest: `sha256:${"a".repeat(64)}`,
 	};
+	const configurationHashes = new Map<string, string>();
+	if (options.competitive) {
+		const campaign = source.campaign as typeof source.campaign & {
+			schemaVersion: string;
+			disclosure: Record<string, unknown>;
+		};
+		campaign.schemaVersion = "naia-memory-semantic-campaign-v5";
+		Object.assign(campaign.disclosure, {
+			eligibility: "competitive-candidate",
+			analysisPlanSha256: "1".repeat(64),
+			confirmatoryAuthorizationSha256: "2".repeat(64),
+			analysisPlanTimestampEvidenceSha256: "3".repeat(64),
+			analysisPlanTimestampTrustPolicyIdentitySha256: "4".repeat(64),
+			claimScope: "declared-multi-class-competitive-report-v1",
+			comparisonLanes: {
+				directLifecycle: ["hindsight", "mem0"],
+				nativeTemporalCharacterization: ["graphiti-historical"],
+				agentManagedCharacterization: ["letta"],
+				productIntegrationDiagnostic: ["graphiti"],
+			},
+			crossLaneAggregation: "prohibited",
+		});
+		for (const run of campaign.runs) {
+			const path = join(directory, run.outputFile);
+			const artifact = JSON.parse(await readFile(path, "utf8"));
+			Object.assign(artifact.disclosure, {
+				endpoint: "https://provider.example/v1/",
+				...(run.engine === "naia" || run.engine === "mem0"
+					? {
+							embeddingModel: "embedding-model",
+							embeddingRevision: "embedding-revision",
+							embeddingDimensions: 768,
+							llmModel: "llm-model",
+							authScheme: "bearer",
+						}
+					: run.engine === "graphiti" || run.engine === "graphiti-historical"
+						? {
+								providerPolicy: "engine-server-native-configuration-v1",
+								graphitiRuntime: {
+									revision: "a".repeat(40),
+									imageDigest: `sha256:${"b".repeat(64)}`,
+									coreVersion: "1.0.0",
+									llmModel: "llm-model",
+									embeddingModel: "embedding-model",
+								},
+							}
+						: run.engine === "hindsight"
+							? {
+									providerPolicy: "engine-server-native-configuration-v1",
+									hindsightRuntime: {
+										version: "1.0.0",
+										imageDigest: `sha256:${"c".repeat(64)}`,
+										llmProvider: "provider",
+										llmModel: "llm-model",
+									},
+								}
+							: {
+									providerPolicy: "engine-server-native-configuration-v1",
+									lettaRuntime: {
+										version: "1.0.0",
+										imageDigest: `sha256:${"d".repeat(64)}`,
+										llmModel: "llm-model",
+										embeddingModel: "embedding-model",
+										embeddingDimensions: 768,
+									},
+								}),
+			});
+			configurationHashes.set(
+				run.engine,
+				semanticConfigurationSha256(artifact.disclosure),
+			);
+			const bytes = JSON.stringify(artifact);
+			await writeFile(path, bytes);
+			run.artifactSha256 = (await import("node:crypto"))
+				.createHash("sha256")
+				.update(bytes)
+				.digest("hex");
+		}
+		await writeFile(source.campaignPath, JSON.stringify(campaign));
+	}
 	const campaignBytes = await readFile(source.campaignPath);
 	const campaignSha256 = (await import("node:crypto"))
 		.createHash("sha256")
@@ -58,7 +141,10 @@ async function fixture() {
 			implementationRevision: "b".repeat(40),
 			workspaceClean: true as const,
 			implementationArtifactSha256: "c".repeat(64),
-			configurationSha256: "d".repeat(64),
+			configurationSha256:
+				options.competitive && !(options.mismatch && engine === "naia")
+					? (configurationHashes.get(engine) as string)
+					: "d".repeat(64),
 			startedAt: "2026-01-02T00:00:00Z",
 			completedAt: "2026-01-02T00:01:00Z",
 			elapsedMs: 60_000,
@@ -85,6 +171,7 @@ async function fixture() {
 	return {
 		directory,
 		...source,
+		campaign: source.campaign,
 		campaignBytes,
 		bundle,
 		trustPolicy: { executorPublicKeys },
@@ -201,6 +288,52 @@ describe("semantic execution evidence", () => {
 				},
 			]),
 		).toThrow("endpoint disclosure is unsafe");
+	});
+
+	it("canonically binds receipts to disclosed configuration", () => {
+		const disclosure = {
+			engine: "naia",
+			executionSeed: "one",
+			topK: 5,
+			embeddingModel: "embedding-model",
+		};
+		expect(semanticConfigurationSha256(disclosure)).toBe(
+			semanticConfigurationSha256({ ...disclosure, executionSeed: "two" }),
+		);
+		expect(semanticConfigurationSha256(disclosure)).not.toBe(
+			semanticConfigurationSha256({
+				...disclosure,
+				embeddingModel: "other-model",
+			}),
+		);
+	});
+
+	it("rejects a validly signed receipt whose configuration hash differs from the raw disclosure", async () => {
+		const value = await fixture({ competitive: true, mismatch: true });
+		expect(() =>
+			validateSemanticExecutionEvidence({
+				contract: value.contract,
+				campaign: value.campaign,
+				campaignBytes: value.campaignBytes,
+				campaignDirectory: value.directory,
+				bundle: value.bundle,
+				trustPolicy: value.trustPolicy,
+			}),
+		).toThrow("semantic execution receipt content is invalid");
+	});
+
+	it("accepts validly signed receipts bound to every competitive configuration", async () => {
+		const value = await fixture({ competitive: true });
+		expect(
+			validateSemanticExecutionEvidence({
+				contract: value.contract,
+				campaign: value.campaign,
+				campaignBytes: value.campaignBytes,
+				campaignDirectory: value.directory,
+				bundle: value.bundle,
+				trustPolicy: value.trustPolicy,
+			}),
+		).toMatchObject({ engineCount: SUPPORTED_SEMANTIC_ENGINES.length });
 	});
 
 	it("qualifies complete signed execution artifacts without claiming cost completeness", async () => {

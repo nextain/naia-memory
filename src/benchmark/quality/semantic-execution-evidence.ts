@@ -126,7 +126,9 @@ function requiredRuntime(
 	return runtime;
 }
 
-function stableConfiguration(disclosure: RawArtifactDisclosure): string {
+export function semanticConfigurationSha256(
+	disclosure: RawArtifactDisclosure,
+): string {
 	const { executionSeed: _executionSeed, ...configuration } = disclosure;
 	return evidenceObjectSha256(configuration);
 }
@@ -163,7 +165,7 @@ export function validateSemanticConfigurationParity(
 		byEngine.set(disclosure.engine, values);
 	}
 	for (const [engine, values] of byEngine) {
-		const configurations = new Set(values.map(stableConfiguration));
+		const configurations = new Set(values.map(semanticConfigurationSha256));
 		if (configurations.size !== 1)
 			throw new Error(
 				`semantic execution configuration drifted across repetitions: ${engine}`,
@@ -342,7 +344,7 @@ function validateCampaign(
 	contract: MemoryUpdateContract,
 	campaign: CampaignManifest,
 	campaignDirectory: string,
-): void {
+): Map<string, string> {
 	const { disclosure, runs } = campaign;
 	if (
 		![
@@ -456,6 +458,12 @@ function validateCampaign(
 		}
 	}
 	if (disclosures.length > 0) validateSemanticConfigurationParity(disclosures);
+	return new Map(
+		disclosures.map((disclosure) => [
+			disclosure.engine,
+			semanticConfigurationSha256(disclosure),
+		]),
+	);
 }
 
 export function semanticEngineRunSetSha256(
@@ -478,7 +486,11 @@ export function validateSemanticExecutionEvidence(input: {
 	if (!isRecord(input.campaign))
 		throw new Error("semantic execution campaign root must be an object");
 	const campaign = input.campaign as CampaignManifest;
-	validateCampaign(input.contract, campaign, input.campaignDirectory);
+	const disclosedConfigurationHashes = validateCampaign(
+		input.contract,
+		campaign,
+		input.campaignDirectory,
+	);
 	const contractSha256 = evidenceObjectSha256(input.contract);
 	const campaignSha256 = sha256Bytes(input.campaignBytes);
 	if (
@@ -523,7 +535,10 @@ export function validateSemanticExecutionEvidence(input: {
 			signedAt < completedAt ||
 			receipt.elapsedMs !== completedAt - startedAt ||
 			(receipt.costDisclosure === "unknown") !==
-				(receipt.estimatedCostUsd === null)
+				(receipt.estimatedCostUsd === null) ||
+			(disclosedConfigurationHashes.has(receipt.engine) &&
+				receipt.configurationSha256 !==
+					disclosedConfigurationHashes.get(receipt.engine))
 		)
 			throw new Error("semantic execution receipt content is invalid");
 		if (

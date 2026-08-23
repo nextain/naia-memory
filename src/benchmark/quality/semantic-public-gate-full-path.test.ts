@@ -20,6 +20,7 @@ import {
 	type SemanticQualificationSubjects,
 	validateSemanticCompetitiveQualification,
 } from "./semantic-competitive-qualification.js";
+import { semanticConfigurationSha256 } from "./semantic-execution-evidence.js";
 import { buildSemanticPilotLaunch } from "./semantic-pilot-launch.js";
 import {
 	writeAdjudicationFixture,
@@ -173,6 +174,17 @@ describe("semantic public gate CLI", () => {
 		]);
 		const { privateKey: selectionPrivateKey, publicKey: selectionPublicKey } =
 			generateKeyPairSync("ed25519");
+		const selectedConfigurationSha256 = semanticConfigurationSha256({
+			engine: "naia",
+			executionSeed: "ignored-by-configuration-hash",
+			topK: 5,
+			endpoint: "https://provider.example/v1/",
+			embeddingModel: "embedding-model",
+			embeddingRevision: "embedding-revision",
+			embeddingDimensions: 768,
+			llmModel: "llm-model",
+			authScheme: "bearer",
+		});
 		const candidates = [
 			{
 				id: "baseline",
@@ -181,7 +193,7 @@ describe("semantic public gate CLI", () => {
 			},
 			{
 				id: "selected",
-				policySha256: "c".repeat(64),
+				policySha256: selectedConfigurationSha256,
 				declaredAt: "2026-01-02T00:00:00Z",
 			},
 		];

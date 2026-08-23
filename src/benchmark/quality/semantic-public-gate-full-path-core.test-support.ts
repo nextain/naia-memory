@@ -14,6 +14,7 @@ import { buildSemanticBlindArtifacts } from "./semantic-blind-packet-cli.js";
 import { buildSemanticCampaignPlan } from "./semantic-campaign-cli.js";
 import {
 	type SemanticExecutionEvidenceBundle,
+	semanticConfigurationSha256,
 	semanticEngineRunSetSha256,
 } from "./semantic-execution-evidence.js";
 import type {
@@ -160,6 +161,7 @@ export async function writeExecutionFixture(
 	const engines = ["hindsight", "mem0", "naia"] as const;
 	const plan = buildSemanticCampaignPlan("public-gate", 3, engines);
 	const runs = [];
+	const configurationHashes = new Map<string, string>();
 	for (const run of plan) {
 		const cases = contract.cases.map((item, executionPosition) => {
 			const output = {
@@ -192,31 +194,36 @@ export async function writeExecutionFixture(
 				outputSha256: hash(JSON.stringify(output)),
 			};
 		});
+		const disclosure = {
+			engine: run.engine,
+			executionSeed: run.caseExecutionSeed,
+			topK: 5,
+			endpoint: "https://provider.example/v1/",
+			...(run.engine === "mem0" || run.engine === "naia"
+				? {
+						embeddingModel: "embedding-model",
+						embeddingRevision: "embedding-revision",
+						embeddingDimensions: 768,
+						llmModel: "llm-model",
+						authScheme: "bearer",
+					}
+				: {
+						providerPolicy: "engine-server-native-configuration-v1",
+						hindsightRuntime: {
+							version: "1.0.0",
+							imageDigest: `sha256:${"d".repeat(64)}`,
+							llmProvider: "provider",
+							llmModel: "llm-model",
+						},
+					}),
+		};
+		configurationHashes.set(
+			run.engine,
+			semanticConfigurationSha256(disclosure),
+		);
 		const artifact = {
 			schemaVersion: "naia-memory-semantic-raw-artifact-v2",
-			disclosure: {
-				engine: run.engine,
-				executionSeed: run.caseExecutionSeed,
-				topK: 5,
-				endpoint: "https://provider.example/v1/",
-				...(run.engine === "mem0" || run.engine === "naia"
-					? {
-							embeddingModel: "embedding-model",
-							embeddingRevision: "embedding-revision",
-							embeddingDimensions: 768,
-							llmModel: "llm-model",
-							authScheme: "bearer",
-						}
-					: {
-							providerPolicy: "engine-server-native-configuration-v1",
-							hindsightRuntime: {
-								version: "1.0.0",
-								imageDigest: `sha256:${"d".repeat(64)}`,
-								llmProvider: "provider",
-								llmModel: "llm-model",
-							},
-						}),
-			},
+			disclosure,
 			cases,
 		};
 		const bytes = JSON.stringify(artifact);
@@ -272,7 +279,7 @@ export async function writeExecutionFixture(
 			implementationRevision: "a".repeat(40),
 			workspaceClean: true as const,
 			implementationArtifactSha256: "b".repeat(64),
-			configurationSha256: "c".repeat(64),
+			configurationSha256: configurationHashes.get(engine) as string,
 			startedAt: times.startedAt,
 			completedAt: times.completedAt,
 			elapsedMs: 60_000,
