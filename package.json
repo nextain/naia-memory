@@ -85,6 +85,7 @@
 		"benchmark:miracl-multilingual-completion-evidence": "env -u NODE_OPTIONS -u NODE_PATH -u TSX_TSCONFIG_PATH node --require \"$PWD/node_modules/tsx/dist/preflight.cjs\" --import \"$PWD/node_modules/tsx/dist/loader.mjs\" src/benchmark/quality/miracl-multilingual-completion-evidence-cli.ts",
 		"benchmark:miracl-global-comparison": "tsx src/benchmark/quality/miracl-global-comparison-cli.ts",
 		"benchmark:miracl-language-comparison": "tsx src/benchmark/quality/miracl-language-comparison-cli.ts",
+		"benchmark:miracl-multilingual-transfer-gate": "tsx src/benchmark/quality/miracl-multilingual-transfer-gate-cli.ts",
 		"benchmark:miracl-full-corpus-attestation": "tsx src/benchmark/quality/native-full-corpus-attestation-cli.ts",
 		"benchmark:miracl-ranking-ab": "tsx src/benchmark/quality/ranking-ab-analysis-cli.ts",
 		"benchmark:graphiti-smoke": "tsx src/benchmark/quality/graphiti-backend-smoke-cli.ts",
