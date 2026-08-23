@@ -95,7 +95,9 @@ export function isSemanticExecutionEvidenceBundle(
 				typeof item.executor === "string" &&
 				item.executor.trim().length > 0 &&
 				typeof item.engine === "string" &&
-				["hindsight", "letta", "mem0", "naia"].includes(item.engine) &&
+				SUPPORTED_SEMANTIC_ENGINES.includes(
+					item.engine as (typeof SUPPORTED_SEMANTIC_ENGINES)[number],
+				) &&
 				[
 					"contractSha256",
 					"campaignSha256",
@@ -184,7 +186,7 @@ function validateCampaign(
 			run.caseExecutionSeed !== planned.caseExecutionSeed ||
 			run.outputFile !== planned.outputFile ||
 			!SHA256.test(run.artifactSha256) ||
-			!/^repetition-\d{2,}-(hindsight|letta|mem0|naia)\.json$/.test(
+			!/^repetition-\d{2,}-(graphiti|hindsight|letta|mem0|naia)\.json$/.test(
 				run.outputFile,
 			)
 		)

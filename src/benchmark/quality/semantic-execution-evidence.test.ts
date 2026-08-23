@@ -26,7 +26,7 @@ async function fixture() {
 	const directory = await mkdtemp(join(tmpdir(), "semantic-execution-"));
 	roots.push(directory);
 	const source = semanticBlindFixture(directory, {
-		engines: ["hindsight", "mem0", "naia"],
+		engines: ["graphiti", "hindsight", "mem0", "naia"],
 		schemaVersion: "naia-memory-semantic-campaign-v3",
 	});
 	source.contract.familySplitFreeze = {
@@ -101,7 +101,7 @@ describe("semantic execution evidence", () => {
 				bundle: value.bundle,
 				trustPolicy: value.trustPolicy,
 			}),
-		).toEqual({ engineCount: 3, runCount: 9, costComplete: false });
+		).toEqual({ engineCount: 4, runCount: 16, costComplete: false });
 	});
 
 	it("rejects forged signatures and incomplete engine coverage", async () => {
