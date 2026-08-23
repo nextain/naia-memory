@@ -7,6 +7,7 @@ import { verifyFullCorpusCheckpointChain } from "./native-full-corpus-checkpoint
 import {
 	type FullCorpusResult,
 	createFullCorpusEvidenceReceipt,
+	resolveFullCorpusInferenceMode,
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
@@ -93,9 +94,11 @@ export async function runFullCorpusEvidenceCli() {
 	};
 	const runtimeObservationText = readFileSync(runtimeObservationPath, "utf8");
 	const embedding = result.configuration.embedding;
-	const inferenceMode = result.configuration.embeddingInferenceMode;
-	if (!embedding || !inferenceMode)
-		throw new Error("result embedding policy is missing");
+	if (!embedding) throw new Error("result embedding policy is missing");
+	const inferenceMode = resolveFullCorpusInferenceMode(
+		result,
+		launchReceipt.evaluationSourceSha256,
+	);
 	const executionPolicy = fullCorpusEmbeddingExecutionPolicy(
 		embedding,
 		result.configuration.passageComposition ?? "",

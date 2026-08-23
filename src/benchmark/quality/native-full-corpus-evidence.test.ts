@@ -34,6 +34,7 @@ import {
 	MIRACL_PASSAGE_COMPOSITION,
 	createFullCorpusEvidenceReceipt,
 	parseTrecEvalAll,
+	resolveFullCorpusInferenceMode,
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
 import { fullCorpusEmbeddingExecutionPolicy } from "./native-full-corpus-policy.js";
@@ -92,6 +93,21 @@ const result = {
 	ingestion: { lastChunkReceiptSha256: "last-receipt" },
 	trecSha256,
 };
+
+it("accepts only the exact frozen legacy baseline as per-item inference", () => {
+	const {
+		embeddingInferenceMode: _mode,
+		embeddingExecutionPolicySha256: _policy,
+		...legacyConfiguration
+	} = result.configuration;
+	const legacy = { ...result, configuration: legacyConfiguration };
+	expect(
+		resolveFullCorpusInferenceMode(legacy, EXPECTED_EVALUATION_SOURCE_SHA256),
+	).toBe("per-item-v1");
+	expect(() => resolveFullCorpusInferenceMode(legacy, "f".repeat(64))).toThrow(
+		"missing or invalid",
+	);
+});
 
 function evidence(overrides = {}) {
 	const {
@@ -154,7 +170,7 @@ function evidence(overrides = {}) {
 		trecRunText,
 		topicsSha256: EXPECTED_MIRACL_TOPICS_SHA256,
 		qrelsSha256: EXPECTED_MIRACL_QRELS_SHA256,
-		trecEvalStdout: "ndcg_cut_10 all 0.412345\nrecall_100 all 0.765432\n",
+		trecEvalStdout: "ndcg_cut_10 all 0.4123\nrecall_100 all 0.7654\n",
 		trecEvalBinarySha256: EXPECTED_TREC_EVAL_BINARY_SHA256,
 		trecEvalSourceCommit: "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c",
 		trecEvalPath: "/tools/trec_eval",
@@ -297,13 +313,30 @@ describe("full-corpus independent evidence", () => {
 		expect(receipt).not.toHaveProperty("independentEvaluator");
 		expect(receipt.metrics).toHaveProperty("reproducedByIndependentTool");
 		expect(receipt.metrics).not.toHaveProperty("independent");
-		expect(receipt.metrics.deltas.ndcgAt10).toBeLessThanOrEqual(1e-6);
+		expect(receipt.metrics.deltas.ndcgAt10).toBeLessThanOrEqual(5e-5);
 		expect(receipt.runtime.latencySemantics).toContain("query-embedding");
 		expect(receipt.runtime.attachmentDelayMilliseconds).toBe(300_000);
 		expect(receipt.runtime.observationBoundary).toContain("after-launch");
 		const binding = deriveFullCorpusExecutionBinding(JSON.stringify(receipt));
 		expect(binding.engine).toBe(MIRACL_FULL_BENCHMARK);
 		expect(binding.receiptSha256).toBe(sha256Bytes(JSON.stringify(receipt)));
+	});
+
+	it("accepts only the exact four-decimal trec_eval representation", () => {
+		const accepted = createFullCorpusEvidenceReceipt(
+			evidence({
+				trecEvalStdout: "ndcg_cut_10 all 0.4123\nrecall_100 all 0.7654\n",
+			}),
+		);
+		expect(accepted.metrics.deltas.ndcgAt10).toBeGreaterThan(1e-6);
+		expect(accepted.metrics.deltas.ndcgAt10).toBeLessThanOrEqual(5e-5);
+		expect(() =>
+			createFullCorpusEvidenceReceipt(
+				evidence({
+					trecEvalStdout: "ndcg_cut_10 all 0.4124\nrecall_100 all 0.7654\n",
+				}),
+			),
+		).toThrow("metric reproduction");
 	});
 
 	it("keeps public eligibility detached, externally signed, and fail-closed", () => {

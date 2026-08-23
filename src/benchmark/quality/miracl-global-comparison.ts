@@ -8,6 +8,7 @@ import {
 	MIRACL_PASSAGE_COMPOSITION,
 	TREC_EVAL_COMMIT,
 	TREC_EVAL_VERSION,
+	matchesTrecEvalOutputPrecision,
 	parseTrecEvalAll,
 	sha256Bytes,
 } from "./native-full-corpus-evidence.js";
@@ -238,8 +239,8 @@ export function createMiraclGlobalComparison(receiptText: string) {
 		receipt.metrics?.tolerance !== METRIC_TOLERANCE ||
 		deltaNdcg !== Math.abs(inProcessNdcg - ndcgAt10) ||
 		deltaRecall !== Math.abs(inProcessRecall - recallAt100) ||
-		deltaNdcg > METRIC_TOLERANCE ||
-		deltaRecall > METRIC_TOLERANCE
+		!matchesTrecEvalOutputPrecision(inProcessNdcg, ndcgAt10) ||
+		!matchesTrecEvalOutputPrecision(inProcessRecall, recallAt100)
 	)
 		throw new Error("independent metric reproduction mismatch");
 	const ndcgDelta = ndcgAt10 - HYBRID.ndcgAt10;

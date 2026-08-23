@@ -38,7 +38,11 @@ if (EXPECTED_MIRACL_TOPIC_IDS.size !== 213)
 export const EXPECTED_QDRANT_COMMIT =
 	"48203e414e4e7f639a6d394fb6e4df695f808e51";
 export const EXPECTED_QDRANT_VERSION = "1.15.5";
-export const METRIC_TOLERANCE = 1e-6;
+// trec_eval's aggregate stdout is fixed to four decimal places. Preserve the
+// maximum representational delta in receipts, but gate on exact equality after
+// formatting the in-process metric to that same precision.
+export const METRIC_TOLERANCE = 5e-5;
+export const TREC_EVAL_OUTPUT_DECIMALS = 4;
 export const MIRACL_PASSAGE_COMPOSITION = 'title + "\\n" + text';
 export const MIRACL_EMBEDDING_POLICY: OfflineEmbeddingPolicyReceipt = {
 	model: "Xenova/multilingual-e5-large",
@@ -72,6 +76,18 @@ export function parseTrecEvalAll(stdout: string): Map<string, number> {
 		metrics.set(columns[0], value);
 	}
 	return metrics;
+}
+
+export function matchesTrecEvalOutputPrecision(
+	inProcess: number,
+	reproduced: number,
+): boolean {
+	return (
+		Number.isFinite(inProcess) &&
+		Number.isFinite(reproduced) &&
+		Math.abs(inProcess - reproduced) <= METRIC_TOLERANCE &&
+		Number(inProcess.toFixed(TREC_EVAL_OUTPUT_DECIMALS)) === reproduced
+	);
 }
 
 export interface FullCorpusResult {
@@ -134,6 +150,24 @@ interface FullCorpusRuntimeObservation {
 		peakRssBytes: number;
 	};
 	result: { path: string; sha256: string };
+}
+
+export function resolveFullCorpusInferenceMode(
+	result: FullCorpusResult,
+	evaluationSourceSha256: string,
+): OfflineBatchInferenceMode {
+	const mode = result.configuration.embeddingInferenceMode;
+	if (mode === "per-item-v1" || mode === "padded-array-batch-v1") return mode;
+	// The frozen baseline source predates explicit inference-mode and execution-
+	// policy fields. Its exact source hash, baseline collection namespace, and
+	// checkpoint policy bind the only admissible legacy interpretation.
+	if (
+		mode === undefined &&
+		result.configuration.embeddingExecutionPolicySha256 === undefined &&
+		evaluationSourceSha256 === EXPECTED_EVALUATION_SOURCE_SHA256
+	)
+		return "per-item-v1";
+	throw new Error("result embedding inference mode is missing or invalid");
 }
 
 export function createFullCorpusEvidenceReceipt(input: {
@@ -271,10 +305,11 @@ export function createFullCorpusEvidenceReceipt(input: {
 		stability.sourceCommitAfter !== input.trecEvalSourceCommit
 	)
 		throw new Error("trec_eval execution stability mismatch");
-	const inferenceMode = result.configuration.embeddingInferenceMode;
+	const inferenceMode = resolveFullCorpusInferenceMode(
+		result,
+		launchReceipt.evaluationSourceSha256,
+	);
 	if (
-		(inferenceMode !== "per-item-v1" &&
-			inferenceMode !== "padded-array-batch-v1") ||
 		result.configuration.passageComposition !== MIRACL_PASSAGE_COMPOSITION ||
 		JSON.stringify(result.configuration.embedding) !==
 			JSON.stringify(MIRACL_EMBEDDING_POLICY)
@@ -286,9 +321,15 @@ export function createFullCorpusEvidenceReceipt(input: {
 		inferenceMode,
 	);
 	const expectedCollection = `naia_miracl_ko_${result.inputs.sourceLockSha256.slice(0, 8)}_${expectedPolicy.embeddingPolicySha256.slice(0, 8)}`;
+	const recordedExecutionPolicy =
+		result.configuration.embeddingExecutionPolicySha256;
+	const legacyBaseline =
+		recordedExecutionPolicy === undefined &&
+		result.configuration.embeddingInferenceMode === undefined &&
+		launchReceipt.evaluationSourceSha256 === EXPECTED_EVALUATION_SOURCE_SHA256;
 	if (
-		result.configuration.embeddingExecutionPolicySha256 !==
-			expectedPolicy.embeddingPolicySha256 ||
+		(!legacyBaseline &&
+			recordedExecutionPolicy !== expectedPolicy.embeddingPolicySha256) ||
 		result.configuration.collectionName !== expectedCollection
 	)
 		throw new Error("benchmark embedding execution policy mismatch");
@@ -387,6 +428,7 @@ export function createFullCorpusEvidenceReceipt(input: {
 		},
 		configuration: {
 			...result.configuration,
+			embeddingInferenceMode: inferenceMode,
 			embeddingPolicySha256: expectedPolicy.embeddingPolicySha256,
 			embeddingExecutionPolicySha256: expectedPolicy.embeddingPolicySha256,
 			qdrant: input.qdrant,
@@ -411,8 +453,8 @@ export function createFullCorpusEvidenceReceipt(input: {
 		recallAt100: Math.abs(result.metrics.recallAt100 - recallAt100),
 	};
 	if (
-		deltas.ndcgAt10 > METRIC_TOLERANCE ||
-		deltas.recallAt100 > METRIC_TOLERANCE
+		!matchesTrecEvalOutputPrecision(result.metrics.ndcgAt10, ndcgAt10) ||
+		!matchesTrecEvalOutputPrecision(result.metrics.recallAt100, recallAt100)
 	)
 		throw new Error("independent metric reproduction mismatch");
 	return {

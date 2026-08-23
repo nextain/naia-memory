@@ -60,14 +60,29 @@ interfaces.
    benchmark or from multilingual embeddings alone. Each engine needs the same
    held-out Korean, English, and Japanese lifecycle families, with language-level
    confidence intervals and failure categories.
+6. The 2026-08-23 Graphiti backend smoke test rejected native-search eligibility
+   for a current-state lifecycle leaderboard. After a relationship changed, the
+   pinned native search surface returned three edges, including two superseded
+   historical edges; the Naia adapter's explicit current-state projection
+   returned one current edge. That projection is potentially useful product
+   integration behavior, but it must not be relabeled as Graphiti-native update
+   correctness. The failed smoke and runtime provenance are recorded in
+   `graphiti-backend-smoke-2026-08-23-v2.json`.
+7. The first Graphiti/Hindsight campaigns are diagnostic-only and carry tracked
+   `DO_NOT_SCORE.md` markers. Graphiti failed the current-state identity gate,
+   while Hindsight was initially read before asynchronous consolidation had
+   settled. A corrected nine-case Hindsight diagnostic uses an explicit settled
+   barrier, but its sample size and diagnostic origin are insufficient for a
+   competitive claim.
 
 ## Required gates before a public competitive report
 
 1. Finish and seal the full-corpus MIRACL-ko run with corpus hash, source
    manifest, runtime receipt, latency distribution, and exact-search settings.
-2. Add a Graphiti bridge using its native episode ingestion and query-dependent
-   hybrid search. Pin the revision, graph database, LLM, embedding model, and
-   temporal fields.
+2. Define two separately named Graphiti tracks: (a) native historical/temporal
+   retrieval and (b) product-integrated current-state projection. Pin the
+   revision, graph database, LLM, embedding model, and temporal fields, and do
+   not place the two tracks in one undifferentiated update-correctness row.
 3. Keep Letta results under an agent-managed-state section. Its native archival
    search is now exposed with the same query and bounded top-k budget, but the
    always-active core-first semantics remain a distinct engine surface rather
@@ -89,6 +104,9 @@ Until those gates pass, the defensible statement is limited to: Naia has a
 reproducible local benchmark program aimed at multilingual retrieval and memory
 supersession, with direct adapters for Mem0, Hindsight, and Graphiti and an
 agent-managed core-plus-archive adapter for Letta. Graphiti has passed backend
-eligibility but not the sealed campaign, and Letta's mixed surface is not a
+connectivity but failed current-state search-identity eligibility; its native
+historical surface and Naia's projected current-state surface therefore require
+separate tracks. Hindsight has only a corrected nine-case settled diagnostic,
+not a sealed competitive campaign, and Letta's mixed surface is not a
 component-equivalent leaderboard row. This is not yet evidence of global
 superiority or global SOTA.
