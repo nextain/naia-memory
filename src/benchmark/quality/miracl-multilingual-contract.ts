@@ -59,6 +59,7 @@ export interface MiraclLanguageContract {
 		manifestSha256: string;
 		expectedDocumentCount?: number;
 		expectedDocidsSha256?: string;
+		expectedSourceLockSha256?: string;
 	};
 }
 
@@ -85,6 +86,8 @@ export const MIRACL_MULTILINGUAL_CONTRACT = {
 			expectedDocumentCount: 1_486_752,
 			expectedDocidsSha256:
 				"6024e30f6c7aed244a5451a9552163a86f74b4254775022f4d4829fcaa87e879",
+			expectedSourceLockSha256:
+				"742952715d6e31eaf9718f04c2bad0509c9d7c754210aa81d793a14430fbb69c",
 			manifestSha256:
 				"86a86e5958e106c2bb93ba0ea673fbf238bcf497397616db7657482279ba9d99",
 		},
@@ -134,6 +137,8 @@ export const MIRACL_MULTILINGUAL_CONTRACT = {
 			expectedDocumentCount: 2_061_414,
 			expectedDocidsSha256:
 				"b81389dd2afad4d0273ec92c25f446b478cb41afb8327c162f8919d93b3c3659",
+			expectedSourceLockSha256:
+				"6f67a375d0bf8062fb6d591843052ab3555b1b5d69acdae164a83387dbaf71e1",
 			manifestSha256:
 				"935b72bf2efde49bf09132145d35137c6e442a19223c765795878464967da4a9",
 		},
