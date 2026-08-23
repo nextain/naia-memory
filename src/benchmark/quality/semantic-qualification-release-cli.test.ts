@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
+import { PROVISIONED_SEMANTIC_COMPETITIVE_QUALIFICATION_TRUST_ANCHOR } from "./semantic-competitive-qualification-trust-anchor.generated.js";
+import { SEMANTIC_COMPETITIVE_QUALIFICATION_TRUST_ANCHOR } from "./semantic-competitive-qualification-trust-anchor.js";
 import { semanticQualificationTrustAnchorFromPublicPolicy } from "./semantic-competitive-qualification-trust-store.js";
 import {
 	runSemanticQualificationReleaseCli,
@@ -77,6 +79,12 @@ afterEach(async () => {
 });
 
 describe("semantic qualification release CLI", () => {
+	it("uses only the statically generated checkout trust anchor", () => {
+		expect(SEMANTIC_COMPETITIVE_QUALIFICATION_TRUST_ANCHOR).toBe(
+			PROVISIONED_SEMANTIC_COMPETITIVE_QUALIFICATION_TRUST_ANCHOR,
+		);
+	});
+
 	it("accepts an exact checkout anchor and deployment policy match", async () => {
 		const current = await fixture();
 		await expect(
