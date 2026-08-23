@@ -34,6 +34,7 @@ export const identities = [
 	"runner-competitor-a",
 	"runner-competitor-b",
 	"author-1",
+	"custodian-1",
 	"reviewer-ko",
 	"reviewer-en",
 	"reviewer-ja",
@@ -67,6 +68,11 @@ export const trustPolicy: PublicEvidenceTrustPolicy = {
 	},
 	datasetAuthorPublicKeys: {
 		"author-1": keys["author-1"].publicKey
+			.export({ type: "spki", format: "pem" })
+			.toString(),
+	},
+	datasetCustodianPublicKeys: {
+		"custodian-1": keys["custodian-1"].publicKey
 			.export({ type: "spki", format: "pem" })
 			.toString(),
 	},
@@ -104,6 +110,9 @@ export const trustPolicy: PublicEvidenceTrustPolicy = {
 		),
 	),
 	benchmarkOperatorTrustDomain: "nextain-benchmark-operator",
+	datasetCustodianTrustDomains: {
+		"custodian-1": "independent-dataset-custodian",
+	},
 	runnerTrustDomains: {
 		"runner-naia": "external-runner-naia",
 		"runner-competitor-a": "external-runner-competitor-a",
@@ -184,7 +193,7 @@ export function engine(engine: string, kind: "naia" | "external") {
 
 export function validManifest(): PublicEvidenceManifest {
 	const manifest: PublicEvidenceManifest = {
-		schemaVersion: "naia-memory-public-evidence-v8",
+		schemaVersion: "naia-memory-public-evidence-v9",
 		publisher: "nextain-release",
 		signatureBase64: "",
 		claim: PUBLIC_EVIDENCE_CLAIM,
@@ -200,6 +209,7 @@ export function validManifest(): PublicEvidenceManifest {
 			caseCount: 120,
 			languageCaseCounts: { ko: 40, en: 40, ja: 40 },
 			authorIds: ["author-1"],
+			custodianId: "custodian-1",
 			reviewerIdsByLanguage: {
 				ko: ["reviewer-ko"],
 				en: ["reviewer-en"],
@@ -388,7 +398,7 @@ export async function writeValidEvidence(
 	manifest.dataset.sha256 = datasetSha256;
 	manifest.protocol.sameInputSha256 = datasetSha256;
 	const provenanceBytes = JSON.stringify({
-		schemaVersion: "naia-memory-public-dataset-provenance-v1",
+		schemaVersion: "naia-memory-public-dataset-provenance-v2",
 		datasetSha256,
 		authors: manifest.dataset.authorIds.map((author) =>
 			signed(
@@ -416,6 +426,21 @@ export async function writeValidEvidence(
 					reviewer as "reviewer-ko",
 				),
 			),
+		),
+		custody: signed(
+			{
+				schemaVersion: "naia-memory-public-dataset-custody-v1",
+				custodian: manifest.dataset.custodianId,
+				datasetSha256,
+				sealedAt: "2026-08-17T00:00:00.000Z",
+				statement: "NO_BENCHMARK_OPERATOR_ACCESS_BEFORE_DISCLOSURE",
+				disclosures: manifest.engines.map((item) => ({
+					engine: item.engine,
+					runner: `runner-${item.engine}`,
+					disclosedAt: "2026-08-18T00:05:00.000Z",
+				})),
+			},
+			"custodian-1",
 		),
 	});
 	await writeFile(join(root, manifest.dataset.provenancePath), provenanceBytes);

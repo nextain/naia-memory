@@ -86,7 +86,7 @@ export function isPublicEvidenceManifest(
 	value: unknown,
 ): value is PublicEvidenceManifest {
 	if (!isPublicEvidenceRecord(value)) return false;
-	if (value.schemaVersion !== "naia-memory-public-evidence-v8") return false;
+	if (value.schemaVersion !== "naia-memory-public-evidence-v9") return false;
 	const dataset = value.dataset;
 	const protocol = value.protocol;
 	const review = value.adversarialReview;
@@ -114,6 +114,7 @@ export function isPublicEvidenceManifest(
 			"sha256",
 			"provenancePath",
 			"provenanceSha256",
+			"custodianId",
 		]) ||
 		typeof dataset.sealedBeforeRun !== "boolean" ||
 		typeof dataset.caseCount !== "number" ||
@@ -199,7 +200,7 @@ function evaluateManifest(
 	const protocol = manifest.protocol;
 
 	reject(
-		manifest.schemaVersion !== "naia-memory-public-evidence-v8",
+		manifest.schemaVersion !== "naia-memory-public-evidence-v9",
 		"manifest schema version is unsupported",
 	);
 	reject(!manifest.publisher.trim(), "publisher identity is missing");
@@ -256,6 +257,10 @@ function evaluateManifest(
 			.filter(Boolean),
 	);
 	reject(authors.size === 0, "independent author identity is missing");
+	reject(
+		!dataset.custodianId.trim(),
+		"independent custodian identity is missing",
+	);
 	reject(
 		[...authors].some((id) => reviewers.has(id)),
 		"authors and native reviewers are not independent",

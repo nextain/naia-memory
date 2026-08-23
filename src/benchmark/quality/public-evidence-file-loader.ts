@@ -19,6 +19,10 @@ import type {
 } from "./public-evidence-types.js";
 import { isPublicEvidenceRecord } from "./public-evidence-types.js";
 import { executionEvidenceFiles } from "./public-execution-attestation.js";
+import {
+	isExecutionAttestation,
+	isExecutionChallenge,
+} from "./public-execution-attestation.js";
 import { compareReceipt } from "./public-receipt-verifier.js";
 import { PUBLIC_RETRIEVAL_SCORING_POLICY } from "./public-retrieval-scorer.js";
 
@@ -89,10 +93,11 @@ function isReview(value: unknown): value is PublicAdversarialReview {
 function isDatasetProvenance(value: unknown): value is PublicDatasetProvenance {
 	return (
 		isPublicEvidenceRecord(value) &&
-		value.schemaVersion === "naia-memory-public-dataset-provenance-v1" &&
+		value.schemaVersion === "naia-memory-public-dataset-provenance-v2" &&
 		typeof value.datasetSha256 === "string" &&
 		Array.isArray(value.authors) &&
-		Array.isArray(value.nativeReviews)
+		Array.isArray(value.nativeReviews) &&
+		isPublicEvidenceRecord(value.custody)
 	);
 }
 
@@ -104,6 +109,32 @@ function compareDatasetProvenance(
 	const failures: string[] = [];
 	if (provenance.datasetSha256 !== manifest.sha256)
 		failures.push("dataset provenance hash binding mismatch");
+	const custody = provenance.custody;
+	if (
+		custody.schemaVersion !== "naia-memory-public-dataset-custody-v1" ||
+		typeof custody.custodian !== "string" ||
+		typeof custody.datasetSha256 !== "string" ||
+		typeof custody.sealedAt !== "string" ||
+		custody.statement !== "NO_BENCHMARK_OPERATOR_ACCESS_BEFORE_DISCLOSURE" ||
+		!Array.isArray(custody.disclosures) ||
+		typeof custody.signatureBase64 !== "string"
+	)
+		failures.push("dataset custody attestation shape is invalid");
+	else {
+		if (custody.custodian !== manifest.custodianId)
+			failures.push("dataset custodian does not match manifest");
+		if (custody.datasetSha256 !== manifest.sha256)
+			failures.push("dataset custody hash binding mismatch");
+		if (!Number.isFinite(Date.parse(custody.sealedAt)))
+			failures.push("dataset custody sealed timestamp is invalid");
+		if (
+			!hasValidEvidenceSignature(
+				custody,
+				trustPolicy.datasetCustodianPublicKeys[custody.custodian],
+			)
+		)
+			failures.push("dataset custody attestation is untrusted or invalid");
+	}
 	const authorIds: string[] = [];
 	for (const author of provenance.authors) {
 		if (
@@ -180,6 +211,79 @@ function compareDatasetProvenance(
 	for (const language of Object.keys(nativeReviewerIdsByLanguage))
 		if (!(language in manifest.reviewerIdsByLanguage))
 			failures.push(`${language} native review attestation is undeclared`);
+	return failures;
+}
+
+function compareDatasetCustodyChronology(
+	provenance: PublicDatasetProvenance,
+	manifest: PublicEvidenceManifest,
+	challenges: Map<string, unknown>,
+	attestations: Map<string, unknown>,
+): string[] {
+	const failures: string[] = [];
+	const custody = provenance.custody;
+	if (!Array.isArray(custody.disclosures)) return failures;
+	const disclosures = new Map<string, (typeof custody.disclosures)[number]>();
+	for (const disclosure of custody.disclosures) {
+		if (
+			!isPublicEvidenceRecord(disclosure) ||
+			typeof disclosure.engine !== "string" ||
+			typeof disclosure.runner !== "string" ||
+			typeof disclosure.disclosedAt !== "string"
+		) {
+			failures.push("dataset custody disclosure shape is invalid");
+			continue;
+		}
+		if (disclosures.has(disclosure.engine))
+			failures.push(
+				`${disclosure.engine}: dataset custody disclosure is duplicated`,
+			);
+		else disclosures.set(disclosure.engine, disclosure);
+	}
+	const executed = new Set(
+		manifest.engines
+			.filter((engine) => engine.executed)
+			.map((engine) => engine.engine),
+	);
+	for (const engine of executed) {
+		const disclosure = disclosures.get(engine);
+		const challenge = challenges.get(engine);
+		const attestation = attestations.get(engine);
+		if (!disclosure) {
+			failures.push(`${engine}: dataset custody disclosure is missing`);
+			continue;
+		}
+		if (
+			!isExecutionChallenge(challenge) ||
+			!isExecutionAttestation(attestation)
+		)
+			continue;
+		const sealedAt = Date.parse(custody.sealedAt);
+		const issuedAt = Date.parse(challenge.issuedAt);
+		const disclosedAt = Date.parse(disclosure.disclosedAt);
+		const startedAt = Date.parse(attestation.startedAt);
+		if (![sealedAt, issuedAt, disclosedAt, startedAt].every(Number.isFinite)) {
+			failures.push(
+				`${engine}: dataset custody chronology timestamp is invalid`,
+			);
+			continue;
+		}
+		if (sealedAt >= issuedAt)
+			failures.push(
+				`${engine}: dataset was not sealed before challenge issuance`,
+			);
+		if (disclosedAt <= issuedAt)
+			failures.push(
+				`${engine}: dataset was disclosed before or at challenge issuance`,
+			);
+		if (disclosedAt > startedAt)
+			failures.push(`${engine}: dataset was disclosed after execution started`);
+		if (disclosure.runner !== attestation.runner)
+			failures.push(`${engine}: dataset disclosure runner mismatch`);
+	}
+	for (const engine of disclosures.keys())
+		if (!executed.has(engine))
+			failures.push(`${engine}: dataset custody disclosure is undeclared`);
 	return failures;
 }
 
@@ -462,6 +566,7 @@ export async function loadPublicEvidenceFiles(
 	}
 
 	let datasetCases: Map<string, PublicDatasetCase> | undefined;
+	let datasetProvenance: PublicDatasetProvenance | undefined;
 	const datasetFile = loadedJson.find(({ item }) => item.kind === "dataset");
 	if (datasetFile) {
 		if (!isDataset(datasetFile.parsed))
@@ -478,10 +583,12 @@ export async function loadPublicEvidenceFiles(
 		if (item.kind === "provenance") {
 			if (!isDatasetProvenance(parsed))
 				failures.push("dataset provenance content shape is invalid");
-			else
+			else {
+				datasetProvenance = parsed;
 				failures.push(
 					...compareDatasetProvenance(parsed, manifest.dataset, trustPolicy),
 				);
+			}
 			continue;
 		}
 		if (item.kind === "scorer") {
@@ -535,5 +642,14 @@ export async function loadPublicEvidenceFiles(
 				failures.push("adversarial review signature is untrusted or invalid");
 		}
 	}
+	if (datasetProvenance)
+		failures.push(
+			...compareDatasetCustodyChronology(
+				datasetProvenance,
+				manifest,
+				challenges,
+				attestations,
+			),
+		);
 	return { failures, challenges, attestations };
 }

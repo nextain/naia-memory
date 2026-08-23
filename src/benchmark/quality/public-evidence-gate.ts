@@ -72,9 +72,25 @@ function validateTrustPolicy(
 		["engine", trustPolicy.enginePublicKeys],
 		["reviewer", trustPolicy.reviewerPublicKeys],
 		["dataset author", trustPolicy.datasetAuthorPublicKeys],
+		["dataset custodian", trustPolicy.datasetCustodianPublicKeys],
 		["challenge issuer", trustPolicy.challengeIssuerPublicKeys],
 		["runner", trustPolicy.runnerPublicKeys],
 	] as const;
+	const custodianDomain =
+		trustPolicy.datasetCustodianTrustDomains[manifest.dataset.custodianId];
+	if (!custodianDomain)
+		failures.push("dataset custodian trust domain is missing");
+	else if (!isCanonicalTrustDomain(custodianDomain))
+		failures.push("dataset custodian trust domain is not canonical");
+	else if (custodianDomain === trustPolicy.benchmarkOperatorTrustDomain)
+		failures.push(
+			"dataset custodian is inside the benchmark operator trust boundary",
+		);
+	for (const custodian of Object.keys(trustPolicy.datasetCustodianTrustDomains))
+		if (!(custodian in trustPolicy.datasetCustodianPublicKeys))
+			failures.push(
+				`dataset custodian trust domain has no trusted key: ${custodian}`,
+			);
 	const roleKeys: { identity: string; key: string; role: string }[] =
 		roleGroups.flatMap(([role, keys]) =>
 			Object.entries(keys).map(([identity, key]) => ({ identity, key, role })),

@@ -29,6 +29,82 @@ import {
 
 describe("public evidence policy attacks", () => {
 	it.each([
+		[
+			"2026-08-17T23:59:00.000Z",
+			"runner-naia",
+			"naia: dataset was disclosed before or at challenge issuance",
+		],
+		[
+			"2026-08-18T00:11:00.000Z",
+			"runner-naia",
+			"naia: dataset was disclosed after execution started",
+		],
+		[
+			"2026-08-18T00:05:00.000Z",
+			"runner-competitor-a",
+			"naia: dataset disclosure runner mismatch",
+		],
+	] as const)(
+		"rejects invalid signed dataset custody chronology %#",
+		async (disclosedAt, runner, expectedFailure) => {
+			const root = await mkdtemp(join(tmpdir(), "naia-public-custody-"));
+			try {
+				const manifest = validManifest();
+				await writeValidEvidence(root, manifest);
+				const provenancePath = join(root, manifest.dataset.provenancePath);
+				const provenance = JSON.parse(await readFile(provenancePath, "utf8"));
+				const { signatureBase64: _signature, ...custodyPayload } =
+					provenance.custody;
+				custodyPayload.disclosures[0] = {
+					...custodyPayload.disclosures[0],
+					disclosedAt,
+					runner,
+				};
+				provenance.custody = signed(custodyPayload, "custodian-1");
+				const bytes = JSON.stringify(provenance);
+				await writeFile(provenancePath, bytes);
+				manifest.dataset.provenanceSha256 = createHash("sha256")
+					.update(bytes)
+					.digest("hex");
+				const decision = await evaluatePublicEvidenceFiles(
+					manifest,
+					root,
+					trustPolicy,
+				);
+				expect(decision.promotable).toBe(false);
+				expect(decision.failures).toContain(expectedFailure);
+			} finally {
+				await rm(root, { recursive: true, force: true });
+			}
+		},
+	);
+
+	it("rejects a signed custody claim sealed after challenge issuance", async () => {
+		const root = await mkdtemp(join(tmpdir(), "naia-public-late-seal-"));
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const provenancePath = join(root, manifest.dataset.provenancePath);
+			const provenance = JSON.parse(await readFile(provenancePath, "utf8"));
+			const { signatureBase64: _signature, ...custodyPayload } =
+				provenance.custody;
+			custodyPayload.sealedAt = "2026-08-18T00:01:00.000Z";
+			provenance.custody = signed(custodyPayload, "custodian-1");
+			const bytes = JSON.stringify(provenance);
+			await writeFile(provenancePath, bytes);
+			manifest.dataset.provenanceSha256 = createHash("sha256")
+				.update(bytes)
+				.digest("hex");
+			expect(
+				(await evaluatePublicEvidenceFiles(manifest, root, trustPolicy))
+					.failures,
+			).toContain("naia: dataset was not sealed before challenge issuance");
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it.each([
 		["dataset", "dataset content shape is invalid"],
 		["receipt", "naia: receipt content shape is invalid"],
 		["review", "adversarial review content shape is invalid"],

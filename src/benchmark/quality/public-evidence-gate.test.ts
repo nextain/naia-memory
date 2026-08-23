@@ -40,6 +40,12 @@ describe("public evidence promotion gate manifest and provenance", () => {
 	it("rejects legacy or model-mediated protocol claims for a model-free scorer", () => {
 		expect(isPublicEvidenceManifest(validManifest())).toBe(true);
 
+		const previousCustodylessSchema = {
+			...validManifest(),
+			schemaVersion: "naia-memory-public-evidence-v8",
+		};
+		expect(isPublicEvidenceManifest(previousCustodylessSchema)).toBe(false);
+
 		const mislabeled = {
 			...validManifest(),
 			schemaVersion: "naia-memory-public-evidence-v6",
@@ -167,6 +173,24 @@ describe("public evidence promotion gate manifest and provenance", () => {
 				(await evaluatePublicEvidenceFiles(manifest, root, policy)).failures,
 			).toContain(
 				"naia: execution runner is inside the benchmark operator trust boundary",
+			);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
+
+	it("rejects a dataset custodian inside the benchmark operator trust boundary", async () => {
+		const root = await mkdtemp(join(tmpdir(), "naia-public-custodian-domain-"));
+		try {
+			const manifest = validManifest();
+			await writeValidEvidence(root, manifest);
+			const policy = structuredClone(trustPolicy);
+			policy.datasetCustodianTrustDomains[manifest.dataset.custodianId] =
+				policy.benchmarkOperatorTrustDomain;
+			expect(
+				(await evaluatePublicEvidenceFiles(manifest, root, policy)).failures,
+			).toContain(
+				"dataset custodian is inside the benchmark operator trust boundary",
 			);
 		} finally {
 			await rm(root, { recursive: true, force: true });

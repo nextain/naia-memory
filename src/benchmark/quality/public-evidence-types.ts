@@ -36,7 +36,7 @@ export type PublicEvidenceEngine = {
 };
 
 export type PublicEvidenceManifest = {
-	schemaVersion: "naia-memory-public-evidence-v8";
+	schemaVersion: "naia-memory-public-evidence-v9";
 	publisher: string;
 	signatureBase64: string;
 	claim: string;
@@ -52,6 +52,7 @@ export type PublicEvidenceManifest = {
 		caseCount: number;
 		languageCaseCounts: Record<string, number>;
 		authorIds: string[];
+		custodianId: string;
 		reviewerIdsByLanguage: Record<string, string[]>;
 	};
 	protocol: {
@@ -86,11 +87,13 @@ export type PublicEvidenceTrustPolicy = {
 	enginePublicKeys: Record<string, string>;
 	reviewerPublicKeys: Record<string, string>;
 	datasetAuthorPublicKeys: Record<string, string>;
+	datasetCustodianPublicKeys: Record<string, string>;
 	nativeReviewerPublicKeysByLanguage: Record<string, Record<string, string>>;
 	challengeIssuerPublicKeys: Record<string, string>;
 	runnerPublicKeys: Record<string, string>;
 	/** Organizational/control boundary asserted by the verifier, not submitted evidence. */
 	benchmarkOperatorTrustDomain: string;
+	datasetCustodianTrustDomains: Record<string, string>;
 	runnerTrustDomains: Record<string, string>;
 	approvedScoringPolicies: Record<string, string>;
 };
@@ -135,12 +138,17 @@ export function isPublicEvidenceTrustPolicy(
 		isPublicKeyRecord(value.enginePublicKeys) &&
 		isPublicKeyRecord(value.reviewerPublicKeys) &&
 		isPublicKeyRecord(value.datasetAuthorPublicKeys) &&
+		isPublicKeyRecord(value.datasetCustodianPublicKeys) &&
 		isPublicEvidenceRecord(nativeReviewers) &&
 		Object.values(nativeReviewers).every(isPublicKeyRecord) &&
 		isPublicKeyRecord(value.challengeIssuerPublicKeys) &&
 		isPublicKeyRecord(value.runnerPublicKeys) &&
 		typeof value.benchmarkOperatorTrustDomain === "string" &&
 		isCanonicalTrustDomain(value.benchmarkOperatorTrustDomain) &&
+		isStringRecord(value.datasetCustodianTrustDomains) &&
+		Object.values(value.datasetCustodianTrustDomains).every(
+			isCanonicalTrustDomain,
+		) &&
 		isStringRecord(value.runnerTrustDomains) &&
 		Object.values(value.runnerTrustDomains).every(isCanonicalTrustDomain) &&
 		isStringRecord(value.approvedScoringPolicies)
@@ -165,10 +173,25 @@ export type PublicDatasetNativeReviewAttestation = {
 };
 
 export type PublicDatasetProvenance = {
-	schemaVersion: "naia-memory-public-dataset-provenance-v1";
+	schemaVersion: "naia-memory-public-dataset-provenance-v2";
 	datasetSha256: string;
 	authors: PublicDatasetAuthorAttestation[];
 	nativeReviews: PublicDatasetNativeReviewAttestation[];
+	custody: PublicDatasetCustodyAttestation;
+};
+
+export type PublicDatasetCustodyAttestation = {
+	schemaVersion: "naia-memory-public-dataset-custody-v1";
+	custodian: string;
+	datasetSha256: string;
+	sealedAt: string;
+	statement: "NO_BENCHMARK_OPERATOR_ACCESS_BEFORE_DISCLOSURE";
+	disclosures: Array<{
+		engine: string;
+		runner: string;
+		disclosedAt: string;
+	}>;
+	signatureBase64: string;
 };
 
 export const PUBLIC_EVIDENCE_SHA256 = /^[a-f0-9]{64}$/;
