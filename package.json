@@ -79,6 +79,7 @@
 		"benchmark:miracl-multilingual-true-batch-authorize": "tsx src/benchmark/quality/miracl-multilingual-candidate-authorization-cli.ts",
 		"benchmark:miracl-full-corpus-launch-receipt": "tsx src/benchmark/quality/native-full-corpus-launch-receipt-cli.ts",
 		"benchmark:miracl-qdrant-service-binding": "tsx src/benchmark/quality/qdrant-service-binding-cli.ts",
+		"benchmark:miracl-qdrant-launch-plan": "tsx src/benchmark/quality/qdrant-service-launch-plan-cli.ts",
 		"benchmark:miracl-full-corpus-runtime-monitor": "tsx src/benchmark/quality/native-full-corpus-runtime-monitor-cli.ts",
 		"benchmark:miracl-full-corpus-evidence": "tsx src/benchmark/quality/native-full-corpus-evidence-cli.ts",
 		"benchmark:miracl-multilingual-completion-evidence": "env -u NODE_OPTIONS -u NODE_PATH -u TSX_TSCONFIG_PATH node --require \"$PWD/node_modules/tsx/dist/preflight.cjs\" --import \"$PWD/node_modules/tsx/dist/loader.mjs\" src/benchmark/quality/miracl-multilingual-completion-evidence-cli.ts",
