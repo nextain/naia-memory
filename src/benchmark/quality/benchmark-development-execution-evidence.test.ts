@@ -92,18 +92,54 @@ function validate(current: ReturnType<typeof fixture>) {
 		expectedSelectionRuleSha256: "a".repeat(64),
 		expectedConfirmatoryDatasetSha256: "b".repeat(64),
 		trustedPlanTimestampedAt: "2026-01-01T00:02:00Z",
+		expectedObservations: current.evidence.receipts.map((receipt, index) => ({
+			id: `observation-${index + 1}`,
+			candidateId: receipt.candidateId,
+			datasetSha256: receipt.datasetSha256,
+			receiptSha256: evidenceObjectSha256(receipt),
+			primaryMetricValue: receipt.primaryMetricValue,
+			startedAt: receipt.startedAt,
+			finishedAt: receipt.finishedAt,
+			previousObservationSha256: null,
+		})),
 	});
 }
 
 describe("benchmark development execution evidence", () => {
-	it("verifies a complete precommitted candidate-by-dataset matrix", () => {
+	it("verifies a complete timestamped candidate-by-dataset matrix", () => {
 		expect(validate(fixture())).toMatchObject({
 			developmentObservationReceiptsExternallyVerified: true,
-			precommittedDevelopmentMatrixCoverageVerified: true,
+			timestampedDevelopmentMatrixCoverageVerified: true,
 			selectionHistoryCompletenessExternallyVerified: false,
-			developmentExecutionPlanPriorExistenceVerified: true,
+			developmentExecutionPlanTrustedTimestampVerified: true,
 			receiptCount: 4,
 		});
+	});
+
+	it("rejects a disclosure observation that does not exactly match its receipt", () => {
+		const current = fixture();
+		const observations = current.evidence.receipts.map((receipt, index) => ({
+			id: `observation-${index + 1}`,
+			candidateId: receipt.candidateId,
+			datasetSha256: receipt.datasetSha256,
+			receiptSha256: evidenceObjectSha256(receipt),
+			primaryMetricValue: receipt.primaryMetricValue,
+			startedAt: receipt.startedAt,
+			finishedAt: receipt.finishedAt,
+			previousObservationSha256: null,
+		}));
+		const first = observations[0];
+		if (!first) throw new Error("fixture observation is missing");
+		first.primaryMetricValue += 0.1;
+		expect(() =>
+			validateBenchmarkDevelopmentExecutionEvidence({
+				...current,
+				expectedSelectionRuleSha256: "a".repeat(64),
+				expectedConfirmatoryDatasetSha256: "b".repeat(64),
+				trustedPlanTimestampedAt: "2026-01-01T00:02:00Z",
+				expectedObservations: observations,
+			}),
+		).toThrow("disclosure observation binding is invalid");
 	});
 
 	it("rejects omitted, duplicated, and mutated receipts", () => {

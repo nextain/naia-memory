@@ -1,4 +1,5 @@
 import { createPublicKey } from "node:crypto";
+import type { BenchmarkDevelopmentObservation } from "./benchmark-selection-disclosure.js";
 import {
 	evidenceObjectSha256,
 	hasValidEvidenceSignature,
@@ -55,6 +56,49 @@ function validHash(value: unknown): value is string {
 	return typeof value === "string" && SHA256.test(value);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isEd25519Key(value: unknown): value is string {
+	if (typeof value !== "string") return false;
+	try {
+		return createPublicKey(value).asymmetricKeyType === "ed25519";
+	} catch {
+		return false;
+	}
+}
+
+export function isBenchmarkDevelopmentExecutionEvidence(
+	value: unknown,
+): value is BenchmarkDevelopmentExecutionEvidence {
+	return (
+		isRecord(value) &&
+		value.schemaVersion ===
+			"naia-memory-benchmark-development-execution-evidence-v1" &&
+		isRecord(value.plan) &&
+		Array.isArray(value.receipts)
+	);
+}
+
+export function isBenchmarkDevelopmentExecutionTrustPolicy(
+	value: unknown,
+): value is BenchmarkDevelopmentExecutionTrustPolicy {
+	return (
+		isRecord(value) &&
+		isRecord(value.administratorPublicKeys) &&
+		isRecord(value.executorPublicKeys) &&
+		Object.keys(value.administratorPublicKeys).length > 0 &&
+		Object.keys(value.executorPublicKeys).length > 0 &&
+		[
+			...Object.entries(value.administratorPublicKeys),
+			...Object.entries(value.executorPublicKeys),
+		].every(
+			([identity, key]) => identity.trim().length > 0 && isEd25519Key(key),
+		)
+	);
+}
+
 function validTime(value: string): number {
 	const parsed = Date.parse(value);
 	if (!Number.isFinite(parsed))
@@ -80,13 +124,14 @@ export function validateBenchmarkDevelopmentExecutionEvidence(input: {
 	expectedSelectionRuleSha256: string;
 	expectedConfirmatoryDatasetSha256: string;
 	trustedPlanTimestampedAt: string;
+	expectedObservations?: BenchmarkDevelopmentObservation[];
 	forbiddenTrustIdentities?: Iterable<string>;
 	forbiddenTrustPublicKeys?: Iterable<string>;
 }): {
 	developmentObservationReceiptsExternallyVerified: true;
-	precommittedDevelopmentMatrixCoverageVerified: true;
+	timestampedDevelopmentMatrixCoverageVerified: true;
 	selectionHistoryCompletenessExternallyVerified: false;
-	developmentExecutionPlanPriorExistenceVerified: true;
+	developmentExecutionPlanTrustedTimestampVerified: true;
 	receiptCount: number;
 	planSha256: string;
 } {
@@ -152,6 +197,12 @@ export function validateBenchmarkDevelopmentExecutionEvidence(input: {
 	const forbiddenKeys = new Set(
 		[...(input.forbiddenTrustPublicKeys ?? [])].map(normalizedKey),
 	);
+	const trustKeys = [
+		...Object.values(trustPolicy.administratorPublicKeys),
+		...Object.values(trustPolicy.executorPublicKeys),
+	].map(normalizedKey);
+	if (new Set(trustKeys).size !== trustKeys.length)
+		throw new Error("development execution trust keys must be globally unique");
 	const administratorKeyId = normalizedKey(administratorKey);
 	if (
 		forbiddenIdentities.has(plan.administrator) ||
@@ -170,6 +221,10 @@ export function validateBenchmarkDevelopmentExecutionEvidence(input: {
 	const planSha256 = evidenceObjectSha256(plan);
 	const seenPairs = new Set<string>();
 	const seenReceiptHashes = new Set<string>();
+	const receiptsByHash = new Map<
+		string,
+		BenchmarkDevelopmentExecutionReceipt
+	>();
 	for (const receipt of evidence.receipts) {
 		const pair = `${receipt.candidateId}\0${receipt.datasetSha256}`;
 		const executorKey = trustPolicy.executorPublicKeys[receipt.executor];
@@ -205,14 +260,33 @@ export function validateBenchmarkDevelopmentExecutionEvidence(input: {
 			throw new Error("development execution role independence is invalid");
 		seenPairs.add(pair);
 		seenReceiptHashes.add(receiptHash);
+		receiptsByHash.set(receiptHash, receipt);
 	}
 	if (seenPairs.size !== expectedPairs.size)
 		throw new Error("development execution receipt coverage is incomplete");
+	if (input.expectedObservations) {
+		if (input.expectedObservations.length !== evidence.receipts.length)
+			throw new Error("development disclosure receipt coverage is incomplete");
+		for (const observation of input.expectedObservations) {
+			const receipt = receiptsByHash.get(observation.receiptSha256);
+			if (
+				!receipt ||
+				receipt.candidateId !== observation.candidateId ||
+				receipt.datasetSha256 !== observation.datasetSha256 ||
+				receipt.primaryMetricValue !== observation.primaryMetricValue ||
+				receipt.startedAt !== observation.startedAt ||
+				receipt.finishedAt !== observation.finishedAt
+			)
+				throw new Error(
+					"development disclosure observation binding is invalid",
+				);
+		}
+	}
 	return {
 		developmentObservationReceiptsExternallyVerified: true,
-		precommittedDevelopmentMatrixCoverageVerified: true,
+		timestampedDevelopmentMatrixCoverageVerified: true,
 		selectionHistoryCompletenessExternallyVerified: false,
-		developmentExecutionPlanPriorExistenceVerified: true,
+		developmentExecutionPlanTrustedTimestampVerified: true,
 		receiptCount: evidence.receipts.length,
 		planSha256,
 	};

@@ -3,6 +3,10 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type {
+	BenchmarkDevelopmentExecutionEvidence,
+	BenchmarkDevelopmentExecutionPlan,
+} from "./benchmark-development-execution-evidence.js";
 import {
 	type BenchmarkDevelopmentObservation,
 	benchmarkObservationSha256,
@@ -51,7 +55,7 @@ afterEach(async () => {
 });
 
 describe("semantic public gate CLI", () => {
-	it("verifies the complete 28-artifact path with selection history, real signatures, and RFC 3161 tokens", async () => {
+	it("verifies the complete 32-artifact path with signed development receipts and RFC 3161 tokens", async () => {
 		const output: string[] = [];
 		captureStdout(output);
 		const directory = await root();
@@ -150,21 +154,84 @@ describe("semantic public gate CLI", () => {
 				declaredAt: "2099-01-02T00:00:00Z",
 			},
 		];
-		const observations: BenchmarkDevelopmentObservation[] = [];
-		for (const [index, [candidateId, datasetSha256, metric]] of [
+		const {
+			privateKey: developmentAdministratorPrivateKey,
+			publicKey: developmentAdministratorPublicKey,
+		} = generateKeyPairSync("ed25519");
+		const {
+			privateKey: developmentExecutorPrivateKey,
+			publicKey: developmentExecutorPublicKey,
+		} = generateKeyPairSync("ed25519");
+		const unsignedDevelopmentPlan = {
+			schemaVersion:
+				"naia-memory-benchmark-development-execution-plan-v1" as const,
+			administrator: "development-plan-administrator",
+			selectionRuleSha256: "a".repeat(64),
+			confirmatoryDatasetSha256: evidenceObjectSha256(fixture.contract),
+			candidates: candidates.map(({ id, policySha256 }) => ({
+				id,
+				policySha256,
+			})),
+			datasetSha256s: ["e".repeat(64), "f".repeat(64)],
+			createdAt: "2026-01-01T00:00:00Z",
+			signedAt: "2026-01-01T00:01:00Z",
+			statement: "COMPLETE_DEVELOPMENT_MATRIX_FROZEN_BEFORE_EXECUTION" as const,
+		};
+		const developmentPlan: BenchmarkDevelopmentExecutionPlan = {
+			...unsignedDevelopmentPlan,
+			signatureBase64: sign(
+				null,
+				evidenceSignaturePayload(unsignedDevelopmentPlan),
+				developmentAdministratorPrivateKey,
+			).toString("base64"),
+		};
+		const developmentPlanToken = await tsa.issue(
+			evidenceObjectSha256(developmentPlan),
+			"development-plan",
+		);
+		const developmentRows = [
 			["baseline", "e".repeat(64), 0.6],
 			["selected", "e".repeat(64), 0.8],
 			["baseline", "f".repeat(64), 0.7],
 			["selected", "f".repeat(64), 0.9],
-		].entries()) {
+		] as const;
+		const developmentReceipts = developmentRows.map(
+			([candidateId, datasetSha256, primaryMetricValue], index) => {
+				const unsignedReceipt = {
+					schemaVersion:
+						"naia-memory-benchmark-development-execution-receipt-v1" as const,
+					executor: "development-matrix-executor",
+					planSha256: evidenceObjectSha256(developmentPlan),
+					candidateId,
+					policySha256: candidates.find(({ id }) => id === candidateId)
+						?.policySha256 as string,
+					datasetSha256,
+					primaryMetricValue,
+					startedAt: `2099-01-03T0${index}:00:00Z`,
+					finishedAt: `2099-01-03T0${index}:30:00Z`,
+					signedAt: `2099-01-03T0${index}:31:00Z`,
+					statement: "DEVELOPMENT_EXECUTION_CONFIRMED" as const,
+				};
+				return {
+					...unsignedReceipt,
+					signatureBase64: sign(
+						null,
+						evidenceSignaturePayload(unsignedReceipt),
+						developmentExecutorPrivateKey,
+					).toString("base64"),
+				};
+			},
+		);
+		const observations: BenchmarkDevelopmentObservation[] = [];
+		for (const [index, receipt] of developmentReceipts.entries()) {
 			observations.push({
 				id: `observation-${index + 1}`,
-				candidateId: candidateId as string,
-				datasetSha256: datasetSha256 as string,
-				receiptSha256: (index + 1).toString(16).repeat(64),
-				primaryMetricValue: metric as number,
-				startedAt: `2099-01-03T0${index}:00:00Z`,
-				finishedAt: `2099-01-03T0${index}:30:00Z`,
+				candidateId: receipt.candidateId,
+				datasetSha256: receipt.datasetSha256,
+				receiptSha256: evidenceObjectSha256(receipt),
+				primaryMetricValue: receipt.primaryMetricValue,
+				startedAt: receipt.startedAt,
+				finishedAt: receipt.finishedAt,
 				previousObservationSha256:
 					index === 0
 						? null
@@ -173,6 +240,29 @@ describe("semantic public gate CLI", () => {
 							),
 			});
 		}
+		const developmentEvidence: BenchmarkDevelopmentExecutionEvidence = {
+			schemaVersion: "naia-memory-benchmark-development-execution-evidence-v1",
+			plan: developmentPlan,
+			receipts: developmentReceipts,
+		};
+		const developmentTrustPolicy = {
+			administratorPublicKeys: {
+				"development-plan-administrator": developmentAdministratorPublicKey
+					.export({ type: "spki", format: "pem" })
+					.toString(),
+			},
+			executorPublicKeys: {
+				"development-matrix-executor": developmentExecutorPublicKey
+					.export({ type: "spki", format: "pem" })
+					.toString(),
+			},
+		};
+		const developmentTimestampEvidence = {
+			schemaVersion:
+				"naia-memory-rfc3161-digest-timestamp-evidence-v1" as const,
+			artifactSha256: evidenceObjectSha256(developmentPlan),
+			...developmentPlanToken,
+		};
 		const unsignedSelection = {
 			schemaVersion: "naia-memory-benchmark-selection-disclosure-v1" as const,
 			auditor: "independent-selection-auditor",
@@ -219,6 +309,21 @@ describe("semantic public gate CLI", () => {
 				}),
 			),
 		]);
+		const developmentPaths = [
+			join(directory, "development-execution-evidence.json"),
+			join(directory, "development-execution-trust-policy.json"),
+			join(directory, "development-plan-timestamp-evidence.json"),
+			join(directory, "development-plan-timestamp-trust-policy.json"),
+		];
+		await Promise.all([
+			writeFile(developmentPaths[0], JSON.stringify(developmentEvidence)),
+			writeFile(developmentPaths[1], JSON.stringify(developmentTrustPolicy)),
+			writeFile(
+				developmentPaths[2],
+				JSON.stringify(developmentTimestampEvidence),
+			),
+			writeFile(developmentPaths[3], JSON.stringify(tsa.trustPolicy)),
+		]);
 
 		const gateArgs = [
 			...fixture.paths,
@@ -228,6 +333,7 @@ describe("semantic public gate CLI", () => {
 			...power.paths,
 			...extraPaths,
 			...selectionPaths,
+			...developmentPaths,
 		];
 		const filePaths = gateArgs.filter((_, index) => index !== 11);
 		const artifacts = Object.fromEntries(
@@ -240,7 +346,7 @@ describe("semantic public gate CLI", () => {
 		await writeFile(
 			draftPath,
 			JSON.stringify({
-				schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v2",
+				schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v3",
 				blindingSeed: gateArgs[11],
 				artifacts,
 			}),
@@ -264,7 +370,9 @@ describe("semantic public gate CLI", () => {
 			deliveryBundleTrustedTimestampVerified: true,
 			selectionHistoryQualified: true,
 			selectionDisclosureInternallyConsistent: true,
-			developmentObservationReceiptsExternallyVerified: false,
+			developmentObservationReceiptsExternallyVerified: true,
+			timestampedDevelopmentMatrixCoverageVerified: true,
+			developmentExecutionPlanTrustedTimestampVerified: true,
 			selectionHistoryCompletenessExternallyVerified: false,
 			candidateCount: 2,
 			developmentObservationCount: 4,
@@ -274,8 +382,7 @@ describe("semantic public gate CLI", () => {
 		expect(result.failure).toContain(
 			"trusted prior existence of the complete acknowledgement bundle",
 		);
-		expect(result.failure).toContain(
-			"development observation receipts and selection-history completeness are not externally verified",
-		);
+		expect(result.failure).toContain("receipt event times");
+		expect(result.failure).toContain("absence of undisclosed shadow trials");
 	}, 30_000);
 });

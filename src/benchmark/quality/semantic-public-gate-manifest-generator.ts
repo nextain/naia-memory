@@ -24,7 +24,7 @@ const MAX_DRAFT_BYTES = 1024 * 1024;
 const MAX_ARTIFACT_BYTES = 16 * 1024 * 1024;
 
 type Draft = {
-	schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v2";
+	schemaVersion: "naia-memory-semantic-public-gate-manifest-draft-v3";
 	blindingSeed: string;
 	artifacts: Record<SemanticPublicGateArtifactName, string>;
 };
@@ -105,7 +105,7 @@ async function readDraft(path: string): Promise<Draft> {
 		"semantic public gate manifest draft",
 	);
 	if (
-		root.schemaVersion !== "naia-memory-semantic-public-gate-manifest-draft-v2"
+		root.schemaVersion !== "naia-memory-semantic-public-gate-manifest-draft-v3"
 	)
 		throw new Error(
 			"semantic public gate manifest draft schema version is invalid",
@@ -208,7 +208,7 @@ export async function generateSemanticPublicGateManifest(
 		};
 	}
 	const manifest: SemanticPublicGateManifest = {
-		schemaVersion: "naia-memory-semantic-public-gate-manifest-v2",
+		schemaVersion: "naia-memory-semantic-public-gate-manifest-v3",
 		blindingSeed: draft.blindingSeed,
 		artifacts,
 	};
