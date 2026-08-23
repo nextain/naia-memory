@@ -1,11 +1,23 @@
 import { describe, expect, it } from "vitest";
 import {
 	MULTILINGUAL_TRUE_BATCH_EQUIVALENCE_TEXTS,
+	MULTILINGUAL_TRUE_BATCH_MODEL,
+	MULTILINGUAL_TRUE_BATCH_MODEL_REVISION,
+	type MultilingualEquivalenceExpectedIdentity,
 	type MultilingualEquivalenceObservation,
 	type MultilingualTrueBatchLanguage,
 	analyzeMultilingualTrueBatchEquivalence,
 	multilingualEquivalenceInputSha256,
 } from "./miracl-multilingual-true-batch-equivalence.js";
+
+function expected(): MultilingualEquivalenceExpectedIdentity {
+	return {
+		model: MULTILINGUAL_TRUE_BATCH_MODEL,
+		modelRevision: MULTILINGUAL_TRUE_BATCH_MODEL_REVISION,
+		policySha256: "a".repeat(64),
+		producerSourceSha256: "c".repeat(64),
+	};
+}
 
 function observation(
 	language: MultilingualTrueBatchLanguage,
@@ -18,6 +30,10 @@ function observation(
 		mode,
 		inputSha256: multilingualEquivalenceInputSha256(language),
 		policySha256: "a".repeat(64),
+		policyBasisMode: "per-item-v1",
+		model: MULTILINGUAL_TRUE_BATCH_MODEL,
+		modelRevision: MULTILINGUAL_TRUE_BATCH_MODEL_REVISION,
+		producerSourceSha256: "c".repeat(64),
 		vectors: MULTILINGUAL_TRUE_BATCH_EQUIVALENCE_TEXTS[language].map(() => [
 			1,
 			delta,
@@ -31,7 +47,7 @@ describe("multilingual true-batch equivalence", () => {
 		(language) => {
 			const evidence = analyzeMultilingualTrueBatchEquivalence(
 				language,
-				"a".repeat(64),
+				expected(),
 				observation(language, "per-item-v1"),
 				observation(language, "padded-array-batch-v1", 1e-7),
 			);
@@ -49,7 +65,7 @@ describe("multilingual true-batch equivalence", () => {
 		expect(() =>
 			analyzeMultilingualTrueBatchEquivalence(
 				"ar",
-				"a".repeat(64),
+				expected(),
 				observation("en", "per-item-v1"),
 				observation("ar", "padded-array-batch-v1"),
 			),
@@ -59,7 +75,7 @@ describe("multilingual true-batch equivalence", () => {
 	it("fails when the candidate vectors exceed the frozen tolerance", () => {
 		const evidence = analyzeMultilingualTrueBatchEquivalence(
 			"en",
-			"a".repeat(64),
+			expected(),
 			observation("en", "per-item-v1"),
 			observation("en", "padded-array-batch-v1", 1e-2),
 		);
@@ -70,7 +86,7 @@ describe("multilingual true-batch equivalence", () => {
 		expect(() =>
 			analyzeMultilingualTrueBatchEquivalence(
 				"en",
-				"b".repeat(64),
+				{ ...expected(), policySha256: "b".repeat(64) },
 				observation("en", "per-item-v1"),
 				observation("en", "padded-array-batch-v1"),
 			),
@@ -81,11 +97,11 @@ describe("multilingual true-batch equivalence", () => {
 		expect(() =>
 			analyzeMultilingualTrueBatchEquivalence(
 				"en",
-				"not-a-sha256",
+				{ ...expected(), policySha256: "not-a-sha256" },
 				observation("en", "per-item-v1"),
 				observation("en", "padded-array-batch-v1"),
 			),
-		).toThrow("expected embedding policy hash is invalid");
+		).toThrow("expected provenance hash is invalid");
 	});
 
 	it("rejects an observation with a mismatched frozen-input hash", () => {
@@ -94,11 +110,37 @@ describe("multilingual true-batch equivalence", () => {
 		expect(() =>
 			analyzeMultilingualTrueBatchEquivalence(
 				"ar",
-				"a".repeat(64),
+				expected(),
 				baseline,
 				observation("ar", "padded-array-batch-v1"),
 			),
 		).toThrow("ar/per-item-v1: input hash mismatch");
+	});
+
+	it("rejects a producer source identity supplied by its own observation", () => {
+		const candidate = observation("ar", "padded-array-batch-v1");
+		candidate.producerSourceSha256 = "d".repeat(64);
+		expect(() =>
+			analyzeMultilingualTrueBatchEquivalence(
+				"ar",
+				expected(),
+				observation("ar", "per-item-v1"),
+				candidate,
+			),
+		).toThrow("ar/padded-array-batch-v1: producer identity mismatch");
+	});
+
+	it("rejects an observation that changes the preregistered policy basis", () => {
+		const candidate = observation("en", "padded-array-batch-v1");
+		candidate.policyBasisMode = "candidate-mode" as "per-item-v1";
+		expect(() =>
+			analyzeMultilingualTrueBatchEquivalence(
+				"en",
+				expected(),
+				observation("en", "per-item-v1"),
+				candidate,
+			),
+		).toThrow("policy basis mode mismatch");
 	});
 
 	it("rejects differing baseline and candidate embedding dimensions", () => {
@@ -107,7 +149,7 @@ describe("multilingual true-batch equivalence", () => {
 		expect(() =>
 			analyzeMultilingualTrueBatchEquivalence(
 				"en",
-				"a".repeat(64),
+				expected(),
 				observation("en", "per-item-v1"),
 				candidate,
 			),
@@ -120,7 +162,20 @@ describe("multilingual true-batch equivalence", () => {
 		expect(() =>
 			analyzeMultilingualTrueBatchEquivalence(
 				"ar",
-				"a".repeat(64),
+				expected(),
+				observation("ar", "per-item-v1"),
+				candidate,
+			),
+		).toThrow("ar/padded-array-batch-v1: vectors are invalid");
+	});
+
+	it("rejects valid JSON with a malformed vectors shape", () => {
+		const candidate = observation("ar", "padded-array-batch-v1");
+		candidate.vectors = null as unknown as number[][];
+		expect(() =>
+			analyzeMultilingualTrueBatchEquivalence(
+				"ar",
+				expected(),
 				observation("ar", "per-item-v1"),
 				candidate,
 			),
@@ -133,7 +188,7 @@ describe("multilingual true-batch equivalence", () => {
 		expect(() =>
 			analyzeMultilingualTrueBatchEquivalence(
 				"en",
-				"a".repeat(64),
+				expected(),
 				baseline,
 				observation("en", "padded-array-batch-v1"),
 			),

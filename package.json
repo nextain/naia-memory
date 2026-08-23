@@ -72,6 +72,7 @@
 		"benchmark:miracl-true-batch-equivalence-observe": "tsx src/benchmark/quality/true-batch-equivalence-observation-cli.ts",
 		"benchmark:miracl-true-batch-equivalence-evidence": "tsx src/benchmark/quality/true-batch-equivalence-evidence-cli.ts",
 		"benchmark:miracl-true-batch-equivalence": "tsx src/benchmark/quality/true-batch-equivalence-runner-cli.ts",
+		"benchmark:miracl-multilingual-true-batch": "tsx src/benchmark/quality/miracl-multilingual-true-batch-runner-cli.ts",
 		"benchmark:miracl-full-corpus-launch-receipt": "tsx src/benchmark/quality/native-full-corpus-launch-receipt-cli.ts",
 		"benchmark:miracl-qdrant-service-binding": "tsx src/benchmark/quality/qdrant-service-binding-cli.ts",
 		"benchmark:miracl-full-corpus-runtime-monitor": "tsx src/benchmark/quality/native-full-corpus-runtime-monitor-cli.ts",

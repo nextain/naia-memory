@@ -3,6 +3,24 @@ import { createHash } from "node:crypto";
 export type MultilingualTrueBatchLanguage = "ar" | "en";
 type InferenceMode = "per-item-v1" | "padded-array-batch-v1";
 
+export const MULTILINGUAL_TRUE_BATCH_MODEL =
+	"Xenova/multilingual-e5-large" as const;
+export const MULTILINGUAL_TRUE_BATCH_MODEL_REVISION =
+	"00fc3aeb3dbb95842de2ac1961d33c6319acf57b" as const;
+export const MULTILINGUAL_TRUE_BATCH_INPUT_COMPOSITION =
+	"raw probe text" as const;
+export const MULTILINGUAL_TRUE_BATCH_THRESHOLDS = {
+	maximumAbsoluteDelta: 1e-4,
+	minimumCosine: 0.99999,
+} as const;
+
+export interface MultilingualEquivalenceExpectedIdentity {
+	model: typeof MULTILINGUAL_TRUE_BATCH_MODEL;
+	modelRevision: typeof MULTILINGUAL_TRUE_BATCH_MODEL_REVISION;
+	policySha256: string;
+	producerSourceSha256: string;
+}
+
 export const MULTILINGUAL_TRUE_BATCH_EQUIVALENCE_TEXTS = {
 	ar: [
 		"أبحث عن مكان هادئ للعمل في القاهرة.",
@@ -44,6 +62,10 @@ export interface MultilingualEquivalenceObservation {
 	mode: InferenceMode;
 	inputSha256: string;
 	policySha256: string;
+	policyBasisMode: "per-item-v1";
+	model: typeof MULTILINGUAL_TRUE_BATCH_MODEL;
+	modelRevision: typeof MULTILINGUAL_TRUE_BATCH_MODEL_REVISION;
+	producerSourceSha256: string;
 	vectors: number[][];
 }
 
@@ -61,6 +83,7 @@ function assertObservation(
 	value: MultilingualEquivalenceObservation,
 	language: MultilingualTrueBatchLanguage,
 	mode: InferenceMode,
+	expected: MultilingualEquivalenceExpectedIdentity,
 ): void {
 	if (
 		value.schemaVersion !== 1 ||
@@ -72,6 +95,16 @@ function assertObservation(
 		throw new Error(`${language}/${mode}: input hash mismatch`);
 	if (!/^[a-f0-9]{64}$/.test(value.policySha256))
 		throw new Error(`${language}/${mode}: policy hash is invalid`);
+	if (value.policyBasisMode !== "per-item-v1")
+		throw new Error(`${language}/${mode}: policy basis mode mismatch`);
+	if (
+		value.model !== expected.model ||
+		value.modelRevision !== expected.modelRevision ||
+		value.producerSourceSha256 !== expected.producerSourceSha256
+	)
+		throw new Error(`${language}/${mode}: producer identity mismatch`);
+	if (!Array.isArray(value.vectors))
+		throw new Error(`${language}/${mode}: vectors are invalid`);
 	const dimensions = value.vectors[0]?.length;
 	if (
 		value.vectors.length !==
@@ -88,17 +121,26 @@ function assertObservation(
 
 export function analyzeMultilingualTrueBatchEquivalence(
 	language: MultilingualTrueBatchLanguage,
-	expectedPolicySha256: string,
+	expected: MultilingualEquivalenceExpectedIdentity,
 	baseline: MultilingualEquivalenceObservation,
 	candidate: MultilingualEquivalenceObservation,
 ) {
-	if (!/^[a-f0-9]{64}$/.test(expectedPolicySha256))
-		throw new Error("expected embedding policy hash is invalid");
-	assertObservation(baseline, language, "per-item-v1");
-	assertObservation(candidate, language, "padded-array-batch-v1");
 	if (
-		baseline.policySha256 !== expectedPolicySha256 ||
-		candidate.policySha256 !== expectedPolicySha256
+		![expected.policySha256, expected.producerSourceSha256].every((value) =>
+			/^[a-f0-9]{64}$/.test(value),
+		)
+	)
+		throw new Error("expected provenance hash is invalid");
+	if (
+		expected.model !== MULTILINGUAL_TRUE_BATCH_MODEL ||
+		expected.modelRevision !== MULTILINGUAL_TRUE_BATCH_MODEL_REVISION
+	)
+		throw new Error("expected model identity is invalid");
+	assertObservation(baseline, language, "per-item-v1", expected);
+	assertObservation(candidate, language, "padded-array-batch-v1", expected);
+	if (
+		baseline.policySha256 !== expected.policySha256 ||
+		candidate.policySha256 !== expected.policySha256
 	)
 		throw new Error("embedding policies differ");
 	if (baseline.vectors[0]?.length !== candidate.vectors[0]?.length)
@@ -124,7 +166,7 @@ export function analyzeMultilingualTrueBatchEquivalence(
 			throw new Error(`vector ${index}: cosine is invalid`);
 		minimumCosine = Math.min(minimumCosine, cosine);
 	}
-	const thresholds = { maximumAbsoluteDelta: 1e-4, minimumCosine: 0.99999 };
+	const thresholds = MULTILINGUAL_TRUE_BATCH_THRESHOLDS;
 	const checks = {
 		maximumAbsoluteDelta: maxAbsoluteDelta <= thresholds.maximumAbsoluteDelta,
 		minimumCosine: minimumCosine >= thresholds.minimumCosine,
@@ -138,6 +180,11 @@ export function analyzeMultilingualTrueBatchEquivalence(
 			"synthetic frozen language-specific padding probe; a PASS requires separately generated model vectors and establishes neither MIRACL retrieval quality nor throughput",
 		inputSha256: baseline.inputSha256,
 		policySha256: baseline.policySha256,
+		policyBasisMode: baseline.policyBasisMode,
+		model: baseline.model,
+		modelRevision: baseline.modelRevision,
+		producerSourceSha256: baseline.producerSourceSha256,
+		dimensions: baseline.vectors[0]?.length,
 		thresholds,
 		observed: { maxAbsoluteDelta, minimumCosine },
 		checks,
