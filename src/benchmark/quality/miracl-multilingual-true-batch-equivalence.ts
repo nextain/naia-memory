@@ -13,6 +13,8 @@ export const MULTILINGUAL_TRUE_BATCH_THRESHOLDS = {
 	maximumAbsoluteDelta: 1e-4,
 	minimumCosine: 0.99999,
 } as const;
+export const MULTILINGUAL_TRUE_BATCH_CLAIM_BOUNDARY =
+	"synthetic frozen language-specific padding probe; a PASS requires separately generated model vectors and establishes neither MIRACL retrieval quality nor throughput" as const;
 
 export interface MultilingualEquivalenceExpectedIdentity {
 	model: typeof MULTILINGUAL_TRUE_BATCH_MODEL;
@@ -176,8 +178,7 @@ export function analyzeMultilingualTrueBatchEquivalence(
 		artifactClass: "preflight-probe-evidence" as const,
 		benchmark: `naia-${language}-per-item-vs-true-batch-vector-probe-v1`,
 		language,
-		claimBoundary:
-			"synthetic frozen language-specific padding probe; a PASS requires separately generated model vectors and establishes neither MIRACL retrieval quality nor throughput",
+		claimBoundary: MULTILINGUAL_TRUE_BATCH_CLAIM_BOUNDARY,
 		inputSha256: baseline.inputSha256,
 		policySha256: baseline.policySha256,
 		policyBasisMode: baseline.policyBasisMode,

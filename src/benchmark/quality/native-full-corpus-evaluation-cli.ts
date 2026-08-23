@@ -15,6 +15,7 @@ import {
 	OFFLINE_MODEL_REVISIONS,
 	OfflineEmbeddingProvider,
 } from "../../memory/embeddings.js";
+import { verifyMultilingualTrueBatchAuthorizationFiles } from "./miracl-multilingual-candidate-authorization.js";
 import {
 	MIRACL_MULTILINGUAL_CONTRACT,
 	type MiraclEvidenceLanguage,
@@ -118,10 +119,14 @@ async function verifyEnglishQdrantLive(
 }
 const CHECKPOINT_ROOT =
 	process.env.MIRACL_FULL_CHECKPOINT_DIR ??
-	`.cache/benchmark-runs/miracl-${LANGUAGE}-full-v1`;
+	(process.env.MIRACL_EMBEDDING_INFERENCE_MODE === "padded-array-batch-v1"
+		? `.cache/benchmark-runs/miracl-${LANGUAGE}-full-true-batch-v1`
+		: `.cache/benchmark-runs/miracl-${LANGUAGE}-full-v1`);
 const OUTPUT =
 	process.env.MIRACL_FULL_OUTPUT ??
-	`reports/quality/miracl-${LANGUAGE}-full-corpus-vector-exact.json`;
+	(process.env.MIRACL_EMBEDDING_INFERENCE_MODE === "padded-array-batch-v1"
+		? `reports/quality/miracl-${LANGUAGE}-full-corpus-vector-exact-true-batch.json`
+		: `reports/quality/miracl-${LANGUAGE}-full-corpus-vector-exact.json`);
 
 function sha256(value: string | Uint8Array): string {
 	return createHash("sha256").update(value).digest("hex");
@@ -227,8 +232,12 @@ async function main(): Promise<void> {
 		process.env.MIRACL_EMBEDDING_INFERENCE_MODE,
 	);
 	if (batchInferenceMode === "padded-array-batch-v1") {
-		verifyTrueBatchLaunchAuthorizationFiles(process.env);
-		verifyTrueBatchEquivalenceEvidenceFiles(process.env);
+		if (LANGUAGE === "ko") {
+			verifyTrueBatchLaunchAuthorizationFiles(process.env);
+			verifyTrueBatchEquivalenceEvidenceFiles(process.env);
+		} else {
+			verifyMultilingualTrueBatchAuthorizationFiles(LANGUAGE, process.env);
+		}
 	}
 	if (existsSync(OUTPUT)) throw new Error("full-corpus output already exists");
 	let qdrantBinding: QdrantServiceBindingReceipt | null = null;
