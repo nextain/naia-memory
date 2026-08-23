@@ -2,7 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { benchmarkReceipt } from "../provenance.js";
+import { benchmarkReceiptFromDatasetHashes } from "../provenance.js";
 import {
 	type MemoryUpdateCase,
 	type MemoryUpdateContract,
@@ -10,12 +10,20 @@ import {
 } from "./memory-update-contract.js";
 import { evidenceObjectSha256 } from "./public-evidence-crypto.js";
 import {
+	type Rfc3161DigestTimestampEvidence,
+	type Rfc3161TimestampTrustPolicy,
+	isRfc3161DigestTimestampEvidence,
+	isRfc3161TimestampTrustPolicy,
+	rfc3161TrustPolicyIdentity,
+} from "./rfc3161-timestamp.js";
+import {
 	type SemanticAnalysisPlan,
 	type SemanticAnalysisPlanTrustPolicy,
 	isSemanticAnalysisPlan,
 	isSemanticAnalysisPlanTrustPolicy,
 	validateSemanticAnalysisPlan,
 } from "./semantic-analysis-plan.js";
+import type { SemanticConfirmatoryExecutionAuthorization } from "./semantic-confirmatory-execution-authorization.js";
 import {
 	expectedSemanticRetrievalSurface,
 	runSemanticRawCli,
@@ -40,6 +48,9 @@ export type SemanticCampaignCliArgs = {
 	engines: SemanticEngine[];
 	analysisPlanPath?: string;
 	analysisPlanTrustPolicyPath?: string;
+	confirmatoryAuthorizationPath?: string;
+	analysisPlanTimestampEvidencePath?: string;
+	analysisPlanTimestampTrustPolicyPath?: string;
 };
 
 export type SemanticCampaignRun = {
@@ -60,6 +71,19 @@ function sha256(value: unknown): string {
 
 function fileSha256(path: string): string {
 	return createHash("sha256").update(readFileSync(path)).digest("hex");
+}
+
+function capturedJson(path: string): {
+	bytes: Buffer;
+	bytesSha256: string;
+	value: unknown;
+} {
+	const bytes = readFileSync(path);
+	return {
+		bytes,
+		bytesSha256: createHash("sha256").update(bytes).digest("hex"),
+		value: JSON.parse(bytes.toString("utf8")),
+	};
 }
 
 export function validateRawArtifact(
@@ -191,6 +215,9 @@ export function parseSemanticCampaignCliArgs(
 				"engines",
 				"analysis-plan",
 				"analysis-plan-trust-policy",
+				"confirmatory-authorization",
+				"analysis-plan-timestamp-evidence",
+				"analysis-plan-timestamp-trust-policy",
 			].includes(match[1])
 		)
 			throw new Error(`unknown argument: --${match[1]}`);
@@ -247,6 +274,13 @@ export function parseSemanticCampaignCliArgs(
 		engines,
 		analysisPlanPath: values.get("analysis-plan"),
 		analysisPlanTrustPolicyPath: values.get("analysis-plan-trust-policy"),
+		confirmatoryAuthorizationPath: values.get("confirmatory-authorization"),
+		analysisPlanTimestampEvidencePath: values.get(
+			"analysis-plan-timestamp-evidence",
+		),
+		analysisPlanTimestampTrustPolicyPath: values.get(
+			"analysis-plan-timestamp-trust-policy",
+		),
 	};
 }
 
@@ -255,13 +289,20 @@ function loadCampaignAnalysisPlan(
 	trustPolicyPath: string | undefined,
 	contract: MemoryUpdateContract,
 	engines: readonly string[],
-): SemanticAnalysisPlan | undefined {
+):
+	| {
+			plan: SemanticAnalysisPlan;
+			trustPolicy: SemanticAnalysisPlanTrustPolicy;
+			datasetHashes: Record<string, string>;
+	  }
+	| undefined {
 	if (!path && !trustPolicyPath) return undefined;
 	if (!path || !trustPolicyPath)
 		throw new Error(
 			"--analysis-plan and --analysis-plan-trust-policy must be supplied together",
 		);
-	const plan = JSON.parse(readFileSync(path, "utf8")) as unknown;
+	const capturedPlan = capturedJson(path);
+	const plan = capturedPlan.value;
 	if (!isSemanticAnalysisPlan(plan))
 		throw new Error(
 			"--analysis-plan must contain a valid semantic analysis plan",
@@ -270,9 +311,8 @@ function loadCampaignAnalysisPlan(
 		throw new Error("semantic analysis plan contract binding is invalid");
 	if (JSON.stringify(plan.engines) !== JSON.stringify(engines))
 		throw new Error("semantic analysis plan engine order is invalid");
-	const trustPolicy = JSON.parse(
-		readFileSync(trustPolicyPath, "utf8"),
-	) as unknown;
+	const capturedTrustPolicy = capturedJson(trustPolicyPath);
+	const trustPolicy = capturedTrustPolicy.value;
 	if (!isSemanticAnalysisPlanTrustPolicy(trustPolicy))
 		throw new Error("semantic analysis plan trust policy is invalid");
 	validateSemanticAnalysisPlan({
@@ -291,7 +331,14 @@ function loadCampaignAnalysisPlan(
 		},
 		firstExecutionStartedAt: new Date().toISOString(),
 	});
-	return plan;
+	return {
+		plan,
+		trustPolicy: trustPolicy as SemanticAnalysisPlanTrustPolicy,
+		datasetHashes: {
+			[path]: capturedPlan.bytesSha256,
+			[trustPolicyPath]: capturedTrustPolicy.bytesSha256,
+		},
+	};
 }
 
 export function buildSemanticCampaignPlan(
@@ -353,9 +400,8 @@ export async function runSemanticCampaignCli(
 	const parsed = parseSemanticCampaignCliArgs(args);
 	const contractPath = resolve(parsed.contractPath);
 	const outputDir = resolve(parsed.outputDir);
-	const contract = JSON.parse(
-		readFileSync(contractPath, "utf8"),
-	) as MemoryUpdateContract;
+	const capturedContract = capturedJson(contractPath);
+	const contract = capturedContract.value as MemoryUpdateContract;
 	validateMemoryUpdateContract(contract);
 	if (contract.tier !== "semantic-update-interpretation")
 		throw new Error("semantic campaign requires a semantic-update contract");
@@ -365,23 +411,77 @@ export async function runSemanticCampaignCli(
 	const analysisPlanTrustPolicyPath = parsed.analysisPlanTrustPolicyPath
 		? resolve(parsed.analysisPlanTrustPolicyPath)
 		: undefined;
-	const analysisPlan = loadCampaignAnalysisPlan(
+	const analysisPlanBundle = loadCampaignAnalysisPlan(
 		analysisPlanPath,
 		analysisPlanTrustPolicyPath,
 		contract,
 		parsed.engines,
 	);
+	const analysisPlan = analysisPlanBundle?.plan;
+	let confirmatoryEvidence:
+		| {
+				authorization: SemanticConfirmatoryExecutionAuthorization;
+				timestampEvidence: Rfc3161DigestTimestampEvidence;
+				timestampTrustPolicy: Rfc3161TimestampTrustPolicy;
+				datasetHashes: Record<string, string>;
+		  }
+		| undefined;
+	const suppliedConfirmatoryPaths = [
+		parsed.confirmatoryAuthorizationPath,
+		parsed.analysisPlanTimestampEvidencePath,
+		parsed.analysisPlanTimestampTrustPolicyPath,
+	];
+	if (!analysisPlanBundle && suppliedConfirmatoryPaths.some(Boolean))
+		throw new Error(
+			"confirmatory authorization evidence requires an analysis plan",
+		);
+	if (analysisPlanBundle) {
+		const requiredPaths = suppliedConfirmatoryPaths;
+		if (requiredPaths.some((path) => !path))
+			throw new Error(
+				"confirmatory authorization and analysis-plan timestamp evidence are required",
+			);
+		const authorizationPath = resolve(requiredPaths[0] as string);
+		const timestampEvidencePath = resolve(requiredPaths[1] as string);
+		const timestampTrustPolicyPath = resolve(requiredPaths[2] as string);
+		const capturedAuthorization = capturedJson(authorizationPath);
+		const capturedTimestampEvidence = capturedJson(timestampEvidencePath);
+		const capturedTimestampTrustPolicy = capturedJson(timestampTrustPolicyPath);
+		const authorization =
+			capturedAuthorization.value as SemanticConfirmatoryExecutionAuthorization;
+		const timestampEvidence = capturedTimestampEvidence.value;
+		const timestampTrustPolicy = capturedTimestampTrustPolicy.value;
+		if (!isRfc3161DigestTimestampEvidence(timestampEvidence))
+			throw new Error("analysis-plan timestamp evidence is invalid");
+		if (!isRfc3161TimestampTrustPolicy(timestampTrustPolicy))
+			throw new Error("analysis-plan timestamp trust policy is invalid");
+		confirmatoryEvidence = {
+			authorization,
+			timestampEvidence: timestampEvidence as Rfc3161DigestTimestampEvidence,
+			timestampTrustPolicy: timestampTrustPolicy as Rfc3161TimestampTrustPolicy,
+			datasetHashes: {
+				[authorizationPath]: capturedAuthorization.bytesSha256,
+				[timestampEvidencePath]: capturedTimestampEvidence.bytesSha256,
+				[timestampTrustPolicyPath]: capturedTimestampTrustPolicy.bytesSha256,
+			},
+		};
+	}
+	mkdirSync(dirname(outputDir), { recursive: true });
+	mkdirSync(outputDir, { mode: 0o700 });
+	const capturedContractPath = resolve(outputDir, ".campaign-contract.json");
+	writeFileSync(capturedContractPath, capturedContract.bytes, {
+		flag: "wx",
+		mode: 0o600,
+	});
 	const plan = buildSemanticCampaignPlan(
 		parsed.executionSeed,
 		parsed.repetitions,
 		parsed.engines,
 	);
-	mkdirSync(dirname(outputDir), { recursive: true });
-	mkdirSync(outputDir, { mode: 0o700 });
 	for (const run of plan) {
 		await dependencies.runSemanticRawCli([
 			`--engine=${run.engine}`,
-			`--contract=${contractPath}`,
+			`--contract=${capturedContractPath}`,
 			`--output=${resolve(outputDir, run.outputFile)}`,
 			`--top-k=${parsed.topK}`,
 			`--seed=${run.caseExecutionSeed}`,
@@ -407,12 +507,26 @@ export async function runSemanticCampaignCli(
 		]),
 	);
 	const disclosure = {
+		eligibility: analysisPlan
+			? ("competitive-candidate" as const)
+			: ("diagnostic" as const),
 		executionSeed: parsed.executionSeed,
 		repetitions: parsed.repetitions,
 		topK: parsed.topK,
 		engines: parsed.engines,
 		analysisPlanSha256: analysisPlan
 			? evidenceObjectSha256(analysisPlan)
+			: null,
+		confirmatoryAuthorizationSha256: confirmatoryEvidence
+			? evidenceObjectSha256(confirmatoryEvidence.authorization)
+			: null,
+		analysisPlanTimestampEvidenceSha256: confirmatoryEvidence
+			? evidenceObjectSha256(confirmatoryEvidence.timestampEvidence)
+			: null,
+		analysisPlanTimestampTrustPolicyIdentitySha256: confirmatoryEvidence
+			? evidenceObjectSha256(
+					rfc3161TrustPolicyIdentity(confirmatoryEvidence.timestampTrustPolicy),
+				)
 			: null,
 		claimScope:
 			analysisPlan?.claimScope ?? "diagnostic-characterization-only-v1",
@@ -433,13 +547,15 @@ export async function runSemanticCampaignCli(
 			"Engine-native surfaces are observed with disclosed native configurations. Letta exposes always-active non-persona core blocks first, followed by its query-ranked archival search results, and preserves the complete core-plus-archive state for identity validation. Graphiti is split into projected-current and native-historical comparator IDs; their scores must not be merged. Historical retrieval is validated against complete group history obtained independently from query output. Component-level parity and a single retrieval leaderboard are not claimed.",
 	};
 	const manifest = {
-		schemaVersion: "naia-memory-semantic-campaign-v4",
+		schemaVersion: "naia-memory-semantic-campaign-v5",
 		interpretation:
 			"Balanced execution manifest over unscored raw artifacts; not quality evidence by itself.",
-		receipt: benchmarkReceipt(
-			analysisPlanPath && analysisPlanTrustPolicyPath
-				? [contractPath, analysisPlanPath, analysisPlanTrustPolicyPath]
-				: [contractPath],
+		receipt: benchmarkReceiptFromDatasetHashes(
+			{
+				[contractPath]: capturedContract.bytesSha256,
+				...(analysisPlanBundle?.datasetHashes ?? {}),
+				...(confirmatoryEvidence?.datasetHashes ?? {}),
+			},
 			disclosure,
 			[
 				"src/benchmark/quality/semantic-campaign-cli.ts",

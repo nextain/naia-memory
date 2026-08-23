@@ -208,14 +208,22 @@ async function writeExecutionFixture(
 	}
 	const campaign = {
 		schemaVersion: analysisPlanSha256
-			? ("naia-memory-semantic-campaign-v4" as const)
+			? ("naia-memory-semantic-campaign-v5" as const)
 			: ("naia-memory-semantic-campaign-v3" as const),
 		disclosure: {
 			executionSeed: "public-gate",
 			repetitions: 3,
 			topK: 5,
 			engines: [...engines],
-			...(analysisPlanSha256 ? { analysisPlanSha256 } : {}),
+			...(analysisPlanSha256
+				? {
+						eligibility: "competitive-candidate" as const,
+						analysisPlanSha256,
+						confirmatoryAuthorizationSha256: "d".repeat(64),
+						analysisPlanTimestampEvidenceSha256: "e".repeat(64),
+						analysisPlanTimestampTrustPolicyIdentitySha256: "f".repeat(64),
+					}
+				: {}),
 			claimScope: "direct-lifecycle-competitive-report-v1",
 			comparisonLanes: {
 				directLifecycle: ["hindsight", "mem0"],
@@ -630,7 +638,7 @@ afterEach(async () => {
 });
 
 describe("semantic public gate CLI", () => {
-	it("requires and qualifies independent pilot power evidence on the full path", async () => {
+	it("requires deployment qualification before the legacy full evidence path", async () => {
 		const output: string[] = [];
 		captureStdout(output);
 		const directory = await root();
@@ -663,18 +671,14 @@ describe("semantic public gate CLI", () => {
 				...power.paths,
 			]),
 		).toBe(1);
-		expect(JSON.parse(output.pop() ?? "{}")).toMatchObject({
-			powerReviewQualified: true,
-			pilotCollectionBindingQualified: true,
-			boundAssignmentCount: 9,
-			reviewedConstructionClusterCount: 9,
-			constructionCauseIndependenceVerified: false,
-			priorAssignmentTimingVerified: false,
+		expect(JSON.parse(output.pop() ?? "{}")).toEqual({
 			promotable: false,
+			failure:
+				"v5 competitive candidates require a deployment-signed qualification",
 		});
 	});
 
-	it("recomputes signed multilingual adjudication but keeps promotion closed", async () => {
+	it("does not accept adjudication as a substitute for deployment qualification", async () => {
 		const output: string[] = [];
 		captureStdout(output);
 		const directory = await root();
@@ -704,22 +708,10 @@ describe("semantic public gate CLI", () => {
 				...analysisPlanPaths,
 			]),
 		).toBe(1);
-		expect(JSON.parse(output.pop() ?? "{}")).toMatchObject({
-			corpusQualified: true,
-			executionEvidenceQualified: true,
-			adjudicationEvidenceQualified: true,
-			analysisPlanIntegrityQualified: true,
-			plannedIndependentAuthorClusterCount: 3,
-			sampleSizeAdequacyVerified: false,
-			analysisPlanTrustedTimestampVerified: false,
-			adjudicatorCount: 3,
-			humanJudgedLanguages: ["en", "ja", "ko"],
-			modelOnlyLanguages: [],
-			evidenceScope: "signed-artifact-integrity-and-coverage",
-			blindnessVerified: false,
-			organizationalIndependenceVerified: false,
-			interRaterAgreementEvaluated: false,
+		expect(JSON.parse(output.pop() ?? "{}")).toEqual({
 			promotable: false,
+			failure:
+				"v5 competitive candidates require a deployment-signed qualification",
 		});
 	});
 
@@ -771,6 +763,28 @@ describe("semantic public gate CLI", () => {
 			costComplete: false,
 			promotable: false,
 		});
+	});
+
+	it("rejects a v5 competitive candidate without deployment qualification", async () => {
+		const output: string[] = [];
+		captureStdout(output);
+		const directory = await root();
+		const fixture = await writeFixture(directory);
+		const executionPaths = await writeExecutionFixture(
+			directory,
+			fixture.contract,
+		);
+		const campaign = JSON.parse(await readFile(executionPaths[0], "utf8"));
+		campaign.schemaVersion = "naia-memory-semantic-campaign-v5";
+		campaign.disclosure.eligibility = "competitive-candidate";
+		await writeFile(executionPaths[0], JSON.stringify(campaign));
+
+		expect(
+			await runSemanticPublicGateCli([...fixture.paths, ...executionPaths]),
+		).toBe(1);
+		expect(JSON.parse(output.pop() ?? "{}").failure).toBe(
+			"v5 competitive candidates require a deployment-signed qualification",
+		);
 	});
 
 	it("qualifies the corpus but refuses public promotion without engine execution evidence", async () => {

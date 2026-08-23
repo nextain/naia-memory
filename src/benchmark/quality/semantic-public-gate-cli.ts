@@ -45,6 +45,11 @@ import {
 	validateSemanticAnalysisPlan,
 } from "./semantic-analysis-plan.js";
 import { calculateSemanticCompetitiveInference } from "./semantic-competitive-inference.js";
+import { SEMANTIC_COMPETITIVE_QUALIFICATION_TRUST_ANCHOR } from "./semantic-competitive-qualification-trust-anchor.js";
+import {
+	isSemanticCompetitiveQualification,
+	validateSemanticCompetitiveQualification,
+} from "./semantic-competitive-qualification.js";
 import {
 	isSemanticExecutionEvidenceBundle,
 	isSemanticExecutionTrustPolicy,
@@ -83,12 +88,13 @@ async function runSemanticEvidenceGateCli(
 			args.length !== 26 &&
 			args.length !== 28 &&
 			args.length !== 32 &&
-			args.length !== 34)
+			args.length !== 34 &&
+			args.length !== 37)
 	) {
 		process.stderr.write(
 			`Usage: pnpm benchmark:semantic-${mode}-gate <contract.json> <attestations.json> <trust-policy.json>${
 				mode === "public"
-					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-collection-plan.json> <pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json> [<rfc3161-timestamp-evidence.json> <rfc3161-timestamp-trust-policy.json> <pilot-launch-receipt.json> [<delivery-acknowledgements.json> <participant-trust-policy.json> <delivery-rfc3161-evidence.json> <delivery-rfc3161-trust-policy.json> [<selection-disclosure.json> <selection-disclosure-trust-policy.json> [<development-execution-evidence.json> <development-execution-trust-policy.json> <development-plan-rfc3161-evidence.json> <development-plan-rfc3161-trust-policy.json> [<development-execution-registry.json> <development-execution-registry-trust-policy.json>]]]]]]]]]"
+					? " [<campaign.json> <execution-evidence.json> <execution-trust-policy.json> [<packet.json> <seal.json> <judgments.json> <adjudication-evidence.json> <adjudication-trust-policy.json> <blinding-seed> [<analysis-plan.json> <analysis-plan-trust-policy.json> [<pilot-collection-plan.json> <pilot-contract.json> <sample-size-assumptions.json> <power-review.json> <power-review-trust-policy.json> [<rfc3161-timestamp-evidence.json> <rfc3161-timestamp-trust-policy.json> <pilot-launch-receipt.json> [<delivery-acknowledgements.json> <participant-trust-policy.json> <delivery-rfc3161-evidence.json> <delivery-rfc3161-trust-policy.json> [<selection-disclosure.json> <selection-disclosure-trust-policy.json> [<development-execution-evidence.json> <development-execution-trust-policy.json> <development-plan-rfc3161-evidence.json> <development-plan-rfc3161-trust-policy.json> [<development-execution-registry.json> <development-execution-registry-trust-policy.json> [<confirmatory-authorization.json> <analysis-plan-timestamp-evidence.json> <competitive-qualification.json>]]]]]]]]]]"
 					: ""
 			}\n`,
 		);
@@ -159,6 +165,21 @@ async function runSemanticEvidenceGateCli(
 			} catch {
 				throw new Error("campaign is not valid JSON");
 			}
+			const campaignRecord = campaign as Record<string, unknown>;
+			const campaignDisclosure = campaignRecord.disclosure as
+				| Record<string, unknown>
+				| undefined;
+			const competitiveCandidate =
+				campaignRecord.schemaVersion === "naia-memory-semantic-campaign-v5" &&
+				campaignDisclosure?.eligibility === "competitive-candidate";
+			if (competitiveCandidate && args.length !== 37)
+				throw new Error(
+					"v5 competitive candidates require a deployment-signed qualification",
+				);
+			if (args.length === 37 && !competitiveCandidate)
+				throw new Error(
+					"competitive qualification is only valid for a v5 competitive candidate",
+				);
 			const executionBundle = await readJson(
 				args[4],
 				"execution evidence bundle",
@@ -300,6 +321,47 @@ async function runSemanticEvidenceGateCli(
 							),
 						],
 					});
+					if (args.length === 37) {
+						const authorization = await readJson(
+							args[34],
+							"confirmatory execution authorization",
+						);
+						const analysisPlanTimestampEvidence = await readJson(
+							args[35],
+							"analysis plan timestamp evidence",
+						);
+						const qualification = await readJson(
+							args[36],
+							"competitive qualification",
+						);
+						if (!isSemanticCompetitiveQualification(qualification))
+							throw new Error(
+								"semantic competitive qualification shape is invalid",
+							);
+						const qualificationTrustAnchor =
+							SEMANTIC_COMPETITIVE_QUALIFICATION_TRUST_ANCHOR;
+						if (!qualificationTrustAnchor)
+							throw new Error(
+								"semantic competitive qualification trust anchor is not provisioned",
+							);
+						analysisPlan = {
+							...analysisPlan,
+							...validateSemanticCompetitiveQualification({
+								qualification,
+								trustAnchor: qualificationTrustAnchor,
+								subjects: {
+									contract,
+									campaign,
+									analysisPlan: parsedPlan,
+									authorization,
+									timestampEvidence: analysisPlanTimestampEvidence,
+									executionEvidence: executionBundle,
+									adjudicationEvidence: adjudicationBundle,
+								},
+								executionReceipts: executionBundle.receipts,
+							}),
+						};
+					}
 					if (args.length >= 19) {
 						const collectionPlan = await readJson(
 							args[14],
@@ -504,7 +566,11 @@ async function runSemanticEvidenceGateCli(
 								throw new Error(
 									"selected benchmark policy does not match the executed Naia configuration",
 								);
-							if (args.length === 32 || args.length === 34) {
+							if (
+								args.length === 32 ||
+								args.length === 34 ||
+								args.length === 37
+							) {
 								const developmentEvidence = await readJson(
 									args[28],
 									"development execution evidence",
@@ -578,7 +644,7 @@ async function runSemanticEvidenceGateCli(
 										],
 									}),
 								};
-								if (args.length === 34) {
+								if (args.length === 34 || args.length === 37) {
 									const registryEvidence = await readJson(
 										args[32],
 										"development execution registry",
@@ -677,7 +743,7 @@ async function runSemanticEvidenceGateCli(
 								? args.length >= 19
 									? args.length >= 26
 										? args.length >= 28
-											? args.length === 34
+											? args.length === 34 || args.length === 37
 												? "pilot review, prior-assignment timing, participant acknowledgement signatures, trusted prior existence of the complete acknowledgement bundle, signed selection disclosure, development receipt binding, and registered development execution start/finish chronology are verified; absence of off-registry executions, absence of undisclosed shadow trials, and selection-history completeness remain unverified; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"
 												: args.length === 32
 													? "pilot review, prior-assignment timing, participant acknowledgement signatures, trusted prior existence of the complete acknowledgement bundle, signed candidate-selection disclosure internal consistency, executed Naia policy binding, a trusted timestamp on the development matrix, complete timestamped-matrix coverage, and development receipt binding are verified; receipt event times, absence of undisclosed shadow trials, and selection-history completeness are not externally verified; human identity, comprehension, independence, physical delivery, and construction-cause independence are not empirically verified; competitive thresholds, simultaneous uncertainty, latency, and released-commit evidence are not evaluated by this gate"

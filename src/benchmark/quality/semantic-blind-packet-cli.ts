@@ -27,8 +27,10 @@ type CampaignManifest = {
 	schemaVersion:
 		| "naia-memory-semantic-campaign-v2"
 		| "naia-memory-semantic-campaign-v3"
-		| "naia-memory-semantic-campaign-v4";
+		| "naia-memory-semantic-campaign-v4"
+		| "naia-memory-semantic-campaign-v5";
 	disclosure: {
+		eligibility?: "diagnostic" | "competitive-candidate";
 		executionSeed: string;
 		repetitions: number;
 		topK: number;
@@ -37,6 +39,9 @@ type CampaignManifest = {
 		claimScope?: string;
 		comparisonLanes?: unknown;
 		crossLaneAggregation?: "prohibited";
+		confirmatoryAuthorizationSha256?: string | null;
+		analysisPlanTimestampEvidenceSha256?: string | null;
+		analysisPlanTimestampTrustPolicyIdentitySha256?: string | null;
 	};
 	runs: Array<SemanticCampaignRun & { artifactSha256: string }>;
 };
@@ -118,7 +123,8 @@ export function buildSemanticBlindArtifacts(input: {
 	if (
 		(input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v2" &&
 			input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v3" &&
-			input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v4") ||
+			input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v4" &&
+			input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v5") ||
 		(input.campaign.schemaVersion === "naia-memory-semantic-campaign-v2" &&
 			disclosure?.engines !== undefined &&
 			(!Array.isArray(disclosure.engines) ||
@@ -143,20 +149,35 @@ export function buildSemanticBlindArtifacts(input: {
 		!Number.isInteger(disclosure.topK) ||
 		disclosure.topK < 1 ||
 		(input.campaign.schemaVersion === "naia-memory-semantic-campaign-v4" &&
+			(disclosure.claimScope !== "diagnostic-characterization-only-v1" ||
+				disclosure.analysisPlanSha256 !== null ||
+				disclosure.comparisonLanes !== null)) ||
+		(input.campaign.schemaVersion === "naia-memory-semantic-campaign-v5" &&
 			(disclosure.claimScope === "diagnostic-characterization-only-v1"
-				? disclosure.analysisPlanSha256 !== null ||
-					disclosure.comparisonLanes !== null
+				? disclosure.eligibility !== "diagnostic" ||
+					disclosure.analysisPlanSha256 !== null ||
+					disclosure.comparisonLanes !== null ||
+					disclosure.confirmatoryAuthorizationSha256 !== null
 				: ![
 						"direct-lifecycle-competitive-report-v1",
 						"declared-multi-class-competitive-report-v1",
 					].includes(disclosure.claimScope ?? "") ||
+					disclosure.eligibility !== "competitive-candidate" ||
 					typeof disclosure.analysisPlanSha256 !== "string" ||
 					!/^[a-f0-9]{64}$/.test(disclosure.analysisPlanSha256) ||
 					!hasValidSemanticComparisonLanes(
 						disclosure.comparisonLanes,
 						disclosure.claimScope,
 					) ||
-					disclosure.crossLaneAggregation !== "prohibited")) ||
+					disclosure.crossLaneAggregation !== "prohibited" ||
+					![
+						disclosure.confirmatoryAuthorizationSha256,
+						disclosure.analysisPlanTimestampEvidenceSha256,
+						disclosure.analysisPlanTimestampTrustPolicyIdentitySha256,
+					].every(
+						(value) =>
+							typeof value === "string" && /^[a-f0-9]{64}$/.test(value),
+					))) ||
 		!Array.isArray(input.campaign.runs) ||
 		input.campaign.runs.length !== disclosure.repetitions * engines.length
 	)

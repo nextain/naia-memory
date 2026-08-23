@@ -52,8 +52,10 @@ export type SemanticExecutionTrustPolicy = {
 type CampaignManifest = {
 	schemaVersion:
 		| "naia-memory-semantic-campaign-v3"
-		| "naia-memory-semantic-campaign-v4";
+		| "naia-memory-semantic-campaign-v4"
+		| "naia-memory-semantic-campaign-v5";
 	disclosure: {
+		eligibility?: "diagnostic" | "competitive-candidate";
 		executionSeed: string;
 		repetitions: number;
 		topK: number;
@@ -62,6 +64,9 @@ type CampaignManifest = {
 		claimScope?: string;
 		comparisonLanes?: unknown;
 		crossLaneAggregation?: "prohibited";
+		confirmatoryAuthorizationSha256?: string | null;
+		analysisPlanTimestampEvidenceSha256?: string | null;
+		analysisPlanTimestampTrustPolicyIdentitySha256?: string | null;
 	};
 	runs: Array<SemanticCampaignRun & { artifactSha256: string }>;
 };
@@ -160,6 +165,7 @@ function validateCampaign(
 		![
 			"naia-memory-semantic-campaign-v3",
 			"naia-memory-semantic-campaign-v4",
+			"naia-memory-semantic-campaign-v5",
 		].includes(campaign.schemaVersion) ||
 		!disclosure?.executionSeed?.trim() ||
 		!Array.isArray(disclosure.engines) ||
@@ -192,7 +198,32 @@ function validateCampaign(
 							disclosure.comparisonLanes,
 							disclosure.claimScope,
 						)) ||
-				disclosure.crossLaneAggregation !== "prohibited")) ||
+				disclosure.crossLaneAggregation !== "prohibited" ||
+				disclosure.claimScope !== "diagnostic-characterization-only-v1")) ||
+		(campaign.schemaVersion === "naia-memory-semantic-campaign-v5" &&
+			(disclosure.claimScope === "diagnostic-characterization-only-v1"
+				? disclosure.eligibility !== "diagnostic" ||
+					disclosure.analysisPlanSha256 !== null ||
+					disclosure.comparisonLanes !== null ||
+					disclosure.confirmatoryAuthorizationSha256 !== null
+				: ![
+						"direct-lifecycle-competitive-report-v1",
+						"declared-multi-class-competitive-report-v1",
+					].includes(disclosure.claimScope ?? "") ||
+					disclosure.eligibility !== "competitive-candidate" ||
+					disclosure.analysisPlanSha256 == null ||
+					!hasValidSemanticComparisonLanes(
+						disclosure.comparisonLanes,
+						disclosure.claimScope,
+					) ||
+					disclosure.crossLaneAggregation !== "prohibited" ||
+					![
+						disclosure.confirmatoryAuthorizationSha256,
+						disclosure.analysisPlanTimestampEvidenceSha256,
+						disclosure.analysisPlanTimestampTrustPolicyIdentitySha256,
+					].every(
+						(value) => typeof value === "string" && SHA256.test(value),
+					))) ||
 		!Array.isArray(runs)
 	)
 		throw new Error("semantic execution campaign shape is invalid");

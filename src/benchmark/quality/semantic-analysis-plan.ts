@@ -208,7 +208,10 @@ export function validateSemanticAnalysisPlan(input: {
 	if (
 		!isRecord(disclosure) ||
 		!validUniqueStrings(disclosure.engines) ||
-		input.campaign.schemaVersion !== "naia-memory-semantic-campaign-v4" ||
+		![
+			"naia-memory-semantic-campaign-v4",
+			"naia-memory-semantic-campaign-v5",
+		].includes(input.campaign.schemaVersion as string) ||
 		disclosure.analysisPlanSha256 !== planSha256 ||
 		disclosure.claimScope !== input.plan.claimScope ||
 		JSON.stringify(disclosure.comparisonLanes) !==
