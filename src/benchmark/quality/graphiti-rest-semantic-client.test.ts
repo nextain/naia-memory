@@ -89,7 +89,7 @@ describe("GraphitiRestSemanticClient", () => {
 		});
 
 		await expect(
-			client.searchFacts({
+			client.searchCurrentFacts({
 				query: "무슨 음식을?",
 				groupIds: ["g"],
 				maxFacts: 3,

@@ -118,6 +118,8 @@ export function validateRawArtifact(
 					item.ingestionPolicy !== "sequential-turn-settled-bank-v1") ||
 				item.temporalInputPolicy !== "engine-default-ingest-time-v1" ||
 				(item.retrievalSurface !== "engine-native-semantic-memory-v1" &&
+					item.retrievalSurface !==
+						"engine-current-state-projected-semantic-memory-v1" &&
 					item.retrievalSurface !== "engine-native-core-state-v1" &&
 					item.retrievalSurface !==
 						"engine-native-core-first-and-semantic-archive-v1") ||

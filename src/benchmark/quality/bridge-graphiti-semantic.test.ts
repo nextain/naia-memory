@@ -11,7 +11,7 @@ function client(
 	return {
 		addEpisode: vi.fn(async () => undefined),
 		hasEpisode: vi.fn(async () => true),
-		searchFacts: vi.fn(async () => []),
+		searchCurrentFacts: vi.fn(async () => []),
 		listCurrentFacts: vi.fn(async () => []),
 		deleteGroup: vi.fn(async () => undefined),
 		...overrides,
@@ -64,7 +64,7 @@ describe("GraphitiSemanticBridge", () => {
 	});
 
 	it("uses native fact identity for both retrieval and complete current state", async () => {
-		const searchFacts = vi.fn(async () => [
+		const searchCurrentFacts = vi.fn(async () => [
 			{ uuid: "edge-new", fact: "사용자는 부산에 산다" },
 		]);
 		const listCurrentFacts = vi.fn(async () => [
@@ -72,7 +72,7 @@ describe("GraphitiSemanticBridge", () => {
 			{ uuid: "edge-food", fact: "사용자는 비빔밥을 좋아한다" },
 		]);
 		const bridge = new GraphitiSemanticBridge(
-			client({ searchFacts, listCurrentFacts }),
+			client({ searchCurrentFacts, listCurrentFacts }),
 			"case-ko",
 		);
 
@@ -80,12 +80,15 @@ describe("GraphitiSemanticBridge", () => {
 			{ nativeId: "edge-new", content: "사용자는 부산에 산다" },
 		]);
 		await expect(bridge.getNativeState()).resolves.toHaveLength(2);
-		expect(searchFacts).toHaveBeenCalledWith({
+		expect(searchCurrentFacts).toHaveBeenCalledWith({
 			query: "어디에 살아요?",
 			groupIds: ["case-ko"],
 			maxFacts: 1,
 		});
 		expect(listCurrentFacts).toHaveBeenCalledWith("case-ko");
+		expect(bridge.retrievalSurface).toBe(
+			"engine-current-state-projected-semantic-memory-v1",
+		);
 	});
 
 	it("deletes only the isolated group", async () => {

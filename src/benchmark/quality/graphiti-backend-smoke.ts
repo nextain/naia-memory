@@ -34,7 +34,7 @@ export type GraphitiBackendSmokeOptions = {
 
 export async function runGraphitiBackendSmoke(
 	client: GraphitiSemanticClient & {
-		searchFactsRaw?: GraphitiSemanticClient["searchFacts"];
+		searchFactsRaw?: GraphitiSemanticClient["searchCurrentFacts"];
 	},
 	options: GraphitiBackendSmokeOptions = {},
 ): Promise<GraphitiBackendSmokeResult> {
@@ -76,7 +76,7 @@ export async function runGraphitiBackendSmoke(
 			wait,
 		);
 		const after = await client.listCurrentFacts(groupA);
-		const search = await client.searchFacts({
+		const search = await client.searchCurrentFacts({
 			query: "지금 어디에 살고 있나요?",
 			groupIds: [groupA],
 			maxFacts: 10,

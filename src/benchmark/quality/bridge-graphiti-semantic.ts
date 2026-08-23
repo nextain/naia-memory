@@ -19,7 +19,8 @@ export type GraphitiSemanticClient = {
 		sourceDescription: string;
 	}): Promise<void>;
 	hasEpisode(input: { uuid: string; groupId: string }): Promise<boolean>;
-	searchFacts(input: {
+	/** Searches Graphiti and returns only results identical to current native edges. */
+	searchCurrentFacts(input: {
 		query: string;
 		groupIds: string[];
 		maxFacts: number;
@@ -52,7 +53,8 @@ export function createGraphitiSemanticBridge(
 }
 
 /**
- * Exercises Graphiti's sequential episode ingestion and native fact retrieval.
+ * Exercises Graphiti's sequential episode ingestion and current-state-projected
+ * native fact retrieval.
  *
  * The injected client must expose Graphiti core's group-scoped current edges;
  * the stock graph-service REST API does not provide a complete fact-list route.
@@ -63,7 +65,8 @@ export class GraphitiSemanticBridge implements SemanticEngineBridge {
 	readonly identityPolicy = "engine-native-memory-v1" as const;
 	readonly ingestionPolicy = "sequential-turn-commit-v1" as const;
 	readonly temporalInputPolicy = "engine-default-ingest-time-v1" as const;
-	readonly retrievalSurface = "engine-native-semantic-memory-v1" as const;
+	readonly retrievalSurface =
+		"engine-current-state-projected-semantic-memory-v1" as const;
 
 	private readonly pollIntervalMs: number;
 	private readonly ingestionTimeoutMs: number;
@@ -118,7 +121,7 @@ export class GraphitiSemanticBridge implements SemanticEngineBridge {
 
 	async search(query: string, topK: number): Promise<SemanticNativeMemory[]> {
 		return (
-			await this.client.searchFacts({
+			await this.client.searchCurrentFacts({
 				query,
 				groupIds: [this.groupId],
 				maxFacts: topK,

@@ -67,7 +67,7 @@ export class GraphitiRestSemanticClient implements GraphitiSemanticClient {
 		return value.committed;
 	}
 
-	async searchFacts(input: {
+	async searchCurrentFacts(input: {
 		query: string;
 		groupIds: string[];
 		maxFacts: number;

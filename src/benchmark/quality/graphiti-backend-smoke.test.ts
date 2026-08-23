@@ -20,7 +20,7 @@ describe("runGraphitiBackendSmoke", () => {
 			listCurrentFacts: vi.fn(async (groupId) => [
 				...(groups.get(groupId) ?? []),
 			]),
-			searchFacts: vi.fn(async ({ groupIds }) => [
+			searchCurrentFacts: vi.fn(async ({ groupIds }) => [
 				...(groups.get(groupIds[0]) ?? []),
 			]),
 			deleteGroup: vi.fn(async (groupId) => void groups.delete(groupId)),
@@ -41,14 +41,14 @@ describe("runGraphitiBackendSmoke", () => {
 	it("audits unprojected search output instead of accepting projected identity", async () => {
 		let current = [{ uuid: "old", fact: "서울" }];
 		const client: GraphitiSemanticClient & {
-			searchFactsRaw: GraphitiSemanticClient["searchFacts"];
+			searchFactsRaw: GraphitiSemanticClient["searchCurrentFacts"];
 		} = {
 			addEpisode: vi.fn(async ({ content }) => {
 				if (content.includes("부산")) current = [{ uuid: "new", fact: "부산" }];
 			}),
 			hasEpisode: vi.fn(async () => true),
 			listCurrentFacts: vi.fn(async () => [...current]),
-			searchFacts: vi.fn(async () => [...current]),
+			searchCurrentFacts: vi.fn(async () => [...current]),
 			searchFactsRaw: vi.fn(async () => [
 				...current,
 				{ uuid: "old", fact: "서울" },
@@ -68,7 +68,7 @@ describe("runGraphitiBackendSmoke", () => {
 			}),
 			hasEpisode: vi.fn(async () => true),
 			listCurrentFacts: vi.fn(async () => [...current]),
-			searchFacts: vi.fn(async () => [{ uuid: "old", fact: "서울" }]),
+			searchCurrentFacts: vi.fn(async () => [{ uuid: "old", fact: "서울" }]),
 			deleteGroup: vi.fn(async () => undefined),
 		};
 		const result = await runGraphitiBackendSmoke(client, { pollIntervalMs: 0 });
@@ -84,7 +84,7 @@ describe("runGraphitiBackendSmoke", () => {
 			}),
 			hasEpisode: vi.fn(async () => true),
 			listCurrentFacts: vi.fn(async () => [...current]),
-			searchFacts: vi.fn(async () => [...current]),
+			searchCurrentFacts: vi.fn(async () => [...current]),
 			deleteGroup: vi.fn(async () => {
 				throw new Error("backend unavailable");
 			}),
