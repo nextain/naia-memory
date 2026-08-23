@@ -1,5 +1,10 @@
 import type { MiraclEvidenceLanguage } from "./miracl-multilingual-contract.js";
 import {
+	canonicalMiraclCorpusIdentity,
+	parseMiraclCorpusIdentityReceipt,
+	sha256MiraclCorpusIdentity,
+} from "./miracl-corpus-identity.js";
+import {
 	type MultilingualFullCorpusResult,
 	verifyMultilingualFullCorpusIdentity,
 } from "./miracl-multilingual-full-corpus-evidence.js";
@@ -108,6 +113,8 @@ export interface MultilingualCompletionEvidenceInput {
 	runtimeObservationText: string;
 	qdrantServiceReceiptPath?: string;
 	qdrantServiceReceiptText?: string;
+	corpusIdentityReceiptPath?: string;
+	corpusIdentityReceiptText?: string;
 	trecEvalPath: string;
 	trecEvalStdout: string;
 	trecEvalBinarySha256: string;
@@ -129,6 +136,7 @@ export interface MultilingualCompletionEvidenceInput {
 		launchReceiptAfterSha256: string;
 		runtimeObservationAfterSha256: string;
 		qdrantServiceReceiptAfterSha256?: string;
+		corpusIdentityReceiptAfterSha256?: string;
 		checkpointChainAfterSha256: string;
 	};
 	evaluationSourceSha256: string;
@@ -143,6 +151,51 @@ function parseJson<T>(text: string, name: string): T {
 	} catch (error) {
 		throw new Error(`${name} is not valid JSON`, { cause: error });
 	}
+}
+
+export function resolveEnglishCorpusIdentityArtifact(input: {
+	language: MiraclEvidenceLanguage;
+	path?: string;
+	text?: string;
+	launchReceiptSha256?: string | null;
+	launchSourceLockSha256?: string | null;
+	resultSourceLockSha256: string;
+	afterSha256?: string;
+}):
+	| {
+			path: string;
+			sha256: string;
+			receipt: ReturnType<typeof parseMiraclCorpusIdentityReceipt>;
+	  }
+	| undefined {
+	if (input.language !== "en") {
+		if (
+			input.path !== undefined ||
+			input.text !== undefined ||
+			input.afterSha256 !== undefined
+		)
+			throw new Error(
+				"corpus identity receipt artifact is reserved for English",
+			);
+		return undefined;
+	}
+	if (!input.path || !input.text)
+		throw new Error("English corpus identity receipt artifact is missing");
+	const receipt = parseMiraclCorpusIdentityReceipt(
+		"en",
+		parseJson<unknown>(input.text, "corpus identity receipt"),
+	);
+	if (input.text !== canonicalMiraclCorpusIdentity(receipt))
+		throw new Error("English corpus identity receipt bytes are not canonical");
+	const receiptSha256 = sha256MiraclCorpusIdentity(receipt);
+	if (
+		receiptSha256 !== input.launchReceiptSha256 ||
+		receipt.sourceLockSha256 !== input.launchSourceLockSha256 ||
+		receipt.sourceLockSha256 !== input.resultSourceLockSha256 ||
+		input.afterSha256 !== receiptSha256
+	)
+		throw new Error("English corpus identity receipt artifact mismatch");
+	return { path: input.path, sha256: receiptSha256, receipt };
 }
 
 export function createMultilingualCompletionEvidence(
@@ -214,6 +267,17 @@ export function createMultilingualCompletionEvidence(
 		launchSourceLockSha256: launch.corpusIdentitySourceLockSha256,
 		resultSourceLockSha256: result.inputs.sourceLockSha256,
 	});
+	const corpusIdentityReceiptArtifact =
+		resolveEnglishCorpusIdentityArtifact({
+			language: input.language,
+			path: input.corpusIdentityReceiptPath,
+			text: input.corpusIdentityReceiptText,
+			launchReceiptSha256: launch.corpusIdentityReceiptSha256,
+			launchSourceLockSha256: launch.corpusIdentitySourceLockSha256,
+			resultSourceLockSha256: result.inputs.sourceLockSha256,
+			afterSha256:
+				input.artifactStability.corpusIdentityReceiptAfterSha256,
+		});
 	let qdrantServiceReceiptArtifact:
 		| {
 				path: string;
@@ -345,6 +409,7 @@ export function createMultilingualCompletionEvidence(
 		},
 		checkpointChain: input.checkpointChain,
 		qdrantServiceReceipt: qdrantServiceReceiptArtifact,
+		corpusIdentityReceipt: corpusIdentityReceiptArtifact,
 	};
 	return {
 		schemaVersion: "naia-memory-miracl-multilingual-completion-evidence-v1",

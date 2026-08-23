@@ -34,7 +34,16 @@ export function verifyEnglishCorpusIdentityLaunchChain(input: {
 	launchSourceLockSha256?: string | null;
 	resultSourceLockSha256: string;
 }): void {
-	if (input.language !== "en") return;
+	if (input.language !== "en") {
+		if (
+			input.receiptSha256 != null ||
+			input.launchSourceLockSha256 != null
+		)
+			throw new Error(
+				"corpus identity launch chain is reserved for English",
+			);
+		return;
+	}
 	if (
 		!input.receiptSha256 ||
 		!/^[a-f0-9]{64}$/u.test(input.receiptSha256) ||

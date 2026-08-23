@@ -83,9 +83,15 @@ export async function runMultilingualCompletionEvidenceCli(
 		environment.MIRACL_FULL_EVIDENCE_OUTPUT ?? `${resultPath}.evidence.json`;
 	const qdrantUrl = environment.QDRANT_URL ?? "http://127.0.0.1:6334";
 	const qdrantServiceReceiptPath = environment.MIRACL_QDRANT_SERVICE_RECEIPT;
+	const corpusIdentityReceiptPath =
+		environment.MIRACL_CORPUS_IDENTITY_RECEIPT;
 	if (language !== "en" && qdrantServiceReceiptPath)
 		throw new Error(
 			"Qdrant service binding receipts are reserved for English evidence",
+		);
+	if (language !== "en" && corpusIdentityReceiptPath)
+		throw new Error(
+			"corpus identity receipts are reserved for English evidence",
 		);
 	const checkpointRoot =
 		environment.MIRACL_FULL_CHECKPOINT_DIR ??
@@ -106,9 +112,15 @@ export async function runMultilingualCompletionEvidenceCli(
 	}
 	if (language === "en" && !qdrantServiceReceiptPath)
 		throw new Error("English Qdrant service receipt input is missing");
+	if (language === "en" && !corpusIdentityReceiptPath)
+		throw new Error("English corpus identity receipt input is missing");
 	if (qdrantServiceReceiptPath && !existsSync(qdrantServiceReceiptPath))
 		throw new Error(
 			`required evidence input missing: ${qdrantServiceReceiptPath}`,
+		);
+	if (corpusIdentityReceiptPath && !existsSync(corpusIdentityReceiptPath))
+		throw new Error(
+			`required evidence input missing: ${corpusIdentityReceiptPath}`,
 		);
 	const resultText = readFileSync(resultPath, "utf8");
 	const result = JSON.parse(resultText) as FullCorpusResult;
@@ -124,6 +136,9 @@ export async function runMultilingualCompletionEvidenceCli(
 	const runtimeObservationText = readFileSync(runtimeObservationPath, "utf8");
 	const qdrantServiceReceiptText = qdrantServiceReceiptPath
 		? readFileSync(qdrantServiceReceiptPath, "utf8")
+		: undefined;
+	const corpusIdentityReceiptText = corpusIdentityReceiptPath
+		? readFileSync(corpusIdentityReceiptPath, "utf8")
 		: undefined;
 	const runtimeObservation = JSON.parse(runtimeObservationText) as {
 		monitor: { sourceSha256: string };
@@ -267,6 +282,8 @@ export async function runMultilingualCompletionEvidenceCli(
 		runtimeObservationText,
 		qdrantServiceReceiptPath,
 		qdrantServiceReceiptText,
+		corpusIdentityReceiptPath,
+		corpusIdentityReceiptText,
 		trecEvalPath: evaluatorPath,
 		trecEvalStdout,
 		trecEvalBinarySha256: binaryBeforeSha256,
@@ -295,6 +312,9 @@ export async function runMultilingualCompletionEvidenceCli(
 			),
 			qdrantServiceReceiptAfterSha256: qdrantServiceReceiptPath
 				? sha256Bytes(readFileSync(qdrantServiceReceiptPath))
+				: undefined,
+			corpusIdentityReceiptAfterSha256: corpusIdentityReceiptPath
+				? sha256Bytes(readFileSync(corpusIdentityReceiptPath))
 				: undefined,
 			checkpointChainAfterSha256: evidenceObjectSha256(checkpointChainAfter),
 		},

@@ -1,6 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+	canonicalMiraclCorpusIdentity,
+	parseMiraclCorpusIdentityReceipt,
+	sha256MiraclCorpusIdentity,
+} from "./miracl-corpus-identity.js";
+import { resolveEnglishCorpusIdentityArtifact } from "./miracl-multilingual-completion-evidence.js";
+import {
 	resolveEnglishCorpusIdentityBinding,
 	resolveFullCorpusLanguage,
 	resolveFullCorpusLaunchReceiptOutput,
@@ -66,8 +72,86 @@ describe("full-corpus launch receipt defaults", () => {
 				...valid,
 				language: "ar",
 				receiptSha256: null,
+				launchSourceLockSha256: null,
 			}),
 		).not.toThrow();
+		for (const changed of [
+			{
+				...valid,
+				language: "ar" as const,
+				launchSourceLockSha256: null,
+			},
+			{
+				...valid,
+				language: "ar" as const,
+				receiptSha256: null,
+			},
+		])
+			expect(() => verifyEnglishCorpusIdentityLaunchChain(changed)).toThrow(
+				"reserved for English",
+			);
+	});
+
+	it("embeds a canonical English corpus identity artifact and rejects drift", () => {
+		const path =
+			"reports/quality/miracl-en-corpus-identity-observation-v2.json";
+		const receipt = parseMiraclCorpusIdentityReceipt(
+			"en",
+			JSON.parse(readFileSync(path, "utf8")) as unknown,
+		);
+		const text = canonicalMiraclCorpusIdentity(receipt);
+		const sha256 = sha256MiraclCorpusIdentity(receipt);
+		const valid = {
+			language: "en" as const,
+			path,
+			text,
+			launchReceiptSha256: sha256,
+			launchSourceLockSha256: receipt.sourceLockSha256,
+			resultSourceLockSha256: receipt.sourceLockSha256,
+			afterSha256: sha256,
+		};
+		expect(resolveEnglishCorpusIdentityArtifact(valid)).toMatchObject({
+			path,
+			sha256,
+			receipt,
+		});
+		for (const changed of [
+			{ ...valid, path: undefined },
+			{ ...valid, text: undefined },
+		])
+			expect(() => resolveEnglishCorpusIdentityArtifact(changed)).toThrow(
+				"artifact is missing",
+			);
+		for (const changed of [
+			{ ...valid, text: `${text}\n` },
+			{ ...valid, launchReceiptSha256: "0".repeat(64) },
+			{ ...valid, launchSourceLockSha256: "0".repeat(64) },
+			{ ...valid, resultSourceLockSha256: "0".repeat(64) },
+			{ ...valid, afterSha256: "0".repeat(64) },
+			{ ...valid, afterSha256: undefined },
+		])
+			expect(() => resolveEnglishCorpusIdentityArtifact(changed)).toThrow();
+		for (const changed of [
+			{ ...valid, language: "ar" as const },
+			{
+				language: "ar" as const,
+				resultSourceLockSha256: valid.resultSourceLockSha256,
+				path,
+			},
+			{
+				language: "ar" as const,
+				resultSourceLockSha256: valid.resultSourceLockSha256,
+				text,
+			},
+			{
+				language: "ar" as const,
+				resultSourceLockSha256: valid.resultSourceLockSha256,
+				afterSha256: sha256,
+			},
+		])
+			expect(() => resolveEnglishCorpusIdentityArtifact(changed)).toThrow(
+				"reserved for English",
+			);
 	});
 	it("binds the implicit output path to the live MIRACL language", () => {
 		expect(
