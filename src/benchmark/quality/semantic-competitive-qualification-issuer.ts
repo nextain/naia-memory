@@ -13,6 +13,7 @@ import type {
 	SemanticAnalysisPlan,
 	SemanticAnalysisPlanTrustPolicy,
 } from "./semantic-analysis-plan.js";
+import { semanticQualificationTrustAnchorFromPublicPolicy } from "./semantic-competitive-qualification-trust-store.js";
 import {
 	SEMANTIC_QUALIFICATION_SUBJECTS,
 	type SemanticCompetitiveQualification,
@@ -89,21 +90,18 @@ export function semanticQualificationTrustAnchor(
 	const gatePublicKey = createPublicKey(privateKey)
 		.export({ type: "spki", format: "pem" })
 		.toString();
-	const trustStoreSha256 = evidenceObjectSha256({
+	return semanticQualificationTrustAnchorFromPublicPolicy({
+		schemaVersion:
+			"naia-memory-semantic-qualification-public-deployment-policy-v1",
 		deploymentId: policy.deploymentId,
 		gateKeyId: policy.gateKeyId,
-		gatePublicKey,
+		gatePublicKeyPem: gatePublicKey,
 		verifierPolicy: policy.verifierPolicy,
 		analysisPlanTrustPolicy: policy.analysisPlanTrustPolicy,
 		timestampTrustPolicyIdentity: rfc3161TrustPolicyIdentity(
 			policy.timestampTrustPolicy,
 		),
 	});
-	return {
-		deploymentId: policy.deploymentId,
-		trustStoreSha256,
-		gatePublicKeys: { [policy.gateKeyId]: gatePublicKey },
-	};
 }
 
 export function issueSemanticCompetitiveQualification(input: {
