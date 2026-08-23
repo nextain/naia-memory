@@ -104,6 +104,8 @@ export function verifyPublicDatasetCustodySeal(input: {
 	const challengeIssuedAt = Date.parse(input.challengeIssuedAt);
 	if (![sealedAt, timestampedAt, challengeIssuedAt].every(Number.isFinite))
 		throw new Error("dataset custody chronology is invalid");
+	if (new Date(challengeIssuedAt).toISOString() !== input.challengeIssuedAt)
+		throw new Error("dataset custody challenge timestamp is not canonical UTC");
 	if (sealedAt > timestampedAt || timestampedAt - sealedAt > 1000)
 		throw new Error("dataset custody asserted seal time differs from TSA time");
 	if (timestampedAt >= challengeIssuedAt)
