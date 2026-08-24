@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
 	buildMiraclEnPrimarySampleReceipt,
+	buildMiraclEnRetrievalCorpus,
 	miraclEnSelectedQrelsSha256,
+	miraclEnSelectedRelevantDocids,
 	selectMiraclEnPreflightQueryIds,
 	validateMiraclEnPassageStrata,
 } from "./miracl-en-primary-sample-receipt.js";
@@ -54,6 +56,11 @@ describe("MIRACL-en source-derived preflight receipt", () => {
 		expect(miraclEnSelectedQrelsSha256(first, ["q1"])).not.toBe(
 			miraclEnSelectedQrelsSha256(first, ["q1", "q2"]),
 		);
+		expect(miraclEnSelectedRelevantDocids(first, ["q1", "q2"])).toEqual([
+			"d1",
+			"d2",
+			"d3",
+		]);
 	});
 
 	it("rejects a count-correct sample concentrated in one length stratum", () => {
@@ -79,6 +86,37 @@ describe("MIRACL-en source-derived preflight receipt", () => {
 		expect(() => validateMiraclEnPassageStrata(passages)).not.toThrow();
 	});
 
+	it("builds the retrieval corpus from stratified negatives and every qrel document", () => {
+		const sample = [
+			{ ordinal: 1, docid: "negative", content: "n" },
+			{ ordinal: 3, docid: "relevant-2", content: "r2" },
+		];
+		const relevant = [
+			{ ordinal: 2, docid: "relevant-1", content: "r1" },
+			{ ordinal: 3, docid: "relevant-2", content: "r2" },
+		];
+		expect(
+			buildMiraclEnRetrievalCorpus(sample, relevant, [
+				"relevant-1",
+				"relevant-2",
+			]),
+		).toEqual([
+			{ ordinal: 1, docid: "negative", content: "n" },
+			{ ordinal: 2, docid: "relevant-1", content: "r1" },
+			{ ordinal: 3, docid: "relevant-2", content: "r2" },
+		]);
+	});
+
+	it("rejects a retrieval corpus missing a selected qrel document", () => {
+		expect(() =>
+			buildMiraclEnRetrievalCorpus(
+				[{ ordinal: 1, docid: "negative", content: "n" }],
+				[{ ordinal: 2, docid: "relevant-1", content: "r1" }],
+				["relevant-1", "relevant-2"],
+			),
+		).toThrow("does not cover every selected qrel");
+	});
+
 	it("rejects bytes that merely claim the locked source identity", () => {
 		const contract = MIRACL_MULTILINGUAL_CONTRACT.en;
 		expect(() =>
@@ -94,6 +132,7 @@ describe("MIRACL-en source-derived preflight receipt", () => {
 				topicsBytes: Buffer.from("forged"),
 				qrelsBytes: Buffer.from("forged"),
 				passages: [],
+				retrievalPassages: [],
 				producerSourceManifest: {} as never,
 			}),
 		).toThrow("topics/qrels bytes");

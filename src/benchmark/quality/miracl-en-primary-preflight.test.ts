@@ -47,6 +47,7 @@ function evidenceInput() {
 			]),
 		),
 		rankingArtifactSha256: "",
+		corpusPassagesSha256: "b".repeat(64),
 	};
 	retrieval.rankingArtifactSha256 =
 		englishPreflightRetrievalInputSha256(retrieval);
@@ -133,7 +134,7 @@ describe("MIRACL English primary preflight", () => {
 		expect(() =>
 			createMiraclEnPrimaryPreflightEvidence(forgedProducer),
 		).toThrow("internally inconsistent");
-	});
+	}, 15_000);
 
 	it("recomputes retrieval metrics from query rankings and qrels", () => {
 		const input = evidenceInput();

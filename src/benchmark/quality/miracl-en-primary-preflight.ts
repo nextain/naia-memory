@@ -60,6 +60,7 @@ export interface EnglishPreflightRetrievalInput {
 	batchRankings: RankedQuery[];
 	relevantByQuery: ReadonlyMap<string, ReadonlySet<string>>;
 	rankingArtifactSha256: string;
+	corpusPassagesSha256: string;
 }
 
 function sha256(value: string | Uint8Array): string {
@@ -205,7 +206,10 @@ function canonicalRows(passages: readonly EnglishPreflightPassage[]): string {
 export function englishPreflightRetrievalInputSha256(
 	input: Pick<
 		EnglishPreflightRetrievalInput,
-		"perItemRankings" | "batchRankings" | "relevantByQuery"
+		| "perItemRankings"
+		| "batchRankings"
+		| "relevantByQuery"
+		| "corpusPassagesSha256"
 	>,
 ): string {
 	const qrels = [...input.relevantByQuery]
@@ -219,6 +223,7 @@ export function englishPreflightRetrievalInputSha256(
 			perItemRankings: input.perItemRankings,
 			batchRankings: input.batchRankings,
 			qrels,
+			corpusPassagesSha256: input.corpusPassagesSha256,
 		})}\n`,
 	);
 }
@@ -317,6 +322,8 @@ export function createMiraclEnPrimaryPreflightEvidence(input: {
 	);
 	if (input.retrieval.rankingArtifactSha256 !== rankingArtifactSha256)
 		throw new Error("retrieval ranking artifact digest mismatch");
+	if (!/^[a-f0-9]{64}$/u.test(input.retrieval.corpusPassagesSha256))
+		throw new Error("retrieval corpus digest is invalid");
 	const retrievalAnalysis = analyzeRankingAb({
 		baseline: input.retrieval.perItemRankings,
 		candidate: input.retrieval.batchRankings,
@@ -353,6 +360,7 @@ export function createMiraclEnPrimaryPreflightEvidence(input: {
 		meanTop10Jaccard: retrievalAnalysis.rankingStability.meanTop10Jaccard,
 		meanTop100Jaccard: retrievalAnalysis.rankingStability.meanTop100Jaccard,
 		rankingArtifactSha256,
+		corpusPassagesSha256: input.retrieval.corpusPassagesSha256,
 	};
 	if (retrieval.queryCount !== MIRACL_EN_PREFLIGHT_RETRIEVAL_QUERIES)
 		throw new Error("retrieval query sample count mismatch");

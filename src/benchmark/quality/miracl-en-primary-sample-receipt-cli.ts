@@ -9,7 +9,9 @@ import { EnglishPreflightSampler } from "./miracl-en-primary-preflight.js";
 import {
 	buildMiraclEnPrimarySampleReceipt,
 	canonicalMiraclEnPrimarySampleReceipt,
+	miraclEnSelectedRelevantDocids,
 	publishMiraclEnPrimarySampleReceipt,
+	selectMiraclEnPreflightQueryIds,
 } from "./miracl-en-primary-sample-receipt.js";
 import { MIRACL_MULTILINGUAL_CONTRACT } from "./miracl-multilingual-contract.js";
 import { miraclSourceRoot } from "./miracl-multilingual-download.js";
@@ -20,6 +22,20 @@ const root = resolve(import.meta.dirname, "../../..");
 const sourceRoot = resolve(
 	process.env.MIRACL_SOURCE_DIR ?? miraclSourceRoot("en"),
 );
+const contract = MIRACL_MULTILINGUAL_CONTRACT.en;
+const topicsBytes = readFileSync(join(sourceRoot, contract.topics.path));
+const qrelsBytes = readFileSync(join(sourceRoot, contract.qrels.path));
+const queryIds = selectMiraclEnPreflightQueryIds(
+	topicsBytes.toString("utf8"),
+	qrelsBytes.toString("utf8"),
+);
+const requiredRelevantDocids = new Set(
+	miraclEnSelectedRelevantDocids(qrelsBytes.toString("utf8"), queryIds),
+);
+const retrievalPassages = new Map<
+	string,
+	{ ordinal: number; docid: string; content: string }
+>();
 const sourceReceiptPath =
 	process.env.MIRACL_SOURCE_RECEIPT ??
 	join(sourceRoot, "source-lock-receipt.json");
@@ -37,25 +53,29 @@ const prepared = prepareMiraclCorpusIdentityScan({
 const sampler = new EnglishPreflightSampler("verified-corpus-stream");
 const scan = await scanNativeCorpusDocuments(
 	prepared.shards,
-	(document, ordinal) =>
-		sampler.consider({
+	(document, ordinal) => {
+		const passage = {
 			ordinal,
 			docid: document.docid,
 			content: `${document.title}\n${document.text}`,
-		}),
+		};
+		sampler.consider(passage);
+		if (requiredRelevantDocids.has(document.docid))
+			retrievalPassages.set(document.docid, passage);
+	},
 	{
 		duplicateWorkDirectory:
 			process.env.MIRACL_DUPLICATE_WORK_DIR ?? dirname(sourceRoot),
 		expectedCompressedShards: prepared.expectedCompressedShards,
 	},
 );
-const contract = MIRACL_MULTILINGUAL_CONTRACT.en;
 const receipt = buildMiraclEnPrimarySampleReceipt({
 	sourceLockSha256: prepared.sourceLockSha256,
 	scan,
-	topicsBytes: readFileSync(join(sourceRoot, contract.topics.path)),
-	qrelsBytes: readFileSync(join(sourceRoot, contract.qrels.path)),
+	topicsBytes,
+	qrelsBytes,
 	passages: sampler.finish(),
+	retrievalPassages: [...retrievalPassages.values()],
 	producerSourceManifest: buildNativeRuntimeSourceManifest({
 		root,
 		entryPoint: "src/benchmark/quality/miracl-en-primary-sample-receipt-cli.ts",

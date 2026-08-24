@@ -39,6 +39,14 @@ export interface MiraclEnPrimarySampleReceipt {
 		idsSha256: string;
 		relevantByQuerySha256: string;
 	};
+	retrievalCorpus: {
+		method: "all-selected-qrel-documents-plus-length-stratified-negatives-v1";
+		relevantDocumentCount: number;
+		relevantDocids: string[];
+		relevantDocidsSha256: string;
+		passages: EnglishPreflightPassage[];
+		passagesSha256: string;
+	};
 	producerSourceManifest: NativeRuntimeSourceManifest;
 }
 
@@ -103,14 +111,78 @@ export function miraclEnSelectedQrelsSha256(
 	qrelsText: string,
 	queryIds: readonly string[],
 ): string {
+	const rows = selectedQrelRows(qrelsText, queryIds);
+	return sha256(`${JSON.stringify(rows)}\n`);
+}
+
+function selectedQrelRows(qrelsText: string, queryIds: readonly string[]) {
 	const qrels = parseQrelsTsv(qrelsText);
-	const rows = queryIds.map((queryId) => {
+	return queryIds.map((queryId) => {
 		const docids = qrels.get(queryId);
 		if (!docids || docids.length === 0)
 			throw new Error(`locked English qrels missing query ${queryId}`);
 		return [queryId, [...new Set(docids)].sort(compareCanonicalText)] as const;
 	});
-	return sha256(`${JSON.stringify(rows)}\n`);
+}
+
+export function miraclEnSelectedRelevantDocids(
+	qrelsText: string,
+	queryIds: readonly string[],
+): string[] {
+	return [
+		...new Set(selectedQrelRows(qrelsText, queryIds).flatMap(([, ids]) => ids)),
+	].sort(compareCanonicalText);
+}
+
+export function miraclEnSelectedRelevantDocidsSha256(
+	qrelsText: string,
+	queryIds: readonly string[],
+): string {
+	return sha256(
+		`${miraclEnSelectedRelevantDocids(qrelsText, queryIds).join("\n")}\n`,
+	);
+}
+
+export function buildMiraclEnRetrievalCorpus(
+	samplePassages: readonly EnglishPreflightPassage[],
+	relevantPassages: readonly EnglishPreflightPassage[],
+	relevantDocids: readonly string[],
+): EnglishPreflightPassage[] {
+	const expectedRelevantDocids = [...new Set(relevantDocids)].sort(
+		compareCanonicalText,
+	);
+	if (expectedRelevantDocids.length !== relevantDocids.length)
+		throw new Error("English selected qrel document identities are not unique");
+	const relevantByDocid = new Map(
+		relevantPassages.map((passage) => [passage.docid, passage]),
+	);
+	if (
+		relevantByDocid.size !== relevantPassages.length ||
+		expectedRelevantDocids.some((docid) => !relevantByDocid.has(docid)) ||
+		relevantByDocid.size !== expectedRelevantDocids.length
+	)
+		throw new Error(
+			"English retrieval corpus does not cover every selected qrel",
+		);
+	const union = new Map<string, EnglishPreflightPassage>();
+	for (const passage of [...samplePassages, ...relevantPassages]) {
+		const existing = union.get(passage.docid);
+		if (
+			existing &&
+			(existing.ordinal !== passage.ordinal ||
+				existing.content !== passage.content)
+		)
+			throw new Error(
+				"English retrieval corpus has conflicting document identities",
+			);
+		union.set(passage.docid, passage);
+	}
+	const passages = [...union.values()].sort(
+		(left, right) => left.ordinal - right.ordinal,
+	);
+	if (new Set(passages.map(({ ordinal }) => ordinal)).size !== passages.length)
+		throw new Error("English retrieval corpus has duplicate ordinals");
+	return passages;
 }
 
 export function buildMiraclEnPrimarySampleReceipt(input: {
@@ -119,6 +191,7 @@ export function buildMiraclEnPrimarySampleReceipt(input: {
 	topicsBytes: Uint8Array;
 	qrelsBytes: Uint8Array;
 	passages: readonly EnglishPreflightPassage[];
+	retrievalPassages: readonly EnglishPreflightPassage[];
 	producerSourceManifest: NativeRuntimeSourceManifest;
 }): MiraclEnPrimarySampleReceipt {
 	const contract = MIRACL_MULTILINGUAL_CONTRACT.en;
@@ -152,6 +225,12 @@ export function buildMiraclEnPrimarySampleReceipt(input: {
 		input.qrelsBytes,
 	);
 	const queryIds = selectMiraclEnPreflightQueryIds(topicsText, qrelsText);
+	const relevantDocids = miraclEnSelectedRelevantDocids(qrelsText, queryIds);
+	const retrievalPassages = buildMiraclEnRetrievalCorpus(
+		ordered,
+		input.retrievalPassages,
+		relevantDocids,
+	);
 	const receipt: MiraclEnPrimarySampleReceipt = {
 		schemaVersion: 1,
 		artifactClass: "miracl-en-primary-source-derived-sample-v1",
@@ -175,6 +254,17 @@ export function buildMiraclEnPrimarySampleReceipt(input: {
 			ids: queryIds,
 			idsSha256: sha256(`${queryIds.join("\n")}\n`),
 			relevantByQuerySha256: miraclEnSelectedQrelsSha256(qrelsText, queryIds),
+		},
+		retrievalCorpus: {
+			method: "all-selected-qrel-documents-plus-length-stratified-negatives-v1",
+			relevantDocumentCount: relevantDocids.length,
+			relevantDocids,
+			relevantDocidsSha256: miraclEnSelectedRelevantDocidsSha256(
+				qrelsText,
+				queryIds,
+			),
+			passages: retrievalPassages,
+			passagesSha256: sha256(canonicalPassages(retrievalPassages)),
 		},
 		producerSourceManifest: input.producerSourceManifest,
 	};
@@ -212,6 +302,13 @@ export function validateMiraclEnPrimarySampleReceipt(
 		receipt.queries.seed !== MIRACL_EN_PREFLIGHT_SAMPLE_SEED ||
 		receipt.queries.ids?.length !== MIRACL_EN_PREFLIGHT_RETRIEVAL_QUERIES ||
 		!receipt.queries.relevantByQuerySha256 ||
+		receipt.retrievalCorpus?.method !==
+			"all-selected-qrel-documents-plus-length-stratified-negatives-v1" ||
+		!Number.isSafeInteger(receipt.retrievalCorpus.relevantDocumentCount) ||
+		receipt.retrievalCorpus.relevantDocumentCount < 1 ||
+		!receipt.retrievalCorpus.relevantDocidsSha256 ||
+		!Array.isArray(receipt.retrievalCorpus.relevantDocids) ||
+		!receipt.retrievalCorpus.passagesSha256 ||
 		!receipt.producerSourceManifest
 	)
 		throw new Error("English source-derived sample receipt shape mismatch");
@@ -241,6 +338,46 @@ export function validateMiraclEnPrimarySampleReceipt(
 		throw new Error("English source-derived query sample is inconsistent");
 	if (!/^[a-f0-9]{64}$/u.test(receipt.queries.relevantByQuerySha256))
 		throw new Error("English source-derived qrels digest is inconsistent");
+	const retrievalPassages = receipt.retrievalCorpus.passages;
+	const relevantDocids = receipt.retrievalCorpus.relevantDocids;
+	const retrievalByDocid = new Map(
+		retrievalPassages.map((passage) => [passage.docid, passage]),
+	);
+	if (
+		relevantDocids.length !== receipt.retrievalCorpus.relevantDocumentCount ||
+		new Set(relevantDocids).size !== relevantDocids.length ||
+		relevantDocids.some((docid, index) =>
+			index > 0 ? docid <= (relevantDocids[index - 1] ?? "") : !docid,
+		) ||
+		retrievalPassages.length < receipt.retrievalCorpus.relevantDocumentCount ||
+		new Set(retrievalPassages.map(({ docid }) => docid)).size !==
+			retrievalPassages.length ||
+		new Set(retrievalPassages.map(({ ordinal }) => ordinal)).size !==
+			retrievalPassages.length ||
+		receipt.retrievalCorpus.relevantDocidsSha256 !==
+			sha256(`${relevantDocids.join("\n")}\n`) ||
+		relevantDocids.some((docid) => !retrievalByDocid.has(docid)) ||
+		passages.some((passage) => {
+			const retrieved = retrievalByDocid.get(passage.docid);
+			return (
+				!retrieved ||
+				retrieved.ordinal !== passage.ordinal ||
+				retrieved.content !== passage.content
+			);
+		}) ||
+		retrievalPassages.some(
+			(passage, index) =>
+				!Number.isSafeInteger(passage.ordinal) ||
+				passage.ordinal < 0 ||
+				!passage.docid ||
+				typeof passage.content !== "string" ||
+				(index > 0 &&
+					passage.ordinal <= (retrievalPassages[index - 1]?.ordinal ?? -1)),
+		) ||
+		receipt.retrievalCorpus.passagesSha256 !==
+			sha256(canonicalPassages(retrievalPassages))
+	)
+		throw new Error("English retrieval corpus is inconsistent");
 	validateNativeRuntimeSourceManifest(receipt.producerSourceManifest);
 }
 

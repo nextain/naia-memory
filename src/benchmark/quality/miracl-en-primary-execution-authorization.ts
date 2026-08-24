@@ -9,6 +9,7 @@ import {
 } from "./miracl-en-primary-execution-policy.js";
 import {
 	miraclEnSelectedQrelsSha256,
+	miraclEnSelectedRelevantDocidsSha256,
 	selectMiraclEnPreflightQueryIds,
 	validateMiraclEnPrimarySampleReceipt,
 } from "./miracl-en-primary-sample-receipt.js";
@@ -74,6 +75,7 @@ interface EnglishPrimaryPreflight {
 			queryCount?: unknown;
 			queryIdsSha256?: unknown;
 			relevantByQuerySha256?: unknown;
+			corpusPassagesSha256?: unknown;
 			rankingArtifactSha256?: unknown;
 		};
 	};
@@ -204,6 +206,8 @@ export function authorizeMiraclEnPrimaryExecution(input: {
 			input.sampleReceipt.queries.idsSha256 ||
 		input.preflight.observed.retrieval.relevantByQuerySha256 !==
 			input.sampleReceipt.queries.relevantByQuerySha256 ||
+		input.preflight.observed.retrieval.corpusPassagesSha256 !==
+			input.sampleReceipt.retrievalCorpus.passagesSha256 ||
 		input.preflight.claimEligibility?.public !== false ||
 		input.preflight.claimEligibility?.equivalence !== false ||
 		input.preflight.claimEligibility?.noninferiority !== false ||
@@ -226,6 +230,10 @@ export function authorizeMiraclEnPrimaryExecution(input: {
 	digest(
 		input.preflight.observed?.retrieval?.relevantByQuerySha256,
 		"preflight retrieval qrels",
+	);
+	digest(
+		input.preflight.observed?.retrieval?.corpusPassagesSha256,
+		"preflight retrieval corpus",
 	);
 	return {
 		schemaVersion: 1 as const,
@@ -367,6 +375,14 @@ export function verifyMiraclEnPrimaryExecutionFiles(
 		miraclEnSelectedQrelsSha256(qrelsBytes.toString("utf8"), sourceQueryIds)
 	)
 		throw new Error("English source-derived qrels changed");
+	if (
+		sampleReceipt.retrievalCorpus.relevantDocidsSha256 !==
+		miraclEnSelectedRelevantDocidsSha256(
+			qrelsBytes.toString("utf8"),
+			sourceQueryIds,
+		)
+	)
+		throw new Error("English source-derived relevant passages changed");
 	const expected = authorizeMiraclEnPrimaryExecution({
 		preflight,
 		preflightBytes,
