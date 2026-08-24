@@ -22,6 +22,13 @@ import { createMem0SemanticBridge } from "./bridge-mem0-semantic.js";
 import { createNaiaSemanticBridge } from "./bridge-naia-semantic.js";
 import { GraphitiRestSemanticClient } from "./graphiti-rest-semantic-client.js";
 import {
+	type GraphitiContactedRuntime,
+	assertGraphitiContactedRuntime,
+	assertGraphitiPinnedRuntime,
+	assertGraphitiRuntimeUnchanged,
+	graphitiConfigurationAuthority,
+} from "./graphiti-runtime-evidence.js";
+import {
 	type SemanticEngineBridge,
 	runSemanticRawContract,
 } from "./memory-semantic-runner.js";
@@ -255,6 +262,75 @@ export function lettaRuntimeConfig() {
 	};
 }
 
+export function graphitiRuntimeConfig() {
+	const revision = process.env.GRAPHITI_REVISION?.trim();
+	const imageDigest = process.env.GRAPHITI_IMAGE_DIGEST?.trim();
+	const coreVersion = process.env.GRAPHITI_CORE_VERSION?.trim();
+	const neo4jDriverVersion = process.env.GRAPHITI_NEO4J_DRIVER_VERSION?.trim();
+	const providerAdapterVersion =
+		process.env.GRAPHITI_PROVIDER_ADAPTER_VERSION?.trim();
+	const llmModel = process.env.GRAPHITI_LLM_MODEL?.trim();
+	const embeddingProvider = process.env.GRAPHITI_EMBEDDING_PROVIDER?.trim();
+	const embeddingModel = process.env.GRAPHITI_EMBEDDING_MODEL?.trim();
+	const embeddingRevision = process.env.GRAPHITI_EMBEDDING_REVISION?.trim();
+	const embeddingDimensions = Number(process.env.GRAPHITI_EMBEDDING_DIMENSIONS);
+	const serverLockSha256 = process.env.GRAPHITI_SERVER_LOCK_SHA256?.trim();
+	const deployedSidecarSha256 =
+		process.env.GRAPHITI_DEPLOYED_SIDECAR_SHA256?.trim();
+	if (
+		!revision ||
+		!imageDigest ||
+		!coreVersion ||
+		!neo4jDriverVersion ||
+		!providerAdapterVersion ||
+		!llmModel ||
+		!embeddingProvider ||
+		!embeddingModel ||
+		!embeddingRevision ||
+		!serverLockSha256 ||
+		!deployedSidecarSha256 ||
+		!Number.isInteger(embeddingDimensions) ||
+		embeddingDimensions < 1
+	)
+		throw new Error(
+			"Graphiti runs require GRAPHITI_REVISION, GRAPHITI_IMAGE_DIGEST, GRAPHITI_CORE_VERSION, GRAPHITI_NEO4J_DRIVER_VERSION, GRAPHITI_PROVIDER_ADAPTER_VERSION, GRAPHITI_LLM_MODEL, GRAPHITI_EMBEDDING_PROVIDER, GRAPHITI_EMBEDDING_MODEL, GRAPHITI_EMBEDDING_REVISION, GRAPHITI_SERVER_LOCK_SHA256, GRAPHITI_DEPLOYED_SIDECAR_SHA256, and positive GRAPHITI_EMBEDDING_DIMENSIONS",
+		);
+	if (!/^[a-f0-9]{40}$/.test(revision))
+		throw new Error("GRAPHITI_REVISION must be an immutable Git commit");
+	if (!/^sha256:[a-f0-9]{64}$/.test(imageDigest))
+		throw new Error("GRAPHITI_IMAGE_DIGEST must be an immutable sha256 digest");
+	if (!/^[a-f0-9]{64}$/.test(serverLockSha256))
+		throw new Error("GRAPHITI_SERVER_LOCK_SHA256 must be a sha256 hash");
+	if (!/^[a-f0-9]{64}$/.test(deployedSidecarSha256))
+		throw new Error("GRAPHITI_DEPLOYED_SIDECAR_SHA256 must be a sha256 hash");
+	assertGraphitiPinnedRuntime({
+		revision,
+		coreVersion,
+		neo4jDriverVersion,
+		providerAdapterVersion,
+		llmModel,
+		embeddingProvider,
+		embeddingModel,
+		embeddingDimensions,
+	});
+	return {
+		revision,
+		imageDigest,
+		coreVersion,
+		neo4jDriverVersion,
+		providerAdapterVersion,
+		llmModel,
+		embeddingProvider,
+		embeddingModel,
+		embeddingRevision,
+		embeddingRevisionAuthority: "operator-asserted",
+		embeddingDimensions,
+		serverLockSha256,
+		deployedSidecarSha256,
+		configurationAuthority: graphitiConfigurationAuthority,
+	};
+}
+
 export async function runSemanticRawCli(args: string[]): Promise<void> {
 	const parsed = parseSemanticRawCliArgs(args);
 	const contractPath = resolve(parsed.contractPath);
@@ -381,34 +457,38 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 		process.env.HINDSIGHT_URL ?? "http://127.0.0.1:18888";
 	const lettaEndpoint = process.env.LETTA_URL ?? "http://127.0.0.1:8283";
 	const graphitiEndpoint = process.env.GRAPHITI_URL ?? "http://127.0.0.1:8000";
-	const graphitiRuntime = () => {
-		const revision = process.env.GRAPHITI_REVISION?.trim();
-		const imageDigest = process.env.GRAPHITI_IMAGE_DIGEST?.trim();
-		const coreVersion = process.env.GRAPHITI_CORE_VERSION?.trim();
-		const llmModel = process.env.GRAPHITI_LLM_MODEL?.trim();
-		const embeddingModel = process.env.GRAPHITI_EMBEDDING_MODEL?.trim();
-		if (
-			!revision ||
-			!imageDigest ||
-			!coreVersion ||
-			!llmModel ||
-			!embeddingModel
-		)
-			throw new Error(
-				"Graphiti runs require GRAPHITI_REVISION, GRAPHITI_IMAGE_DIGEST, GRAPHITI_CORE_VERSION, GRAPHITI_LLM_MODEL, and GRAPHITI_EMBEDDING_MODEL",
-			);
-		if (!/^[a-f0-9]{40}$/.test(revision))
-			throw new Error("GRAPHITI_REVISION must be an immutable Git commit");
-		if (!/^sha256:[a-f0-9]{64}$/.test(imageDigest))
-			throw new Error(
-				"GRAPHITI_IMAGE_DIGEST must be an immutable sha256 digest",
-			);
-		return { revision, imageDigest, coreVersion, llmModel, embeddingModel };
-	};
-	const graphitiRuntimeReceipt =
+	let graphitiRuntimeReceipt =
 		parsed.engine === "graphiti" || parsed.engine === "graphiti-historical"
-			? graphitiRuntime()
+			? graphitiRuntimeConfig()
 			: undefined;
+	const graphitiIdentityClient = graphitiRuntimeReceipt
+		? new GraphitiRestSemanticClient({ baseUrl: graphitiEndpoint })
+		: undefined;
+	let contactedServerIdentityBefore: GraphitiContactedRuntime | undefined;
+	if (graphitiRuntimeReceipt && graphitiIdentityClient) {
+		contactedServerIdentityBefore =
+			await graphitiIdentityClient.runtimeIdentity();
+		assertGraphitiContactedRuntime(contactedServerIdentityBefore, {
+			graphitiCoreVersion: graphitiRuntimeReceipt.coreVersion,
+			neo4jDriverVersion: graphitiRuntimeReceipt.neo4jDriverVersion,
+			providerAdapterVersion: graphitiRuntimeReceipt.providerAdapterVersion,
+			llmModel: graphitiRuntimeReceipt.llmModel,
+			embeddingProvider: graphitiRuntimeReceipt.embeddingProvider,
+			embeddingModel: graphitiRuntimeReceipt.embeddingModel,
+			embeddingDimensions: graphitiRuntimeReceipt.embeddingDimensions,
+			serverLockSha256: graphitiRuntimeReceipt.serverLockSha256,
+			deployedSidecarSha256: graphitiRuntimeReceipt.deployedSidecarSha256,
+		});
+		graphitiRuntimeReceipt = {
+			...graphitiRuntimeReceipt,
+			contactedServerIdentityBefore,
+			configurationAuthority:
+				"source-pin-matched-and-contacted-server-observed" as const,
+			serviceRevisionAuthority:
+				"operator-attested-not-server-observed" as const,
+			serviceImageAuthority: "operator-attested-not-server-observed" as const,
+		};
+	}
 	const hindsightRuntimeReceipt =
 		parsed.engine === "hindsight" ? hindsightRuntimeConfig() : undefined;
 	const lettaRuntimeReceipt =
@@ -419,6 +499,33 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 		parsed.topK,
 		executionSeed,
 	);
+	if (
+		graphitiRuntimeReceipt &&
+		graphitiIdentityClient &&
+		contactedServerIdentityBefore
+	) {
+		const contactedServerIdentityAfter =
+			await graphitiIdentityClient.runtimeIdentity();
+		assertGraphitiContactedRuntime(contactedServerIdentityAfter, {
+			graphitiCoreVersion: graphitiRuntimeReceipt.coreVersion,
+			neo4jDriverVersion: graphitiRuntimeReceipt.neo4jDriverVersion,
+			providerAdapterVersion: graphitiRuntimeReceipt.providerAdapterVersion,
+			llmModel: graphitiRuntimeReceipt.llmModel,
+			embeddingProvider: graphitiRuntimeReceipt.embeddingProvider,
+			embeddingModel: graphitiRuntimeReceipt.embeddingModel,
+			embeddingDimensions: graphitiRuntimeReceipt.embeddingDimensions,
+			serverLockSha256: graphitiRuntimeReceipt.serverLockSha256,
+			deployedSidecarSha256: graphitiRuntimeReceipt.deployedSidecarSha256,
+		});
+		assertGraphitiRuntimeUnchanged(
+			contactedServerIdentityBefore,
+			contactedServerIdentityAfter,
+		);
+		graphitiRuntimeReceipt = {
+			...graphitiRuntimeReceipt,
+			contactedServerIdentityAfter,
+		};
+	}
 	const expectedRetrievalSurface = expectedSemanticRetrievalSurface(
 		parsed.engine,
 	);

@@ -45,6 +45,37 @@ describe("GraphitiRestSemanticClient", () => {
 		expect(Number.isNaN(Date.parse(body.timestamp))).toBe(false);
 	});
 
+	it("reads runtime identity from the contacted companion", async () => {
+		const request = vi.fn(async () =>
+			json({
+				graphiti_core_version: "0.28.2",
+				neo4j_driver_version: "5.28.1",
+				provider_adapter_version: "google-genai@1.62.0",
+				llm_client_class: "graphiti_core.llm.GeminiClient",
+				llm_model: "gemini-2.5-flash",
+				embedding_client_class: "graphiti_core.embedder.GeminiEmbedder",
+				embedding_provider: "gemini",
+				embedding_model: "gemini-embedding-001",
+				embedding_dimensions: 3072,
+				server_lock_sha256: "a".repeat(64),
+				deployed_sidecar_sha256: "b".repeat(64),
+			}),
+		);
+		const client = new GraphitiRestSemanticClient({
+			baseUrl: "http://127.0.0.1:8000",
+			fetch: request,
+		});
+
+		await expect(client.runtimeIdentity()).resolves.toMatchObject({
+			graphitiCoreVersion: "0.28.2",
+			embeddingProvider: "gemini",
+			embeddingDimensions: 3072,
+		});
+		expect(String(request.mock.calls[0][0])).toContain(
+			"benchmark/runtime-identity",
+		);
+	});
+
 	it("uses companion commit and complete-current-state routes", async () => {
 		const request = vi
 			.fn()

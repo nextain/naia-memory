@@ -17,6 +17,40 @@ import {
 	validateSemanticExecutionEvidence,
 } from "./semantic-execution-evidence.js";
 
+function graphitiRuntimeEvidence() {
+	const contacted = {
+		graphitiCoreVersion: "1.0.0",
+		neo4jDriverVersion: "5.28.1",
+		providerAdapterVersion: "google-genai@1.62.0",
+		llmClientClass: "graphiti_core.llm_client.gemini_client.GeminiClient",
+		llmModel: "llm-model",
+		embeddingClientClass: "graphiti_core.embedder.gemini.GeminiEmbedder",
+		embeddingProvider: "embedding-provider",
+		embeddingModel: "embedding-model",
+		embeddingDimensions: 768,
+		serverLockSha256: "c".repeat(64),
+		deployedSidecarSha256: "d".repeat(64),
+	};
+	return {
+		revision: "a".repeat(40),
+		imageDigest: `sha256:${"b".repeat(64)}`,
+		coreVersion: "1.0.0",
+		neo4jDriverVersion: "5.28.1",
+		providerAdapterVersion: "google-genai@1.62.0",
+		llmModel: "llm-model",
+		embeddingProvider: "embedding-provider",
+		embeddingModel: "embedding-model",
+		embeddingRevision: "embedding-revision",
+		embeddingRevisionAuthority: "operator-asserted",
+		configurationAuthority: "source-pin-matched-and-contacted-server-observed",
+		embeddingDimensions: 768,
+		serverLockSha256: "c".repeat(64),
+		deployedSidecarSha256: "d".repeat(64),
+		contactedServerIdentityBefore: contacted,
+		contactedServerIdentityAfter: { ...contacted },
+	};
+}
+
 const roots: string[] = [];
 
 afterEach(async () => {
@@ -76,13 +110,7 @@ async function fixture(
 					: run.engine === "graphiti" || run.engine === "graphiti-historical"
 						? {
 								providerPolicy: "engine-server-native-configuration-v1",
-								graphitiRuntime: {
-									revision: "a".repeat(40),
-									imageDigest: `sha256:${"b".repeat(64)}`,
-									coreVersion: "1.0.0",
-									llmModel: "llm-model",
-									embeddingModel: "embedding-model",
-								},
+								graphitiRuntime: graphitiRuntimeEvidence(),
 							}
 						: run.engine === "hindsight"
 							? {
@@ -190,6 +218,9 @@ describe("semantic execution evidence", () => {
 			topK: 5,
 			embeddingModel: "embedding-model",
 			embeddingRevision: "embedding-revision",
+			embeddingRevisionAuthority: "operator-asserted",
+			configurationAuthority:
+				"source-pin-matched-and-contacted-server-observed",
 			embeddingDimensions: 768,
 			llmModel: "llm-model",
 			authScheme: "bearer",
@@ -327,6 +358,9 @@ describe("semantic execution evidence", () => {
 			embeddingProvider: "embedding-provider",
 			embeddingModel: "embedding-model",
 			embeddingRevision: "embedding-revision",
+			embeddingRevisionAuthority: "operator-asserted",
+			configurationAuthority:
+				"source-pin-matched-and-contacted-server-observed",
 			embeddingDimensions: 768,
 		};
 		for (const field of [
@@ -362,13 +396,11 @@ describe("semantic execution evidence", () => {
 	});
 
 	it("requires immutable server images and identical Graphiti lane runtimes", () => {
-		const runtime = {
-			revision: "a".repeat(40),
-			imageDigest: `sha256:${"b".repeat(64)}`,
-			coreVersion: "1.0.0",
-			llmModel: "llm-model",
-			embeddingModel: "embedding-model",
-		};
+		const runtime = graphitiRuntimeEvidence();
+		const changedRuntime = graphitiRuntimeEvidence();
+		changedRuntime.coreVersion = "2.0.0";
+		changedRuntime.contactedServerIdentityBefore.graphitiCoreVersion = "2.0.0";
+		changedRuntime.contactedServerIdentityAfter.graphitiCoreVersion = "2.0.0";
 		expect(() =>
 			validateSemanticConfigurationParity([
 				{
@@ -383,10 +415,97 @@ describe("semantic execution evidence", () => {
 					executionSeed: "historical",
 					providerPolicy: "engine-server-native-configuration-v1",
 					endpoint: "http://127.0.0.1:8000/",
-					graphitiRuntime: { ...runtime, coreVersion: "2.0.0" },
+					graphitiRuntime: changedRuntime,
 				},
 			]),
 		).toThrow("lane runtime parity mismatch");
+		for (const engine of ["graphiti", "graphiti-historical"] as const) {
+			for (const field of [
+				"embeddingProvider",
+				"embeddingModel",
+				"embeddingRevision",
+			] as const) {
+				expect(() =>
+					validateSemanticConfigurationParity([
+						{
+							engine,
+							executionSeed: "current",
+							providerPolicy: "engine-server-native-configuration-v1",
+							endpoint: "http://127.0.0.1:8000/",
+							graphitiRuntime: { ...runtime, [field]: "" },
+						},
+					]),
+				).toThrow(`${engine}/${field}`);
+			}
+		}
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{
+					engine: "graphiti",
+					executionSeed: "current",
+					providerPolicy: "engine-server-native-configuration-v1",
+					endpoint: "http://127.0.0.1:8000/",
+					graphitiRuntime: { ...runtime, embeddingDimensions: 0 },
+				},
+			]),
+		).toThrow("Graphiti embedding dimensions are invalid");
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{
+					engine: "graphiti",
+					executionSeed: "current",
+					providerPolicy: "engine-server-native-configuration-v1",
+					endpoint: "http://127.0.0.1:8000/",
+					graphitiRuntime: {
+						...runtime,
+						embeddingRevisionAuthority: "immutable",
+					},
+				},
+			]),
+		).toThrow("Graphiti embedding revision authority is invalid");
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{
+					engine: "graphiti-historical",
+					executionSeed: "historical",
+					providerPolicy: "engine-server-native-configuration-v1",
+					endpoint: "http://127.0.0.1:8000/",
+					graphitiRuntime: {
+						...runtime,
+						configurationAuthority: "operator-asserted",
+					},
+				},
+			]),
+		).toThrow("Graphiti configuration authority is invalid");
+		for (const graphitiRuntime of [
+			{ ...runtime, contactedServerIdentityBefore: undefined },
+			{
+				...runtime,
+				contactedServerIdentityBefore: {
+					...runtime.contactedServerIdentityBefore,
+					llmClientClass: "fake.GeminiClient",
+				},
+			},
+			{
+				...runtime,
+				contactedServerIdentityAfter: {
+					...runtime.contactedServerIdentityAfter,
+					serverLockSha256: "e".repeat(64),
+				},
+			},
+		]) {
+			expect(() =>
+				validateSemanticConfigurationParity([
+					{
+						engine: "graphiti",
+						executionSeed: "current",
+						providerPolicy: "engine-server-native-configuration-v1",
+						endpoint: "http://127.0.0.1:8000/",
+						graphitiRuntime,
+					},
+				]),
+			).toThrow();
+		}
 	});
 
 	it("rejects unsafe endpoint disclosures", () => {

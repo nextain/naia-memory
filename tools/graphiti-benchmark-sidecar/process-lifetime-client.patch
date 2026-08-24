@@ -77,7 +77,7 @@ index 29e188b..41fa1fa 100644
      if settings.openai_base_url is not None:
          client.llm_client.config.base_url = settings.openai_base_url
      if settings.openai_api_key is not None:
-@@ -112,17 +118,33 @@ async def get_graphiti(settings: ZepEnvDep):
+@@ -112,15 +118,31 @@ async def get_graphiti(settings: ZepEnvDep):
      if settings.model_name is not None:
          client.llm_client.model = settings.model_name
  
@@ -114,5 +114,4 @@ index 29e188b..41fa1fa 100644
 +    client = _graphiti_client
 +    _graphiti_client = None
 +    if client is not None:
-        await client.close()
-
+         await client.close()

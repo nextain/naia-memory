@@ -14,7 +14,7 @@ index 8ca65ae..711666d 100644
  from graphiti_core.nodes import EntityNode, EpisodicNode  # type: ignore
  
  from graph_service.config import ZepEnvDep
-@@ -103,10 +106,25 @@ def _create_graphiti_client(settings: ZepEnvDep) -> ZepGraphiti:
+@@ -103,10 +106,26 @@ def _create_graphiti_client(settings: ZepEnvDep) -> ZepGraphiti:
                  'Neo4j configuration (neo4j_uri, neo4j_user, neo4j_password) is required '
                  "when db_backend is 'neo4j'"
              )
@@ -29,6 +29,7 @@ index 8ca65ae..711666d 100644
 +            GeminiEmbedderConfig(
 +                api_key=settings.openai_api_key,
 +                embedding_model=settings.embedding_model_name,
++                embedding_dim=3072,
 +            )
 +        )
          return ZepGraphiti(

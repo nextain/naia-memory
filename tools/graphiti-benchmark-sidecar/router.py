@@ -6,6 +6,9 @@ loopback because the upstream graph-service has no authentication.
 """
 
 from datetime import datetime
+from hashlib import sha256
+from importlib.metadata import version
+from pathlib import Path
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -41,6 +44,50 @@ class NativeFact(BaseModel):
 
 class CurrentFacts(BaseModel):
     facts: list[NativeFact]
+
+
+class RuntimeIdentity(BaseModel):
+    graphiti_core_version: str
+    neo4j_driver_version: str
+    provider_adapter_version: str
+    llm_client_class: str
+    llm_model: str
+    embedding_client_class: str
+    embedding_provider: str
+    embedding_model: str
+    embedding_dimensions: int
+    server_lock_sha256: str
+    deployed_sidecar_sha256: str
+
+
+@router.get("/runtime-identity")
+async def runtime_identity(graphiti: ZepGraphitiDep) -> RuntimeIdentity:
+    """Describe the contacted process from its live client and deployed files."""
+    sidecar_path = Path(__file__).resolve()
+    lock_path = sidecar_path.parent.parent / "uv.lock"
+    if not lock_path.is_file():
+        raise RuntimeError(f"Graphiti server lockfile is missing: {lock_path}")
+
+    llm_config = graphiti.llm_client.config
+    embedder_config = graphiti.embedder.config
+    embedding_dimensions = embedder_config.embedding_dim
+    if not isinstance(embedding_dimensions, int) or embedding_dimensions < 1:
+        raise RuntimeError("Graphiti embedder has no positive configured dimension")
+
+    embedder_module = type(graphiti.embedder).__module__
+    return RuntimeIdentity(
+        graphiti_core_version=version("graphiti-core"),
+        neo4j_driver_version=version("neo4j"),
+        provider_adapter_version=f"google-genai@{version('google-genai')}",
+        llm_client_class=_qualified_class_name(graphiti.llm_client),
+        llm_model=llm_config.model,
+        embedding_client_class=_qualified_class_name(graphiti.embedder),
+        embedding_provider=embedder_module.rsplit(".", 1)[-1],
+        embedding_model=embedder_config.embedding_model,
+        embedding_dimensions=embedding_dimensions,
+        server_lock_sha256=_sha256_file(lock_path),
+        deployed_sidecar_sha256=_sha256_file(sidecar_path),
+    )
 
 
 @router.post("/messages")
@@ -115,3 +162,12 @@ async def _group_edges(
         cursor = page[-1].uuid
 
     return edges
+
+
+def _qualified_class_name(value: object) -> str:
+    value_type = type(value)
+    return f"{value_type.__module__}.{value_type.__qualname__}"
+
+
+def _sha256_file(path: Path) -> str:
+    return sha256(path.read_bytes()).hexdigest()

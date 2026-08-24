@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+	graphitiRuntimeConfig,
 	hindsightRuntimeConfig,
 	lettaRuntimeConfig,
 	parseSemanticRawCliArgs,
@@ -104,6 +105,80 @@ describe("semantic raw CLI", () => {
 				"--output=receipt.json",
 			]),
 		).toMatchObject({ engine: "graphiti" });
+	});
+
+	it("binds Graphiti embedding provider, model, revision, and dimensions", () => {
+		vi.stubEnv("GRAPHITI_REVISION", "993e081a6d7948a0d8851c12a5fbdbeb49fed862");
+		vi.stubEnv("GRAPHITI_IMAGE_DIGEST", `sha256:${"b".repeat(64)}`);
+		vi.stubEnv("GRAPHITI_CORE_VERSION", "0.28.2");
+		vi.stubEnv("GRAPHITI_NEO4J_DRIVER_VERSION", "5.28.1");
+		vi.stubEnv("GRAPHITI_PROVIDER_ADAPTER_VERSION", "google-genai@1.62.0");
+		vi.stubEnv("GRAPHITI_LLM_MODEL", "gemini-2.5-flash");
+		vi.stubEnv("GRAPHITI_EMBEDDING_PROVIDER", "gemini");
+		vi.stubEnv("GRAPHITI_EMBEDDING_MODEL", "gemini-embedding-001");
+		vi.stubEnv("GRAPHITI_EMBEDDING_REVISION", "provider-release-2026-08-01");
+		vi.stubEnv("GRAPHITI_EMBEDDING_DIMENSIONS", "3072");
+		vi.stubEnv("GRAPHITI_SERVER_LOCK_SHA256", "c".repeat(64));
+		vi.stubEnv("GRAPHITI_DEPLOYED_SIDECAR_SHA256", "d".repeat(64));
+		expect(graphitiRuntimeConfig()).toEqual({
+			revision: "993e081a6d7948a0d8851c12a5fbdbeb49fed862",
+			imageDigest: `sha256:${"b".repeat(64)}`,
+			coreVersion: "0.28.2",
+			neo4jDriverVersion: "5.28.1",
+			providerAdapterVersion: "google-genai@1.62.0",
+			llmModel: "gemini-2.5-flash",
+			embeddingProvider: "gemini",
+			embeddingModel: "gemini-embedding-001",
+			embeddingRevision: "provider-release-2026-08-01",
+			embeddingRevisionAuthority: "operator-asserted",
+			embeddingDimensions: 3072,
+			serverLockSha256: "c".repeat(64),
+			deployedSidecarSha256: "d".repeat(64),
+			configurationAuthority: "source-pinned-deployment-operator-attested",
+		});
+	});
+
+	it("rejects incomplete Graphiti embedding identity", () => {
+		vi.stubEnv("GRAPHITI_REVISION", "993e081a6d7948a0d8851c12a5fbdbeb49fed862");
+		vi.stubEnv("GRAPHITI_IMAGE_DIGEST", `sha256:${"b".repeat(64)}`);
+		vi.stubEnv("GRAPHITI_CORE_VERSION", "0.28.2");
+		vi.stubEnv("GRAPHITI_NEO4J_DRIVER_VERSION", "5.28.1");
+		vi.stubEnv("GRAPHITI_PROVIDER_ADAPTER_VERSION", "google-genai@1.62.0");
+		vi.stubEnv("GRAPHITI_LLM_MODEL", "gemini-2.5-flash");
+		vi.stubEnv("GRAPHITI_EMBEDDING_PROVIDER", "gemini");
+		vi.stubEnv("GRAPHITI_EMBEDDING_MODEL", "gemini-embedding-001");
+		vi.stubEnv("GRAPHITI_EMBEDDING_REVISION", "provider-release-2026-08-01");
+		vi.stubEnv("GRAPHITI_EMBEDDING_DIMENSIONS", "3072");
+		vi.stubEnv("GRAPHITI_SERVER_LOCK_SHA256", "c".repeat(64));
+		vi.stubEnv("GRAPHITI_DEPLOYED_SIDECAR_SHA256", "d".repeat(64));
+		for (const name of [
+			"GRAPHITI_EMBEDDING_PROVIDER",
+			"GRAPHITI_EMBEDDING_MODEL",
+			"GRAPHITI_EMBEDDING_REVISION",
+		] as const) {
+			const restored = {
+				GRAPHITI_EMBEDDING_PROVIDER: "gemini",
+				GRAPHITI_EMBEDDING_MODEL: "gemini-embedding-001",
+				GRAPHITI_EMBEDDING_REVISION: "provider-release-2026-08-01",
+			}[name];
+			vi.stubEnv(name, "");
+			expect(() => graphitiRuntimeConfig()).toThrow(name);
+			vi.stubEnv(name, restored);
+		}
+		vi.stubEnv("GRAPHITI_EMBEDDING_DIMENSIONS", "0");
+		expect(() => graphitiRuntimeConfig()).toThrow(
+			"positive GRAPHITI_EMBEDDING_DIMENSIONS",
+		);
+		vi.stubEnv("GRAPHITI_EMBEDDING_DIMENSIONS", "3072");
+		vi.stubEnv("GRAPHITI_EMBEDDING_MODEL", "different-model");
+		expect(() => graphitiRuntimeConfig()).toThrow(
+			"GRAPHITI_EMBEDDING_MODEL does not match",
+		);
+		vi.stubEnv("GRAPHITI_EMBEDDING_MODEL", "gemini-embedding-001");
+		vi.stubEnv("GRAPHITI_SERVER_LOCK_SHA256", "invalid");
+		expect(() => graphitiRuntimeConfig()).toThrow(
+			"GRAPHITI_SERVER_LOCK_SHA256 must be a sha256 hash",
+		);
 	});
 
 	it("keeps Graphiti native historical search under a separate engine ID", () => {

@@ -1,6 +1,11 @@
 import { createHash, createPublicKey } from "node:crypto";
 import { lstatSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import {
+	type GraphitiContactedRuntime,
+	assertGraphitiContactedRuntime,
+	assertGraphitiRuntimeUnchanged,
+} from "./graphiti-runtime-evidence.js";
 import type { MemoryUpdateContract } from "./memory-update-contract.js";
 import {
 	evidenceObjectSha256,
@@ -126,6 +131,43 @@ function requiredRuntime(
 	return runtime;
 }
 
+function requiredGraphitiContactedRuntime(
+	runtime: Record<string, unknown>,
+	field: "contactedServerIdentityBefore" | "contactedServerIdentityAfter",
+): GraphitiContactedRuntime {
+	const observed = runtime[field];
+	if (!isRecord(observed))
+		throw new Error(`semantic Graphiti ${field} is missing`);
+	for (const requiredField of [
+		"graphitiCoreVersion",
+		"neo4jDriverVersion",
+		"providerAdapterVersion",
+		"llmClientClass",
+		"llmModel",
+		"embeddingClientClass",
+		"embeddingProvider",
+		"embeddingModel",
+		"serverLockSha256",
+		"deployedSidecarSha256",
+	]) {
+		if (typeof observed[requiredField] !== "string" || !observed[requiredField])
+			throw new Error(`semantic Graphiti ${field}/${requiredField} is missing`);
+	}
+	if (
+		!Number.isInteger(observed.embeddingDimensions) ||
+		Number(observed.embeddingDimensions) < 1
+	)
+		throw new Error(
+			`semantic Graphiti ${field}/embeddingDimensions is invalid`,
+		);
+	if (
+		!SHA256.test(String(observed.serverLockSha256)) ||
+		!SHA256.test(String(observed.deployedSidecarSha256))
+	)
+		throw new Error(`semantic Graphiti ${field} hashes are invalid`);
+	return observed as GraphitiContactedRuntime;
+}
+
 export function semanticConfigurationSha256(
 	disclosure: RawArtifactDisclosure,
 ): string {
@@ -193,13 +235,62 @@ export function validateSemanticConfigurationParity(
 				"revision",
 				"imageDigest",
 				"coreVersion",
+				"neo4jDriverVersion",
+				"providerAdapterVersion",
 				"llmModel",
+				"embeddingProvider",
 				"embeddingModel",
+				"embeddingRevision",
+				"embeddingRevisionAuthority",
+				"configurationAuthority",
+				"serverLockSha256",
+				"deployedSidecarSha256",
 			]);
 			if (!/^[a-f0-9]{40}$/.test(String(runtime.revision)))
 				throw new Error("semantic Graphiti revision is not immutable");
 			if (!/^sha256:[a-f0-9]{64}$/.test(String(runtime.imageDigest)))
 				throw new Error("semantic Graphiti image digest is not immutable");
+			if (runtime.embeddingRevisionAuthority !== "operator-asserted")
+				throw new Error(
+					"semantic Graphiti embedding revision authority is invalid",
+				);
+			if (
+				runtime.configurationAuthority !==
+				"source-pin-matched-and-contacted-server-observed"
+			)
+				throw new Error("semantic Graphiti configuration authority is invalid");
+			if (
+				!Number.isInteger(runtime.embeddingDimensions) ||
+				Number(runtime.embeddingDimensions) < 1
+			)
+				throw new Error("semantic Graphiti embedding dimensions are invalid");
+			if (
+				!SHA256.test(String(runtime.serverLockSha256)) ||
+				!SHA256.test(String(runtime.deployedSidecarSha256))
+			)
+				throw new Error("semantic Graphiti runtime hashes are invalid");
+			const before = requiredGraphitiContactedRuntime(
+				runtime,
+				"contactedServerIdentityBefore",
+			);
+			const after = requiredGraphitiContactedRuntime(
+				runtime,
+				"contactedServerIdentityAfter",
+			);
+			const expected = {
+				graphitiCoreVersion: String(runtime.coreVersion),
+				neo4jDriverVersion: String(runtime.neo4jDriverVersion),
+				providerAdapterVersion: String(runtime.providerAdapterVersion),
+				llmModel: String(runtime.llmModel),
+				embeddingProvider: String(runtime.embeddingProvider),
+				embeddingModel: String(runtime.embeddingModel),
+				embeddingDimensions: Number(runtime.embeddingDimensions),
+				serverLockSha256: String(runtime.serverLockSha256),
+				deployedSidecarSha256: String(runtime.deployedSidecarSha256),
+			};
+			assertGraphitiContactedRuntime(before, expected);
+			assertGraphitiContactedRuntime(after, expected);
+			assertGraphitiRuntimeUnchanged(before, after);
 		} else if (engine === "hindsight") {
 			if (
 				requiredNonemptyString(disclosure, "providerPolicy") !==

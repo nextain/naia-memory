@@ -8,6 +8,7 @@ needed for a fail-closed comparison:
 - exact episode/group commit acknowledgement;
 - complete group-scoped current entity-edge state;
 - complete group-scoped historical entity-edge state, independently of search.
+- live client configuration plus hashes of the deployed sidecar and server lockfile.
 
 Copy `router.py` to
 `server/graph_service/graphiti_benchmark_sidecar.py` in the pinned checkout, then
@@ -77,6 +78,16 @@ quality.
 The smoke probe separately requests unprojected native search output and fails if
 that output contains an edge absent from current state. This keeps the validity
 projection from making the search/state check tautological.
+
+Before mutating backend state, the smoke CLI calls `runtime-identity` on the same
+contacted service. It compares the live Graphiti client classes, configured model,
+embedder provider/model/dimension, installed graphiti-core, Neo4j driver, and
+provider-adapter distribution versions, deployed sidecar hash, and server lockfile
+hash with the operator receipt. It repeats the observation after the probe and
+rejects any identity drift during execution. Git revision, container image
+identity, and embedding-model revision remain explicitly operator-attested because
+the running Python process cannot independently derive them from these deployment
+files or the provider API.
 
 The original request-scoped service passed two-group isolation, supersession,
 commit, and search/current-state identity probes on 2026-08-22. The tracked receipt is

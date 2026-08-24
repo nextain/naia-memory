@@ -6,6 +6,20 @@ import type {
 
 type FetchLike = typeof fetch;
 
+export type GraphitiRuntimeIdentity = {
+	graphitiCoreVersion: string;
+	neo4jDriverVersion: string;
+	providerAdapterVersion: string;
+	llmClientClass: string;
+	llmModel: string;
+	embeddingClientClass: string;
+	embeddingProvider: string;
+	embeddingModel: string;
+	embeddingDimensions: number;
+	serverLockSha256: string;
+	deployedSidecarSha256: string;
+};
+
 export type GraphitiRestSemanticClientOptions = {
 	baseUrl: string;
 	fetch?: FetchLike;
@@ -56,6 +70,49 @@ export class GraphitiRestSemanticClient
 		)
 			throw new Error("Graphiti companion did not acknowledge episode commit");
 		this.episodeIds.set(input.uuid, value.uuid);
+	}
+
+	async runtimeIdentity(): Promise<GraphitiRuntimeIdentity> {
+		const value = await this.fetchJson("benchmark/runtime-identity");
+		if (!isRecord(value))
+			throw new Error("Graphiti runtime identity response is invalid");
+		const stringFields = [
+			"graphiti_core_version",
+			"neo4j_driver_version",
+			"provider_adapter_version",
+			"llm_client_class",
+			"llm_model",
+			"embedding_client_class",
+			"embedding_provider",
+			"embedding_model",
+			"server_lock_sha256",
+			"deployed_sidecar_sha256",
+		] as const;
+		for (const field of stringFields) {
+			if (typeof value[field] !== "string" || !value[field].trim())
+				throw new Error(`Graphiti runtime identity has invalid ${field}`);
+		}
+		if (
+			typeof value.embedding_dimensions !== "number" ||
+			!Number.isInteger(value.embedding_dimensions) ||
+			value.embedding_dimensions < 1
+		)
+			throw new Error(
+				"Graphiti runtime identity has invalid embedding_dimensions",
+			);
+		return {
+			graphitiCoreVersion: value.graphiti_core_version,
+			neo4jDriverVersion: value.neo4j_driver_version,
+			providerAdapterVersion: value.provider_adapter_version,
+			llmClientClass: value.llm_client_class,
+			llmModel: value.llm_model,
+			embeddingClientClass: value.embedding_client_class,
+			embeddingProvider: value.embedding_provider,
+			embeddingModel: value.embedding_model,
+			embeddingDimensions: value.embedding_dimensions,
+			serverLockSha256: value.server_lock_sha256,
+			deployedSidecarSha256: value.deployed_sidecar_sha256,
+		};
 	}
 
 	async hasEpisode(input: {
