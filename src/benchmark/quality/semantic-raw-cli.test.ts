@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { parseSemanticRawCliArgs, providerConfig } from "./semantic-raw-cli.js";
+import {
+	hindsightRuntimeConfig,
+	parseSemanticRawCliArgs,
+	providerConfig,
+} from "./semantic-raw-cli.js";
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -40,6 +44,55 @@ describe("semantic raw CLI", () => {
 				"--output=receipt.json",
 			]),
 		).toMatchObject({ engine: "hindsight" });
+	});
+
+	it("binds the complete Hindsight LLM and embedding runtime", () => {
+		vi.stubEnv("HINDSIGHT_ENGINE_VERSION", "0.4.0");
+		vi.stubEnv("HINDSIGHT_IMAGE_DIGEST", `sha256:${"a".repeat(64)}`);
+		vi.stubEnv("HINDSIGHT_LLM_PROVIDER", "gemini");
+		vi.stubEnv("HINDSIGHT_LLM_MODEL", "gemini-2.5-flash");
+		vi.stubEnv("HINDSIGHT_EMBEDDING_PROVIDER", "local");
+		vi.stubEnv("HINDSIGHT_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5");
+		vi.stubEnv("HINDSIGHT_EMBEDDING_REVISION", "model-revision");
+		vi.stubEnv("HINDSIGHT_EMBEDDING_DIMENSIONS", "384");
+
+		expect(hindsightRuntimeConfig()).toEqual({
+			version: "0.4.0",
+			imageDigest: `sha256:${"a".repeat(64)}`,
+			llmProvider: "gemini",
+			llmModel: "gemini-2.5-flash",
+			embeddingProvider: "local",
+			embeddingModel: "BAAI/bge-small-en-v1.5",
+			embeddingRevision: "model-revision",
+			embeddingDimensions: 384,
+		});
+	});
+
+	it("rejects incomplete or invalid Hindsight embedding evidence", () => {
+		vi.stubEnv("HINDSIGHT_ENGINE_VERSION", "0.4.0");
+		vi.stubEnv("HINDSIGHT_IMAGE_DIGEST", `sha256:${"a".repeat(64)}`);
+		vi.stubEnv("HINDSIGHT_LLM_PROVIDER", "gemini");
+		vi.stubEnv("HINDSIGHT_LLM_MODEL", "gemini-2.5-flash");
+		vi.stubEnv("HINDSIGHT_EMBEDDING_PROVIDER", "local");
+		vi.stubEnv("HINDSIGHT_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5");
+		vi.stubEnv("HINDSIGHT_EMBEDDING_REVISION", "model-revision");
+		expect(() => hindsightRuntimeConfig()).toThrow(
+			"positive HINDSIGHT_EMBEDDING_DIMENSIONS",
+		);
+		vi.stubEnv("HINDSIGHT_EMBEDDING_DIMENSIONS", "0");
+		expect(() => hindsightRuntimeConfig()).toThrow(
+			"positive HINDSIGHT_EMBEDDING_DIMENSIONS",
+		);
+		vi.stubEnv("HINDSIGHT_EMBEDDING_DIMENSIONS", "384");
+		for (const [name, value] of [
+			["HINDSIGHT_EMBEDDING_PROVIDER", "local"],
+			["HINDSIGHT_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5"],
+			["HINDSIGHT_EMBEDDING_REVISION", "model-revision"],
+		] as const) {
+			vi.stubEnv(name, "");
+			expect(() => hindsightRuntimeConfig()).toThrow(name);
+			vi.stubEnv(name, value);
+		}
 	});
 
 	it("accepts Graphiti as a temporal graph memory engine", () => {
@@ -145,5 +198,28 @@ describe("semantic raw CLI", () => {
 		vi.stubEnv("BENCHMARK_EMBEDDING_DIMENSIONS", "768");
 		vi.stubEnv("BENCHMARK_AUTH", "unsupported");
 		expect(() => providerConfig()).toThrow("must be bearer or x-anyllm");
+	});
+
+	it("requires an explicit embedding revision for competitive runs", () => {
+		vi.stubEnv("BENCHMARK_OPENAI_BASE_URL", "https://provider.example/v1");
+		vi.stubEnv("BENCHMARK_OPENAI_API_KEY", "test-secret");
+		expect(() => providerConfig()).toThrow(
+			"BENCHMARK_EMBEDDING_REVISION is required",
+		);
+	});
+
+	it("requires an explicit embedding revision through the gateway", () => {
+		vi.stubEnv("GATEWAY_URL", "https://gateway.example");
+		vi.stubEnv("GATEWAY_MASTER_KEY", "test-secret");
+		expect(() => providerConfig()).toThrow(
+			"BENCHMARK_EMBEDDING_REVISION is required",
+		);
+	});
+
+	it("requires an explicit embedding revision with direct Gemini", () => {
+		vi.stubEnv("GEMINI_API_KEY", "test-secret");
+		expect(() => providerConfig()).toThrow(
+			"BENCHMARK_EMBEDDING_REVISION is required",
+		);
 	});
 });

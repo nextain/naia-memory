@@ -92,6 +92,10 @@ async function fixture(
 										imageDigest: `sha256:${"c".repeat(64)}`,
 										llmProvider: "provider",
 										llmModel: "llm-model",
+										embeddingProvider: "embedding-provider",
+										embeddingModel: "embedding-model",
+										embeddingRevision: "embedding-revision",
+										embeddingDimensions: 768,
 									},
 								}
 							: {
@@ -242,6 +246,75 @@ describe("semantic execution evidence", () => {
 				},
 			]),
 		).toThrow("hindsight/hindsightRuntime");
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{
+					engine: "hindsight",
+					executionSeed: "hindsight",
+					topK: 5,
+					providerPolicy: "engine-server-native-configuration-v1",
+					endpoint: "http://127.0.0.1:18888/",
+					hindsightRuntime: {
+						version: "1.0.0",
+						imageDigest: `sha256:${"c".repeat(64)}`,
+						llmProvider: "provider",
+						llmModel: "llm-model",
+						embeddingProvider: "embedding-provider",
+						embeddingModel: "embedding-model",
+						embeddingDimensions: 768,
+					},
+				},
+			]),
+		).toThrow("hindsight/embeddingRevision");
+		for (const field of [
+			"embeddingProvider",
+			"embeddingModel",
+			"embeddingRevision",
+		] as const) {
+			expect(() =>
+				validateSemanticConfigurationParity([
+					{
+						engine: "hindsight",
+						executionSeed: "hindsight",
+						topK: 5,
+						providerPolicy: "engine-server-native-configuration-v1",
+						endpoint: "http://127.0.0.1:18888/",
+						hindsightRuntime: {
+							version: "1.0.0",
+							imageDigest: `sha256:${"c".repeat(64)}`,
+							llmProvider: "provider",
+							llmModel: "llm-model",
+							embeddingProvider: "embedding-provider",
+							embeddingModel: "embedding-model",
+							embeddingRevision: "embedding-revision",
+							embeddingDimensions: 768,
+							[field]: "",
+						},
+					},
+				]),
+			).toThrow(`hindsight/${field}`);
+		}
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{
+					engine: "hindsight",
+					executionSeed: "hindsight",
+					topK: 5,
+					providerPolicy: "engine-server-native-configuration-v1",
+					endpoint: "http://127.0.0.1:18888/",
+					hindsightRuntime: {
+						version: "1.0.0",
+						imageDigest: `sha256:${"c".repeat(64)}`,
+						llmProvider: "provider",
+						llmModel: "llm-model",
+						embeddingProvider: "embedding-provider",
+						embeddingModel: "embedding-model",
+						embeddingRevision: "embedding-revision",
+						embeddingDimensions: 0,
+					},
+				},
+			]),
+		).toThrow("Hindsight embedding dimensions are invalid");
 	});
 
 	it("requires immutable server images and identical Graphiti lane runtimes", () => {

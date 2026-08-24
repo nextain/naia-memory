@@ -211,9 +211,17 @@ export function validateSemanticConfigurationParity(
 				"imageDigest",
 				"llmProvider",
 				"llmModel",
+				"embeddingProvider",
+				"embeddingModel",
+				"embeddingRevision",
 			]);
 			if (!/^sha256:[a-f0-9]{64}$/.test(String(runtime.imageDigest)))
 				throw new Error("semantic Hindsight image digest is not immutable");
+			if (
+				!Number.isInteger(runtime.embeddingDimensions) ||
+				Number(runtime.embeddingDimensions) < 1
+			)
+				throw new Error("semantic Hindsight embedding dimensions are invalid");
 		} else if (engine === "letta") {
 			if (
 				requiredNonemptyString(disclosure, "providerPolicy") !==

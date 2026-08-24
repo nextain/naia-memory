@@ -115,6 +115,14 @@ function discloseEndpoint(baseURL: string): string {
 }
 
 export function providerConfig() {
+	const embeddingRevision = () => {
+		const revision = process.env.BENCHMARK_EMBEDDING_REVISION?.trim();
+		if (!revision)
+			throw new Error(
+				"BENCHMARK_EMBEDDING_REVISION is required for reproducible competitive runs",
+			);
+		return revision;
+	};
 	const configuredBaseURL = process.env.BENCHMARK_OPENAI_BASE_URL;
 	const configuredApiKey = process.env.BENCHMARK_OPENAI_API_KEY;
 	if (configuredBaseURL || configuredApiKey) {
@@ -140,8 +148,7 @@ export function providerConfig() {
 				? configuredBaseURL
 				: `${configuredBaseURL}/`,
 			embeddingModel,
-			embeddingRevision:
-				process.env.BENCHMARK_EMBEDDING_REVISION ?? embeddingModel,
+			embeddingRevision: embeddingRevision(),
 			embeddingDimensions: dimensions,
 			llmModel: process.env.BENCHMARK_LLM_MODEL ?? "gpt-4.1-mini",
 			auth,
@@ -154,7 +161,7 @@ export function providerConfig() {
 			apiKey: gatewayKey,
 			baseURL: `${gatewayUrl}/v1/`,
 			embeddingModel: "vertexai:gemini-embedding-001",
-			embeddingRevision: "gemini-embedding-001",
+			embeddingRevision: embeddingRevision(),
 			embeddingDimensions: 3072,
 			llmModel: process.env.BENCHMARK_LLM_MODEL ?? "vertexai:gemini-2.5-flash",
 			auth: "bearer" as const,
@@ -166,10 +173,51 @@ export function providerConfig() {
 		apiKey,
 		baseURL: GEMINI_BASE,
 		embeddingModel: "gemini-embedding-001",
-		embeddingRevision: "gemini-embedding-001",
+		embeddingRevision: embeddingRevision(),
 		embeddingDimensions: 3072,
 		llmModel: process.env.BENCHMARK_LLM_MODEL ?? "gemini-2.5-flash",
 		auth: "bearer" as const,
+	};
+}
+
+export function hindsightRuntimeConfig() {
+	const version = process.env.HINDSIGHT_ENGINE_VERSION?.trim();
+	const imageDigest = process.env.HINDSIGHT_IMAGE_DIGEST?.trim();
+	const llmProvider = process.env.HINDSIGHT_LLM_PROVIDER?.trim();
+	const llmModel = process.env.HINDSIGHT_LLM_MODEL?.trim();
+	const embeddingProvider = process.env.HINDSIGHT_EMBEDDING_PROVIDER?.trim();
+	const embeddingModel = process.env.HINDSIGHT_EMBEDDING_MODEL?.trim();
+	const embeddingRevision = process.env.HINDSIGHT_EMBEDDING_REVISION?.trim();
+	const embeddingDimensions = Number(
+		process.env.HINDSIGHT_EMBEDDING_DIMENSIONS,
+	);
+	if (
+		!version ||
+		!imageDigest ||
+		!llmProvider ||
+		!llmModel ||
+		!embeddingProvider ||
+		!embeddingModel ||
+		!embeddingRevision ||
+		!Number.isInteger(embeddingDimensions) ||
+		embeddingDimensions < 1
+	)
+		throw new Error(
+			"Hindsight runs require HINDSIGHT_ENGINE_VERSION, HINDSIGHT_IMAGE_DIGEST, HINDSIGHT_LLM_PROVIDER, HINDSIGHT_LLM_MODEL, HINDSIGHT_EMBEDDING_PROVIDER, HINDSIGHT_EMBEDDING_MODEL, HINDSIGHT_EMBEDDING_REVISION, and a positive HINDSIGHT_EMBEDDING_DIMENSIONS",
+		);
+	if (!/^sha256:[a-f0-9]{64}$/.test(imageDigest))
+		throw new Error(
+			"HINDSIGHT_IMAGE_DIGEST must be an immutable sha256 digest",
+		);
+	return {
+		version,
+		imageDigest,
+		llmProvider,
+		llmModel,
+		embeddingProvider,
+		embeddingModel,
+		embeddingRevision,
+		embeddingDimensions,
 	};
 }
 
@@ -323,21 +371,6 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 			);
 		return { revision, imageDigest, coreVersion, llmModel, embeddingModel };
 	};
-	const hindsightRuntime = () => {
-		const version = process.env.HINDSIGHT_ENGINE_VERSION?.trim();
-		const imageDigest = process.env.HINDSIGHT_IMAGE_DIGEST?.trim();
-		const llmProvider = process.env.HINDSIGHT_LLM_PROVIDER?.trim();
-		const llmModel = process.env.HINDSIGHT_LLM_MODEL?.trim();
-		if (!version || !imageDigest || !llmProvider || !llmModel)
-			throw new Error(
-				"Hindsight runs require HINDSIGHT_ENGINE_VERSION, HINDSIGHT_IMAGE_DIGEST, HINDSIGHT_LLM_PROVIDER, and HINDSIGHT_LLM_MODEL",
-			);
-		if (!/^sha256:[a-f0-9]{64}$/.test(imageDigest))
-			throw new Error(
-				"HINDSIGHT_IMAGE_DIGEST must be an immutable sha256 digest",
-			);
-		return { version, imageDigest, llmProvider, llmModel };
-	};
 	const lettaRuntime = () => {
 		const version = process.env.LETTA_ENGINE_VERSION?.trim();
 		const imageDigest = process.env.LETTA_IMAGE_DIGEST?.trim();
@@ -370,7 +403,7 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 			? graphitiRuntime()
 			: undefined;
 	const hindsightRuntimeReceipt =
-		parsed.engine === "hindsight" ? hindsightRuntime() : undefined;
+		parsed.engine === "hindsight" ? hindsightRuntimeConfig() : undefined;
 	const lettaRuntimeReceipt =
 		parsed.engine === "letta" ? lettaRuntime() : undefined;
 	const receipts = await runSemanticRawContract(

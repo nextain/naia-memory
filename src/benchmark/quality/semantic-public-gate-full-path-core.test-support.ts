@@ -214,6 +214,10 @@ export async function writeExecutionFixture(
 							imageDigest: `sha256:${"d".repeat(64)}`,
 							llmProvider: "provider",
 							llmModel: "llm-model",
+							embeddingProvider: "embedding-provider",
+							embeddingModel: "embedding-model",
+							embeddingRevision: "embedding-revision",
+							embeddingDimensions: 768,
 						},
 					}),
 		};
