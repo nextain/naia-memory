@@ -104,7 +104,9 @@ async function fixture(
 										version: "1.0.0",
 										imageDigest: `sha256:${"d".repeat(64)}`,
 										llmModel: "llm-model",
+										embeddingProvider: "embedding-provider",
 										embeddingModel: "embedding-model",
+										embeddingRevision: "embedding-revision",
 										embeddingDimensions: 768,
 									},
 								}),
@@ -315,6 +317,48 @@ describe("semantic execution evidence", () => {
 				},
 			]),
 		).toThrow("Hindsight embedding dimensions are invalid");
+	});
+
+	it("rejects incomplete Letta embedding runtime evidence", () => {
+		const runtime = {
+			version: "1.0.0",
+			imageDigest: `sha256:${"d".repeat(64)}`,
+			llmModel: "llm-model",
+			embeddingProvider: "embedding-provider",
+			embeddingModel: "embedding-model",
+			embeddingRevision: "embedding-revision",
+			embeddingDimensions: 768,
+		};
+		for (const field of [
+			"embeddingProvider",
+			"embeddingModel",
+			"embeddingRevision",
+		] as const) {
+			expect(() =>
+				validateSemanticConfigurationParity([
+					{
+						engine: "letta",
+						executionSeed: "letta",
+						topK: 5,
+						providerPolicy: "engine-server-native-configuration-v1",
+						endpoint: "http://127.0.0.1:8283/",
+						lettaRuntime: { ...runtime, [field]: "" },
+					},
+				]),
+			).toThrow(`letta/${field}`);
+		}
+		expect(() =>
+			validateSemanticConfigurationParity([
+				{
+					engine: "letta",
+					executionSeed: "letta",
+					topK: 5,
+					providerPolicy: "engine-server-native-configuration-v1",
+					endpoint: "http://127.0.0.1:8283/",
+					lettaRuntime: { ...runtime, embeddingDimensions: 0 },
+				},
+			]),
+		).toThrow("letta/embeddingDimensions");
 	});
 
 	it("requires immutable server images and identical Graphiti lane runtimes", () => {

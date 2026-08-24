@@ -232,7 +232,9 @@ export function validateSemanticConfigurationParity(
 				"version",
 				"imageDigest",
 				"llmModel",
+				"embeddingProvider",
 				"embeddingModel",
+				"embeddingRevision",
 			]);
 			if (!/^sha256:[a-f0-9]{64}$/.test(String(runtime.imageDigest)))
 				throw new Error("semantic Letta image digest is not immutable");

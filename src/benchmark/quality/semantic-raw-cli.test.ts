@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	hindsightRuntimeConfig,
+	lettaRuntimeConfig,
 	parseSemanticRawCliArgs,
 	providerConfig,
 } from "./semantic-raw-cli.js";
@@ -123,6 +124,49 @@ describe("semantic raw CLI", () => {
 				"--output=receipt.json",
 			]),
 		).toMatchObject({ engine: "letta" });
+	});
+
+	it("binds Letta embedding provider, model, revision, and dimensions", () => {
+		vi.stubEnv("LETTA_ENGINE_VERSION", "0.13.0");
+		vi.stubEnv("LETTA_IMAGE_DIGEST", `sha256:${"d".repeat(64)}`);
+		vi.stubEnv("LETTA_LLM_MODEL", "openai/gpt-4.1-mini");
+		vi.stubEnv("LETTA_EMBEDDING_PROVIDER", "openai");
+		vi.stubEnv("LETTA_EMBEDDING_MODEL", "text-embedding-3-small");
+		vi.stubEnv("LETTA_EMBEDDING_REVISION", "provider-release-2026-08-01");
+		vi.stubEnv("LETTA_EMBEDDING_DIMENSIONS", "1536");
+
+		expect(lettaRuntimeConfig()).toEqual({
+			version: "0.13.0",
+			imageDigest: `sha256:${"d".repeat(64)}`,
+			llmModel: "openai/gpt-4.1-mini",
+			embeddingProvider: "openai",
+			embeddingModel: "text-embedding-3-small",
+			embeddingRevision: "provider-release-2026-08-01",
+			embeddingDimensions: 1536,
+		});
+	});
+
+	it("rejects incomplete Letta embedding identity", () => {
+		vi.stubEnv("LETTA_ENGINE_VERSION", "0.13.0");
+		vi.stubEnv("LETTA_IMAGE_DIGEST", `sha256:${"d".repeat(64)}`);
+		vi.stubEnv("LETTA_LLM_MODEL", "openai/gpt-4.1-mini");
+		vi.stubEnv("LETTA_EMBEDDING_PROVIDER", "openai");
+		vi.stubEnv("LETTA_EMBEDDING_MODEL", "text-embedding-3-small");
+		vi.stubEnv("LETTA_EMBEDDING_REVISION", "provider-release-2026-08-01");
+		vi.stubEnv("LETTA_EMBEDDING_DIMENSIONS", "1536");
+		for (const [name, value] of [
+			["LETTA_EMBEDDING_PROVIDER", "openai"],
+			["LETTA_EMBEDDING_MODEL", "text-embedding-3-small"],
+			["LETTA_EMBEDDING_REVISION", "provider-release-2026-08-01"],
+		] as const) {
+			vi.stubEnv(name, "");
+			expect(() => lettaRuntimeConfig()).toThrow(name);
+			vi.stubEnv(name, value);
+		}
+		vi.stubEnv("LETTA_EMBEDDING_DIMENSIONS", "0");
+		expect(() => lettaRuntimeConfig()).toThrow(
+			"positive LETTA_EMBEDDING_DIMENSIONS",
+		);
 	});
 
 	it("rejects a blank execution seed", () => {

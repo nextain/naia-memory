@@ -221,6 +221,40 @@ export function hindsightRuntimeConfig() {
 	};
 }
 
+export function lettaRuntimeConfig() {
+	const version = process.env.LETTA_ENGINE_VERSION?.trim();
+	const imageDigest = process.env.LETTA_IMAGE_DIGEST?.trim();
+	const llmModel = process.env.LETTA_LLM_MODEL?.trim();
+	const embeddingProvider = process.env.LETTA_EMBEDDING_PROVIDER?.trim();
+	const embeddingModel = process.env.LETTA_EMBEDDING_MODEL?.trim();
+	const embeddingRevision = process.env.LETTA_EMBEDDING_REVISION?.trim();
+	const embeddingDimensions = Number(process.env.LETTA_EMBEDDING_DIMENSIONS);
+	if (
+		!version ||
+		!imageDigest ||
+		!llmModel ||
+		!embeddingProvider ||
+		!embeddingModel ||
+		!embeddingRevision ||
+		!Number.isInteger(embeddingDimensions) ||
+		embeddingDimensions < 1
+	)
+		throw new Error(
+			"Letta runs require LETTA_ENGINE_VERSION, LETTA_IMAGE_DIGEST, LETTA_LLM_MODEL, LETTA_EMBEDDING_PROVIDER, LETTA_EMBEDDING_MODEL, LETTA_EMBEDDING_REVISION, and positive LETTA_EMBEDDING_DIMENSIONS",
+		);
+	if (!/^sha256:[a-f0-9]{64}$/.test(imageDigest))
+		throw new Error("LETTA_IMAGE_DIGEST must be an immutable sha256 digest");
+	return {
+		version,
+		imageDigest,
+		llmModel,
+		embeddingProvider,
+		embeddingModel,
+		embeddingRevision,
+		embeddingDimensions,
+	};
+}
+
 export async function runSemanticRawCli(args: string[]): Promise<void> {
 	const parsed = parseSemanticRawCliArgs(args);
 	const contractPath = resolve(parsed.contractPath);
@@ -371,33 +405,6 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 			);
 		return { revision, imageDigest, coreVersion, llmModel, embeddingModel };
 	};
-	const lettaRuntime = () => {
-		const version = process.env.LETTA_ENGINE_VERSION?.trim();
-		const imageDigest = process.env.LETTA_IMAGE_DIGEST?.trim();
-		const llmModel = process.env.LETTA_LLM_MODEL?.trim();
-		const embeddingModel = process.env.LETTA_EMBEDDING_MODEL?.trim();
-		const embeddingDimensions = Number(process.env.LETTA_EMBEDDING_DIMENSIONS);
-		if (
-			!version ||
-			!imageDigest ||
-			!llmModel ||
-			!embeddingModel ||
-			!Number.isInteger(embeddingDimensions) ||
-			embeddingDimensions < 1
-		)
-			throw new Error(
-				"Letta runs require LETTA_ENGINE_VERSION, LETTA_IMAGE_DIGEST, LETTA_LLM_MODEL, LETTA_EMBEDDING_MODEL, and positive LETTA_EMBEDDING_DIMENSIONS",
-			);
-		if (!/^sha256:[a-f0-9]{64}$/.test(imageDigest))
-			throw new Error("LETTA_IMAGE_DIGEST must be an immutable sha256 digest");
-		return {
-			version,
-			imageDigest,
-			llmModel,
-			embeddingModel,
-			embeddingDimensions,
-		};
-	};
 	const graphitiRuntimeReceipt =
 		parsed.engine === "graphiti" || parsed.engine === "graphiti-historical"
 			? graphitiRuntime()
@@ -405,7 +412,7 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 	const hindsightRuntimeReceipt =
 		parsed.engine === "hindsight" ? hindsightRuntimeConfig() : undefined;
 	const lettaRuntimeReceipt =
-		parsed.engine === "letta" ? lettaRuntime() : undefined;
+		parsed.engine === "letta" ? lettaRuntimeConfig() : undefined;
 	const receipts = await runSemanticRawContract(
 		contract,
 		createBridge,
