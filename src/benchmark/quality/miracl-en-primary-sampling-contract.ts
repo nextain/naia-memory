@@ -9,7 +9,6 @@ export const MIRACL_EN_PREFLIGHT_STRATA = [
 	1_024,
 	2_048,
 	4_096,
-	8_192,
 	Number.POSITIVE_INFINITY,
 ] as const;
 

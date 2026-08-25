@@ -84,7 +84,9 @@ describe("MIRACL English primary preflight", () => {
 		for (const passage of candidates) forward.consider(passage);
 		for (const passage of [...candidates].reverse()) reverse.consider(passage);
 		expect(forward.finish()).toEqual(reverse.finish());
-		expect(forward.finish()).toHaveLength(8_192);
+		expect(forward.finish()).toHaveLength(
+			(MIRACL_EN_PREFLIGHT_STRATA.length - 1) * MIRACL_EN_PREFLIGHT_PER_STRATUM,
+		);
 	});
 
 	it("reports observations without granting equivalence or public claims", () => {
@@ -167,6 +169,19 @@ describe("MIRACL English primary preflight", () => {
 		expect(() => sampler.finish()).toThrow("must be full");
 	});
 
+	it("keeps the sparse English long tail in one fillable stratum", () => {
+		expect(MIRACL_EN_PREFLIGHT_STRATA).toEqual([
+			0,
+			128,
+			256,
+			512,
+			1_024,
+			2_048,
+			4_096,
+			Number.POSITIVE_INFINITY,
+		]);
+	});
+
 	it("keeps verified corpus streaming identity checks ordinal-bounded", () => {
 		const sampler = new EnglishPreflightSampler("verified-corpus-stream");
 		sampler.consider({ ordinal: 0, docid: "d-0", content: "x" });
@@ -174,11 +189,13 @@ describe("MIRACL English primary preflight", () => {
 		expect(() =>
 			sampler.consider({ ordinal: 3, docid: "d-3", content: "x" }),
 		).toThrow("not contiguous");
-		const duplicate = new EnglishPreflightSampler("verified-corpus-stream");
-		duplicate.consider({ ordinal: 0, docid: "same", content: "x" });
-		expect(() =>
-			duplicate.consider({ ordinal: 1, docid: "same", content: "y" }),
-		).toThrow("duplicated");
+		const verified = new EnglishPreflightSampler("verified-corpus-stream");
+		for (let ordinal = 0; ordinal < 100_000; ordinal += 1)
+			verified.consider({
+				ordinal,
+				docid: `disk-verified-${ordinal}`,
+				content: "bounded stream sample",
+			});
 	});
 
 	it("canonicalizes retrieval query ordering in the artifact digest", () => {

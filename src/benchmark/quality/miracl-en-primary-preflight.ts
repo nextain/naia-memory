@@ -87,18 +87,19 @@ export class EnglishPreflightSampler {
 			throw new Error("sample ordinal must be a nonnegative safe integer");
 		if (!passage.docid || typeof passage.content !== "string")
 			throw new Error("sample passage is malformed");
-		if (this.docids.has(passage.docid))
-			throw new Error("sample passage identity is duplicated");
 		if (this.identityMode === "verified-corpus-stream") {
 			if (passage.ordinal !== this.lastVerifiedOrdinal + 1)
 				throw new Error("verified corpus stream ordinal is not contiguous");
 			this.lastVerifiedOrdinal = passage.ordinal;
 		} else {
-			if (this.ordinals.has(passage.ordinal))
+			if (
+				this.ordinals.has(passage.ordinal) ||
+				this.docids.has(passage.docid)
+			)
 				throw new Error("sample passage identity is duplicated");
 			this.ordinals.add(passage.ordinal);
+			this.docids.add(passage.docid);
 		}
-		this.docids.add(passage.docid);
 		const stratum = englishPreflightStratumFor(
 			Buffer.byteLength(passage.content, "utf8"),
 		);
@@ -128,12 +129,13 @@ export class EnglishPreflightSampler {
 	}
 
 	finish(): EnglishPreflightPassage[] {
-		if (
-			this.strata.some(
-				(rows) => rows.length !== MIRACL_EN_PREFLIGHT_PER_STRATUM,
-			)
-		)
-			throw new Error("every English preflight length stratum must be full");
+		const incomplete = this.strata
+			.map((rows, stratum) => ({ stratum, count: rows.length }))
+			.filter(({ count }) => count !== MIRACL_EN_PREFLIGHT_PER_STRATUM);
+		if (incomplete.length > 0)
+			throw new Error(
+				`every English preflight length stratum must be full: ${JSON.stringify(incomplete)}`,
+			);
 		return this.strata
 			.flat()
 			.sort((left, right) => left.ordinal - right.ordinal)

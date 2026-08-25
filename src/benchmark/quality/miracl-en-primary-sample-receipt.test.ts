@@ -8,6 +8,10 @@ import {
 	validateMiraclEnPassageStrata,
 	verifyMiraclEnSourcePassage,
 } from "./miracl-en-primary-sample-receipt.js";
+import {
+	MIRACL_EN_PREFLIGHT_PER_STRATUM,
+	MIRACL_EN_PREFLIGHT_STRATA,
+} from "./miracl-en-primary-sampling-contract.js";
 import { MIRACL_MULTILINGUAL_CONTRACT } from "./miracl-multilingual-contract.js";
 
 function queryFixture() {
@@ -65,21 +69,30 @@ describe("MIRACL-en source-derived preflight receipt", () => {
 	});
 
 	it("rejects a count-correct sample concentrated in one length stratum", () => {
-		const forged = Array.from({ length: 8_192 }, (_, ordinal) => ({
-			ordinal,
-			docid: `d${ordinal}`,
-			content: "short",
-		}));
+		const forged = Array.from(
+			{
+				length:
+					(MIRACL_EN_PREFLIGHT_STRATA.length - 1) *
+					MIRACL_EN_PREFLIGHT_PER_STRATUM,
+			},
+			(_, ordinal) => ({
+				ordinal,
+				docid: `d${ordinal}`,
+				content: "short",
+			}),
+		);
 		expect(() => validateMiraclEnPassageStrata(forged)).toThrow(
 			"strata are inconsistent",
 		);
 	});
 
 	it("accepts exactly 1,024 passages in every configured length stratum", () => {
-		const byteLengths = [1, 128, 256, 512, 1_024, 2_048, 4_096, 8_192];
+		const byteLengths = MIRACL_EN_PREFLIGHT_STRATA.slice(0, -1).map((minimum) =>
+			Math.max(1, minimum),
+		);
 		const passages = byteLengths.flatMap((length, stratum) =>
-			Array.from({ length: 1_024 }, (_, offset) => ({
-				ordinal: stratum * 1_024 + offset,
+			Array.from({ length: MIRACL_EN_PREFLIGHT_PER_STRATUM }, (_, offset) => ({
+				ordinal: stratum * MIRACL_EN_PREFLIGHT_PER_STRATUM + offset,
 				docid: `d${stratum}-${offset}`,
 				content: "x".repeat(length),
 			})),
