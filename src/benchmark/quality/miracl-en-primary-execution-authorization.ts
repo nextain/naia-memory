@@ -1,6 +1,18 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import {
+	constants,
+	closeSync,
+	existsSync,
+	fstatSync,
+	openSync,
+	readFileSync,
+	readSync,
+} from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import {
+	prepareMiraclCorpusIdentityScan,
+	readMiraclSourceReceipt,
+} from "./miracl-corpus-identity.js";
 import {
 	MIRACL_EN_PREFLIGHT_RETRIEVAL_QUERIES,
 	MIRACL_EN_PRIMARY_EXECUTION,
@@ -8,6 +20,8 @@ import {
 	miraclEnPrimaryExecutionPolicy,
 } from "./miracl-en-primary-execution-policy.js";
 import {
+	type MiraclEnPrimarySampleReceipt,
+	MiraclEnPrimarySampleSourceVerifier,
 	miraclEnSelectedQrelsSha256,
 	miraclEnSelectedRelevantDocidsSha256,
 	selectMiraclEnPreflightQueryIds,
@@ -18,6 +32,7 @@ import {
 	miraclSourceRoot,
 	parseMiraclSourceLockReceipt,
 } from "./miracl-multilingual-download.js";
+import { scanNativeCorpusDocuments } from "./native-corpus-extract.js";
 import { MIRACL_EMBEDDING_POLICY } from "./native-full-corpus-evidence.js";
 import {
 	type NativeRuntimeSourceManifest,
@@ -60,6 +75,7 @@ interface EnglishPrimaryPreflight {
 		embeddingExecutionPolicySha256?: unknown;
 		producerSourceSha256?: unknown;
 		producerSourceManifest?: NativeRuntimeSourceManifest;
+		vectorArtifactSha256?: unknown;
 	};
 	checks?: {
 		finiteDimensions?: unknown;
@@ -122,6 +138,7 @@ export function authorizeMiraclEnPrimaryExecution(input: {
 	qdrantReceiptBytes: Uint8Array;
 	evaluationSourceSha256: string;
 	authorizationSourceSha256: string;
+	vectorArtifactSha256: string;
 }) {
 	canonicalReceipt(input.preflight, input.preflightBytes, "English preflight");
 	canonicalReceipt(
@@ -141,6 +158,7 @@ export function authorizeMiraclEnPrimaryExecution(input: {
 	);
 	digest(input.evaluationSourceSha256, "evaluation source");
 	digest(input.authorizationSourceSha256, "authorization source");
+	digest(input.vectorArtifactSha256, "preflight vector artifact file");
 	if (!input.preflight.execution?.producerSourceManifest)
 		throw new Error("preflight producer source manifest is required");
 	validateNativeRuntimeSourceManifest(
@@ -191,6 +209,8 @@ export function authorizeMiraclEnPrimaryExecution(input: {
 			policy.embeddingExecutionPolicySha256 ||
 		input.preflight.execution.producerSourceSha256 !==
 			input.preflight.execution.producerSourceManifest.manifestSha256 ||
+		input.preflight.execution.vectorArtifactSha256 !==
+			input.vectorArtifactSha256 ||
 		input.preflight.checks?.finiteDimensions !== true ||
 		input.preflight.checks?.repeatBitIdentical !== true ||
 		input.preflight.checks?.orderSensitivityReported !== true ||
@@ -261,6 +281,7 @@ export function authorizeMiraclEnPrimaryExecution(input: {
 		},
 		artifacts: {
 			preflightSha256: sha256(input.preflightBytes),
+			preflightVectorArtifactSha256: input.vectorArtifactSha256,
 			sourceDerivedSampleSha256: sha256(input.sampleReceiptBytes),
 			sourceReceiptSha256: sha256(input.sourceReceiptBytes),
 			qdrantServiceReceiptSha256: qdrantServiceBindingSha256(qdrantReceipt),
@@ -287,10 +308,82 @@ function parse(bytes: Uint8Array, name: string): unknown {
 	}
 }
 
+function sha256FileSync(path: string): string {
+	const descriptor = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+	const hash = createHash("sha256");
+	const buffer = Buffer.allocUnsafe(1024 * 1024);
+	try {
+		const before = fstatSync(descriptor, { bigint: true });
+		if (!before.isFile())
+			throw new Error(
+				"English preflight vector artifact is not a regular file",
+			);
+		for (;;) {
+			const bytesRead = readSync(descriptor, buffer, 0, buffer.length, null);
+			if (bytesRead === 0) break;
+			hash.update(buffer.subarray(0, bytesRead));
+		}
+		const after = fstatSync(descriptor, { bigint: true });
+		if (
+			before.size !== after.size ||
+			before.mtimeNs !== after.mtimeNs ||
+			before.ctimeNs !== after.ctimeNs
+		)
+			throw new Error(
+				"English preflight vector artifact changed while hashing",
+			);
+	} finally {
+		closeSync(descriptor);
+	}
+	return hash.digest("hex");
+}
+
+export function verifyMiraclEnPreflightVectorArtifact(
+	path: string,
+	expectedSha256: string,
+): string {
+	digest(expectedSha256, "expected preflight vector artifact");
+	const actualSha256 = sha256FileSync(path);
+	if (actualSha256 !== expectedSha256)
+		throw new Error("English preflight vector artifact digest mismatch");
+	return actualSha256;
+}
+
+export async function verifyMiraclEnPrimarySampleAgainstLockedCorpus(input: {
+	sourceRoot: string;
+	sourceReceiptPath: string;
+	sampleReceipt: unknown;
+	duplicateWorkDirectory?: string;
+}): Promise<void> {
+	validateMiraclEnPrimarySampleReceipt(input.sampleReceipt);
+	const prepared = prepareMiraclCorpusIdentityScan({
+		language: "en",
+		sourceRoot: input.sourceRoot,
+		sourceReceipt: readMiraclSourceReceipt(input.sourceReceiptPath),
+	});
+	if (prepared.sourceLockSha256 !== input.sampleReceipt.sourceLockSha256)
+		throw new Error("English source-derived sample source lock changed");
+	const verifier = new MiraclEnPrimarySampleSourceVerifier(input.sampleReceipt);
+	const scan = await scanNativeCorpusDocuments(
+		prepared.shards,
+		(document, ordinal) => verifier.consider(document, ordinal),
+		{
+			duplicateWorkDirectory:
+				input.duplicateWorkDirectory ?? dirname(input.sourceRoot),
+			expectedCompressedShards: prepared.expectedCompressedShards,
+		},
+	);
+	verifier.finish(scan);
+}
+
 export function verifyMiraclEnPrimaryExecutionFiles(
 	environment: NodeJS.ProcessEnv,
 	root = process.cwd(),
-): void {
+): {
+	sampleReceipt: MiraclEnPrimarySampleReceipt;
+	sourceReceiptPath: string;
+	sourceRoot: string;
+} {
 	if (environment.MIRACL_LANGUAGE !== "en")
 		throw new Error(
 			"English primary authorization requires MIRACL_LANGUAGE=en",
@@ -307,12 +400,15 @@ export function verifyMiraclEnPrimaryExecutionFiles(
 		preflight:
 			environment.MIRACL_EN_PRIMARY_PREFLIGHT ??
 			"reports/quality/miracl-en-primary-preflight/evidence.json",
+		vectors:
+			environment.MIRACL_EN_PRIMARY_PREFLIGHT_VECTORS ??
+			`${environment.MIRACL_EN_PRIMARY_PREFLIGHT ?? "reports/quality/miracl-en-primary-preflight/evidence.json"}.vectors.f32`,
 		sample:
 			environment.MIRACL_EN_PRIMARY_SAMPLE_RECEIPT ??
 			"reports/quality/miracl-en-primary-preflight/source-derived-sample.json",
 		source:
 			environment.MIRACL_SOURCE_RECEIPT ??
-			`${miraclSourceRoot("en")}/source-lock-receipt.json`,
+			`${environment.MIRACL_SOURCE_DIR ?? miraclSourceRoot("en")}/source-lock-receipt.json`,
 		qdrant: environment.MIRACL_QDRANT_SERVICE_RECEIPT,
 		authorization:
 			environment.MIRACL_EN_PRIMARY_AUTHORIZATION ??
@@ -330,6 +426,15 @@ export function verifyMiraclEnPrimaryExecutionFiles(
 		throw new Error("English primary result already exists");
 	if (existsSync(resolve(root, MIRACL_EN_PRIMARY_TREC)))
 		throw new Error("English primary TREC output already exists");
+	const sourceReceiptPath = resolve(root, paths.source);
+	const sourceRoot = resolve(
+		root,
+		environment.MIRACL_SOURCE_DIR ?? miraclSourceRoot("en"),
+	);
+	if (dirname(sourceReceiptPath) !== sourceRoot)
+		throw new Error(
+			"English source receipt and execution source root must be identical",
+		);
 	const preflightBytes = readFileSync(resolve(root, paths.preflight));
 	const sampleReceiptBytes = readFileSync(resolve(root, paths.sample));
 	const sourceReceiptBytes = readFileSync(resolve(root, paths.source));
@@ -351,7 +456,6 @@ export function verifyMiraclEnPrimaryExecutionFiles(
 		preflight.execution.producerSourceManifest,
 	);
 	verifyNativeRuntimeSourceManifest(root, sampleReceipt.producerSourceManifest);
-	const sourceRoot = dirname(resolve(root, paths.source));
 	const contract = MIRACL_MULTILINGUAL_CONTRACT.en;
 	const topicsBytes = readFileSync(join(sourceRoot, contract.topics.path));
 	const qrelsBytes = readFileSync(join(sourceRoot, contract.qrels.path));
@@ -408,9 +512,28 @@ export function verifyMiraclEnPrimaryExecutionFiles(
 				),
 			),
 		),
+		vectorArtifactSha256: verifyMiraclEnPreflightVectorArtifact(
+			resolve(root, paths.vectors),
+			preflight.execution.vectorArtifactSha256 as string,
+		),
 	});
 	const actual = parse(authorizationBytes, "English primary authorization");
 	canonicalReceipt(actual, authorizationBytes, "English primary authorization");
 	if (canonical(actual) !== canonical(expected))
 		throw new Error("English primary authorization mismatch");
+	return { sampleReceipt, sourceReceiptPath, sourceRoot };
+}
+
+export async function verifyMiraclEnPrimaryExecutionLaunch(
+	environment: NodeJS.ProcessEnv,
+	root = process.cwd(),
+): Promise<void> {
+	const verified = verifyMiraclEnPrimaryExecutionFiles(environment, root);
+	await verifyMiraclEnPrimarySampleAgainstLockedCorpus({
+		sourceRoot: verified.sourceRoot,
+		sourceReceiptPath: verified.sourceReceiptPath,
+		sampleReceipt: verified.sampleReceipt,
+		duplicateWorkDirectory:
+			environment.MIRACL_DUPLICATE_WORK_DIR ?? dirname(verified.sourceRoot),
+	});
 }

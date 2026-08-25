@@ -1,0 +1,391 @@
+{
+  "schemaVersion": "naia-memory-semantic-raw-artifact-v2",
+  "interpretation": "Unscored engine-native semantic memories and retrievals; not quality evidence by itself.",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-20T12:24:30.136Z",
+    "git": {
+      "revision": "e1152a75e34ba1bcea8aa2970fdb7012f883b5d7",
+      "dirty": true
+    },
+    "datasets": {
+      "/var/home/luke/alpha-adk/projects/naia-memory/reports/quality/semantic-heldout-model-authored-2026-08-19.json": "c6ea38eba5d97bfab7c519fc1d4087cb461b85f295a0d8eb354cef6575c6ce36"
+    },
+    "implementations": {
+      "src/benchmark/quality/semantic-raw-cli.ts": "664bce17aadea127a5af23d22c64431b4c9cfa6e90f80f4fcb16d57f75bf7b6c",
+      "src/benchmark/quality/memory-semantic-runner.ts": "8f1e1456e4ab1195e9c5b397abd36c9d31d5f02482385ba3cab9bd3453dd5ad1",
+      "src/benchmark/quality/bridge-naia-semantic.ts": "cafcee3ac6a93fe885d20c5a4407fcd2a49e72a75f26b3a35277ae0d7566d87b"
+    },
+    "config": {
+      "engine": "naia",
+      "topK": 5,
+      "executionSeed": "2cfe85d8ddaa700428f5af15ef956e8c4261e07122c51cf2d12e296757332fad",
+      "embeddingModel": "gemini-embedding-001",
+      "embeddingRevision": "gemini-embedding-001",
+      "embeddingDimensions": 3072,
+      "llmModel": "gemini-2.5-flash",
+      "authScheme": "bearer",
+      "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/"
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "disclosure": {
+    "engine": "naia",
+    "topK": 5,
+    "executionSeed": "2cfe85d8ddaa700428f5af15ef956e8c4261e07122c51cf2d12e296757332fad",
+    "embeddingModel": "gemini-embedding-001",
+    "embeddingRevision": "gemini-embedding-001",
+    "embeddingDimensions": 3072,
+    "llmModel": "gemini-2.5-flash",
+    "authScheme": "bearer",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/"
+  },
+  "cases": [
+    {
+      "caseId": "case_ko_no_update_3",
+      "executionPosition": 1,
+      "language": "ko",
+      "fixtureSha256": "aa820b7ff8d77e61860c6716eddc43e48fb6fc2bd179db9fab8c6e4f53966029",
+      "engineInputSha256": "3f69ee6a62bd9088fd36f9d94ca455e914063d6fd0d1df8dd0cec1f3b9166704",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "38dd073b-800e-3379-69f7-fea7bc34218d",
+          "content": "사용자 가장 좋아하는 여행지: 제주도"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "38dd073b-800e-3379-69f7-fea7bc34218d",
+          "content": "사용자 가장 좋아하는 여행지: 제주도"
+        }
+      ],
+      "outputSha256": "5c43bdc0215c44de59125772df14fb98f78b3691378ae02a50c6dcdde428f4a5"
+    },
+    {
+      "caseId": "case_en_no_update_6",
+      "executionPosition": 2,
+      "language": "en",
+      "fixtureSha256": "334a48ad65aa714efbeb004ac6f27ab472849d22999db0499a89acbe7c888a89",
+      "engineInputSha256": "e8e5dd3277a98a6586c4a3ba2155c429d46521f88bb35c8d91096e7bc35c9ae6",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "6eb9b46e-a197-ae64-93ef-c89accf4e1fa",
+          "content": "User's favorite animal is a dolphin."
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "6eb9b46e-a197-ae64-93ef-c89accf4e1fa",
+          "content": "User's favorite animal is a dolphin."
+        }
+      ],
+      "outputSha256": "146083f1974c7dba5168027b0f7da9fcd515fb7bdddc090fff9feb12e7c5ba6f"
+    },
+    {
+      "caseId": "case_ja_update_7",
+      "executionPosition": 3,
+      "language": "ja",
+      "fixtureSha256": "098678bdf34c8de2740918cf05625917ebbb59fdf034244e21069a9e0beea1c4",
+      "engineInputSha256": "8811c5cb46fd9c5ea933bf7d37439bc107de83f5b9bc6b517ad49dc9f91a8fbd",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "120e5b27-58fc-8955-04d7-dbd1192f771b",
+          "content": "ユーザーの毎朝の習慣: 読書"
+        },
+        {
+          "nativeId": "9bb5d542-97c0-e18a-ef6d-fefae1fc3112",
+          "content": "ユーザーは瞑想を日課にしています。"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "9bb5d542-97c0-e18a-ef6d-fefae1fc3112",
+          "content": "ユーザーは瞑想を日課にしています。"
+        },
+        {
+          "nativeId": "120e5b27-58fc-8955-04d7-dbd1192f771b",
+          "content": "ユーザーの毎朝の習慣: 読書"
+        }
+      ],
+      "outputSha256": "1d80121d3beb2d50dbf62746b06934956bd19c07419b214d16c13dd3ffe225bb"
+    },
+    {
+      "caseId": "case_en_update_4",
+      "executionPosition": 4,
+      "language": "en",
+      "fixtureSha256": "9310909eff4dc1d1441d756a80f617ac59fadbde620c5640a29bc0f0648de49a",
+      "engineInputSha256": "074b61dfc67bf2535fe1dc1a876ea0b713adbeaf70968fbcbc8a18c7076856de",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "17ae30b7-ceec-1089-5e80-f28ee2f7ed57",
+          "content": "User preferred music genre: classical"
+        },
+        {
+          "nativeId": "10dcc5bc-29cf-4f61-d11d-0750d810237e",
+          "content": "User's music genre preference is classical music."
+        },
+        {
+          "nativeId": "17ae30b7-ceec-1089-5e80-f28ee2f7ed57-v1787228609107",
+          "content": "User music genre preference: jazz"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "17ae30b7-ceec-1089-5e80-f28ee2f7ed57-v1787228609107",
+          "content": "User music genre preference: jazz"
+        },
+        {
+          "nativeId": "10dcc5bc-29cf-4f61-d11d-0750d810237e",
+          "content": "User's music genre preference is classical music."
+        }
+      ],
+      "outputSha256": "6ef67698b23a3733fc72c1f97511e5cc53192d9bf42bed3deac58ef722bf91b0"
+    },
+    {
+      "caseId": "case_ja_delete_8",
+      "executionPosition": 5,
+      "language": "ja",
+      "fixtureSha256": "df101e7f8229c7008a08bfdb174a42ed4e0b8d90e74d8e4c1ce3c8fa2d44681a",
+      "engineInputSha256": "067541f999429bedfd59404455eedd040092b67924d395a80e8fe23ddbc242c9",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "f86b827a-8968-d1a7-e816-f03dc7493091",
+          "content": "ユーザーの好きな食べ物: 辛い料理"
+        },
+        {
+          "nativeId": "5e81c5e1-ac4d-d103-b300-680b00c68c99",
+          "content": "ユーザーの食べ物の好み: 辛いものが苦手"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "f86b827a-8968-d1a7-e816-f03dc7493091",
+          "content": "ユーザーの好きな食べ物: 辛い料理"
+        },
+        {
+          "nativeId": "5e81c5e1-ac4d-d103-b300-680b00c68c99",
+          "content": "ユーザーの食べ物の好み: 辛いものが苦手"
+        }
+      ],
+      "outputSha256": "8a01acb5d61a553a06e3ea1c56742d360b00c2a660f7542707b2f217e7413cfb"
+    },
+    {
+      "caseId": "case_ko_delete_2",
+      "executionPosition": 6,
+      "language": "ko",
+      "fixtureSha256": "a435bcdd7159679c75966e396d58464e5f5ea2d62e8db478ad68bd29fa6b829b",
+      "engineInputSha256": "1ec1418926b7daa66192c6d2f12627f10d9d3bac08c9b4c02079629f2bc8e5e2",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "535e8144-da7b-5f8a-13de-d14c6c267dce",
+          "content": "사용자 취미: 우표 수집"
+        }
+      ],
+      "retrieved": [],
+      "outputSha256": "38da42e8c29f658e3531b5926c57156d18be22e0f60edf8644d30345eb712db5"
+    },
+    {
+      "caseId": "case_ja_no_update_9",
+      "executionPosition": 7,
+      "language": "ja",
+      "fixtureSha256": "e74ea13b8df03fb7aef4f08488cbe63d29d5a42f3e704e74007d61fbe80ac77d",
+      "engineInputSha256": "39497ff71b33f69cd536b60ee8cf57caad4eeb547e157e17bdd877ab31f063bb",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "72c348fb-8eae-02f2-8cb1-6cac472acf3e",
+          "content": "ユーザーの好きな本のジャンル: SF小説"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "72c348fb-8eae-02f2-8cb1-6cac472acf3e",
+          "content": "ユーザーの好きな本のジャンル: SF小説"
+        }
+      ],
+      "outputSha256": "b2ea667b82ef8149790e3d27a42a46c8ae738e2c3ba3c689ecfaa2644a8f2b10"
+    },
+    {
+      "caseId": "case_ko_update_1",
+      "executionPosition": 8,
+      "language": "ko",
+      "fixtureSha256": "74dff3bbbcab5f54c70de17c8767cb6a839c7f45ff6b55139e31a5b74a97a7ad",
+      "engineInputSha256": "bafe5e14fa62767946c0d57bbc21eba88981fcc3bdd5490a41b1358e87292c69",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "981e9363-4852-2dc4-5ef9-14e0e8cbf9b0",
+          "content": "사용자 가장 좋아하는 색깔: 파란색"
+        },
+        {
+          "nativeId": "981e9363-4852-2dc4-5ef9-14e0e8cbf9b0-v1787228654158",
+          "content": "사용자 선호 색상: 초록색"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "981e9363-4852-2dc4-5ef9-14e0e8cbf9b0-v1787228654158",
+          "content": "사용자 선호 색상: 초록색"
+        }
+      ],
+      "outputSha256": "e078453d52a268f184deb9cc6fd9797685d8216a25d6039b06051bead43eafe5"
+    },
+    {
+      "caseId": "case_en_delete_5",
+      "executionPosition": 9,
+      "language": "en",
+      "fixtureSha256": "d102261930fe6e6c6bdc1015e555d4ed2f23c96666fdfd3b3a6ed27507f2d221",
+      "engineInputSha256": "c3a5433fee4e91aa46d4d857c1cb905e271a64192bc7ba0cf21cd52093d821df",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "ba07e145-0319-1d4c-1701-680a1072d96a",
+          "content": "User was planning a picnic for the weekend of 2026-08-22"
+        },
+        {
+          "nativeId": "b2d939be-b291-4495-5b08-55a2bb6b3e0d",
+          "content": "User is no longer planning that picnic."
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "b2d939be-b291-4495-5b08-55a2bb6b3e0d",
+          "content": "User is no longer planning that picnic."
+        },
+        {
+          "nativeId": "ba07e145-0319-1d4c-1701-680a1072d96a",
+          "content": "User was planning a picnic for the weekend of 2026-08-22"
+        }
+      ],
+      "outputSha256": "80691be71f67baac9d55448e7662d3f5ca0c6f15c0302666c93e0075a4e742d4"
+    }
+  ]
+}

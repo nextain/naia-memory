@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "artifactClass": "corpus-identity-observation",
+  "claimBoundary": "Source identity only; this observation contains no retrieval score, quality result, or multilingual comparison claim.",
+  "language": "en",
+  "sourceLockSha256": "99727481b47a8a423ad8fa54ca09c8296515fba17ce9c9ce6356e53654918549",
+  "documentCount": 32893221,
+  "docidsSha256": "23a425f3889a6b6a3f41f32666cb748fca05ae2e750abad13ebbc0354ebb7847"
+}

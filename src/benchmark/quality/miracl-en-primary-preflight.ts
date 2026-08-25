@@ -11,6 +11,10 @@ import {
 	compareCanonicalText,
 	englishPreflightStratumFor,
 } from "./miracl-en-primary-sampling-contract.js";
+import {
+	type EnglishPreflightVectorObservation,
+	englishPreflightVectorArtifactSha256,
+} from "./miracl-en-primary-vector-artifact.js";
 import { MIRACL_MULTILINGUAL_CONTRACT } from "./miracl-multilingual-contract.js";
 import { MIRACL_EMBEDDING_POLICY } from "./native-full-corpus-evidence.js";
 import {
@@ -18,6 +22,12 @@ import {
 	validateNativeRuntimeSourceManifest,
 } from "./native-runtime-source-manifest.js";
 import { type RankedQuery, analyzeRankingAb } from "./ranking-ab-analysis.js";
+export {
+	type EnglishPreflightVectorObservation,
+	englishPreflightVectorArtifactSha256,
+	publishEnglishPreflightVectorArtifact,
+	rankEnglishPreflightCorpus,
+} from "./miracl-en-primary-vector-artifact.js";
 
 export {
 	compareCanonicalText,
@@ -37,22 +47,6 @@ export interface EnglishPreflightPassage {
 interface RankedPassage extends EnglishPreflightPassage {
 	rank: string;
 	stratum: number;
-}
-
-export interface EnglishPreflightVectorObservation {
-	perItem: readonly (readonly number[])[];
-	batchOrdered: readonly (readonly number[])[];
-	batchOrderedRepeat: readonly (readonly number[])[];
-	batchShuffledRestored: readonly (readonly number[])[];
-}
-
-export function englishPreflightVectorArtifactSha256(input: {
-	passages: readonly EnglishPreflightPassage[];
-	vectors: EnglishPreflightVectorObservation;
-}): string {
-	return sha256(
-		`${JSON.stringify({ passages: input.passages, vectors: input.vectors })}\n`,
-	);
 }
 
 export interface EnglishPreflightRetrievalInput {
@@ -93,16 +87,18 @@ export class EnglishPreflightSampler {
 			throw new Error("sample ordinal must be a nonnegative safe integer");
 		if (!passage.docid || typeof passage.content !== "string")
 			throw new Error("sample passage is malformed");
+		if (this.docids.has(passage.docid))
+			throw new Error("sample passage identity is duplicated");
 		if (this.identityMode === "verified-corpus-stream") {
 			if (passage.ordinal !== this.lastVerifiedOrdinal + 1)
 				throw new Error("verified corpus stream ordinal is not contiguous");
 			this.lastVerifiedOrdinal = passage.ordinal;
 		} else {
-			if (this.ordinals.has(passage.ordinal) || this.docids.has(passage.docid))
+			if (this.ordinals.has(passage.ordinal))
 				throw new Error("sample passage identity is duplicated");
 			this.ordinals.add(passage.ordinal);
-			this.docids.add(passage.docid);
 		}
+		this.docids.add(passage.docid);
 		const stratum = englishPreflightStratumFor(
 			Buffer.byteLength(passage.content, "utf8"),
 		);
@@ -145,38 +141,51 @@ export class EnglishPreflightSampler {
 	}
 }
 
-function finiteVector(vector: readonly number[]): boolean {
-	return (
-		vector.length === MIRACL_EMBEDDING_POLICY.dimensions &&
-		vector.every(Number.isFinite)
-	);
-}
-
-function cosine(left: readonly number[], right: readonly number[]): number {
+function cosineFlat(
+	left: Float32Array,
+	right: Float32Array,
+	offset: number,
+	dimensions: number,
+): number {
 	let dot = 0;
 	let leftNorm = 0;
 	let rightNorm = 0;
-	for (let index = 0; index < left.length; index += 1) {
+	for (let column = 0; column < dimensions; column += 1) {
+		const index = offset + column;
 		const a = left[index] ?? Number.NaN;
 		const b = right[index] ?? Number.NaN;
 		dot += a * b;
 		leftNorm += a * a;
 		rightNorm += b * b;
 	}
-	const denominator = Math.sqrt(leftNorm * rightNorm);
-	if (!(denominator > 0))
+	const denominator = Math.sqrt(leftNorm) * Math.sqrt(rightNorm);
+	if (!Number.isFinite(denominator) || !(denominator > 0))
 		throw new Error("preflight vectors must have nonzero norm");
-	return dot / denominator;
+	const cosine = dot / denominator;
+	if (!Number.isFinite(cosine))
+		throw new Error("preflight vector cosine is not finite");
+	return cosine;
 }
 
-function vectorDelta(left: readonly number[], right: readonly number[]) {
+function vectorDeltaFlat(
+	left: Float32Array,
+	right: Float32Array,
+	row: number,
+	dimensions: number,
+) {
 	let maximumAbsoluteDelta = 0;
-	for (let index = 0; index < left.length; index += 1)
+	const offset = row * dimensions;
+	for (let column = 0; column < dimensions; column += 1) {
+		const index = offset + column;
 		maximumAbsoluteDelta = Math.max(
 			maximumAbsoluteDelta,
 			Math.abs((left[index] ?? Number.NaN) - (right[index] ?? Number.NaN)),
 		);
-	return { maximumAbsoluteDelta, cosine: cosine(left, right) };
+	}
+	return {
+		maximumAbsoluteDelta,
+		cosine: cosineFlat(left, right, offset, dimensions),
+	};
 }
 
 function quantile(sorted: readonly number[], fraction: number): number {
@@ -212,6 +221,10 @@ export function englishPreflightRetrievalInputSha256(
 		| "corpusPassagesSha256"
 	>,
 ): string {
+	const canonicalRankings = (rankings: readonly RankedQuery[]) =>
+		[...rankings].sort((left, right) =>
+			compareCanonicalText(left.queryId, right.queryId),
+		);
 	const qrels = [...input.relevantByQuery]
 		.map(([queryId, docids]) => [queryId, [...docids].sort()] as const)
 		.sort(([left], [right]) => compareCanonicalText(left, right));
@@ -220,8 +233,8 @@ export function englishPreflightRetrievalInputSha256(
 			method: "query-ranking-qrels-recomputation-v1",
 			querySelection: "sha256-seeded-topic-id-v1",
 			querySelectionSeed: MIRACL_EN_PREFLIGHT_SAMPLE_SEED,
-			perItemRankings: input.perItemRankings,
-			batchRankings: input.batchRankings,
+			perItemRankings: canonicalRankings(input.perItemRankings),
+			batchRankings: canonicalRankings(input.batchRankings),
 			qrels,
 			corpusPassagesSha256: input.corpusPassagesSha256,
 		})}\n`,
@@ -253,12 +266,16 @@ export function createMiraclEnPrimaryPreflightEvidence(input: {
 		(MIRACL_EN_PREFLIGHT_STRATA.length - 1) * MIRACL_EN_PREFLIGHT_PER_STRATUM;
 	if (input.passages.length !== expectedCount)
 		throw new Error("English preflight sample count mismatch");
-	const arrays = Object.values(input.vectors);
+	const { dimensions, ...observations } = input.vectors;
+	const arrays = Object.values(observations);
+	const expectedValues = expectedCount * MIRACL_EMBEDDING_POLICY.dimensions;
 	if (
+		dimensions !== MIRACL_EMBEDDING_POLICY.dimensions ||
 		arrays.some(
 			(vectors) =>
-				vectors.length !== expectedCount ||
-				vectors.some((vector) => !finiteVector(vector)),
+				!(vectors instanceof Float32Array) ||
+				vectors.length !== expectedValues ||
+				vectors.some((value) => !Number.isFinite(value)),
 		)
 	)
 		throw new Error("English preflight vectors are invalid");
@@ -279,16 +296,24 @@ export function createMiraclEnPrimaryPreflightEvidence(input: {
 		)
 	)
 		throw new Error("preflight throughput is invalid");
-	const repeatBitIdentical = input.vectors.batchOrdered.every((vector, row) =>
-		vector.every((value, column) =>
-			Object.is(value, input.vectors.batchOrderedRepeat[row]?.[column]),
+	const repeatBitIdentical = input.vectors.batchOrdered.every((value, index) =>
+		Object.is(value, input.vectors.batchOrderedRepeat[index]),
+	);
+	const perItemDeltas = Array.from({ length: expectedCount }, (_, row) =>
+		vectorDeltaFlat(
+			input.vectors.perItem,
+			input.vectors.batchOrdered,
+			row,
+			dimensions,
 		),
 	);
-	const perItemDeltas = input.vectors.perItem.map((vector, index) =>
-		vectorDelta(vector, input.vectors.batchOrdered[index] ?? []),
-	);
-	const orderDeltas = input.vectors.batchOrdered.map((vector, index) =>
-		vectorDelta(vector, input.vectors.batchShuffledRestored[index] ?? []),
+	const orderDeltas = Array.from({ length: expectedCount }, (_, row) =>
+		vectorDeltaFlat(
+			input.vectors.batchOrdered,
+			input.vectors.batchShuffledRestored,
+			row,
+			dimensions,
+		),
 	);
 	const strata = Array.from(
 		{ length: MIRACL_EN_PREFLIGHT_STRATA.length - 1 },

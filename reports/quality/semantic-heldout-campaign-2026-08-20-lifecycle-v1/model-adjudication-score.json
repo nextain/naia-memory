@@ -1,0 +1,944 @@
+{
+  "schemaVersion": "naia-memory-semantic-adjudication-score-v1",
+  "disclosure": {
+    "metricUnit": "sample-level binary exposure; uncertain memories are reported and never coerced to another label",
+    "packetContentSha256": "27a9beb84a6ca51e86fdc6994a536b96cdf0981ef55932e50063896c1aa7f30d",
+    "judgmentsFileSha256": "92ccda6f00889df31956644dc8faa636b3967a7d52b661cb3fcc39807cda8d39",
+    "judgmentsCanonicalSha256": "f06b304c34a535bb5b7a8b83abe0db5093b1e2c9fdfcf611895d8179ab5f7f1d",
+    "adjudicators": [
+      {
+        "id": "google-ai-studio/gemini-2.5-flash",
+        "kind": "model",
+        "languageCoverage": [
+          "en",
+          "ja",
+          "ko"
+        ],
+        "completedAt": "2026-08-20T12:27:07.329Z",
+        "independentFromEngineImplementers": true,
+        "provider": "google-ai-studio",
+        "model": "gemini-2.5-flash",
+        "promptSha256": "28716972bc0aac0c0812823b658eff3d89199a7b9a575cbdd6b59ea7b18f1e2c"
+      }
+    ]
+  },
+  "cells": {
+    "hindsight/ja": {
+      "samples": 9,
+      "currentAt1": 6,
+      "currentAtK": 9,
+      "staleExposureAtK": 4,
+      "deletionLeakageAtK": 2,
+      "uncertainMemories": 0
+    },
+    "naia/ko": {
+      "samples": 9,
+      "currentAt1": 6,
+      "currentAtK": 6,
+      "staleExposureAtK": 0,
+      "deletionLeakageAtK": 0,
+      "uncertainMemories": 0
+    },
+    "mem0/ko": {
+      "samples": 9,
+      "currentAt1": 6,
+      "currentAtK": 6,
+      "staleExposureAtK": 0,
+      "deletionLeakageAtK": 0,
+      "uncertainMemories": 0
+    },
+    "naia/en": {
+      "samples": 9,
+      "currentAt1": 8,
+      "currentAtK": 8,
+      "staleExposureAtK": 4,
+      "deletionLeakageAtK": 2,
+      "uncertainMemories": 0
+    },
+    "mem0/en": {
+      "samples": 9,
+      "currentAt1": 6,
+      "currentAtK": 6,
+      "staleExposureAtK": 0,
+      "deletionLeakageAtK": 0,
+      "uncertainMemories": 0
+    },
+    "hindsight/ko": {
+      "samples": 9,
+      "currentAt1": 5,
+      "currentAtK": 8,
+      "staleExposureAtK": 6,
+      "deletionLeakageAtK": 1,
+      "uncertainMemories": 0
+    },
+    "hindsight/en": {
+      "samples": 9,
+      "currentAt1": 6,
+      "currentAtK": 7,
+      "staleExposureAtK": 6,
+      "deletionLeakageAtK": 2,
+      "uncertainMemories": 0
+    },
+    "naia/ja": {
+      "samples": 9,
+      "currentAt1": 5,
+      "currentAtK": 9,
+      "staleExposureAtK": 3,
+      "deletionLeakageAtK": 3,
+      "uncertainMemories": 0
+    },
+    "mem0/ja": {
+      "samples": 9,
+      "currentAt1": 4,
+      "currentAtK": 4,
+      "staleExposureAtK": 0,
+      "deletionLeakageAtK": 0,
+      "uncertainMemories": 0
+    }
+  },
+  "samples": [
+    {
+      "sampleId": "sample-0001",
+      "engine": "hindsight",
+      "language": "ja",
+      "caseId": "case_ja_no_update_9",
+      "repetition": 1,
+      "labels": [
+        "current",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0002",
+      "engine": "naia",
+      "language": "ko",
+      "caseId": "case_ko_no_update_3",
+      "repetition": 2,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0003",
+      "engine": "mem0",
+      "language": "ko",
+      "caseId": "case_ko_no_update_3",
+      "repetition": 2,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0004",
+      "engine": "mem0",
+      "language": "ko",
+      "caseId": "case_ko_delete_2",
+      "repetition": 3,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0005",
+      "engine": "naia",
+      "language": "en",
+      "caseId": "case_en_no_update_6",
+      "repetition": 3,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0006",
+      "engine": "mem0",
+      "language": "en",
+      "caseId": "case_en_update_4",
+      "repetition": 2,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0007",
+      "engine": "hindsight",
+      "language": "ko",
+      "caseId": "case_ko_delete_2",
+      "repetition": 2,
+      "labels": [
+        "stale",
+        "current",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0008",
+      "engine": "hindsight",
+      "language": "en",
+      "caseId": "case_en_no_update_6",
+      "repetition": 1,
+      "labels": [
+        "irrelevant",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0009",
+      "engine": "naia",
+      "language": "ja",
+      "caseId": "case_ja_update_7",
+      "repetition": 1,
+      "labels": [
+        "stale",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0010",
+      "engine": "hindsight",
+      "language": "ja",
+      "caseId": "case_ja_delete_8",
+      "repetition": 3,
+      "labels": [
+        "current",
+        "stale",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0011",
+      "engine": "hindsight",
+      "language": "ko",
+      "caseId": "case_ko_update_1",
+      "repetition": 3,
+      "labels": [
+        "stale",
+        "stale",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0012",
+      "engine": "mem0",
+      "language": "ja",
+      "caseId": "case_ja_no_update_9",
+      "repetition": 2,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0013",
+      "engine": "hindsight",
+      "language": "ja",
+      "caseId": "case_ja_update_7",
+      "repetition": 1,
+      "labels": [
+        "stale",
+        "stale",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0014",
+      "engine": "mem0",
+      "language": "ko",
+      "caseId": "case_ko_update_1",
+      "repetition": 2,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0015",
+      "engine": "mem0",
+      "language": "ja",
+      "caseId": "case_ja_update_7",
+      "repetition": 3,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0016",
+      "engine": "naia",
+      "language": "ja",
+      "caseId": "case_ja_no_update_9",
+      "repetition": 3,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0017",
+      "engine": "mem0",
+      "language": "en",
+      "caseId": "case_en_no_update_6",
+      "repetition": 3,
+      "labels": [
+        "current",
+        "irrelevant"
+      ]
+    },
+    {
+      "sampleId": "sample-0018",
+      "engine": "hindsight",
+      "language": "en",
+      "caseId": "case_en_delete_5",
+      "repetition": 1,
+      "labels": [
+        "current",
+        "stale",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0019",
+      "engine": "naia",
+      "language": "ko",
+      "caseId": "case_ko_no_update_3",
+      "repetition": 3,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0020",
+      "engine": "naia",
+      "language": "en",
+      "caseId": "case_en_update_4",
+      "repetition": 1,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0021",
+      "engine": "naia",
+      "language": "ko",
+      "caseId": "case_ko_delete_2",
+      "repetition": 1,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0022",
+      "engine": "hindsight",
+      "language": "en",
+      "caseId": "case_en_update_4",
+      "repetition": 1,
+      "labels": [
+        "current",
+        "stale",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0023",
+      "engine": "hindsight",
+      "language": "en",
+      "caseId": "case_en_update_4",
+      "repetition": 2,
+      "labels": [
+        "current",
+        "stale",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0024",
+      "engine": "hindsight",
+      "language": "ko",
+      "caseId": "case_ko_delete_2",
+      "repetition": 1,
+      "labels": [
+        "current",
+        "stale",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0025",
+      "engine": "hindsight",
+      "language": "ja",
+      "caseId": "case_ja_no_update_9",
+      "repetition": 3,
+      "labels": [
+        "current",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0026",
+      "engine": "hindsight",
+      "language": "en",
+      "caseId": "case_en_update_4",
+      "repetition": 3,
+      "labels": [
+        "current",
+        "stale",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0027",
+      "engine": "mem0",
+      "language": "en",
+      "caseId": "case_en_update_4",
+      "repetition": 3,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0028",
+      "engine": "naia",
+      "language": "ja",
+      "caseId": "case_ja_update_7",
+      "repetition": 2,
+      "labels": [
+        "current",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0029",
+      "engine": "naia",
+      "language": "ko",
+      "caseId": "case_ko_update_1",
+      "repetition": 1,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0030",
+      "engine": "naia",
+      "language": "en",
+      "caseId": "case_en_delete_5",
+      "repetition": 2,
+      "labels": [
+        "current",
+        "deleted"
+      ]
+    },
+    {
+      "sampleId": "sample-0031",
+      "engine": "hindsight",
+      "language": "en",
+      "caseId": "case_en_no_update_6",
+      "repetition": 2,
+      "labels": [
+        "current",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0032",
+      "engine": "hindsight",
+      "language": "ja",
+      "caseId": "case_ja_delete_8",
+      "repetition": 2,
+      "labels": [
+        "current",
+        "deleted",
+        "deleted"
+      ]
+    },
+    {
+      "sampleId": "sample-0033",
+      "engine": "hindsight",
+      "language": "ja",
+      "caseId": "case_ja_delete_8",
+      "repetition": 1,
+      "labels": [
+        "current",
+        "deleted",
+        "deleted"
+      ]
+    },
+    {
+      "sampleId": "sample-0034",
+      "engine": "mem0",
+      "language": "en",
+      "caseId": "case_en_delete_5",
+      "repetition": 2,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0035",
+      "engine": "mem0",
+      "language": "ko",
+      "caseId": "case_ko_no_update_3",
+      "repetition": 3,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0036",
+      "engine": "naia",
+      "language": "en",
+      "caseId": "case_en_update_4",
+      "repetition": 3,
+      "labels": [
+        "current",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0037",
+      "engine": "hindsight",
+      "language": "en",
+      "caseId": "case_en_delete_5",
+      "repetition": 2,
+      "labels": [
+        "deleted",
+        "stale",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0038",
+      "engine": "hindsight",
+      "language": "ko",
+      "caseId": "case_ko_no_update_3",
+      "repetition": 3,
+      "labels": [
+        "current",
+        "current",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0039",
+      "engine": "naia",
+      "language": "ko",
+      "caseId": "case_ko_update_1",
+      "repetition": 3,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0040",
+      "engine": "mem0",
+      "language": "en",
+      "caseId": "case_en_delete_5",
+      "repetition": 1,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0041",
+      "engine": "naia",
+      "language": "ja",
+      "caseId": "case_ja_no_update_9",
+      "repetition": 1,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0042",
+      "engine": "hindsight",
+      "language": "en",
+      "caseId": "case_en_delete_5",
+      "repetition": 3,
+      "labels": [
+        "deleted",
+        "stale",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0043",
+      "engine": "hindsight",
+      "language": "ko",
+      "caseId": "case_ko_delete_2",
+      "repetition": 3,
+      "labels": [
+        "deleted",
+        "stale",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0044",
+      "engine": "mem0",
+      "language": "ja",
+      "caseId": "case_ja_delete_8",
+      "repetition": 2,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0045",
+      "engine": "naia",
+      "language": "en",
+      "caseId": "case_en_delete_5",
+      "repetition": 1,
+      "labels": [
+        "deleted",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0046",
+      "engine": "hindsight",
+      "language": "ja",
+      "caseId": "case_ja_no_update_9",
+      "repetition": 2,
+      "labels": [
+        "current",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0047",
+      "engine": "naia",
+      "language": "ko",
+      "caseId": "case_ko_update_1",
+      "repetition": 2,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0048",
+      "engine": "mem0",
+      "language": "ja",
+      "caseId": "case_ja_no_update_9",
+      "repetition": 1,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0049",
+      "engine": "hindsight",
+      "language": "ko",
+      "caseId": "case_ko_no_update_3",
+      "repetition": 2,
+      "labels": [
+        "current",
+        "current",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0050",
+      "engine": "naia",
+      "language": "en",
+      "caseId": "case_en_update_4",
+      "repetition": 2,
+      "labels": [
+        "current",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0051",
+      "engine": "mem0",
+      "language": "ja",
+      "caseId": "case_ja_update_7",
+      "repetition": 2,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0052",
+      "engine": "naia",
+      "language": "ko",
+      "caseId": "case_ko_delete_2",
+      "repetition": 3,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0053",
+      "engine": "mem0",
+      "language": "en",
+      "caseId": "case_en_update_4",
+      "repetition": 1,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0054",
+      "engine": "naia",
+      "language": "ko",
+      "caseId": "case_ko_no_update_3",
+      "repetition": 1,
+      "labels": [
+        "current",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0055",
+      "engine": "naia",
+      "language": "ko",
+      "caseId": "case_ko_delete_2",
+      "repetition": 2,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0056",
+      "engine": "naia",
+      "language": "ja",
+      "caseId": "case_ja_no_update_9",
+      "repetition": 2,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0057",
+      "engine": "mem0",
+      "language": "ko",
+      "caseId": "case_ko_update_1",
+      "repetition": 3,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0058",
+      "engine": "naia",
+      "language": "en",
+      "caseId": "case_en_no_update_6",
+      "repetition": 2,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0059",
+      "engine": "mem0",
+      "language": "ko",
+      "caseId": "case_ko_no_update_3",
+      "repetition": 1,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0060",
+      "engine": "mem0",
+      "language": "ko",
+      "caseId": "case_ko_delete_2",
+      "repetition": 1,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0061",
+      "engine": "mem0",
+      "language": "ko",
+      "caseId": "case_ko_delete_2",
+      "repetition": 2,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0062",
+      "engine": "mem0",
+      "language": "en",
+      "caseId": "case_en_no_update_6",
+      "repetition": 2,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0063",
+      "engine": "naia",
+      "language": "ja",
+      "caseId": "case_ja_delete_8",
+      "repetition": 1,
+      "labels": [
+        "deleted",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0064",
+      "engine": "naia",
+      "language": "en",
+      "caseId": "case_en_delete_5",
+      "repetition": 3,
+      "labels": [
+        "current",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0065",
+      "engine": "hindsight",
+      "language": "ja",
+      "caseId": "case_ja_update_7",
+      "repetition": 3,
+      "labels": [
+        "stale",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0066",
+      "engine": "naia",
+      "language": "ja",
+      "caseId": "case_ja_update_7",
+      "repetition": 3,
+      "labels": [
+        "current",
+        "stale"
+      ]
+    },
+    {
+      "sampleId": "sample-0067",
+      "engine": "mem0",
+      "language": "ja",
+      "caseId": "case_ja_no_update_9",
+      "repetition": 3,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0068",
+      "engine": "hindsight",
+      "language": "en",
+      "caseId": "case_en_no_update_6",
+      "repetition": 3,
+      "labels": [
+        "current",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0069",
+      "engine": "mem0",
+      "language": "en",
+      "caseId": "case_en_no_update_6",
+      "repetition": 1,
+      "labels": [
+        "current",
+        "irrelevant"
+      ]
+    },
+    {
+      "sampleId": "sample-0070",
+      "engine": "hindsight",
+      "language": "ja",
+      "caseId": "case_ja_update_7",
+      "repetition": 2,
+      "labels": [
+        "stale",
+        "stale",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0071",
+      "engine": "mem0",
+      "language": "ja",
+      "caseId": "case_ja_delete_8",
+      "repetition": 3,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0072",
+      "engine": "naia",
+      "language": "ja",
+      "caseId": "case_ja_delete_8",
+      "repetition": 3,
+      "labels": [
+        "deleted",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0073",
+      "engine": "naia",
+      "language": "en",
+      "caseId": "case_en_no_update_6",
+      "repetition": 1,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0074",
+      "engine": "mem0",
+      "language": "ko",
+      "caseId": "case_ko_update_1",
+      "repetition": 1,
+      "labels": [
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0075",
+      "engine": "mem0",
+      "language": "ja",
+      "caseId": "case_ja_update_7",
+      "repetition": 1,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0076",
+      "engine": "naia",
+      "language": "ja",
+      "caseId": "case_ja_delete_8",
+      "repetition": 2,
+      "labels": [
+        "deleted",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0077",
+      "engine": "mem0",
+      "language": "ja",
+      "caseId": "case_ja_delete_8",
+      "repetition": 1,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0078",
+      "engine": "hindsight",
+      "language": "ko",
+      "caseId": "case_ko_no_update_3",
+      "repetition": 1,
+      "labels": [
+        "current",
+        "current",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0079",
+      "engine": "mem0",
+      "language": "en",
+      "caseId": "case_en_delete_5",
+      "repetition": 3,
+      "labels": []
+    },
+    {
+      "sampleId": "sample-0080",
+      "engine": "hindsight",
+      "language": "ko",
+      "caseId": "case_ko_update_1",
+      "repetition": 2,
+      "labels": [
+        "stale",
+        "stale",
+        "current"
+      ]
+    },
+    {
+      "sampleId": "sample-0081",
+      "engine": "hindsight",
+      "language": "ko",
+      "caseId": "case_ko_update_1",
+      "repetition": 1,
+      "labels": [
+        "current",
+        "stale",
+        "stale"
+      ]
+    }
+  ]
+}

@@ -2,7 +2,10 @@ import { createHash } from "node:crypto";
 import { linkSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { MIRACL_EN_PREFLIGHT_RETRIEVAL_QUERIES } from "./miracl-en-primary-execution-policy.js";
-import type { EnglishPreflightPassage } from "./miracl-en-primary-preflight.js";
+import {
+	type EnglishPreflightPassage,
+	EnglishPreflightSampler,
+} from "./miracl-en-primary-preflight.js";
 import {
 	MIRACL_EN_PREFLIGHT_PER_STRATUM,
 	MIRACL_EN_PREFLIGHT_SAMPLE_SEED,
@@ -11,7 +14,10 @@ import {
 	englishPreflightStratumFor,
 } from "./miracl-en-primary-sampling-contract.js";
 import { MIRACL_MULTILINGUAL_CONTRACT } from "./miracl-multilingual-contract.js";
-import type { NativeCorpusScanReceipt } from "./native-corpus-extract.js";
+import type {
+	NativeCorpusDocument,
+	NativeCorpusScanReceipt,
+} from "./native-corpus-extract.js";
 import type { NativeRuntimeSourceManifest } from "./native-runtime-source-manifest.js";
 import { validateNativeRuntimeSourceManifest } from "./native-runtime-source-manifest.js";
 import { parseQrelsTsv, parseTopicsTsv } from "./public-miracl-source.js";
@@ -183,6 +189,75 @@ export function buildMiraclEnRetrievalCorpus(
 	if (new Set(passages.map(({ ordinal }) => ordinal)).size !== passages.length)
 		throw new Error("English retrieval corpus has duplicate ordinals");
 	return passages;
+}
+
+export function verifyMiraclEnSourcePassage(
+	expected: EnglishPreflightPassage,
+	document: NativeCorpusDocument,
+	ordinal: number,
+): void {
+	if (
+		expected.ordinal !== ordinal ||
+		expected.docid !== document.docid ||
+		expected.content !== `${document.title}\n${document.text}`
+	)
+		throw new Error(
+			"English source-derived retrieval passage does not match the locked corpus",
+		);
+}
+
+export class MiraclEnPrimarySampleSourceVerifier {
+	private readonly sampler = new EnglishPreflightSampler(
+		"verified-corpus-stream",
+	);
+	private readonly expectedRetrievalByOrdinal: Map<
+		number,
+		EnglishPreflightPassage
+	>;
+	private readonly observedRetrievalOrdinals = new Set<number>();
+
+	constructor(private readonly receipt: MiraclEnPrimarySampleReceipt) {
+		validateMiraclEnPrimarySampleReceipt(receipt);
+		this.expectedRetrievalByOrdinal = new Map(
+			receipt.retrievalCorpus.passages.map((passage) => [
+				passage.ordinal,
+				passage,
+			]),
+		);
+	}
+
+	consider(document: NativeCorpusDocument, ordinal: number): void {
+		const passage = {
+			ordinal,
+			docid: document.docid,
+			content: `${document.title}\n${document.text}`,
+		};
+		this.sampler.consider(passage);
+		const expected = this.expectedRetrievalByOrdinal.get(ordinal);
+		if (!expected) return;
+		verifyMiraclEnSourcePassage(expected, document, ordinal);
+		this.observedRetrievalOrdinals.add(ordinal);
+	}
+
+	finish(scan: NativeCorpusScanReceipt): void {
+		if (JSON.stringify(scan) !== JSON.stringify(this.receipt.corpus))
+			throw new Error("English source-derived corpus scan receipt changed");
+		if (
+			this.observedRetrievalOrdinals.size !==
+			this.receipt.retrievalCorpus.passages.length
+		)
+			throw new Error(
+				"English source-derived retrieval passage is missing from the locked corpus",
+			);
+		const selected = this.sampler.finish();
+		if (
+			canonicalPassages(selected) !==
+			canonicalPassages(this.receipt.sample.passages)
+		)
+			throw new Error(
+				"English source-derived passage sample does not match the locked corpus",
+			);
+	}
 }
 
 export function buildMiraclEnPrimarySampleReceipt(input: {

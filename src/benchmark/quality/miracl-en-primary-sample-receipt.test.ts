@@ -6,6 +6,7 @@ import {
 	miraclEnSelectedRelevantDocids,
 	selectMiraclEnPreflightQueryIds,
 	validateMiraclEnPassageStrata,
+	verifyMiraclEnSourcePassage,
 } from "./miracl-en-primary-sample-receipt.js";
 import { MIRACL_MULTILINGUAL_CONTRACT } from "./miracl-multilingual-contract.js";
 
@@ -136,5 +137,30 @@ describe("MIRACL-en source-derived preflight receipt", () => {
 				producerSourceManifest: {} as never,
 			}),
 		).toThrow("topics/qrels bytes");
+	});
+
+	it("rejects a self-consistent receipt passage whose body differs from the locked corpus", () => {
+		const expected = {
+			ordinal: 7,
+			docid: "doc-7",
+			content: "title\nforged body",
+		};
+		expect(() =>
+			verifyMiraclEnSourcePassage(
+				expected,
+				{ docid: "doc-7", title: "title", text: "locked body" },
+				7,
+			),
+		).toThrow("does not match the locked corpus");
+	});
+
+	it("accepts only the exact locked ordinal, identity, and composed body", () => {
+		expect(() =>
+			verifyMiraclEnSourcePassage(
+				{ ordinal: 7, docid: "doc-7", content: "title\nlocked body" },
+				{ docid: "doc-7", title: "title", text: "locked body" },
+				7,
+			),
+		).not.toThrow();
 	});
 });

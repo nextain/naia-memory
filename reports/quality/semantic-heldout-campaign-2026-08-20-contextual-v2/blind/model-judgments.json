@@ -1,0 +1,1093 @@
+{
+  "schemaVersion": "naia-memory-semantic-judgments-v2",
+  "packetContentSha256": "4715bfd955100396d462411aa09066623d27fc7b02ed52e9fac65593bc4342eb",
+  "adjudicators": [
+    {
+      "id": "google-ai-studio/gemini-2.5-flash",
+      "kind": "model",
+      "languageCoverage": [
+        "en",
+        "ja",
+        "ko"
+      ],
+      "completedAt": "2026-08-20T12:54:53.396Z",
+      "independentFromEngineImplementers": true,
+      "provider": "google-ai-studio",
+      "model": "gemini-2.5-flash",
+      "promptSha256": "28716972bc0aac0c0812823b658eff3d89199a7b9a575cbdd6b59ea7b18f1e2c"
+    }
+  ],
+  "samples": [
+    {
+      "sampleId": "sample-0001",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "deleted",
+          "notes": "The user explicitly states they no longer like spicy food and requests its removal from their preferences."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's current preference and the intent of the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0002",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's updated favorite color as requested in the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0003",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately confirms the user's favorite animal, which is consistent with the conversation and query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0004",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately confirms the user's favorite travel destination, consistent with the conversation and query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "This memory accurately confirms the user's preference for Jeju Island, consistent with the conversation and query."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "current",
+          "notes": "This memory accurately confirms the user's favorite travel destination, consistent with the conversation and query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0005",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0006",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately confirms the user's favorite animal, consistent with the conversation and query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "This memory accurately confirms the user's favorite animal, consistent with the conversation and query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0007",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "stale",
+          "notes": "This memory states the user's favorite color is blue, which has been superseded by the user's updated preference for green."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "This memory states the user prefers blue, which has been superseded by the user's updated preference for green."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's updated favorite color as requested in the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0008",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's updated preferred music genre as requested in the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0009",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0010",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately reflects the user's current favorite animal and directly answers the query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "The memory accurately reflects the user's current favorite animal and directly answers the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0011",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "deleted",
+          "notes": "The memory indicates the user is no longer planning the picnic, aligning with the query to remove it from plans."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "This memory states the user was planning a picnic, which has since been cancelled and is no longer current."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "stale",
+          "notes": "This memory states a picnic is planned, which has since been cancelled and is no longer current."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0012",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately reflects the user's updated favorite color, which is the goal of the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0013",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "deleted",
+          "notes": "The memory states the user no longer likes spicy food, aligning with the query to remove it from their preferences."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "This memory states the user likes spicy food, which has since been superseded by their updated preference."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "stale",
+          "notes": "This memory states the user likes spicy food, which has since been superseded by their updated preference."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0014",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "deleted",
+          "notes": "The memory indicates the user is no longer planning the picnic, aligning with the query to remove it from plans."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "This memory states the user was planning a picnic, which has since been cancelled and is no longer current."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "stale",
+          "notes": "This memory states a picnic is planned, which has since been cancelled and is no longer current."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0015",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately reflects the user's current preferred book genre and directly answers the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0016",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately reflects the user's current favorite animal and directly answers the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0017",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "stale",
+          "notes": "This memory states the user likes spicy food, which has since been superseded by their updated preference."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "deleted",
+          "notes": "The memory states the user no longer likes spicy food, aligning with the query to remove it from their preferences."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0018",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately reflects the user's updated preferred music genre, which is the goal of the query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "This memory states the user's preferred genre is classical, which has since been superseded by their updated preference."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "stale",
+          "notes": "This memory states the user prefers classical music, which has since been superseded by their updated preference."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0019",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's updated favorite color as stated in the last turn and the query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "This memory refers to a past utterance about a preference (blue) that has since been superseded by a new preference (green)."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "stale",
+          "notes": "This memory states the user's favorite color is blue, which has been superseded by the user's new preference for green."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0020",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's favorite travel destination and directly answers the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0021",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's updated favorite color as stated in the last turn and the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0022",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's current state of having canceled the picnic plans, aligning with the query's intent."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "This memory describes a past plan that is no longer current, as the user has canceled it."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "stale",
+          "notes": "This memory states the user is currently planning a picnic, which is contradicted by the last turn and the query to remove the plan."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0023",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's travel destination preference and directly answers the query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's favorite travel destination and directly answers the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0024",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's favorite book genre and directly answers the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0025",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's current state of not planning a picnic, aligning with the query's intent to remove the plan."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0026",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0027",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "deleted",
+          "notes": "This memory states the user's favorite food is spicy food, which the user explicitly states they no longer like and requests to be removed from their preferences."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0028",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately reflects the user's current preferred music genre as stated in the last turn and confirmed by the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0029",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately states the user's preferred travel destination, which is confirmed by the user's query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "The memory accurately states the user's favorite travel destination, which is confirmed by the user's query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0030",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory directly reflects the user's updated favorite color as stated in the last turn and confirmed by the query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "irrelevant",
+          "notes": "The memory refers to the assistant's color, not the user's favorite color, making it irrelevant to the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0031",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0032",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0033",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately states the user's favorite animal, which is confirmed by the user's query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0034",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately states the user's preferred book genre, which is confirmed by the user's query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0035",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately states the user's favorite animal, which is confirmed by the user's query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0036",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "irrelevant",
+          "notes": "The memory describes the user's query about their preference, not the preference itself, making it irrelevant for confirming the actual preference."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "The memory accurately states the user's preferred book genre, which is confirmed by the user's query."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "current",
+          "notes": "The memory accurately states the user's preferred book genre, which is confirmed by the user's query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0037",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's updated music genre preference."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "This memory reflects the user's previous preference, which has been superseded by jazz."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0038",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's current state of no longer collecting stamps, which aligns with the request to remove it."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "deleted",
+          "notes": "This memory states the user has stamp collecting as a hobby, which the user explicitly requested to remove."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "deleted",
+          "notes": "This memory states the user's hobby is stamp collecting, which the user explicitly requested to remove."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0039",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory confirms the user's preference for sci-fi novels, directly answering the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0040",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0041",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0042",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's current state of no longer planning the picnic, which aligns with the request to remove it."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0043",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "stale",
+          "notes": "This memory reflects the user's previous morning routine, which has been updated to meditation."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "This memory indicates the user's current activity of meditation, which is the updated morning routine, even if phrased as a hobby."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0044",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's updated music genre preference."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "This memory reflects the user's previous preference, which has been superseded by jazz."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0045",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "deleted",
+          "notes": "This memory states the user likes spicy food, which the user explicitly requested to remove from their preferences."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's current preference of disliking spicy food, supporting the deletion of the previous preference."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0046",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0047",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "stale",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0048",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0049",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0050",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0051",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0052",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0053",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0054",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0055",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0056",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0057",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "stale",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0058",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "deleted",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "deleted",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0059",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0060",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "deleted",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "deleted",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0061",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0062",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0063",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0064",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The user is confirming their favorite travel destination, and this memory accurately reflects that current fact."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "The user is confirming their favorite travel destination, and this memory accurately reflects that current fact."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "current",
+          "notes": "The user is confirming their favorite travel destination, and this memory accurately reflects that current fact."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0065",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0066",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The user is confirming their favorite travel destination, and this memory accurately reflects that current fact."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0067",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "stale",
+          "notes": "The user explicitly states that reading is no longer their morning routine, making this memory outdated."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "The user explicitly states that reading is no longer their morning routine, making this memory outdated."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's updated morning routine of meditation."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0068",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "stale",
+          "notes": "The user explicitly states that their favorite color is now green, making blue a stale preference."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "The user explicitly states that their favorite color is now green, making blue a stale preference."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's updated favorite color."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0069",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The user is confirming their preferred book genre, and this memory accurately reflects that current fact."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0070",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The user is confirming their preferred book genre, and this memory accurately reflects that current fact."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0071",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The user is confirming their favorite travel destination, and this memory accurately reflects that current fact."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "The user is confirming their favorite travel destination, and this memory accurately reflects that current fact."
+        },
+        {
+          "memoryId": "memory-03",
+          "label": "current",
+          "notes": "The user is confirming their favorite travel destination, and this memory accurately reflects that current fact."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0072",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0073",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately reflects the user's current favorite color as stated in the last turn and confirmed by the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0074",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "stale",
+          "notes": "This memory reflects the user's previous morning routine which has been superseded by meditation, as indicated in the last turn and the query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "This memory reflects the user's new daily routine, meditation, as stated in the last turn and confirmed by the query, although it's labeled as a 'hobby' rather than a 'routine'."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0075",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "stale",
+          "notes": "This memory reflects the user's previous morning routine which has been superseded by meditation, as indicated in the last turn and the query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's current morning routine as stated in the last turn and confirmed by the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0076",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "deleted",
+          "notes": "The memory accurately reflects that the user has cancelled the picnic, aligning with the explicit request to remove it from plans."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0077",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "stale",
+          "notes": "This memory reflects the user's previous morning routine which has been superseded by meditation, as indicated in the last turn and the query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's current morning routine as stated in the last turn and confirmed by the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0078",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately reflects the user's favorite animal, which has not changed and is being confirmed by the query."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "The memory accurately reflects the user's favorite animal, which has not changed and is being confirmed by the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0079",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "deleted",
+          "notes": "This memory reflects a preference that the user has explicitly stated they no longer hold and requested to be removed."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0080",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The memory accurately reflects the user's current favorite color as stated in the last turn and confirmed by the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    },
+    {
+      "sampleId": "sample-0081",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash"
+    }
+  ]
+}

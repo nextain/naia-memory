@@ -2,7 +2,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
-	MIRACL_EN_QDRANT_MINIMUM_FREE_BYTES,
 	existsSync,
 	mkdirSync,
 	readFileSync,
@@ -15,6 +14,7 @@ import {
 	OFFLINE_MODEL_REVISIONS,
 	OfflineEmbeddingProvider,
 } from "../../memory/embeddings.js";
+import { verifyMiraclEnPrimaryExecutionLaunch } from "./miracl-en-primary-execution-authorization.js";
 import { verifyMultilingualTrueBatchAuthorizationFiles } from "./miracl-multilingual-candidate-authorization.js";
 import {
 	MIRACL_MULTILINGUAL_CONTRACT,
@@ -43,6 +43,7 @@ import {
 	verifyLockedFile,
 } from "./public-miracl-source.js";
 import {
+	MIRACL_EN_QDRANT_MINIMUM_FREE_BYTES,
 	type QdrantServiceBindingReceipt,
 	parsePodmanInspect,
 	parseQdrantServiceBindingReceipt,
@@ -225,6 +226,8 @@ async function main(): Promise<void> {
 		throw new Error(
 			"CUDA_VISIBLE_DEVICES must be the empty string for CPU-only evidence",
 		);
+	if (LANGUAGE === "en")
+		await verifyMiraclEnPrimaryExecutionLaunch(process.env);
 	positiveInteger("CHUNK_SIZE", CHUNK_SIZE);
 	positiveInteger("EMBEDDING_BATCH_SIZE", EMBEDDING_BATCH_SIZE);
 	positiveInteger("UPSERT_BATCH_SIZE", UPSERT_BATCH_SIZE);

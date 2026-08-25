@@ -1,0 +1,1096 @@
+{
+  "schemaVersion": "naia-memory-semantic-blind-packet-v1",
+  "instructions": {
+    "engineIdentity": "withheld",
+    "recurrenceDisclosure": "Each conversation recurs once per engine in each repetition. Judge every sample independently; do not compare or group recurring conversations.",
+    "sealHandling": "The campaign manifest and adjudication seal must remain unavailable to adjudicators until judgments are frozen.",
+    "labelEachRetrievedMemory": "Label every retrieved memory as current, stale, deleted, irrelevant, or uncertain using only the turns and query.",
+    "qualityClaim": "This packet is an adjudication input, not quality evidence until independently completed and unsealed."
+  },
+  "source": {
+    "contractSha256": "c6ea38eba5d97bfab7c519fc1d4087cb461b85f295a0d8eb354cef6575c6ce36",
+    "campaignSha256": "99ab9235b7f81271d5bd70da3b4101599ea671626b841986577a7eccd2de9b6a",
+    "construction": "generated-diagnostic"
+  },
+  "samples": [
+    {
+      "sampleId": "sample-0001",
+      "language": "en",
+      "turns": [
+        {
+          "content": "My favorite animal is a dolphin."
+        },
+        {
+          "content": "Dolphin, a great choice."
+        },
+        {
+          "content": "Is my favorite animal still listed as a dolphin?"
+        }
+      ],
+      "query": "Confirm if dolphin is still my favorite animal.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User's favorite animal is a dolphin"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0002",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はSF小説を好んで読みます。"
+        },
+        {
+          "content": "SF小説がお好きなんですね。"
+        },
+        {
+          "content": "私が好きな本のジャンルはSF小説で合っていますか？"
+        }
+      ],
+      "query": "私の好きな本のジャンルがSF小説であるか確認してください。",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "SF小説は本のジャンルである。"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "benchmark-userはSF小説を好んで読みます。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0003",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "가장 좋아하는 색깔은 파란색이에요."
+        },
+        {
+          "content": "네, 알겠습니다. 파란색이시군요."
+        },
+        {
+          "content": "아, 잠깐만요. 사실 요즘은 초록색이 더 좋아요."
+        }
+      ],
+      "query": "가장 좋아하는 색깔을 초록색으로 업데이트 해주세요.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user는 요즘 초록색을 더 좋아합니다."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0004",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "辛い料理が好きです。"
+        },
+        {
+          "content": "辛い料理がお好きなんですね。"
+        },
+        {
+          "content": "最近は辛いものが苦手になったので、もう好きではありません。"
+        }
+      ],
+      "query": "私の好きな食べ物リストから辛い料理を削除してください。",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0005",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はSF小説を好んで読みます。"
+        },
+        {
+          "content": "SF小説がお好きなんですね。"
+        },
+        {
+          "content": "私が好きな本のジャンルはSF小説で合っていますか？"
+        }
+      ],
+      "query": "私の好きな本のジャンルがSF小説であるか確認してください。",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーの好む本のジャンル: SF小説"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0006",
+      "language": "en",
+      "turns": [
+        {
+          "content": "My preferred music genre is classical."
+        },
+        {
+          "content": "Understood, classical music it is."
+        },
+        {
+          "content": "Actually, I've been listening to a lot of jazz lately, so I prefer jazz now."
+        }
+      ],
+      "query": "Please update my preferred music genre to jazz.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user prefers jazz music."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0007",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "가장 좋아하는 색깔은 파란색이에요."
+        },
+        {
+          "content": "네, 알겠습니다. 파란색이시군요."
+        },
+        {
+          "content": "아, 잠깐만요. 사실 요즘은 초록색이 더 좋아요."
+        }
+      ],
+      "query": "가장 좋아하는 색깔을 초록색으로 업데이트 해주세요.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자 선호 색상: 초록색"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0008",
+      "language": "en",
+      "turns": [
+        {
+          "content": "My preferred music genre is classical."
+        },
+        {
+          "content": "Understood, classical music it is."
+        },
+        {
+          "content": "Actually, I've been listening to a lot of jazz lately, so I prefer jazz now."
+        }
+      ],
+      "query": "Please update my preferred music genre to jazz.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User music preference: jazz"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0009",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I was planning a picnic for next weekend."
+        },
+        {
+          "content": "A picnic next weekend, got it."
+        },
+        {
+          "content": "The weather forecast changed, so I'm no longer planning that picnic."
+        }
+      ],
+      "query": "Please remove the picnic from my plans.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user is no longer planning the picnic."
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "benchmark-user was planning a picnic for next weekend."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0010",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "毎朝、読書をしています。"
+        },
+        {
+          "content": "はい、朝の読書ですね。"
+        },
+        {
+          "content": "最近は読書ではなく、瞑想を日課にしています。"
+        }
+      ],
+      "query": "私の朝のルーティンを読書から瞑想に更新してください。",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-userは最近、瞑想を日課にしています。"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "benchmark-user performs morning reading."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0011",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "辛い料理が好きです。"
+        },
+        {
+          "content": "辛い料理がお好きなんですね。"
+        },
+        {
+          "content": "最近は辛いものが苦手になったので、もう好きではありません。"
+        }
+      ],
+      "query": "私の好きな食べ物リストから辛い料理を削除してください。",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0012",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "가장 좋아하는 여행지는 제주도입니다."
+        },
+        {
+          "content": "제주도 좋아하시는군요."
+        },
+        {
+          "content": "제가 가장 좋아하는 여행지가 제주도 맞죠?"
+        }
+      ],
+      "query": "제가 좋아하는 여행지가 여전히 제주도인지 확인해 주세요.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user의 가장 좋아하는 여행지는 제주도입니다."
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "benchmark-user likes 제주도."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0013",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I was planning a picnic for next weekend."
+        },
+        {
+          "content": "A picnic next weekend, got it."
+        },
+        {
+          "content": "The weather forecast changed, so I'm no longer planning that picnic."
+        }
+      ],
+      "query": "Please remove the picnic from my plans.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user was planning a picnic for next weekend."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0014",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "毎朝、読書をしています。"
+        },
+        {
+          "content": "はい、朝の読書ですね。"
+        },
+        {
+          "content": "最近は読書ではなく、瞑想を日課にしています。"
+        }
+      ],
+      "query": "私の朝のルーティンを読書から瞑想に更新してください。",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-userは瞑想を日課にしました。"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "benchmark-user performs morning reading."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0015",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "가장 좋아하는 색깔은 파란색이에요."
+        },
+        {
+          "content": "네, 알겠습니다. 파란색이시군요."
+        },
+        {
+          "content": "아, 잠깐만요. 사실 요즘은 초록색이 더 좋아요."
+        }
+      ],
+      "query": "가장 좋아하는 색깔을 초록색으로 업데이트 해주세요.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user prefers green these days."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0016",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "가장 좋아하는 여행지는 제주도입니다."
+        },
+        {
+          "content": "제주도 좋아하시는군요."
+        },
+        {
+          "content": "제가 가장 좋아하는 여행지가 제주도 맞죠?"
+        }
+      ],
+      "query": "제가 좋아하는 여행지가 여전히 제주도인지 확인해 주세요.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user는 제주도를 가장 좋아하는 여행지로 꼽습니다."
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "benchmark-user likes Jeju-do."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0017",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "毎朝、読書をしています。"
+        },
+        {
+          "content": "はい、朝の読書ですね。"
+        },
+        {
+          "content": "最近は読書ではなく、瞑想を日課にしています。"
+        }
+      ],
+      "query": "私の朝のルーティンを読書から瞑想に更新してください。",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーの日課: 瞑想"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0018",
+      "language": "en",
+      "turns": [
+        {
+          "content": "My preferred music genre is classical."
+        },
+        {
+          "content": "Understood, classical music it is."
+        },
+        {
+          "content": "Actually, I've been listening to a lot of jazz lately, so I prefer jazz now."
+        }
+      ],
+      "query": "Please update my preferred music genre to jazz.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User music preference: jazz"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0019",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "가장 좋아하는 여행지는 제주도입니다."
+        },
+        {
+          "content": "제주도 좋아하시는군요."
+        },
+        {
+          "content": "제가 가장 좋아하는 여행지가 제주도 맞죠?"
+        }
+      ],
+      "query": "제가 좋아하는 여행지가 여전히 제주도인지 확인해 주세요.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자 여행지 선호: 제주도"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "사용자 가장 좋아하는 여행지: 제주도"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0020",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "저는 우표 수집하는 것을 취미로 하고 있습니다."
+        },
+        {
+          "content": "우표 수집이 취미이시군요."
+        },
+        {
+          "content": "더 이상 우표 수집을 하지 않아요."
+        }
+      ],
+      "query": "제 취미 목록에서 우표 수집을 제거해 주세요.",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0021",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "가장 좋아하는 색깔은 파란색이에요."
+        },
+        {
+          "content": "네, 알겠습니다. 파란색이시군요."
+        },
+        {
+          "content": "아, 잠깐만요. 사실 요즘은 초록색이 더 좋아요."
+        }
+      ],
+      "query": "가장 좋아하는 색깔을 초록색으로 업데이트 해주세요.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자 선호 색상: 초록색"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0022",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "저는 우표 수집하는 것을 취미로 하고 있습니다."
+        },
+        {
+          "content": "우표 수집이 취미이시군요."
+        },
+        {
+          "content": "더 이상 우표 수집을 하지 않아요."
+        }
+      ],
+      "query": "제 취미 목록에서 우표 수집을 제거해 주세요.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user는 우표 수집을 취미로 하고 있습니다"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0023",
+      "language": "en",
+      "turns": [
+        {
+          "content": "My preferred music genre is classical."
+        },
+        {
+          "content": "Understood, classical music it is."
+        },
+        {
+          "content": "Actually, I've been listening to a lot of jazz lately, so I prefer jazz now."
+        }
+      ],
+      "query": "Please update my preferred music genre to jazz.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user prefers jazz"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0024",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "毎朝、読書をしています。"
+        },
+        {
+          "content": "はい、朝の読書ですね。"
+        },
+        {
+          "content": "最近は読書ではなく、瞑想を日課にしています。"
+        }
+      ],
+      "query": "私の朝のルーティンを読書から瞑想に更新してください。",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーの日課: 瞑想"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0025",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "辛い料理が好きです。"
+        },
+        {
+          "content": "辛い料理がお好きなんですね。"
+        },
+        {
+          "content": "最近は辛いものが苦手になったので、もう好きではありません。"
+        }
+      ],
+      "query": "私の好きな食べ物リストから辛い料理を削除してください。",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user dislikes 辛いもの."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0026",
+      "language": "en",
+      "turns": [
+        {
+          "content": "My favorite animal is a dolphin."
+        },
+        {
+          "content": "Dolphin, a great choice."
+        },
+        {
+          "content": "Is my favorite animal still listed as a dolphin?"
+        }
+      ],
+      "query": "Confirm if dolphin is still my favorite animal.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User's favorite animal is a dolphin"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0027",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "저는 우표 수집하는 것을 취미로 하고 있습니다."
+        },
+        {
+          "content": "우표 수집이 취미이시군요."
+        },
+        {
+          "content": "더 이상 우표 수집을 하지 않아요."
+        }
+      ],
+      "query": "제 취미 목록에서 우표 수집을 제거해 주세요.",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0028",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "辛い料理が好きです。"
+        },
+        {
+          "content": "辛い料理がお好きなんですね。"
+        },
+        {
+          "content": "最近は辛いものが苦手になったので、もう好きではありません。"
+        }
+      ],
+      "query": "私の好きな食べ物リストから辛い料理を削除してください。",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-userは辛いものが好きではありません。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0029",
+      "language": "en",
+      "turns": [
+        {
+          "content": "My favorite animal is a dolphin."
+        },
+        {
+          "content": "Dolphin, a great choice."
+        },
+        {
+          "content": "Is my favorite animal still listed as a dolphin?"
+        }
+      ],
+      "query": "Confirm if dolphin is still my favorite animal.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user's favorite animal is a dolphin."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0030",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はSF小説を好んで読みます。"
+        },
+        {
+          "content": "SF小説がお好きなんですね。"
+        },
+        {
+          "content": "私が好きな本のジャンルはSF小説で合っていますか？"
+        }
+      ],
+      "query": "私の好きな本のジャンルがSF小説であるか確認してください。",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーの好む本のジャンル: SF小説"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0031",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I was planning a picnic for next weekend."
+        },
+        {
+          "content": "A picnic next weekend, got it."
+        },
+        {
+          "content": "The weather forecast changed, so I'm no longer planning that picnic."
+        }
+      ],
+      "query": "Please remove the picnic from my plans.",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0032",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はSF小説を好んで読みます。"
+        },
+        {
+          "content": "SF小説がお好きなんですね。"
+        },
+        {
+          "content": "私が好きな本のジャンルはSF小説で合っていますか？"
+        }
+      ],
+      "query": "私の好きな本のジャンルがSF小説であるか確認してください。",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-userはSF小説を好んで読みます。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0033",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I was planning a picnic for next weekend."
+        },
+        {
+          "content": "A picnic next weekend, got it."
+        },
+        {
+          "content": "The weather forecast changed, so I'm no longer planning that picnic."
+        }
+      ],
+      "query": "Please remove the picnic from my plans.",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0034",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "저는 우표 수집하는 것을 취미로 하고 있습니다."
+        },
+        {
+          "content": "우표 수집이 취미이시군요."
+        },
+        {
+          "content": "더 이상 우표 수집을 하지 않아요."
+        }
+      ],
+      "query": "제 취미 목록에서 우표 수집을 제거해 주세요.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user has discontinued stamp collecting as a hobby."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0035",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "가장 좋아하는 여행지는 제주도입니다."
+        },
+        {
+          "content": "제주도 좋아하시는군요."
+        },
+        {
+          "content": "제가 가장 좋아하는 여행지가 제주도 맞죠?"
+        }
+      ],
+      "query": "제가 좋아하는 여행지가 여전히 제주도인지 확인해 주세요.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자 가장 좋아하는 여행지: 제주도"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0036",
+      "language": "en",
+      "turns": [
+        {
+          "content": "My favorite animal is a dolphin."
+        },
+        {
+          "content": "Dolphin, a great choice."
+        },
+        {
+          "content": "Is my favorite animal still listed as a dolphin?"
+        }
+      ],
+      "query": "Confirm if dolphin is still my favorite animal.",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "benchmark-user's favorite animal is a dolphin."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    }
+  ],
+  "packetContentSha256": "1bf87236eb5d18238b81dab0bba7c0cd30901e3078a1d2012540e0121ab4452c"
+}

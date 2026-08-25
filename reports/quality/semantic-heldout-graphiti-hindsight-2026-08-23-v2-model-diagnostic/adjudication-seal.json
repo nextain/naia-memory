@@ -1,0 +1,700 @@
+{
+  "schemaVersion": "naia-memory-semantic-blind-seal-v1",
+  "interpretation": "Confidential engine/run mapping. Do not provide this file to adjudicators.",
+  "packetContentSha256": "799ea18754c89f46001c8cfb674aa48a0891f8ab1e397e5432f3a42e30494576",
+  "blindingSeedSha256": "5ef5ad9fbd7ff576ea08a45018ed886ee66dde7a78bd304148f5bdabebe6839e",
+  "samples": [
+    {
+      "sampleId": "sample-0001",
+      "caseId": "case_ja_delete_8",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "4935281e25d96f8ac2eda5c853d3508c04c4d44a58eb3de8b5eb6d7bab19079f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "2b218359-fa3b-4d9e-9de0-1ba92f92de11"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "c6dc9082-9777-47ca-9893-00bd4c51316b"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "96579020-1497-4acb-9998-6bff85ff7616"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0002",
+      "caseId": "case_en_no_update_6",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "4935281e25d96f8ac2eda5c853d3508c04c4d44a58eb3de8b5eb6d7bab19079f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "7dd3e7b4-6325-4984-9047-95886700cad5"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "ddcebf90-d531-4873-b94a-eae9287b4148"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0003",
+      "caseId": "case_ja_update_7",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "bc781857471440fe9804d4278e34dacc2aac92d4c00cff3edb1886b309b26eca",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "1cdac24e-cf79-4a9e-9225-4c511f1bdefc"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "c8b5c7b1-7432-4b9c-a9da-22f28216b3a9"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0004",
+      "caseId": "case_ja_no_update_9",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "4935281e25d96f8ac2eda5c853d3508c04c4d44a58eb3de8b5eb6d7bab19079f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "3863cfb7-9cb9-4dcc-9c62-394e2b1a76eb"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "340ba4c4-e326-41b5-adf1-e4d95899c309"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0005",
+      "caseId": "case_ko_no_update_3",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "4935281e25d96f8ac2eda5c853d3508c04c4d44a58eb3de8b5eb6d7bab19079f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "331a1cf9-bcd8-43d3-97ba-aca7eaf91edf"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "3751f901-755b-4685-834a-919fcacd6752"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "42db9f94-5e25-4e17-9764-561794a766eb"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0006",
+      "caseId": "case_ja_delete_8",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "28b471c591415d1c3cc51de73438842a60578e6aa1e93c1451a9b96d7502df1b",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "47f5898d-9d9b-4b26-aa3c-5ea211d01190"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "7690c983-83d6-4c68-baa6-1a81f1e5cd64"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "a484a22c-1fbe-4ce2-8552-0abdc779857b"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0007",
+      "caseId": "case_en_delete_5",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "37062fb6c58618dce79cd87e34e5f0f75df2ac63d1d37ffa03b217d8e4b573cb",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "4c98df31-f559-4149-b511-c3b2b54bcaee"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0008",
+      "caseId": "case_ko_update_1",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "28b471c591415d1c3cc51de73438842a60578e6aa1e93c1451a9b96d7502df1b",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "4e373a9f-922c-4d53-a840-ea2f7c32e2b0"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "be2102d8-e430-4a22-bfd9-c2b5dd2e11e8"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "4effbd81-7bb9-4d1a-a29b-9e0571d56952"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0009",
+      "caseId": "case_en_no_update_6",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "37062fb6c58618dce79cd87e34e5f0f75df2ac63d1d37ffa03b217d8e4b573cb",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "a34e8f15-851e-47f1-9a14-fe1f72542fd1"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0010",
+      "caseId": "case_en_update_4",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "4935281e25d96f8ac2eda5c853d3508c04c4d44a58eb3de8b5eb6d7bab19079f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "cf874d22-2b72-4f50-ba1c-b843ae222a89"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "1a479ba1-e7bb-411d-a28f-14b8a92074ae"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "ad7aa06f-b6f4-440c-aabb-bccef233401e"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0011",
+      "caseId": "case_ko_delete_2",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "bc781857471440fe9804d4278e34dacc2aac92d4c00cff3edb1886b309b26eca",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "e94aedba-6364-46b0-8d7a-7979667bba48"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0012",
+      "caseId": "case_en_no_update_6",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "28b471c591415d1c3cc51de73438842a60578e6aa1e93c1451a9b96d7502df1b",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "bb28bb12-cd81-411e-8d9f-b11a7723ee84"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "5ef24b71-9e53-4707-921b-f00a1d42ea53"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0013",
+      "caseId": "case_ja_no_update_9",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "37062fb6c58618dce79cd87e34e5f0f75df2ac63d1d37ffa03b217d8e4b573cb",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "a019e66d-d6d8-4c93-b3b8-d765cebc2099"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "47542f47-c1b4-4be8-9df4-1dc08e6baa63"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0014",
+      "caseId": "case_ja_update_7",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "37062fb6c58618dce79cd87e34e5f0f75df2ac63d1d37ffa03b217d8e4b573cb",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "cd6169ca-9ac5-46aa-9753-54a48267ad45"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "c0c977cd-69fe-46be-aceb-7292f48fe9cc"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0015",
+      "caseId": "case_ja_update_7",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "4935281e25d96f8ac2eda5c853d3508c04c4d44a58eb3de8b5eb6d7bab19079f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "4167f9e4-e5ef-40a7-b444-50644659c463"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "4fa22072-c42a-47c7-95bc-9f1d9d79dce4"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "3eeb4bc5-1e6c-49c7-8119-ba409d2cffee"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0016",
+      "caseId": "case_en_no_update_6",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "bc781857471440fe9804d4278e34dacc2aac92d4c00cff3edb1886b309b26eca",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "48d368ee-f358-4c5c-93a0-1787aa660b60"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0017",
+      "caseId": "case_en_update_4",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "bc781857471440fe9804d4278e34dacc2aac92d4c00cff3edb1886b309b26eca",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "2059ebde-69a5-47f4-8033-588df6e00ff0"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0018",
+      "caseId": "case_ko_delete_2",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "37062fb6c58618dce79cd87e34e5f0f75df2ac63d1d37ffa03b217d8e4b573cb",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "469c2eae-5e66-476f-9414-c350e7751126"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0019",
+      "caseId": "case_ko_update_1",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "bc781857471440fe9804d4278e34dacc2aac92d4c00cff3edb1886b309b26eca",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "ae2fc1bd-60e4-4c6a-8475-3fbd9b3f2b0d"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0020",
+      "caseId": "case_ja_no_update_9",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "28b471c591415d1c3cc51de73438842a60578e6aa1e93c1451a9b96d7502df1b",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "110a0cc6-04d6-44b0-8f4e-42df78214bf2"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "c18a2648-fea2-4bd5-847c-484417fc954f"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "30f03961-436d-407f-8d34-f4f132f69cea"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0021",
+      "caseId": "case_ja_no_update_9",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "bc781857471440fe9804d4278e34dacc2aac92d4c00cff3edb1886b309b26eca",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "176c6356-2e9a-4f9e-84e3-0326d8756078"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0022",
+      "caseId": "case_ko_update_1",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "4935281e25d96f8ac2eda5c853d3508c04c4d44a58eb3de8b5eb6d7bab19079f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "eef22c62-1b22-44b0-9149-b4fb014d018b"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "51002d12-b658-4b91-a01d-5623bb1d1cb9"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "724c25ab-d6d6-4727-af5f-c0843191784a"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0023",
+      "caseId": "case_ko_delete_2",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "4935281e25d96f8ac2eda5c853d3508c04c4d44a58eb3de8b5eb6d7bab19079f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "7047dd57-29ad-4eb7-ae25-2b7c56c50f8f"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "364b3481-69ff-4e6d-8f21-bb06010b0c7f"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "c9aab48e-4a5c-46c6-a505-fe4f0c037244"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0024",
+      "caseId": "case_ko_delete_2",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "28b471c591415d1c3cc51de73438842a60578e6aa1e93c1451a9b96d7502df1b",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "69d841fc-d33e-471a-a196-f4eb794d3c31"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "a96719f2-bc24-4a2e-be29-b5d082e760bf"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "a23c7e4d-b697-473b-bf95-e7943b429192"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0025",
+      "caseId": "case_en_update_4",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "37062fb6c58618dce79cd87e34e5f0f75df2ac63d1d37ffa03b217d8e4b573cb",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "b149eb2f-338f-4b83-a3bb-80433a0d0063"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0026",
+      "caseId": "case_ko_no_update_3",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "28b471c591415d1c3cc51de73438842a60578e6aa1e93c1451a9b96d7502df1b",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "75f4b453-a43d-44d5-be15-c6df227326b1"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "ffe43451-5669-467d-98a0-c070b54ac749"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "ac00f92e-d250-485e-b5aa-97551adec842"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0027",
+      "caseId": "case_en_delete_5",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "28b471c591415d1c3cc51de73438842a60578e6aa1e93c1451a9b96d7502df1b",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "ebe4558b-80fe-4368-baa5-339dbc27f812"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "70925c84-cbbe-41d5-8c75-bc9752c8776f"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "9381adb6-0390-46d0-adc4-99bcae48f0b5"
+        },
+        {
+          "memoryId": "memory-04",
+          "nativeId": "db01bb87-97e0-4050-9c76-7a0f3453b865"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0028",
+      "caseId": "case_ja_update_7",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "28b471c591415d1c3cc51de73438842a60578e6aa1e93c1451a9b96d7502df1b",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "0a65825a-c2ca-4436-9f52-355ff5d4c5fc"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "063c7cbf-e344-44e8-9c0b-ff2e8ceaf70e"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "19add20c-8c31-455f-84ca-f82abc284428"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0029",
+      "caseId": "case_en_update_4",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "28b471c591415d1c3cc51de73438842a60578e6aa1e93c1451a9b96d7502df1b",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "5177c1b3-d3dc-4fc5-ba9a-b8d2531ea265"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "5b7c6b87-51c9-4370-bc37-6ce114f02f6e"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "6005d2ee-a9ae-4833-be05-0025b4e4fc1f"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0030",
+      "caseId": "case_ko_update_1",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "37062fb6c58618dce79cd87e34e5f0f75df2ac63d1d37ffa03b217d8e4b573cb",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "92e47600-c3f6-4b34-891b-8fdbb09f95d7"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0031",
+      "caseId": "case_ko_no_update_3",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "37062fb6c58618dce79cd87e34e5f0f75df2ac63d1d37ffa03b217d8e4b573cb",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "a88b6fa9-2034-4251-8675-c1a3cece661e"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0032",
+      "caseId": "case_en_delete_5",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "4935281e25d96f8ac2eda5c853d3508c04c4d44a58eb3de8b5eb6d7bab19079f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "47917bde-17b8-4782-b088-076504d02dba"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "340a49ca-37f6-465b-b438-2a81dff23818"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "259b2a5a-6e95-408c-92c1-3b49f3fc5aa6"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0033",
+      "caseId": "case_ja_delete_8",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "bc781857471440fe9804d4278e34dacc2aac92d4c00cff3edb1886b309b26eca",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "0ab54d10-a3b6-4135-881e-ce0220fb1d31"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0034",
+      "caseId": "case_ja_delete_8",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "37062fb6c58618dce79cd87e34e5f0f75df2ac63d1d37ffa03b217d8e4b573cb",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "c50b5d4a-b36e-43b6-b3cb-2ccc0bc039a8"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0035",
+      "caseId": "case_ko_no_update_3",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "bc781857471440fe9804d4278e34dacc2aac92d4c00cff3edb1886b309b26eca",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "9653114d-602b-44c9-96f6-068393bd2cf7"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "5134c82c-93d6-4601-9252-9d948dbcd732"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0036",
+      "caseId": "case_en_delete_5",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "bc781857471440fe9804d4278e34dacc2aac92d4c00cff3edb1886b309b26eca",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "f44a4a3a-122f-4b52-9410-94c6095005bc"
+        }
+      ]
+    }
+  ]
+}

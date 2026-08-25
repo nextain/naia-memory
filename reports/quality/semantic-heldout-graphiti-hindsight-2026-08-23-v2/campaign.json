@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "naia-memory-semantic-campaign-v3",
+  "interpretation": "Balanced execution manifest over unscored raw artifacts; not quality evidence by itself.",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-22T23:23:26.867Z",
+    "git": {
+      "revision": "b60e8f89b320ced684e4ed2c73158c33681fbece",
+      "dirty": true
+    },
+    "datasets": {
+      "/var/home/luke/alpha-adk/projects/naia-memory/reports/quality/semantic-heldout-model-authored-2026-08-19.json": "c6ea38eba5d97bfab7c519fc1d4087cb461b85f295a0d8eb354cef6575c6ce36"
+    },
+    "implementations": {
+      "src/benchmark/quality/semantic-campaign-cli.ts": "a0eb546a065ad2b1ae29da763a1461cc912ff6cac0223ab310b17803c9d58fa2",
+      "src/benchmark/quality/semantic-raw-cli.ts": "b973b0bbe8e51406f2d4b72ec76c3172b04dd8e78b641772d1776c2397ba24d0",
+      "src/benchmark/quality/memory-semantic-runner.ts": "51016b17d690ecf335dede17992580ab577ef12dc66a8395d189f8273e3f97f5",
+      "src/benchmark/quality/bridge-graphiti-semantic.ts": "ab5b218bfcb0cd35e65a5cc84475d55efcfd5ff3f87b48dd82b93132749a4881",
+      "src/benchmark/quality/graphiti-rest-semantic-client.ts": "4c68a99117f3e95eea267b79d6f2d3b40e8f158f3a88e532dd2217c24ed392fa",
+      "src/benchmark/quality/bridge-hindsight-semantic.ts": "b2d6502387e222d7c85267074df6fc2128b30dc3caace5bd427885c21c2a7e98",
+      "src/benchmark/quality/bridge-letta-semantic.ts": "dede9b1149ef99e5646977a1476023f3597fdc494613964f053d48063fb15157",
+      "src/benchmark/quality/bridge-mem0-semantic.ts": "855f5bb22132844db9fcd14d5452d121976707c23e4112512d5a113248ab79d1",
+      "src/benchmark/quality/bridge-naia-semantic.ts": "43c02dda6665abf920545f7b4e971c49db20dc406dc1309a70d3f54293bec88b"
+    },
+    "config": {
+      "executionSeed": "issue-39-graphiti-hindsight-v2",
+      "repetitions": 2,
+      "topK": 5,
+      "engines": [
+        "graphiti",
+        "hindsight"
+      ],
+      "engineOrderPolicy": "seeded-n-engine-latin-rotation-v2",
+      "caseOrderPolicy": "shared-seeded-per-repetition-v1",
+      "enginePositionCounts": {
+        "graphiti": {
+          "1": 1,
+          "2": 1
+        },
+        "hindsight": {
+          "1": 1,
+          "2": 1
+        }
+      },
+      "languageCaseCounts": {
+        "ko": 3,
+        "en": 3,
+        "ja": 3
+      },
+      "generalizationBoundary": "Generated diagnostic cases only; repetitions measure execution stability, not held-out generalization.",
+      "configurationPolicy": "Engine-native surfaces are observed with disclosed native configurations. Letta exposes always-active non-persona core blocks first, followed by its query-ranked archival search results, and preserves the complete core-plus-archive state for identity validation. Graphiti retrieval is projected onto complete current native edges and may return fewer than top-k. Component-level parity and a single retrieval leaderboard are not claimed."
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "disclosure": {
+    "executionSeed": "issue-39-graphiti-hindsight-v2",
+    "repetitions": 2,
+    "topK": 5,
+    "engines": [
+      "graphiti",
+      "hindsight"
+    ],
+    "engineOrderPolicy": "seeded-n-engine-latin-rotation-v2",
+    "caseOrderPolicy": "shared-seeded-per-repetition-v1",
+    "enginePositionCounts": {
+      "graphiti": {
+        "1": 1,
+        "2": 1
+      },
+      "hindsight": {
+        "1": 1,
+        "2": 1
+      }
+    },
+    "languageCaseCounts": {
+      "ko": 3,
+      "en": 3,
+      "ja": 3
+    },
+    "generalizationBoundary": "Generated diagnostic cases only; repetitions measure execution stability, not held-out generalization.",
+    "configurationPolicy": "Engine-native surfaces are observed with disclosed native configurations. Letta exposes always-active non-persona core blocks first, followed by its query-ranked archival search results, and preserves the complete core-plus-archive state for identity validation. Graphiti retrieval is projected onto complete current native edges and may return fewer than top-k. Component-level parity and a single retrieval leaderboard are not claimed."
+  },
+  "runs": [
+    {
+      "repetition": 1,
+      "enginePosition": 1,
+      "engine": "hindsight",
+      "caseExecutionSeed": "cf87d46f7a2f0f6dc6144fb3b01e4bf10e3023ca9cf1ebfbc4777422cd12acd3",
+      "outputFile": "repetition-01-hindsight.json",
+      "artifactSha256": "28b471c591415d1c3cc51de73438842a60578e6aa1e93c1451a9b96d7502df1b"
+    },
+    {
+      "repetition": 1,
+      "enginePosition": 2,
+      "engine": "graphiti",
+      "caseExecutionSeed": "cf87d46f7a2f0f6dc6144fb3b01e4bf10e3023ca9cf1ebfbc4777422cd12acd3",
+      "outputFile": "repetition-01-graphiti.json",
+      "artifactSha256": "37062fb6c58618dce79cd87e34e5f0f75df2ac63d1d37ffa03b217d8e4b573cb"
+    },
+    {
+      "repetition": 2,
+      "enginePosition": 1,
+      "engine": "graphiti",
+      "caseExecutionSeed": "869d4d3347def87886fac17f3e60bcbb47f5d18610c6692171d7bf4d56de82cf",
+      "outputFile": "repetition-02-graphiti.json",
+      "artifactSha256": "bc781857471440fe9804d4278e34dacc2aac92d4c00cff3edb1886b309b26eca"
+    },
+    {
+      "repetition": 2,
+      "enginePosition": 2,
+      "engine": "hindsight",
+      "caseExecutionSeed": "869d4d3347def87886fac17f3e60bcbb47f5d18610c6692171d7bf4d56de82cf",
+      "outputFile": "repetition-02-hindsight.json",
+      "artifactSha256": "4935281e25d96f8ac2eda5c853d3508c04c4d44a58eb3de8b5eb6d7bab19079f"
+    }
+  ]
+}
