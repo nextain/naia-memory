@@ -1,6 +1,6 @@
 import { constants, readFileSync, statSync, writeFileSync } from "node:fs";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { platform, tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
@@ -68,7 +68,9 @@ describe("atomicReplaceFileSync", () => {
 		atomicReplaceFileSync(target, '{"current":true}');
 
 		expect(readFileSync(target, "utf8")).toBe('{"current":true}');
-		expect(statSync(target).mode & 0o777).toBe(0o600);
+		if (platform() !== "win32") {
+			expect(statSync(target).mode & 0o777).toBe(0o600);
+		}
 		expect(await readdir(directory)).toEqual(["memory.json"]);
 	});
 
