@@ -1,0 +1,1761 @@
+{
+  "benchmark": "structured-supersession-contract-v1",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-14T09:44:41.620Z",
+    "git": {
+      "revision": "722dfc5e2af7098b01b49a3229c5477b80a4e547",
+      "dirty": true
+    },
+    "datasets": {
+      "src/benchmark/quality/structured-supersession-contract-v1.json": "393366f857795577ab5db5decf98d0f22b0de36ab71aba26beba467d4a3fc918"
+    },
+    "config": {
+      "model": "paraphrase-multilingual-MiniLM-L12-v2",
+      "device": "cpu",
+      "topK": 5,
+      "searchMode": "vector-only",
+      "benchmarkClock": "2024-07-03T09:46:40.000Z",
+      "variants": [
+        "unstructured-control",
+        "explicit-structure"
+      ]
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "dimensions": 384,
+  "interpretation": "Mechanism evaluation only: explicit extractor metadata is the intervention; no language-specific rule or threshold is used.",
+  "variants": {
+    "unstructured-control": {
+      "evaluated": 7,
+      "hitAt1": 0.14285714285714285,
+      "hitAtK": 0.7142857142857143,
+      "mrr": 0.3,
+      "forbiddenAt1": 0.14285714285714285,
+      "forbiddenAtK": 0.42857142857142855,
+      "lifecyclePass": 0.42857142857142855,
+      "cases": [
+        {
+          "id": "ko-residence-replacement",
+          "language": "ko",
+          "query": "사용자의 현재 거주지는 어디인가?",
+          "statements": [
+            {
+              "id": "ko-residence-old",
+              "content": "사용자 거주지: 서울",
+              "project": "profile",
+              "structured": {
+                "subject": "사용자",
+                "property": "거주지",
+                "value": "서울",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "ko-residence-new",
+              "content": "사용자 거주지: 부산",
+              "project": "profile",
+              "structured": {
+                "subject": "사용자",
+                "property": "거주지",
+                "value": "부산",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "ko-residence-new"
+          ],
+          "forbidden_statement_ids": [
+            "ko-residence-old"
+          ],
+          "expected_active_statement_ids": [
+            "ko-residence-new"
+          ],
+          "expected_inactive_statement_ids": [
+            "ko-residence-old"
+          ],
+          "retrieved_statement_ids": [
+            "ko-residence-old",
+            "en-not-residence",
+            "ja-timezone-old",
+            "en-editor-old",
+            "ja-residence"
+          ],
+          "acceptable_rank": null,
+          "forbidden_ranks": [
+            1
+          ],
+          "active_statement_ids": [
+            "ko-residence-old"
+          ],
+          "inactive_statement_ids": []
+        },
+        {
+          "id": "en-editor-replacement",
+          "language": "en",
+          "query": "Which editor does the user currently prefer?",
+          "statements": [
+            {
+              "id": "en-editor-old",
+              "content": "User preferred editor: Vim",
+              "project": "profile",
+              "structured": {
+                "subject": "user",
+                "property": "preferred editor",
+                "value": "Vim",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "en-editor-new",
+              "content": "User preferred editor: Helix",
+              "project": "profile",
+              "structured": {
+                "subject": "USER",
+                "property": "preferred   editor",
+                "value": "Helix",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "en-editor-new"
+          ],
+          "forbidden_statement_ids": [
+            "en-editor-old"
+          ],
+          "expected_active_statement_ids": [
+            "en-editor-new"
+          ],
+          "expected_inactive_statement_ids": [
+            "en-editor-old"
+          ],
+          "retrieved_statement_ids": [
+            "ko-residence-old",
+            "en-editor-old",
+            "en-not-residence",
+            "ja-timezone-old",
+            "en-editor-new"
+          ],
+          "acceptable_rank": 5,
+          "forbidden_ranks": [
+            2
+          ],
+          "active_statement_ids": [
+            "en-editor-new",
+            "en-editor-old"
+          ],
+          "inactive_statement_ids": []
+        },
+        {
+          "id": "ja-timezone-replacement",
+          "language": "ja",
+          "query": "ユーザーの現在のタイムゾーンは何ですか？",
+          "statements": [
+            {
+              "id": "ja-timezone-old",
+              "content": "ユーザーのタイムゾーン: Asia/Tokyo",
+              "project": "profile",
+              "structured": {
+                "subject": "ユーザー",
+                "property": "タイムゾーン",
+                "value": "Asia/Tokyo",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "ja-timezone-new",
+              "content": "ユーザーのタイムゾーン: Asia/Seoul",
+              "project": "profile",
+              "structured": {
+                "subject": "ユーザー",
+                "property": "タイムゾーン",
+                "value": "Asia/Seoul",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "ja-timezone-new"
+          ],
+          "forbidden_statement_ids": [
+            "ja-timezone-old"
+          ],
+          "expected_active_statement_ids": [
+            "ja-timezone-new"
+          ],
+          "expected_inactive_statement_ids": [
+            "ja-timezone-old"
+          ],
+          "retrieved_statement_ids": [
+            "ko-residence-old",
+            "ja-timezone-old",
+            "en-not-residence",
+            "en-editor-old",
+            "ja-timezone-new"
+          ],
+          "acceptable_rank": 5,
+          "forbidden_ranks": [
+            2
+          ],
+          "active_statement_ids": [
+            "ja-timezone-new",
+            "ja-timezone-old"
+          ],
+          "inactive_statement_ids": []
+        },
+        {
+          "id": "ko-multi-value-retention",
+          "language": "ko",
+          "query": "사용자의 기술은 무엇인가?",
+          "statements": [
+            {
+              "id": "ko-skill-ts",
+              "content": "사용자 기술: TypeScript",
+              "project": "profile",
+              "structured": {
+                "subject": "사용자",
+                "property": "기술",
+                "value": "TypeScript",
+                "polarity": "affirmed",
+                "cardinality": "multi",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "ko-skill-rust",
+              "content": "사용자 기술: Rust",
+              "project": "profile",
+              "structured": {
+                "subject": "사용자",
+                "property": "기술",
+                "value": "Rust",
+                "polarity": "affirmed",
+                "cardinality": "multi",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "ko-skill-ts",
+            "ko-skill-rust"
+          ],
+          "forbidden_statement_ids": [],
+          "expected_active_statement_ids": [
+            "ko-skill-ts",
+            "ko-skill-rust"
+          ],
+          "expected_inactive_statement_ids": [],
+          "retrieved_statement_ids": [
+            "ko-residence-old",
+            "en-editor-old",
+            "en-not-residence",
+            "ja-timezone-old",
+            "ja-residence"
+          ],
+          "acceptable_rank": null,
+          "forbidden_ranks": [],
+          "active_statement_ids": [
+            "ko-skill-rust",
+            "ko-skill-ts"
+          ],
+          "inactive_statement_ids": []
+        },
+        {
+          "id": "en-negated-retention",
+          "language": "en",
+          "query": "What is known about the user's residence?",
+          "statements": [
+            {
+              "id": "en-residence",
+              "content": "User residence: Seoul",
+              "project": "profile",
+              "structured": {
+                "subject": "user",
+                "property": "residence",
+                "value": "Seoul",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "en-not-residence",
+              "content": "User does not currently live in Seoul",
+              "project": "profile",
+              "structured": {
+                "subject": "user",
+                "property": "residence",
+                "value": "Seoul",
+                "polarity": "negated",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "en-residence",
+            "en-not-residence"
+          ],
+          "forbidden_statement_ids": [],
+          "expected_active_statement_ids": [
+            "en-residence",
+            "en-not-residence"
+          ],
+          "expected_inactive_statement_ids": [],
+          "retrieved_statement_ids": [
+            "ko-residence-old",
+            "en-not-residence",
+            "ja-timezone-old",
+            "en-editor-old",
+            "ja-residence"
+          ],
+          "acceptable_rank": 2,
+          "forbidden_ranks": [],
+          "active_statement_ids": [
+            "en-not-residence"
+          ],
+          "inactive_statement_ids": [
+            "en-residence"
+          ]
+        },
+        {
+          "id": "ja-property-boundary",
+          "language": "ja",
+          "query": "ユーザーの居住地と勤務先はどこですか？",
+          "statements": [
+            {
+              "id": "ja-residence",
+              "content": "ユーザー居住地: 東京",
+              "project": "profile",
+              "structured": {
+                "subject": "ユーザー",
+                "property": "居住地",
+                "value": "東京",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "ja-office",
+              "content": "ユーザー勤務先: 東京",
+              "project": "profile",
+              "structured": {
+                "subject": "ユーザー",
+                "property": "勤務先",
+                "value": "東京",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "ja-residence",
+            "ja-office"
+          ],
+          "forbidden_statement_ids": [],
+          "expected_active_statement_ids": [
+            "ja-residence",
+            "ja-office"
+          ],
+          "expected_inactive_statement_ids": [],
+          "retrieved_statement_ids": [
+            "ko-residence-old",
+            "en-not-residence",
+            "ja-timezone-old",
+            "en-editor-old",
+            "ja-residence"
+          ],
+          "acceptable_rank": 5,
+          "forbidden_ranks": [],
+          "active_statement_ids": [
+            "ja-office",
+            "ja-residence"
+          ],
+          "inactive_statement_ids": []
+        },
+        {
+          "id": "ko-project-boundary",
+          "language": "ko",
+          "query": "개인 프로필의 사용자는 어디에 사는가?",
+          "statements": [
+            {
+              "id": "ko-personal-residence",
+              "content": "개인 프로필 사용자 거주지: 서울",
+              "project": "personal",
+              "structured": {
+                "subject": "사용자",
+                "property": "거주지",
+                "value": "서울",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "ko-work-residence",
+              "content": "업무 프로필 사용자 거주지: 부산",
+              "project": "work",
+              "structured": {
+                "subject": "사용자",
+                "property": "거주지",
+                "value": "부산",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "ko-personal-residence"
+          ],
+          "forbidden_statement_ids": [
+            "ko-work-residence"
+          ],
+          "expected_active_statement_ids": [
+            "ko-personal-residence",
+            "ko-work-residence"
+          ],
+          "expected_inactive_statement_ids": [],
+          "recall_project": "personal",
+          "retrieved_statement_ids": [
+            "ko-personal-residence"
+          ],
+          "acceptable_rank": 1,
+          "forbidden_ranks": [],
+          "active_statement_ids": [
+            "ko-personal-residence",
+            "ko-work-residence"
+          ],
+          "inactive_statement_ids": []
+        }
+      ]
+    },
+    "explicit-structure": {
+      "evaluated": 7,
+      "hitAt1": 0.42857142857142855,
+      "hitAtK": 0.8571428571428571,
+      "mrr": 0.5714285714285714,
+      "forbiddenAt1": 0,
+      "forbiddenAtK": 0,
+      "lifecyclePass": 1,
+      "cases": [
+        {
+          "id": "ko-residence-replacement",
+          "language": "ko",
+          "query": "사용자의 현재 거주지는 어디인가?",
+          "statements": [
+            {
+              "id": "ko-residence-old",
+              "content": "사용자 거주지: 서울",
+              "project": "profile",
+              "structured": {
+                "subject": "사용자",
+                "property": "거주지",
+                "value": "서울",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "ko-residence-new",
+              "content": "사용자 거주지: 부산",
+              "project": "profile",
+              "structured": {
+                "subject": "사용자",
+                "property": "거주지",
+                "value": "부산",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "ko-residence-new"
+          ],
+          "forbidden_statement_ids": [
+            "ko-residence-old"
+          ],
+          "expected_active_statement_ids": [
+            "ko-residence-new"
+          ],
+          "expected_inactive_statement_ids": [
+            "ko-residence-old"
+          ],
+          "retrieved_statement_ids": [
+            "ja-timezone-new",
+            "ko-residence-new",
+            "en-editor-new",
+            "ja-residence",
+            "en-residence"
+          ],
+          "acceptable_rank": 2,
+          "forbidden_ranks": [],
+          "active_statement_ids": [
+            "ko-residence-new"
+          ],
+          "inactive_statement_ids": [
+            "ko-residence-old"
+          ]
+        },
+        {
+          "id": "en-editor-replacement",
+          "language": "en",
+          "query": "Which editor does the user currently prefer?",
+          "statements": [
+            {
+              "id": "en-editor-old",
+              "content": "User preferred editor: Vim",
+              "project": "profile",
+              "structured": {
+                "subject": "user",
+                "property": "preferred editor",
+                "value": "Vim",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "en-editor-new",
+              "content": "User preferred editor: Helix",
+              "project": "profile",
+              "structured": {
+                "subject": "USER",
+                "property": "preferred   editor",
+                "value": "Helix",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "en-editor-new"
+          ],
+          "forbidden_statement_ids": [
+            "en-editor-old"
+          ],
+          "expected_active_statement_ids": [
+            "en-editor-new"
+          ],
+          "expected_inactive_statement_ids": [
+            "en-editor-old"
+          ],
+          "retrieved_statement_ids": [
+            "en-editor-new",
+            "ja-timezone-new",
+            "ko-residence-new",
+            "ja-residence",
+            "en-residence"
+          ],
+          "acceptable_rank": 1,
+          "forbidden_ranks": [],
+          "active_statement_ids": [
+            "en-editor-new"
+          ],
+          "inactive_statement_ids": [
+            "en-editor-old"
+          ]
+        },
+        {
+          "id": "ja-timezone-replacement",
+          "language": "ja",
+          "query": "ユーザーの現在のタイムゾーンは何ですか？",
+          "statements": [
+            {
+              "id": "ja-timezone-old",
+              "content": "ユーザーのタイムゾーン: Asia/Tokyo",
+              "project": "profile",
+              "structured": {
+                "subject": "ユーザー",
+                "property": "タイムゾーン",
+                "value": "Asia/Tokyo",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "ja-timezone-new",
+              "content": "ユーザーのタイムゾーン: Asia/Seoul",
+              "project": "profile",
+              "structured": {
+                "subject": "ユーザー",
+                "property": "タイムゾーン",
+                "value": "Asia/Seoul",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "ja-timezone-new"
+          ],
+          "forbidden_statement_ids": [
+            "ja-timezone-old"
+          ],
+          "expected_active_statement_ids": [
+            "ja-timezone-new"
+          ],
+          "expected_inactive_statement_ids": [
+            "ja-timezone-old"
+          ],
+          "retrieved_statement_ids": [
+            "ja-timezone-new",
+            "ko-residence-new",
+            "en-editor-new",
+            "ja-residence",
+            "en-residence"
+          ],
+          "acceptable_rank": 1,
+          "forbidden_ranks": [],
+          "active_statement_ids": [
+            "ja-timezone-new"
+          ],
+          "inactive_statement_ids": [
+            "ja-timezone-old"
+          ]
+        },
+        {
+          "id": "ko-multi-value-retention",
+          "language": "ko",
+          "query": "사용자의 기술은 무엇인가?",
+          "statements": [
+            {
+              "id": "ko-skill-ts",
+              "content": "사용자 기술: TypeScript",
+              "project": "profile",
+              "structured": {
+                "subject": "사용자",
+                "property": "기술",
+                "value": "TypeScript",
+                "polarity": "affirmed",
+                "cardinality": "multi",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "ko-skill-rust",
+              "content": "사용자 기술: Rust",
+              "project": "profile",
+              "structured": {
+                "subject": "사용자",
+                "property": "기술",
+                "value": "Rust",
+                "polarity": "affirmed",
+                "cardinality": "multi",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "ko-skill-ts",
+            "ko-skill-rust"
+          ],
+          "forbidden_statement_ids": [],
+          "expected_active_statement_ids": [
+            "ko-skill-ts",
+            "ko-skill-rust"
+          ],
+          "expected_inactive_statement_ids": [],
+          "retrieved_statement_ids": [
+            "ja-timezone-new",
+            "en-editor-new",
+            "ko-residence-new",
+            "ja-residence",
+            "en-residence"
+          ],
+          "acceptable_rank": null,
+          "forbidden_ranks": [],
+          "active_statement_ids": [
+            "ko-skill-rust",
+            "ko-skill-ts"
+          ],
+          "inactive_statement_ids": []
+        },
+        {
+          "id": "en-negated-retention",
+          "language": "en",
+          "query": "What is known about the user's residence?",
+          "statements": [
+            {
+              "id": "en-residence",
+              "content": "User residence: Seoul",
+              "project": "profile",
+              "structured": {
+                "subject": "user",
+                "property": "residence",
+                "value": "Seoul",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "en-not-residence",
+              "content": "User does not currently live in Seoul",
+              "project": "profile",
+              "structured": {
+                "subject": "user",
+                "property": "residence",
+                "value": "Seoul",
+                "polarity": "negated",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "en-residence",
+            "en-not-residence"
+          ],
+          "forbidden_statement_ids": [],
+          "expected_active_statement_ids": [
+            "en-residence",
+            "en-not-residence"
+          ],
+          "expected_inactive_statement_ids": [],
+          "retrieved_statement_ids": [
+            "ko-residence-new",
+            "ja-timezone-new",
+            "en-editor-new",
+            "en-residence",
+            "ja-residence"
+          ],
+          "acceptable_rank": 4,
+          "forbidden_ranks": [],
+          "active_statement_ids": [
+            "en-not-residence",
+            "en-residence"
+          ],
+          "inactive_statement_ids": []
+        },
+        {
+          "id": "ja-property-boundary",
+          "language": "ja",
+          "query": "ユーザーの居住地と勤務先はどこですか？",
+          "statements": [
+            {
+              "id": "ja-residence",
+              "content": "ユーザー居住地: 東京",
+              "project": "profile",
+              "structured": {
+                "subject": "ユーザー",
+                "property": "居住地",
+                "value": "東京",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "ja-office",
+              "content": "ユーザー勤務先: 東京",
+              "project": "profile",
+              "structured": {
+                "subject": "ユーザー",
+                "property": "勤務先",
+                "value": "東京",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "ja-residence",
+            "ja-office"
+          ],
+          "forbidden_statement_ids": [],
+          "expected_active_statement_ids": [
+            "ja-residence",
+            "ja-office"
+          ],
+          "expected_inactive_statement_ids": [],
+          "retrieved_statement_ids": [
+            "ja-timezone-new",
+            "ko-residence-new",
+            "en-editor-new",
+            "ja-residence",
+            "en-residence"
+          ],
+          "acceptable_rank": 4,
+          "forbidden_ranks": [],
+          "active_statement_ids": [
+            "ja-office",
+            "ja-residence"
+          ],
+          "inactive_statement_ids": []
+        },
+        {
+          "id": "ko-project-boundary",
+          "language": "ko",
+          "query": "개인 프로필의 사용자는 어디에 사는가?",
+          "statements": [
+            {
+              "id": "ko-personal-residence",
+              "content": "개인 프로필 사용자 거주지: 서울",
+              "project": "personal",
+              "structured": {
+                "subject": "사용자",
+                "property": "거주지",
+                "value": "서울",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            },
+            {
+              "id": "ko-work-residence",
+              "content": "업무 프로필 사용자 거주지: 부산",
+              "project": "work",
+              "structured": {
+                "subject": "사용자",
+                "property": "거주지",
+                "value": "부산",
+                "polarity": "affirmed",
+                "cardinality": "single",
+                "provenance": "caller"
+              }
+            }
+          ],
+          "acceptable_statement_ids": [
+            "ko-personal-residence"
+          ],
+          "forbidden_statement_ids": [
+            "ko-work-residence"
+          ],
+          "expected_active_statement_ids": [
+            "ko-personal-residence",
+            "ko-work-residence"
+          ],
+          "expected_inactive_statement_ids": [],
+          "recall_project": "personal",
+          "retrieved_statement_ids": [
+            "ko-personal-residence"
+          ],
+          "acceptable_rank": 1,
+          "forbidden_ranks": [],
+          "active_statement_ids": [
+            "ko-personal-residence",
+            "ko-work-residence"
+          ],
+          "inactive_statement_ids": []
+        }
+      ]
+    }
+  },
+  "perLanguage": {
+    "ko": {
+      "unstructured-control": {
+        "evaluated": 3,
+        "hitAt1": 0.3333333333333333,
+        "hitAtK": 0.3333333333333333,
+        "mrr": 0.3333333333333333,
+        "forbiddenAt1": 0.3333333333333333,
+        "forbiddenAtK": 0.3333333333333333,
+        "lifecyclePass": 0.6666666666666666,
+        "cases": [
+          {
+            "id": "ko-residence-replacement",
+            "language": "ko",
+            "query": "사용자의 현재 거주지는 어디인가?",
+            "statements": [
+              {
+                "id": "ko-residence-old",
+                "content": "사용자 거주지: 서울",
+                "project": "profile",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "거주지",
+                  "value": "서울",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "ko-residence-new",
+                "content": "사용자 거주지: 부산",
+                "project": "profile",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "거주지",
+                  "value": "부산",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "ko-residence-new"
+            ],
+            "forbidden_statement_ids": [
+              "ko-residence-old"
+            ],
+            "expected_active_statement_ids": [
+              "ko-residence-new"
+            ],
+            "expected_inactive_statement_ids": [
+              "ko-residence-old"
+            ],
+            "retrieved_statement_ids": [
+              "ko-residence-old",
+              "en-not-residence",
+              "ja-timezone-old",
+              "en-editor-old",
+              "ja-residence"
+            ],
+            "acceptable_rank": null,
+            "forbidden_ranks": [
+              1
+            ],
+            "active_statement_ids": [
+              "ko-residence-old"
+            ],
+            "inactive_statement_ids": []
+          },
+          {
+            "id": "ko-multi-value-retention",
+            "language": "ko",
+            "query": "사용자의 기술은 무엇인가?",
+            "statements": [
+              {
+                "id": "ko-skill-ts",
+                "content": "사용자 기술: TypeScript",
+                "project": "profile",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "기술",
+                  "value": "TypeScript",
+                  "polarity": "affirmed",
+                  "cardinality": "multi",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "ko-skill-rust",
+                "content": "사용자 기술: Rust",
+                "project": "profile",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "기술",
+                  "value": "Rust",
+                  "polarity": "affirmed",
+                  "cardinality": "multi",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "ko-skill-ts",
+              "ko-skill-rust"
+            ],
+            "forbidden_statement_ids": [],
+            "expected_active_statement_ids": [
+              "ko-skill-ts",
+              "ko-skill-rust"
+            ],
+            "expected_inactive_statement_ids": [],
+            "retrieved_statement_ids": [
+              "ko-residence-old",
+              "en-editor-old",
+              "en-not-residence",
+              "ja-timezone-old",
+              "ja-residence"
+            ],
+            "acceptable_rank": null,
+            "forbidden_ranks": [],
+            "active_statement_ids": [
+              "ko-skill-rust",
+              "ko-skill-ts"
+            ],
+            "inactive_statement_ids": []
+          },
+          {
+            "id": "ko-project-boundary",
+            "language": "ko",
+            "query": "개인 프로필의 사용자는 어디에 사는가?",
+            "statements": [
+              {
+                "id": "ko-personal-residence",
+                "content": "개인 프로필 사용자 거주지: 서울",
+                "project": "personal",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "거주지",
+                  "value": "서울",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "ko-work-residence",
+                "content": "업무 프로필 사용자 거주지: 부산",
+                "project": "work",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "거주지",
+                  "value": "부산",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "ko-personal-residence"
+            ],
+            "forbidden_statement_ids": [
+              "ko-work-residence"
+            ],
+            "expected_active_statement_ids": [
+              "ko-personal-residence",
+              "ko-work-residence"
+            ],
+            "expected_inactive_statement_ids": [],
+            "recall_project": "personal",
+            "retrieved_statement_ids": [
+              "ko-personal-residence"
+            ],
+            "acceptable_rank": 1,
+            "forbidden_ranks": [],
+            "active_statement_ids": [
+              "ko-personal-residence",
+              "ko-work-residence"
+            ],
+            "inactive_statement_ids": []
+          }
+        ]
+      },
+      "explicit-structure": {
+        "evaluated": 3,
+        "hitAt1": 0.3333333333333333,
+        "hitAtK": 0.6666666666666666,
+        "mrr": 0.5,
+        "forbiddenAt1": 0,
+        "forbiddenAtK": 0,
+        "lifecyclePass": 1,
+        "cases": [
+          {
+            "id": "ko-residence-replacement",
+            "language": "ko",
+            "query": "사용자의 현재 거주지는 어디인가?",
+            "statements": [
+              {
+                "id": "ko-residence-old",
+                "content": "사용자 거주지: 서울",
+                "project": "profile",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "거주지",
+                  "value": "서울",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "ko-residence-new",
+                "content": "사용자 거주지: 부산",
+                "project": "profile",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "거주지",
+                  "value": "부산",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "ko-residence-new"
+            ],
+            "forbidden_statement_ids": [
+              "ko-residence-old"
+            ],
+            "expected_active_statement_ids": [
+              "ko-residence-new"
+            ],
+            "expected_inactive_statement_ids": [
+              "ko-residence-old"
+            ],
+            "retrieved_statement_ids": [
+              "ja-timezone-new",
+              "ko-residence-new",
+              "en-editor-new",
+              "ja-residence",
+              "en-residence"
+            ],
+            "acceptable_rank": 2,
+            "forbidden_ranks": [],
+            "active_statement_ids": [
+              "ko-residence-new"
+            ],
+            "inactive_statement_ids": [
+              "ko-residence-old"
+            ]
+          },
+          {
+            "id": "ko-multi-value-retention",
+            "language": "ko",
+            "query": "사용자의 기술은 무엇인가?",
+            "statements": [
+              {
+                "id": "ko-skill-ts",
+                "content": "사용자 기술: TypeScript",
+                "project": "profile",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "기술",
+                  "value": "TypeScript",
+                  "polarity": "affirmed",
+                  "cardinality": "multi",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "ko-skill-rust",
+                "content": "사용자 기술: Rust",
+                "project": "profile",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "기술",
+                  "value": "Rust",
+                  "polarity": "affirmed",
+                  "cardinality": "multi",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "ko-skill-ts",
+              "ko-skill-rust"
+            ],
+            "forbidden_statement_ids": [],
+            "expected_active_statement_ids": [
+              "ko-skill-ts",
+              "ko-skill-rust"
+            ],
+            "expected_inactive_statement_ids": [],
+            "retrieved_statement_ids": [
+              "ja-timezone-new",
+              "en-editor-new",
+              "ko-residence-new",
+              "ja-residence",
+              "en-residence"
+            ],
+            "acceptable_rank": null,
+            "forbidden_ranks": [],
+            "active_statement_ids": [
+              "ko-skill-rust",
+              "ko-skill-ts"
+            ],
+            "inactive_statement_ids": []
+          },
+          {
+            "id": "ko-project-boundary",
+            "language": "ko",
+            "query": "개인 프로필의 사용자는 어디에 사는가?",
+            "statements": [
+              {
+                "id": "ko-personal-residence",
+                "content": "개인 프로필 사용자 거주지: 서울",
+                "project": "personal",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "거주지",
+                  "value": "서울",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "ko-work-residence",
+                "content": "업무 프로필 사용자 거주지: 부산",
+                "project": "work",
+                "structured": {
+                  "subject": "사용자",
+                  "property": "거주지",
+                  "value": "부산",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "ko-personal-residence"
+            ],
+            "forbidden_statement_ids": [
+              "ko-work-residence"
+            ],
+            "expected_active_statement_ids": [
+              "ko-personal-residence",
+              "ko-work-residence"
+            ],
+            "expected_inactive_statement_ids": [],
+            "recall_project": "personal",
+            "retrieved_statement_ids": [
+              "ko-personal-residence"
+            ],
+            "acceptable_rank": 1,
+            "forbidden_ranks": [],
+            "active_statement_ids": [
+              "ko-personal-residence",
+              "ko-work-residence"
+            ],
+            "inactive_statement_ids": []
+          }
+        ]
+      }
+    },
+    "en": {
+      "unstructured-control": {
+        "evaluated": 2,
+        "hitAt1": 0,
+        "hitAtK": 1,
+        "mrr": 0.35,
+        "forbiddenAt1": 0,
+        "forbiddenAtK": 0.5,
+        "lifecyclePass": 0,
+        "cases": [
+          {
+            "id": "en-editor-replacement",
+            "language": "en",
+            "query": "Which editor does the user currently prefer?",
+            "statements": [
+              {
+                "id": "en-editor-old",
+                "content": "User preferred editor: Vim",
+                "project": "profile",
+                "structured": {
+                  "subject": "user",
+                  "property": "preferred editor",
+                  "value": "Vim",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "en-editor-new",
+                "content": "User preferred editor: Helix",
+                "project": "profile",
+                "structured": {
+                  "subject": "USER",
+                  "property": "preferred   editor",
+                  "value": "Helix",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "en-editor-new"
+            ],
+            "forbidden_statement_ids": [
+              "en-editor-old"
+            ],
+            "expected_active_statement_ids": [
+              "en-editor-new"
+            ],
+            "expected_inactive_statement_ids": [
+              "en-editor-old"
+            ],
+            "retrieved_statement_ids": [
+              "ko-residence-old",
+              "en-editor-old",
+              "en-not-residence",
+              "ja-timezone-old",
+              "en-editor-new"
+            ],
+            "acceptable_rank": 5,
+            "forbidden_ranks": [
+              2
+            ],
+            "active_statement_ids": [
+              "en-editor-new",
+              "en-editor-old"
+            ],
+            "inactive_statement_ids": []
+          },
+          {
+            "id": "en-negated-retention",
+            "language": "en",
+            "query": "What is known about the user's residence?",
+            "statements": [
+              {
+                "id": "en-residence",
+                "content": "User residence: Seoul",
+                "project": "profile",
+                "structured": {
+                  "subject": "user",
+                  "property": "residence",
+                  "value": "Seoul",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "en-not-residence",
+                "content": "User does not currently live in Seoul",
+                "project": "profile",
+                "structured": {
+                  "subject": "user",
+                  "property": "residence",
+                  "value": "Seoul",
+                  "polarity": "negated",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "en-residence",
+              "en-not-residence"
+            ],
+            "forbidden_statement_ids": [],
+            "expected_active_statement_ids": [
+              "en-residence",
+              "en-not-residence"
+            ],
+            "expected_inactive_statement_ids": [],
+            "retrieved_statement_ids": [
+              "ko-residence-old",
+              "en-not-residence",
+              "ja-timezone-old",
+              "en-editor-old",
+              "ja-residence"
+            ],
+            "acceptable_rank": 2,
+            "forbidden_ranks": [],
+            "active_statement_ids": [
+              "en-not-residence"
+            ],
+            "inactive_statement_ids": [
+              "en-residence"
+            ]
+          }
+        ]
+      },
+      "explicit-structure": {
+        "evaluated": 2,
+        "hitAt1": 0.5,
+        "hitAtK": 1,
+        "mrr": 0.625,
+        "forbiddenAt1": 0,
+        "forbiddenAtK": 0,
+        "lifecyclePass": 1,
+        "cases": [
+          {
+            "id": "en-editor-replacement",
+            "language": "en",
+            "query": "Which editor does the user currently prefer?",
+            "statements": [
+              {
+                "id": "en-editor-old",
+                "content": "User preferred editor: Vim",
+                "project": "profile",
+                "structured": {
+                  "subject": "user",
+                  "property": "preferred editor",
+                  "value": "Vim",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "en-editor-new",
+                "content": "User preferred editor: Helix",
+                "project": "profile",
+                "structured": {
+                  "subject": "USER",
+                  "property": "preferred   editor",
+                  "value": "Helix",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "en-editor-new"
+            ],
+            "forbidden_statement_ids": [
+              "en-editor-old"
+            ],
+            "expected_active_statement_ids": [
+              "en-editor-new"
+            ],
+            "expected_inactive_statement_ids": [
+              "en-editor-old"
+            ],
+            "retrieved_statement_ids": [
+              "en-editor-new",
+              "ja-timezone-new",
+              "ko-residence-new",
+              "ja-residence",
+              "en-residence"
+            ],
+            "acceptable_rank": 1,
+            "forbidden_ranks": [],
+            "active_statement_ids": [
+              "en-editor-new"
+            ],
+            "inactive_statement_ids": [
+              "en-editor-old"
+            ]
+          },
+          {
+            "id": "en-negated-retention",
+            "language": "en",
+            "query": "What is known about the user's residence?",
+            "statements": [
+              {
+                "id": "en-residence",
+                "content": "User residence: Seoul",
+                "project": "profile",
+                "structured": {
+                  "subject": "user",
+                  "property": "residence",
+                  "value": "Seoul",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "en-not-residence",
+                "content": "User does not currently live in Seoul",
+                "project": "profile",
+                "structured": {
+                  "subject": "user",
+                  "property": "residence",
+                  "value": "Seoul",
+                  "polarity": "negated",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "en-residence",
+              "en-not-residence"
+            ],
+            "forbidden_statement_ids": [],
+            "expected_active_statement_ids": [
+              "en-residence",
+              "en-not-residence"
+            ],
+            "expected_inactive_statement_ids": [],
+            "retrieved_statement_ids": [
+              "ko-residence-new",
+              "ja-timezone-new",
+              "en-editor-new",
+              "en-residence",
+              "ja-residence"
+            ],
+            "acceptable_rank": 4,
+            "forbidden_ranks": [],
+            "active_statement_ids": [
+              "en-not-residence",
+              "en-residence"
+            ],
+            "inactive_statement_ids": []
+          }
+        ]
+      }
+    },
+    "ja": {
+      "unstructured-control": {
+        "evaluated": 2,
+        "hitAt1": 0,
+        "hitAtK": 1,
+        "mrr": 0.2,
+        "forbiddenAt1": 0,
+        "forbiddenAtK": 0.5,
+        "lifecyclePass": 0.5,
+        "cases": [
+          {
+            "id": "ja-timezone-replacement",
+            "language": "ja",
+            "query": "ユーザーの現在のタイムゾーンは何ですか？",
+            "statements": [
+              {
+                "id": "ja-timezone-old",
+                "content": "ユーザーのタイムゾーン: Asia/Tokyo",
+                "project": "profile",
+                "structured": {
+                  "subject": "ユーザー",
+                  "property": "タイムゾーン",
+                  "value": "Asia/Tokyo",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "ja-timezone-new",
+                "content": "ユーザーのタイムゾーン: Asia/Seoul",
+                "project": "profile",
+                "structured": {
+                  "subject": "ユーザー",
+                  "property": "タイムゾーン",
+                  "value": "Asia/Seoul",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "ja-timezone-new"
+            ],
+            "forbidden_statement_ids": [
+              "ja-timezone-old"
+            ],
+            "expected_active_statement_ids": [
+              "ja-timezone-new"
+            ],
+            "expected_inactive_statement_ids": [
+              "ja-timezone-old"
+            ],
+            "retrieved_statement_ids": [
+              "ko-residence-old",
+              "ja-timezone-old",
+              "en-not-residence",
+              "en-editor-old",
+              "ja-timezone-new"
+            ],
+            "acceptable_rank": 5,
+            "forbidden_ranks": [
+              2
+            ],
+            "active_statement_ids": [
+              "ja-timezone-new",
+              "ja-timezone-old"
+            ],
+            "inactive_statement_ids": []
+          },
+          {
+            "id": "ja-property-boundary",
+            "language": "ja",
+            "query": "ユーザーの居住地と勤務先はどこですか？",
+            "statements": [
+              {
+                "id": "ja-residence",
+                "content": "ユーザー居住地: 東京",
+                "project": "profile",
+                "structured": {
+                  "subject": "ユーザー",
+                  "property": "居住地",
+                  "value": "東京",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "ja-office",
+                "content": "ユーザー勤務先: 東京",
+                "project": "profile",
+                "structured": {
+                  "subject": "ユーザー",
+                  "property": "勤務先",
+                  "value": "東京",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "ja-residence",
+              "ja-office"
+            ],
+            "forbidden_statement_ids": [],
+            "expected_active_statement_ids": [
+              "ja-residence",
+              "ja-office"
+            ],
+            "expected_inactive_statement_ids": [],
+            "retrieved_statement_ids": [
+              "ko-residence-old",
+              "en-not-residence",
+              "ja-timezone-old",
+              "en-editor-old",
+              "ja-residence"
+            ],
+            "acceptable_rank": 5,
+            "forbidden_ranks": [],
+            "active_statement_ids": [
+              "ja-office",
+              "ja-residence"
+            ],
+            "inactive_statement_ids": []
+          }
+        ]
+      },
+      "explicit-structure": {
+        "evaluated": 2,
+        "hitAt1": 0.5,
+        "hitAtK": 1,
+        "mrr": 0.625,
+        "forbiddenAt1": 0,
+        "forbiddenAtK": 0,
+        "lifecyclePass": 1,
+        "cases": [
+          {
+            "id": "ja-timezone-replacement",
+            "language": "ja",
+            "query": "ユーザーの現在のタイムゾーンは何ですか？",
+            "statements": [
+              {
+                "id": "ja-timezone-old",
+                "content": "ユーザーのタイムゾーン: Asia/Tokyo",
+                "project": "profile",
+                "structured": {
+                  "subject": "ユーザー",
+                  "property": "タイムゾーン",
+                  "value": "Asia/Tokyo",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "ja-timezone-new",
+                "content": "ユーザーのタイムゾーン: Asia/Seoul",
+                "project": "profile",
+                "structured": {
+                  "subject": "ユーザー",
+                  "property": "タイムゾーン",
+                  "value": "Asia/Seoul",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "ja-timezone-new"
+            ],
+            "forbidden_statement_ids": [
+              "ja-timezone-old"
+            ],
+            "expected_active_statement_ids": [
+              "ja-timezone-new"
+            ],
+            "expected_inactive_statement_ids": [
+              "ja-timezone-old"
+            ],
+            "retrieved_statement_ids": [
+              "ja-timezone-new",
+              "ko-residence-new",
+              "en-editor-new",
+              "ja-residence",
+              "en-residence"
+            ],
+            "acceptable_rank": 1,
+            "forbidden_ranks": [],
+            "active_statement_ids": [
+              "ja-timezone-new"
+            ],
+            "inactive_statement_ids": [
+              "ja-timezone-old"
+            ]
+          },
+          {
+            "id": "ja-property-boundary",
+            "language": "ja",
+            "query": "ユーザーの居住地と勤務先はどこですか？",
+            "statements": [
+              {
+                "id": "ja-residence",
+                "content": "ユーザー居住地: 東京",
+                "project": "profile",
+                "structured": {
+                  "subject": "ユーザー",
+                  "property": "居住地",
+                  "value": "東京",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              },
+              {
+                "id": "ja-office",
+                "content": "ユーザー勤務先: 東京",
+                "project": "profile",
+                "structured": {
+                  "subject": "ユーザー",
+                  "property": "勤務先",
+                  "value": "東京",
+                  "polarity": "affirmed",
+                  "cardinality": "single",
+                  "provenance": "caller"
+                }
+              }
+            ],
+            "acceptable_statement_ids": [
+              "ja-residence",
+              "ja-office"
+            ],
+            "forbidden_statement_ids": [],
+            "expected_active_statement_ids": [
+              "ja-residence",
+              "ja-office"
+            ],
+            "expected_inactive_statement_ids": [],
+            "retrieved_statement_ids": [
+              "ja-timezone-new",
+              "ko-residence-new",
+              "en-editor-new",
+              "ja-residence",
+              "en-residence"
+            ],
+            "acceptable_rank": 4,
+            "forbidden_ranks": [],
+            "active_statement_ids": [
+              "ja-office",
+              "ja-residence"
+            ],
+            "inactive_statement_ids": []
+          }
+        ]
+      }
+    }
+  }
+}

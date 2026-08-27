@@ -1,0 +1,57 @@
+{
+  "benchmark": "miracl-ar-full-corpus-naia-vector-exact-v1",
+  "claimBoundary": "full-corpus embedding retrieval only; excludes Naia lifecycle, lexical fusion, and ANN quality",
+  "inputs": {
+    "language": "ar",
+    "sourceLockSha256": "6f67a375d0bf8062fb6d591843052ab3555b1b5d69acdae164a83387dbaf71e1",
+    "topicsSha256": "10b534b889ec46e23df478eee09410ef2880d90d419644dfed5d05d39b57ece0",
+    "qrelsSha256": "3670a7804dedd5a602dad0661f6adb1e65b197829d5571f428e0af7fc46aa313",
+    "corpusDocidsSha256": "b81389dd2afad4d0273ec92c25f446b478cb41afb8327c162f8919d93b3c3659",
+    "documentCount": 2061414,
+    "queryCount": 2896
+  },
+  "configuration": {
+    "passageComposition": "title + \"\\n\" + text",
+    "embedding": {
+      "model": "Xenova/multilingual-e5-large",
+      "revision": "00fc3aeb3dbb95842de2ac1961d33c6319acf57b",
+      "dtype": "q8",
+      "dimensions": 1024,
+      "queryPrefix": "query: ",
+      "passagePrefix": "passage: ",
+      "pooling": "mean",
+      "normalize": true,
+      "tokenizerMaxLength": 512,
+      "truncation": true,
+      "titleConcatenation": "provider-receives-precomposed-text"
+    },
+    "embeddingInferenceMode": "per-item-v1",
+    "embeddingExecutionPolicySha256": "777d3b922aca50364b5de2c9c8cd49b27c10b90bd9931df60919fe92fc8b23bb",
+    "vectorStore": "Qdrant",
+    "distance": "Cosine",
+    "exactSearch": true,
+    "topK": 100,
+    "cpuOnly": true,
+    "collectionName": "naia_miracl_ar_6f67a375_777d3b92"
+  },
+  "metrics": {
+    "successAt1": 0.700621546961326,
+    "successAt5": 0.8867403314917127,
+    "successAt10": 0.924378453038674,
+    "recallAt10": 0.8344487196351834,
+    "ndcgAt10": 0.7432251736268787,
+    "mrr": 0.7825400662257428,
+    "recallAt100": 0.9627645959396649
+  },
+  "latencyMilliseconds": {
+    "mean": 1005.0358456472213,
+    "max": 1677.1104680001736
+  },
+  "ingestion": {
+    "seconds": 104768.036415486,
+    "embeddedDocuments": 2061414,
+    "cachedDocuments": 0,
+    "lastChunkReceiptSha256": "e20ac01282f39e851e12e0ece213acc1890d8b5a7cf42ce2ac2afb5b59940eb6"
+  },
+  "trecSha256": "a9f4e06588f8cc7965e939f2ed265fe90d5269a873e6e876bfe8ce7fdc702e0a"
+}

@@ -1,0 +1,324 @@
+{
+  "schemaVersion": 1,
+  "artifactClass": "miracl-en-primary-preflight-v1",
+  "verdict": "PASS",
+  "language": "en",
+  "claimBoundary": "one preregistered MIRACL-en execution of the frozen padded-array-batch-v1 passage engine with per-item-v1 queries; establishes no equivalence or noninferiority to per-item passage inference, no throughput claim, no multilingual transfer claim, and no public-comparison eligibility",
+  "sourceLockSha256": "99727481b47a8a423ad8fa54ca09c8296515fba17ce9c9ce6356e53654918549",
+  "corpusDocidsSha256": "23a425f3889a6b6a3f41f32666cb748fca05ae2e750abad13ebbc0354ebb7847",
+  "sample": {
+    "method": "sha256-seeded-length-stratified-ordinal-v1",
+    "seed": "naia-miracl-en-primary-v1",
+    "documentCount": 7168,
+    "ordinalsSha256": "9e2dffd6303d2496e6a51da6b9faa1e641d1f4300b06cfc1d8998c272d4a9b92",
+    "passagesSha256": "c433b84c3776d2bb96686c25d61800f659a7c51859a8459d81eef4723cad8356",
+    "lengthStrata": 7
+  },
+  "execution": {
+    "embeddingExecutionPolicySha256": "d2d6e0c505dbe11ff8e34999a7ddfff02f82ef977f739e7884153d63771e5856",
+    "producerSourceManifest": {
+      "schemaVersion": "naia-native-runtime-source-manifest-v1",
+      "entryPoint": "src/benchmark/quality/miracl-en-primary-preflight-cli.ts",
+      "additionalInputs": [
+        "pnpm-lock.yaml"
+      ],
+      "files": [
+        {
+          "path": "pnpm-lock.yaml",
+          "sha256": "ec62124952aeffb10134cf3c57b50f4de30aec27c1e930013ad316fb457b4a1c"
+        },
+        {
+          "path": "src/benchmark/quality/miracl-corpus-identity.ts",
+          "sha256": "d74ed7ffab9af896ece3a9daffa175cc3f35370e464c8ce0598cf4490501a4ec"
+        },
+        {
+          "path": "src/benchmark/quality/miracl-en-primary-execution-authorization.ts",
+          "sha256": "852245bac8d71d083faf328c1d6786aa22733dcb55c592147b73e8cf10c2667e"
+        },
+        {
+          "path": "src/benchmark/quality/miracl-en-primary-execution-policy.ts",
+          "sha256": "46e0545823b17dc57232d641fd8d77e14d8b8f68eb37b63d267b11445506ff87"
+        },
+        {
+          "path": "src/benchmark/quality/miracl-en-primary-preflight-cli.ts",
+          "sha256": "e507e5257fa60276e6fbcb6c1b1b96bdcc5194f35a5f3321b147102d401a66f3"
+        },
+        {
+          "path": "src/benchmark/quality/miracl-en-primary-preflight.ts",
+          "sha256": "58b7376350a1522b334439064f6f41659f1717e035fef3bfb1714faca75c592a"
+        },
+        {
+          "path": "src/benchmark/quality/miracl-en-primary-sample-receipt.ts",
+          "sha256": "e9237b406839969eaa0678f27534eee8fdd5988f9c6b796536e58b16b1c01543"
+        },
+        {
+          "path": "src/benchmark/quality/miracl-en-primary-sampling-contract.ts",
+          "sha256": "ce82da1b7726513e403be89f127e69c0005bf06226a894b400ed45fe183e3437"
+        },
+        {
+          "path": "src/benchmark/quality/miracl-en-primary-vector-artifact.ts",
+          "sha256": "705cbe3c248a3f44e224caee67f1b0d4ea2cbeeb8686473c5ec51d4dca1752ff"
+        },
+        {
+          "path": "src/benchmark/quality/miracl-multilingual-contract.ts",
+          "sha256": "fcc772a2f865a4be53c52e0b7fb536cab4946ab64a3e28839707e30a8bf902b4"
+        },
+        {
+          "path": "src/benchmark/quality/miracl-multilingual-download.ts",
+          "sha256": "36ffb0a67e67c25595bc9a19e6c9a0d1ad8e72d38330d17680b4b358e3c4c067"
+        },
+        {
+          "path": "src/benchmark/quality/native-corpus-extract.ts",
+          "sha256": "139a73d209d9e4be038909b5325d84c4855d4fdc16caaa10c023c9a8c97988ca"
+        },
+        {
+          "path": "src/benchmark/quality/native-full-corpus-evidence.ts",
+          "sha256": "d7df966c9fc692fdbedc58421bcb8220ba513a9432543d4dddde57f138751c13"
+        },
+        {
+          "path": "src/benchmark/quality/native-full-corpus-policy.ts",
+          "sha256": "1e11b354f86587a8be4ffb5592bd8ee82ca5922205fc291141291ec82e5190c5"
+        },
+        {
+          "path": "src/benchmark/quality/native-runtime-source-manifest.ts",
+          "sha256": "0ee787d2aad1e41a2de5dd8ec9f372ce5a72d8e246fe4be948508d493ae492a9"
+        },
+        {
+          "path": "src/benchmark/quality/public-evidence-crypto.ts",
+          "sha256": "64a018293b6143ff1b322843e5b8ee3ba5e009a5a400d21581c98aa99c03597e"
+        },
+        {
+          "path": "src/benchmark/quality/public-miracl-source.ts",
+          "sha256": "585b5f5673712a393e5c1a7038a2ac1d7c903919d17f087310d4e5979ea8cea2"
+        },
+        {
+          "path": "src/benchmark/quality/qdrant-service-binding.ts",
+          "sha256": "d68b38d895384ba4b9fd537316ec4d1a32770046fc35aa5e99dfcf351630dbb5"
+        },
+        {
+          "path": "src/benchmark/quality/qdrant-service-launch-plan.ts",
+          "sha256": "97df720645187e60d6dd4ac5afb7a4a37e16cb912dea5732499383c4ef40445e"
+        },
+        {
+          "path": "src/benchmark/quality/ranking-ab-analysis.ts",
+          "sha256": "a524214abe81a84f94f164b1fe05d53f3212f40e3789596bc55dfd24d184f7a3"
+        },
+        {
+          "path": "src/memory/embeddings.ts",
+          "sha256": "9eb3a73c9c8f9436a8c1227fb19f2cb5c335c4a1ec1b752cac640c1a42e285fa"
+        },
+        {
+          "path": "src/memory/usage-tracker.ts",
+          "sha256": "ebe0994d185213221ea92395c73e8b1e38913389e78ad2ef783edd4bb03c0111"
+        }
+      ],
+      "manifestSha256": "8a91d7a8b1a371b4d6080ae3b0c1ecd44adaee63d8206586abe04505b807dadb"
+    },
+    "producerSourceSha256": "8a91d7a8b1a371b4d6080ae3b0c1ecd44adaee63d8206586abe04505b807dadb",
+    "vectorArtifactSha256": "b20970d2ac62d8d8fdec2339bb100f8f6f980b8c5c36dc9ff0fc98a514dc6042"
+  },
+  "observed": {
+    "perItemVersusBatch": {
+      "maximumAbsoluteDelta": {
+        "minimum": 0.007882213220000267,
+        "p50": 0.013962325640022755,
+        "p95": 0.01951446197926998,
+        "p99": 0.02646822005044669,
+        "maximum": 0.04934008326381445
+      },
+      "cosine": {
+        "minimum": 0.9163903576362664,
+        "p50": 0.9917080224104999,
+        "p95": 0.9946395377563237,
+        "p99": 0.9954013671966172,
+        "maximum": 0.9966764978362606
+      }
+    },
+    "batchOrderSensitivity": {
+      "maximumAbsoluteDelta": {
+        "minimum": 0.008178109303116798,
+        "p50": 0.013823747634887695,
+        "p95": 0.019447313621640205,
+        "p99": 0.02579563669860363,
+        "maximum": 0.05040357168763876
+      },
+      "cosine": {
+        "minimum": 0.901251553826266,
+        "p50": 0.9918697343214198,
+        "p95": 0.9945688234268864,
+        "p99": 0.9953313463804465,
+        "maximum": 0.9963895520360867
+      }
+    },
+    "lengthStrata": [
+      {
+        "stratum": 0,
+        "minimumBytes": 0,
+        "maximumBytesExclusive": 128,
+        "maximumAbsoluteDelta": {
+          "minimum": 0.007882213220000267,
+          "p50": 0.012322278693318367,
+          "p95": 0.01587837189435959,
+          "p99": 0.017783313523977995,
+          "maximum": 0.022991880774497986
+        },
+        "cosine": {
+          "minimum": 0.9880783722284824,
+          "p50": 0.9935587339619955,
+          "p95": 0.9953419208419869,
+          "p99": 0.9958631964216859,
+          "maximum": 0.9966764978362606
+        }
+      },
+      {
+        "stratum": 1,
+        "minimumBytes": 128,
+        "maximumBytesExclusive": 256,
+        "maximumAbsoluteDelta": {
+          "minimum": 0.008687220513820648,
+          "p50": 0.01264974195510149,
+          "p95": 0.0157392299734056,
+          "p99": 0.01769869029521942,
+          "maximum": 0.021368175745010376
+        },
+        "cosine": {
+          "minimum": 0.9853067584934491,
+          "p50": 0.9931822552595284,
+          "p95": 0.994887479220007,
+          "p99": 0.9955596439869647,
+          "maximum": 0.9959060133075753
+        }
+      },
+      {
+        "stratum": 2,
+        "minimumBytes": 256,
+        "maximumBytesExclusive": 512,
+        "maximumAbsoluteDelta": {
+          "minimum": 0.008754715323448181,
+          "p50": 0.013113582332152873,
+          "p95": 0.016656193882226944,
+          "p99": 0.018305229023098946,
+          "maximum": 0.021653111092746258
+        },
+        "cosine": {
+          "minimum": 0.9837442288028589,
+          "p50": 0.992671358480103,
+          "p95": 0.9946809397414539,
+          "p99": 0.9954222769931077,
+          "maximum": 0.9962223385643749
+        }
+      },
+      {
+        "stratum": 3,
+        "minimumBytes": 512,
+        "maximumBytesExclusive": 1024,
+        "maximumAbsoluteDelta": {
+          "minimum": 0.009083069860935211,
+          "p50": 0.01396992802619934,
+          "p95": 0.017398457042872906,
+          "p99": 0.019005518406629562,
+          "maximum": 0.021390598267316818
+        },
+        "cosine": {
+          "minimum": 0.9823641277186762,
+          "p50": 0.9915500978346588,
+          "p95": 0.9939426658691861,
+          "p99": 0.9949821170455795,
+          "maximum": 0.9962243794998614
+        }
+      },
+      {
+        "stratum": 4,
+        "minimumBytes": 1024,
+        "maximumBytesExclusive": 2048,
+        "maximumAbsoluteDelta": {
+          "minimum": 0.009622950106859207,
+          "p50": 0.014493545517325401,
+          "p95": 0.018550273962318897,
+          "p99": 0.020425969792995602,
+          "maximum": 0.025288475677371025
+        },
+        "cosine": {
+          "minimum": 0.9814750890427255,
+          "p50": 0.9910172411135498,
+          "p95": 0.993574613310554,
+          "p99": 0.994176382228786,
+          "maximum": 0.9949884343112306
+        }
+      },
+      {
+        "stratum": 5,
+        "minimumBytes": 2048,
+        "maximumBytesExclusive": 4096,
+        "maximumAbsoluteDelta": {
+          "minimum": 0.01087300293147564,
+          "p50": 0.015837752260267735,
+          "p95": 0.023720333352684975,
+          "p99": 0.0319569930434227,
+          "maximum": 0.04662434943020344
+        },
+        "cosine": {
+          "minimum": 0.9384679105174173,
+          "p50": 0.9892495591081307,
+          "p95": 0.9925520388926715,
+          "p99": 0.9934093132060822,
+          "maximum": 0.9940388394266322
+        }
+      },
+      {
+        "stratum": 6,
+        "minimumBytes": 4096,
+        "maximumBytesExclusive": null,
+        "maximumAbsoluteDelta": {
+          "minimum": 0.010610140860080719,
+          "p50": 0.016017671674489975,
+          "p95": 0.02457538992166519,
+          "p99": 0.03375842422246933,
+          "maximum": 0.04934008326381445
+        },
+        "cosine": {
+          "minimum": 0.9163903576362664,
+          "p50": 0.9890788883861571,
+          "p95": 0.992438696098025,
+          "p99": 0.99333851094574,
+          "maximum": 0.9942908602383193
+        }
+      }
+    ],
+    "throughputDocumentsPerSecond": {
+      "perItem": 10.394697482178577,
+      "batch": 4.147551827190026,
+      "ratio": 0.39900649675480115
+    },
+    "retrieval": {
+      "method": "query-ranking-qrels-recomputation-v1",
+      "querySelection": "sha256-seeded-topic-id-v1",
+      "querySelectionSeed": "naia-miracl-en-primary-v1",
+      "queryCount": 64,
+      "queryIdsSha256": "900942b86c154203e111b7cd4455dedd8b61889db1daf632b714e9058dc02b4c",
+      "relevantByQuerySha256": "1f068cef88542405ffae1c46062cbc89c26d31035bb0e63fb056c8d43b966293",
+      "perItemNdcgAt10": 0.983664172396503,
+      "batchNdcgAt10": 0.9852949483568931,
+      "meanTop10Jaccard": 0.738152472527473,
+      "meanTop100Jaccard": 0.6603456812891886,
+      "rankingArtifactSha256": "c9cafa755f6237d1f602df7b4810b983c2d51ab8acc6ea96477f0641ae8455c4",
+      "corpusPassagesSha256": "bbe692cd1e280cde8b2b6d674b1795c8adfeb7b3883ce226e927440cea476ab9"
+    }
+  },
+  "checks": {
+    "finiteDimensions": true,
+    "repeatBitIdentical": true,
+    "orderSensitivityReported": true,
+    "lengthStratifiedDeltasReported": true,
+    "retrievalDeltasReported": true,
+    "throughputReported": true
+  },
+  "claimEligibility": {
+    "public": false,
+    "equivalence": false,
+    "noninferiority": false,
+    "throughput": false,
+    "multilingualTransfer": false,
+    "sota": false
+  }
+}

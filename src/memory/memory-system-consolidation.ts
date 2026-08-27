@@ -1,0 +1,507 @@
+import {
+	buildNewFact,
+	findDuplicateFact,
+	resolveFactContradictions,
+} from "./consolidation-fact-resolution.js";
+import { MAX_EPISODES_PER_CYCLE } from "./consolidation-primitives.js";
+import {
+	hasGroundedDeleteAuthority,
+	resolveDeleteTarget,
+} from "./delete-authorization.js";
+import { distillInsights } from "./insight-distillation.js";
+import type {
+	ExtractedFact,
+	MemorySystemOptions,
+} from "./memory-system-api.js";
+import { MemorySystemBackup } from "./memory-system-backup.js";
+import { filterNegativeCapture } from "./negative-capture.js";
+import { reconcileStructuredDuplicate } from "./structured-duplicate-reconciliation.js";
+import {
+	hasTrustedUserMutationSources,
+	resolveStructuredMutationPolicy,
+} from "./structured-mutation-policy.js";
+import type { ConsolidationResult, Fact } from "./types.js";
+import { recordDeleteOutcome, recordMutationOutcome } from "./usage-tracker.js";
+
+/** Sleep-cycle consolidation and adapter backup operations. */
+export abstract class MemorySystemConsolidation extends MemorySystemBackup {
+	private consolidationTimer: ReturnType<typeof setInterval> | null = null;
+	private readonly consolidationIntervalMs: number;
+	private warnedMissingDeleteVerifier = false;
+	private warnedOversizedDelete = false;
+	private warnedDeleteVerifierFailure = false;
+
+	constructor(options: MemorySystemOptions) {
+		super(options);
+		this.consolidationIntervalMs =
+			options.consolidationIntervalMs ?? 30 * 60 * 1000;
+	}
+	/**
+	 * Start the background consolidation timer.
+	 * Runs periodically during idle time, like sleep-cycle memory consolidation.
+	 *
+	 * Neuroscience basis: during slow-wave sleep, the hippocampus replays
+	 * recent experiences and transfers patterns to the neocortex.
+	 */
+	startConsolidation(): void {
+		if (this.consolidationTimer) return;
+		this.consolidationTimer = setInterval(async () => {
+			try {
+				await this.consolidateNow();
+			} catch (err) {
+				// Non-critical — log and continue
+				console.error("[MemorySystem] consolidation error:", err);
+			}
+		}, this.consolidationIntervalMs);
+	}
+
+	/** Stop the consolidation timer */
+	stopConsolidation(): void {
+		if (this.consolidationTimer) {
+			clearInterval(this.consolidationTimer);
+			this.consolidationTimer = null;
+		}
+	}
+
+	/**
+	 * Run a full consolidation cycle on demand.
+	 *
+	 * Pipeline:
+	 * 1. Extract facts from unconsolidated episodes (hippocampal replay)
+	 * 2. Check extracted facts against existing facts (reconsolidation)
+	 * 3. Upsert new/updated facts into semantic memory
+	 * 4. Mark processed episodes as consolidated
+	 * 5. Run adapter-level decay + association cleanup
+	 */
+	async consolidateNow(force = false): Promise<ConsolidationResult> {
+		if (this._isConsolidating) {
+			return {
+				episodesProcessed: 0,
+				factsCreated: 0,
+				factsUpdated: 0,
+				memoriesPruned: 0,
+				associationsUpdated: 0,
+			};
+		}
+		this._isConsolidating = true;
+
+		try {
+			const now = Date.now();
+			let factsCreated = 0;
+			let factsUpdated = 0;
+
+			// 1. Get unconsolidated episodes
+			// LocalAdapter returns insertion order (oldest-first); slice preserves that order.
+			const unconsolidated = await this.adapter.episode.getUnconsolidated();
+			const readyEpisodes = unconsolidated
+				.filter((ep) => force || now - ep.timestamp > 5 * 60 * 1000) // 5 min age gate (skip if forced)
+				.slice(0, MAX_EPISODES_PER_CYCLE); // Cap batch size — oldest first
+
+			if (readyEpisodes.length > 0) {
+				// 2. Extract facts from episodes
+				const extractedRaw = await this.factExtractor(readyEpisodes);
+				// negative-capture (hermes-derived): drop transient/env-dependent "facts" that would
+				// harden into durable self-imposed constraints (e.g. "tool X is broken"). Deterministic
+				// backstop to the LLM extractor's prompt-level policy (negative-capture.ts). Single
+				// chokepoint here covers both the heuristic and the LLM extractor.
+				const { kept: extracted, dropped: negDropped } =
+					filterNegativeCapture(extractedRaw);
+				if (negDropped.length > 0 && process.env.NAIA_FILTER_DEBUG === "1") {
+					console.error(
+						`[NEG_CAPTURE] dropped ${negDropped.length} fact(s): ${negDropped.map((d) => d.reason).join(", ")}`,
+					);
+				}
+
+				// Dedup entity-pair associations across the entire cycle (not just per-fact)
+				const seenPairs = new Set<string>();
+
+				// 3. For each extracted fact, check contradictions and upsert
+				for (const ef of extracted) {
+					const sourceEpisodes = ef.sourceEpisodeIds.map((id) =>
+						readyEpisodes.find((episode) => episode.id === id),
+					);
+					const srcEp =
+						sourceEpisodes.find((episode) => episode?.role === "user") ??
+						sourceEpisodes[0];
+					const trustedUserMutation = hasTrustedUserMutationSources(
+						ef.sourceEpisodeIds,
+						readyEpisodes,
+					);
+					const efProject = srcEp?.encodingContext?.project;
+					// Search for semantically similar facts instead of getAll() — O(topK) not O(N).
+					// R2.5 (#20): deepRecall=true so the isRelevant threshold
+					// (`vs>=0.12 || bs>0 || eb>=0.2`) does NOT prune candidates here. For
+					// contradiction detection we want broad recall — even loosely related
+					// facts must reach the LLM filter so it can decide.
+					const existingFacts = ef.structured
+						? (await this.adapter.semantic.getAll()).filter(
+								// Supersession mutates the predecessor.  Unlike soft recall, it
+								// must never let an unscoped write update a project-scoped fact.
+								(fact) => fact.encodingContext?.project === efProject,
+							)
+						: await this.adapter.semantic.search(
+								ef.content,
+								10,
+								true,
+								efProject ? { project: efProject } : undefined,
+							);
+					if (process.env.NAIA_FILTER_DEBUG === "1") {
+						const totalFacts =
+							(this.adapter as any).getStore?.()?.facts?.length ?? "?";
+						console.error(
+							`[FILTER_DEBUG] search("${ef.content.slice(0, 40)}", topK=10, deepRecall=true, proj=${efProject ?? "—"}) → ${existingFacts.length} hits | store total facts: ${totalFacts}`,
+						);
+					}
+
+					if (ef.operation === "delete") {
+						if (!hasGroundedDeleteAuthority(ef, srcEp)) {
+							recordDeleteOutcome("denied");
+							continue;
+						}
+						if (!srcEp) continue;
+						if (!this.deleteVerifier) {
+							recordDeleteOutcome("verifier_failed");
+							if (!this.warnedMissingDeleteVerifier) {
+								console.warn(
+									"[naia-memory] grounded delete ignored because no delete verifier is configured",
+								);
+								this.warnedMissingDeleteVerifier = true;
+							}
+							continue;
+						}
+						const resolution = await resolveDeleteTarget({
+							episode: srcEp,
+							fact: ef,
+							existingFacts,
+							verifier: this.deleteVerifier,
+						});
+						if (resolution.status === "oversized") {
+							recordDeleteOutcome("oversized");
+							if (!this.warnedOversizedDelete) {
+								console.warn(
+									"[naia-memory] grounded delete ignored because candidate limit was exceeded",
+								);
+								this.warnedOversizedDelete = true;
+							}
+							continue;
+						}
+						if (resolution.status === "verifier_failed") {
+							recordDeleteOutcome("verifier_failed");
+							if (!this.warnedDeleteVerifierFailure) {
+								console.warn(
+									"[naia-memory] delete verifier failed; deletion denied",
+								);
+								this.warnedDeleteVerifierFailure = true;
+							}
+							continue;
+						}
+						if (resolution.status !== "authorized") {
+							recordDeleteOutcome("denied");
+							continue;
+						}
+						recordDeleteOutcome("authorized");
+						const archivedTargets: Fact[] = resolution.targets.map(
+							(target) => ({
+								...target,
+								status: "archived",
+								updatedAt: now,
+								validTo: now,
+							}),
+						);
+						if (this.adapter.semantic.upsertMany)
+							await this.adapter.semantic.upsertMany(archivedTargets);
+						else {
+							for (const target of archivedTargets)
+								await this.adapter.semantic.upsert(target);
+						}
+						factsUpdated += archivedTargets.length;
+						continue;
+					}
+
+					// Check for exact/near identity to prevent semantic redundancy (#4)
+					const duplicate = findDuplicateFact(ef, existingFacts);
+
+					const mutationPolicy = resolveStructuredMutationPolicy({
+						trustedUserMutation,
+						structured: ef.structured,
+						existingFacts,
+						contradictionFilter: this.contradictionFilter,
+					});
+
+					if (duplicate) {
+						if (!mutationPolicy.trustedUserMutation) {
+							if (ef.structured)
+								recordMutationOutcome("structured_conflict_denied");
+							continue;
+						}
+						if (ef.structured) {
+							const reconciled = await reconcileStructuredDuplicate({
+								adapter: this.adapter,
+								contradictionFilter: this.contradictionFilter,
+								existingFacts,
+								duplicate,
+								structured: ef.structured,
+								content: ef.content,
+								now,
+							});
+							factsUpdated += reconciled;
+							recordMutationOutcome(
+								reconciled > 0
+									? "structured_duplicate_reconciled"
+									: "structured_duplicate_noop",
+							);
+						}
+						// Near-duplicate found — update metadata but don't create new entry
+						const newImportance = Math.max(
+							duplicate.importance,
+							ef.importance,
+							0.7,
+						);
+						const newMaxEmotion = Math.max(
+							duplicate.maxEmotion ?? 0,
+							ef.maxEmotion ?? 0,
+						);
+						await this.adapter.semantic.upsert({
+							...duplicate,
+							updatedAt: now,
+							lastAccessed: now, // Strengthening on reactivation
+							importance: newImportance,
+							maxEmotion: newMaxEmotion,
+							strength: newImportance,
+							sourceEpisodes: [
+								...new Set([
+									...duplicate.sourceEpisodes,
+									...ef.sourceEpisodeIds,
+								]),
+							],
+						});
+						factsUpdated++;
+						continue;
+					}
+
+					const structured = ef.structured;
+					if (mutationPolicy.blockedUntrustedConflict) {
+						if (structured) recordMutationOutcome("structured_conflict_denied");
+						continue;
+					}
+					const contradictions = await resolveFactContradictions({
+						extracted: ef,
+						existingFacts,
+						trustedUserMutation: mutationPolicy.trustedUserMutation,
+						supersessions: mutationPolicy.supersessions,
+						fallbackFacts: mutationPolicy.fallbackFacts,
+						contradictionFilter: this.contradictionFilter,
+						contextualEvidence: sourceEpisodes
+							.filter(
+								(episode): episode is NonNullable<typeof episode> => !!episode,
+							)
+							.map((episode) => episode.content)
+							.join("\n"),
+					});
+
+					if (contradictions.length > 0) {
+						// Update ALL contradicted facts to prevent stale contradictory data
+						// (Partial resolution bug #4 fixed).
+						// R2.5 v2: chain + bi-temporal validity (보존 우선).
+						const updates = contradictions.filter(
+							(entry) =>
+								entry.result.action === "update" &&
+								Boolean(entry.result.updatedContent),
+						);
+						const anchor = updates[0]?.fact;
+						if (anchor) {
+							const predecessorIds = updates.map(({ fact }) => fact.id);
+							const successorId = `${anchor.id}-v${Date.now()}`;
+							const predecessorUpdates: Fact[] = updates.map(({ fact }) => ({
+								...fact,
+								status: "superseded",
+								updatedAt: now,
+								validTo: now,
+								successorId,
+							}));
+							const newImportance = Math.max(
+								ef.importance,
+								0.7,
+								...updates.map(({ fact }) => fact.importance),
+							);
+							const newMaxEmotion = Math.max(
+								ef.maxEmotion ?? 0,
+								...updates.map(({ fact }) => fact.maxEmotion ?? 0),
+							);
+							const successor: Fact = {
+								...anchor,
+								id: successorId,
+								content: ef.content,
+								status: "active",
+								createdAt: now,
+								updatedAt: now,
+								lastAccessed: now,
+								importance: newImportance,
+								maxEmotion: newMaxEmotion,
+								strength: newImportance,
+								sourceEpisodes: [
+									...new Set([
+										...updates.flatMap(({ fact }) => fact.sourceEpisodes),
+										...ef.sourceEpisodeIds,
+									]),
+								],
+								entities: ef.entities,
+								topics: ef.topics,
+								structured: ef.structured ?? anchor.structured,
+								encodingContext:
+									anchor.encodingContext ?? srcEp?.encodingContext,
+								supersedes: anchor.id,
+								validFrom: now,
+								validTo: null,
+							};
+							const lifecycleUpdates = [...predecessorUpdates, successor];
+							if (this.adapter.semantic.upsertMany)
+								await this.adapter.semantic.upsertMany(lifecycleUpdates);
+							else {
+								for (const update of lifecycleUpdates)
+									await this.adapter.semantic.upsert(update);
+							}
+							if (structured)
+								for (const _update of predecessorUpdates)
+									recordMutationOutcome("structured_supersession_applied");
+							factsUpdated += predecessorUpdates.length;
+							// R4 #26 Step 3a — supersede 시점 spike emit
+							// (consolidate path).
+							await this.emitSpike({
+								factId: successorId,
+								content: ef.content,
+								reason: "contradiction",
+								confidence: 0.9,
+								relatedFactIds: predecessorIds,
+								emittedAt: now,
+								scope: anchor.encodingContext?.project
+									? { project: anchor.encodingContext.project }
+									: undefined,
+							});
+						}
+					} else {
+						if (structured && !mutationPolicy.trustedUserMutation) continue;
+						// New fact — create with deterministic UUID for idempotency
+						// Prevents duplicates if consolidation is interrupted and re-run.
+						// Format: 32 SHA-256 hex chars arranged as UUID (8-4-4-4-12) — accepted by both
+						// LocalAdapter (string key) and QdrantAdapter (requires UUID format).
+						const newFact = buildNewFact({
+							extracted: ef,
+							now,
+							encodingContext: srcEp?.encodingContext,
+						});
+						const deterministicId = newFact.id;
+						const newImportance = newFact.importance;
+						await this.adapter.semantic.upsert(newFact);
+						if (structured) recordMutationOutcome("structured_fact_created");
+						factsCreated++;
+						// R4 #26 Step 3b — high-importance + active context relevant
+						// 시점 spike emit. naia-agent 가 active context push 했고,
+						// 새 fact 가 active topic 또는 entity 매칭 + importance ≥ 0.8.
+						if (
+							this.activeContext &&
+							newImportance >= 0.8 &&
+							this.matchesActiveContext(newFact)
+						) {
+							await this.emitSpike({
+								factId: deterministicId,
+								content: ef.content,
+								reason: "high-importance-relevant",
+								confidence: newImportance,
+								relatedFactIds: [],
+								emittedAt: now,
+								scope: srcEp?.encodingContext?.project
+									? { project: srcEp.encodingContext.project }
+									: undefined,
+							});
+						}
+						// R4 Step 3c — recall-failure-resolved 검사.
+						await this.checkRecallFailureResolved(newFact, now);
+						// R4 Step 3d — repeated-fail 검사 (자동 emit).
+						await this.checkRepeatedFailResolved(newFact, now);
+					}
+
+					// Strengthen associations between extracted entities (cycle-level dedup)
+					for (let i = 0; i < ef.entities.length; i++) {
+						for (let j = i + 1; j < ef.entities.length; j++) {
+							const a = ef.entities[i].toLowerCase();
+							const b = ef.entities[j].toLowerCase();
+							const pairKey = a < b ? `${a}|${b}` : `${b}|${a}`;
+							if (seenPairs.has(pairKey)) continue;
+							seenPairs.add(pairKey);
+							await this.adapter.semantic.associate(a, b, 0.05);
+						}
+					}
+				}
+
+				// 4. Mark episodes as consolidated
+				await this.adapter.episode.markConsolidated(
+					readyEpisodes.map((ep) => ep.id),
+				);
+			}
+
+			// 5. Run adapter-level decay + cleanup
+			const adapterResult = await this.adapter.consolidate();
+
+			// 6. R4 #220 Step 3 — Semantic Consolidation (Insight Distillation)
+			//    Distill clusters of facts into high-level insights.
+			const insightsCreated = await distillInsights(this.adapter, now);
+
+			// R4 Step 5a/5c — Background-brain 시간 스파이크(시간 anchor + 기념일).
+			//    detectTemporalAnchors/detectEmotionAnniversaries 는 구현돼 있었으나
+			//    consolidate 사이클에 한 번도 연결되지 않아 spike 가 안 났음 → 배선.
+			await this.detectTemporalAnchors(now);
+			await this.detectEmotionAnniversaries(now);
+
+			// 7. R4 #26 Step 4 — Replay-worthy fact strength boost.
+			//    학계 정합 (anchor §7): Sharp-wave ripples + CLS — 자다가
+			//    *recent + important + recently-recalled* fact 의 strength
+			//    를 강화 (replay). decay 의 반대 동작.
+			//
+			// 기준:
+			//  - createdAt < 14일 이내 (recent)
+			//  - importance >= 0.7 (high)
+			//  - 또는 lastAccessed < 7일 이내 (recent recall)
+			//  - active context topic 매칭 시 추가 boost
+			const sevenDays = 7 * 24 * 60 * 60 * 1000;
+			const fourteenDays = 14 * 24 * 60 * 60 * 1000;
+			let replayBoosted = 0;
+			try {
+				const allFacts = await this.adapter.semantic.getAll();
+				for (const fact of allFacts) {
+					if (fact.status !== "active") continue;
+					const isRecent = now - fact.createdAt < fourteenDays;
+					const isImportant = fact.importance >= 0.7;
+					const recentRecall = now - fact.lastAccessed < sevenDays;
+					if (!(isRecent && isImportant) && !recentRecall) continue;
+					// boost = +5% strength, capped 1.0
+					const boost = this.matchesActiveContextFact(fact) ? 0.1 : 0.05;
+					fact.strength = Math.min(1.0, fact.strength + boost);
+					await this.adapter.semantic.upsert(fact);
+					replayBoosted++;
+				}
+			} catch (e: any) {
+				console.warn(`[MemorySystem] replay boost failed: ${e?.message}`);
+			}
+			// 측정 framework — replay 갯수 기록.
+			try {
+				const { recordReplayBoost } = await import("./usage-tracker.js");
+				recordReplayBoost(replayBoosted);
+			} catch {}
+
+			return {
+				episodesProcessed: readyEpisodes.length,
+				factsCreated,
+				factsUpdated,
+				insightsCreated,
+				memoriesPruned: adapterResult.memoriesPruned,
+				associationsUpdated: adapterResult.associationsUpdated,
+				// R4 Step 4 — replay boost count (informational, not part of legacy
+				// ConsolidationResult contract; type-assert to extend).
+				...({ replayBoosted } as any),
+			};
+		} finally {
+			this._isConsolidating = false;
+		}
+	}
+}

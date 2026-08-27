@@ -1,106 +1,166 @@
 /**
- * Recall latency breakdown — attributes deep-recall time across the SQL stages
- * WITHOUT worker IPC (opens the preserved perf-bench DB directly), so we can
- * see where the ~41ms goes before optimizing. Reuses the DB left by
- * run-latency.ts (~/.naia/memory/perf-bench-latency.db).
+ * Current SQLite recall SQL breakdown against an explicitly selected benchmark DB.
+ * Mirrors SqliteAdapter.semantic.search and measures the direct-SQL latency floor.
+ *
+ * Run: BENCH_DB_PATH=/tmp/naia-memory-perf-123.db npx tsx src/benchmark/perf/breakdown.ts
  */
 import Database from "better-sqlite3";
 import * as sqliteVec from "sqlite-vec";
-import { join } from "node:path";
-import { homedir } from "node:os";
 import { existsSync } from "node:fs";
+import { normalize, tokenize } from "../../memory/ko-normalize.js";
 import { DeterministicEmbeddingProvider } from "./deterministic-embedder.js";
 
-const dbPath = join(homedir(), ".naia", "memory", "perf-bench-latency.db");
-if (!existsSync(dbPath)) {
-	console.error(`DB not found: ${dbPath} — run run-latency.ts first`);
-	process.exit(1);
-}
+const dbPath = process.env.BENCH_DB_PATH;
+if (!dbPath)
+	throw new Error(
+		"BENCH_DB_PATH is required; select the exact DB produced by run-latency.ts",
+	);
+if (!existsSync(dbPath)) throw new Error(`DB not found: ${dbPath}`);
 
 const DIMS = Number(process.env.BENCH_DIMS ?? 384);
-const TOPK = 10;
+const TOPK = Number(process.env.BENCH_TOPK ?? 10);
+const ROUNDS = Number(process.env.BENCH_ROUNDS ?? 20);
 const limit = TOPK * 10;
+const queries = [1, 42, 100, 250, 500, 777, 999, 12, 333, 654]
+	.map((n) => `topic-${n}`)
+	.concat([0, 3, 5, 7, 9].map((n) => `group-${n}`));
 
-const db = new Database(dbPath, { readonly: false });
-sqliteVec.load(db);
-db.pragma("cache_size = -64000");
+type Stage = "embed" | "fts" | "vector" | "idMap" | "finalSelect" | "total";
+type Samples = Record<Stage, number[]>;
 
-const embedder = new DeterministicEmbeddingProvider(DIMS);
-
-const queries = [1, 42, 100, 250, 500, 777, 999, 12, 333, 654].map((n) => `topic-${n}`);
-
-function med(xs: number[]): number {
-	const s = [...xs].sort((a, b) => a - b);
-	return s[Math.floor(s.length / 2)];
+function percentile(values: number[], p: number): number {
+	const sorted = [...values].sort((a, b) => a - b);
+	return (
+		sorted[
+			Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))
+		] ?? 0
+	);
 }
 
-async function main() {
-	const total = db.prepare("SELECT count(*) c FROM facts").get() as any;
-	const vecCold = db.prepare("SELECT count(*) c FROM vec_facts").get() as any;
-	console.log(`DB: facts=${total.c}, vec_facts=${vecCold.c}, dims=${DIMS}`);
+function makeSamples(): Samples {
+	return {
+		embed: [],
+		fts: [],
+		vector: [],
+		idMap: [],
+		finalSelect: [],
+		total: [],
+	};
+}
 
-	// prepared statements (deep path = full corpus tables)
-	const ftsStmt = db.prepare(
-		"SELECT rowid, bm25(facts_fts) as score FROM facts_fts WHERE facts_fts MATCH ? ORDER BY bm25(facts_fts) LIMIT ?",
-	);
-	const vecStmt = db.prepare(
-		"SELECT fact_id, distance FROM vec_facts WHERE embedding MATCH ? AND k = ?",
-	);
+const db = new Database(dbPath, { readonly: true, fileMustExist: true });
+sqliteVec.load(db);
+db.pragma("cache_size = -64000");
+const embedder = new DeterministicEmbeddingProvider(DIMS);
 
-	const acc = { embed: [] as number[], fts: [] as number[], vec: [] as number[], idmap: [] as number[], final: [] as number[], all: [] as number[] };
+async function measurePath(hot: boolean): Promise<Samples> {
+	const suffix = hot ? "_hot" : "";
+	const ftsTable = `facts_fts${suffix}`;
+	const vecTable = `vec_facts${suffix}`;
+	const fts = db.prepare(`SELECT ft.rowid, bm25(${ftsTable}) AS score
+		FROM ${ftsTable} ft
+		JOIN id_map m ON m.fid = ft.rowid
+		JOIN facts f ON f.id = m.fact_id
+		WHERE ${ftsTable} MATCH ?${hot ? " AND f.status = 'active'" : ""}
+		ORDER BY bm25(${ftsTable}) LIMIT ?`);
+	const vector = db.prepare(`SELECT v.fact_id, v.distance FROM ${vecTable} v
+		WHERE v.embedding MATCH ? AND v.k = ? ORDER BY v.distance`);
+	const samples = makeSamples();
 
-	// warmup
-	for (const q of queries) {
-		const v = await embedder.embed(q);
-		ftsStmt.all(q.replace(/[^\w\s]/g, " ").trim().split(/\s+/).map((t) => `${t}*`).join(" OR "), limit);
-		vecStmt.all(Buffer.from(new Float32Array(v).buffer), limit);
-	}
+	for (let round = -1; round < ROUNDS; round++) {
+		for (const query of queries) {
+			const t0 = performance.now();
+			const queryVec = await embedder.embed(query);
+			const t1 = performance.now();
+			const match = tokenize(normalize(query))
+				.filter(Boolean)
+				.map((token) => `"${token.replace(/"/g, '""')}"*`)
+				.join(" OR ");
+			const ftsRows = fts.all(match, limit) as Array<{ rowid: number }>;
+			const t2 = performance.now();
+			const vectorRows = vector.all(
+				Buffer.from(new Float32Array(queryVec).buffer),
+				limit,
+			) as Array<{ fact_id: string }>;
+			const t3 = performance.now();
 
-	const ROUNDS = 20;
-	for (let r = 0; r < ROUNDS; r++) {
-		for (const q of queries) {
-			const a0 = performance.now();
-			const qvec = await embedder.embed(q);
-			const a1 = performance.now();
-			const match = q.replace(/[^\w\s]/g, " ").trim().split(/\s+/).map((t) => `${t}*`).join(" OR ");
-			const ftsRows = ftsStmt.all(match, limit) as any[];
-			const a2 = performance.now();
-			const vecRows = vecStmt.all(Buffer.from(new Float32Array(qvec).buffer), limit) as any[];
-			const a3 = performance.now();
-
-			const rrfMap = new Map<string, number>();
+			const scores = new Map<string, number>();
 			if (ftsRows.length > 0) {
 				const resolved = db
-					.prepare(`SELECT rowid, fact_id FROM id_map WHERE fid IN (${ftsRows.map((r2: any) => r2.rowid).join(",")})`)
-					.all() as any[];
-				resolved.forEach((r2: any, i: number) => rrfMap.set(r2.fact_id, 1.0 / (60 + (i + 1))));
+					.prepare(
+						`SELECT rowid, fact_id FROM id_map WHERE fid IN (${ftsRows.map(() => "?").join(",")})`,
+					)
+					.all(...ftsRows.map(({ rowid }) => rowid)) as Array<{
+					rowid: number;
+					fact_id: string;
+				}>;
+				const ranks = new Map(
+					ftsRows.map((row, index) => [Number(row.rowid), index + 1]),
+				);
+				for (const row of resolved)
+					scores.set(row.fact_id, 1 / (60 + (ranks.get(row.rowid) ?? limit)));
 			}
-			const a4 = performance.now();
-			vecRows.forEach((r2: any, i: number) => rrfMap.set(r2.fact_id, (rrfMap.get(r2.fact_id) || 0) + 1.0 / (60 + (i + 1))));
-			const ids = Array.from(rrfMap.keys()).slice(0, 50);
+			const t4 = performance.now();
+			for (const [index, row] of vectorRows.entries()) {
+				scores.set(
+					row.fact_id,
+					(scores.get(row.fact_id) ?? 0) + 1 / (60 + index + 1),
+				);
+			}
+			const ids = [...scores.entries()]
+				.sort((a, b) => b[1] - a[1])
+				.slice(0, Math.max(50, TOPK))
+				.map(([id]) => id);
 			if (ids.length > 0) {
-				db.prepare(`SELECT * FROM facts WHERE id IN (${ids.map(() => "?").join(",")}) LIMIT ?`).all(...ids, TOPK * 2);
+				db.prepare(
+					`SELECT * FROM facts WHERE 1=1 AND id IN (${ids.map(() => "?").join(",")})`,
+				).all(...ids);
 			}
-			const a5 = performance.now();
-
-			acc.embed.push(a1 - a0);
-			acc.fts.push(a2 - a1);
-			acc.vec.push(a3 - a2);
-			acc.idmap.push(a4 - a3);
-			acc.final.push(a5 - a4);
-			acc.all.push(a5 - a0);
+			const t5 = performance.now();
+			if (round < 0) continue;
+			samples.embed.push(t1 - t0);
+			samples.fts.push(t2 - t1);
+			samples.vector.push(t3 - t2);
+			samples.idMap.push(t4 - t3);
+			samples.finalSelect.push(t5 - t4);
+			samples.total.push(t5 - t0);
 		}
 	}
+	return samples;
+}
 
-	console.log(`\n--- Deep recall SQL breakdown (median ms over ${ROUNDS * queries.length} calls, NO worker IPC) ---`);
-	console.log(`embed (local):     ${med(acc.embed).toFixed(3)}`);
-	console.log(`FTS query:         ${med(acc.fts).toFixed(3)}`);
-	console.log(`vec brute scan:    ${med(acc.vec).toFixed(3)}   <-- full-corpus KNN`);
-	console.log(`id_map resolve:    ${med(acc.idmap).toFixed(3)}`);
-	console.log(`final SELECT:      ${med(acc.final).toFixed(3)}`);
-	console.log(`TOTAL (SQL only):  ${med(acc.all).toFixed(3)}`);
-	console.log(`\n(vs worker-path deep p50 ~40.7ms → IPC/serialization overhead ≈ p50 - SQL total)`);
+function printPath(label: string, samples: Samples): void {
+	console.log(
+		`\n${label} direct-SQL breakdown (${samples.total.length} samples)`,
+	);
+	console.log("| stage | p50 ms | p95 ms |");
+	console.log("|---|---:|---:|");
+	for (const stage of Object.keys(samples) as Stage[]) {
+		console.log(
+			`| ${stage} | ${percentile(samples[stage], 50).toFixed(3)} | ${percentile(samples[stage], 95).toFixed(3)} |`,
+		);
+	}
+}
+
+async function main(): Promise<void> {
+	const counts = db
+		.prepare(`SELECT
+		(SELECT count(*) FROM facts) AS facts,
+		(SELECT count(*) FROM facts_fts_hot) AS hotFts,
+		(SELECT count(*) FROM vec_facts) AS vectors,
+		(SELECT count(*) FROM vec_facts_hot) AS hotVectors`)
+		.get() as Record<string, number>;
+	console.log(`DB: ${dbPath}`);
+	console.log(
+		`facts=${counts.facts}, hot_fts=${counts.hotFts}, vectors=${counts.vectors}, hot_vectors=${counts.hotVectors}, dims=${DIMS}`,
+	);
+	printPath("surface", await measurePath(true));
+	printPath("deep", await measurePath(false));
 	db.close();
 }
 
-main();
+main().catch((error) => {
+	db.close();
+	console.error(error);
+	process.exitCode = 1;
+});

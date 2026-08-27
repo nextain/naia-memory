@@ -1,0 +1,38 @@
+[
+  {
+    "id": "ATOM-EN-GATE",
+    "source_id": "SRC-USER-RESEARCH",
+    "text": "English primary full-corpus evaluation must fail closed before Qdrant access unless explicit primary-execution authorization is valid.",
+    "directive_ids": ["DIR-EN-GATE"],
+    "subject": "artifact_runtime",
+    "effect": "verification",
+    "render_policy": "deny",
+    "target_ids": ["TARGET-EVALUATOR"],
+    "criterion_ids": ["AC-FAIL-CLOSED"],
+    "evidence_ids": ["EVIDENCE-CLI-TEST"]
+  },
+  {
+    "id": "ATOM-EVIDENCE-INTEGRITY",
+    "source_id": "SRC-USER-EVIDENCE",
+    "text": "Source pins, receipts, checkpoints, and tests must support reproducible evidence without allowing stale or fabricated promotion claims.",
+    "directive_ids": ["DIR-EVIDENCE"],
+    "subject": "artifact_content",
+    "effect": "constraint",
+    "render_policy": "deny",
+    "target_ids": ["TARGET-EVIDENCE"],
+    "criterion_ids": ["AC-INTEGRITY"],
+    "evidence_ids": ["EVIDENCE-SOURCE-PIN", "EVIDENCE-AR-RESULT"]
+  },
+  {
+    "id": "ATOM-OVERFIT",
+    "source_id": "SRC-USER-COMPETITIVENESS",
+    "text": "Assess whether the benchmark is overfit to Naia's goals and constrain global competitiveness claims to what the evidence actually measures.",
+    "directive_ids": ["DIR-OVERFIT"],
+    "subject": "artifact_content",
+    "effect": "verification",
+    "render_policy": "deny",
+    "target_ids": ["TARGET-REPORT"],
+    "criterion_ids": ["AC-CLAIM-BOUNDARY"],
+    "evidence_ids": ["EVIDENCE-AR-METRICS", "EVIDENCE-COMPARATORS"]
+  }
+]

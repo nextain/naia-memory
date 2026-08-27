@@ -113,8 +113,11 @@
 | `user-scenarios.md` | V-model 사용자 시나리오(UC)와 테스트 커버리지 맵 |
 | `requirements.md` | 인증 분리·멱등성 기능/비기능 요구사항과 완료 상태 |
 | `design/sqlite-migration.md` | SQLite (sqlite-vec/FTS5/R-Tree) 하이브리드 스토리지 설계 |
+| `design/conflict-aware-structured-facts.md` | 원문 보존형 구조화 사실·충돌 체인·다국어 안전 폴백 설계 |
 | `laptop-vllm-experiment.md` | 로컬 임베딩/추론 서빙 실측 |
 | `reports/README.md` | 벤치마크 리포트 색인 (R-시리즈 + A/B 가이드) |
+| `user-scenarios.md` | 사용자 가치와 테스트 시나리오 매핑 |
+| `requirements.md` | 기능·비기능 요구사항과 완료 상태 |
 
 > 면제(고립 검사 제외) dir: `docs/progress/` (날짜별 진행 메모), `docs/reports/`
 > (R-시리즈 벤치 런 산출물), `docs/archive/` (종료된 벤치 이력).

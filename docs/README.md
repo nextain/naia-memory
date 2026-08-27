@@ -20,8 +20,14 @@
 - [요구사항](./requirements.md) — 인증 헤더 분리·Mem0 멱등성 요구사항과 검증 상태
 - [V-model 추적표](./v-model.md) — 인증·멱등성 REQ→UC→TEST-S→SPEC→TEST-F 정공·역추적
 - [SQLite 마이그레이션 설계](./design/sqlite-migration.md) — sqlite-vec/FTS5/R-Tree 하이브리드 스토리지
+- [구조화 사실 충돌 해소 설계](./design/conflict-aware-structured-facts.md) — 원문 보존형 구조화 사실·다국어 안전 폴백·검증 계약
 - [노트북 vLLM 실험](./laptop-vllm-experiment.md) — 로컬 임베딩/추론 서빙 실측
 - [벤치마크 리포트 색인](./reports/README.md) — R-시리즈 정확도/지연 벤치마크 + [A/B 테스트 가이드](./reports/ab-testing-guide.md)
+
+## 사용자·요구사항
+
+- [사용자 시나리오](./user-scenarios.md) — 벤치마크 증거와 구조화 사실 충돌 해소의 사용자 가치·테스트 매핑
+- [요구사항](./requirements.md) — 벤치마크 재현성·한국어 검색 계약·구조화 사실 충돌 해소 조건
 
 ## 작업 기록 / 벤치마크 런 / 이력 (면제 dir)
 

@@ -1,0 +1,54 @@
+{
+  "benchmark": "miracl-ko-full-corpus-naia-vector-exact-v1",
+  "claimBoundary": "full-corpus embedding retrieval only; excludes Naia lifecycle, lexical fusion, and ANN quality",
+  "inputs": {
+    "sourceLockSha256": "742952715d6e31eaf9718f04c2bad0509c9d7c754210aa81d793a14430fbb69c",
+    "topicsSha256": "a365552cfc997a8915e948a3b5994883f641e7c3f12b6af87bbfaf89729e32a8",
+    "qrelsSha256": "88827ccc5b64e531b25f70eef30202d33daa9bfa3ac8cceadf5cdbd5ca5034df",
+    "corpusDocidsSha256": "6024e30f6c7aed244a5451a9552163a86f74b4254775022f4d4829fcaa87e879",
+    "documentCount": 1486752,
+    "queryCount": 213
+  },
+  "configuration": {
+    "passageComposition": "title + \"\\n\" + text",
+    "embedding": {
+      "model": "Xenova/multilingual-e5-large",
+      "revision": "00fc3aeb3dbb95842de2ac1961d33c6319acf57b",
+      "dtype": "q8",
+      "dimensions": 1024,
+      "queryPrefix": "query: ",
+      "passagePrefix": "passage: ",
+      "pooling": "mean",
+      "normalize": true,
+      "tokenizerMaxLength": 512,
+      "truncation": true,
+      "titleConcatenation": "provider-receives-precomposed-text"
+    },
+    "vectorStore": "Qdrant",
+    "distance": "Cosine",
+    "exactSearch": true,
+    "topK": 100,
+    "cpuOnly": true,
+    "collectionName": "naia_miracl_ko_74295271_777d3b92"
+  },
+  "metrics": {
+    "successAt1": 0.596244131455399,
+    "successAt5": 0.8685446009389671,
+    "successAt10": 0.92018779342723,
+    "recallAt10": 0.7474821995948756,
+    "ndcgAt10": 0.6526027330050439,
+    "mrr": 0.7227903212625504,
+    "recallAt100": 0.9232560345236401
+  },
+  "latencyMilliseconds": {
+    "mean": 202.10370399057865,
+    "max": 1040.7565810084343
+  },
+  "ingestion": {
+    "seconds": 70518.220045808,
+    "embeddedDocuments": 1486752,
+    "cachedDocuments": 0,
+    "lastChunkReceiptSha256": "ab4f1268d49c640542a222becaca2f012d8ea08ae39b83947e9ef6712dbfef43"
+  },
+  "trecSha256": "acb64f58874012d4494ca6f974bc977011dd687af9aeae83f5bb1418f1474604"
+}

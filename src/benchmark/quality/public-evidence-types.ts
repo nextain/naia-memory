@@ -1,0 +1,260 @@
+import { createPublicKey } from "node:crypto";
+
+export type PublicEvidenceEngine = {
+	engine: string;
+	kind: "naia" | "external";
+	implementationFamily: string;
+	executed: boolean;
+	receiptPath: string;
+	receiptSha256: string;
+	challengePath: string;
+	challengeSha256: string;
+	attestationPath: string;
+	attestationSha256: string;
+	executionEvidencePath: string;
+	executionEvidenceSha256: string;
+	datasetSha256: string;
+	implementationRevision: string;
+	implementationArtifactPath: string;
+	implementationArtifactSha256: string;
+	configurationPath: string;
+	configurationSha256: string;
+	providerModels: string[];
+	elapsedMs: number;
+	estimatedCostUsd: number;
+	failureCount: number;
+	primaryMetric: {
+		name: string;
+		value: number;
+		ci95Low: number;
+		ci95High: number;
+	};
+	languagePrimaryMetrics: Record<
+		string,
+		{ value: number; ci95Low: number; ci95High: number }
+	>;
+};
+
+export type PublicEvidenceManifest = {
+	schemaVersion: "naia-memory-public-evidence-v9";
+	publisher: string;
+	signatureBase64: string;
+	claim: string;
+	dataset: {
+		path: string;
+		benchmarkTier: string;
+		construction: string;
+		nativeReviewStatus: string;
+		sealedBeforeRun: boolean;
+		sha256: string;
+		provenancePath: string;
+		provenanceSha256: string;
+		caseCount: number;
+		languageCaseCounts: Record<string, number>;
+		authorIds: string[];
+		custodianId: string;
+		reviewerIdsByLanguage: Record<string, string[]>;
+	};
+	protocol: {
+		sameInputSha256: string;
+		topK: number;
+		repetitions: number;
+		primaryMetricName: string;
+		scoringPolicyId: string;
+		scorerArtifactPath: string;
+		scorerArtifactSha256: string;
+		frozenBeforeRun: boolean;
+	};
+	engines: PublicEvidenceEngine[];
+	adversarialReview: {
+		independent: boolean;
+		reviewer: string;
+		evidenceScopeSha256: string;
+		artifactPath: string;
+		artifactSha256: string;
+		verdict: string;
+	};
+};
+
+export type PublicEvidenceDecision = {
+	promotable: boolean;
+	failures: string[];
+};
+
+/** Trusted keys are supplied by the publisher/verifier, never by submitted evidence. */
+export type PublicEvidenceTrustPolicy = {
+	publisherPublicKeys: Record<string, string>;
+	enginePublicKeys: Record<string, string>;
+	reviewerPublicKeys: Record<string, string>;
+	datasetAuthorPublicKeys: Record<string, string>;
+	datasetCustodianPublicKeys: Record<string, string>;
+	nativeReviewerPublicKeysByLanguage: Record<string, Record<string, string>>;
+	challengeIssuerPublicKeys: Record<string, string>;
+	runnerPublicKeys: Record<string, string>;
+	/** Organizational/control boundary asserted by the verifier, not submitted evidence. */
+	benchmarkOperatorTrustDomain: string;
+	datasetCustodianTrustDomains: Record<string, string>;
+	runnerTrustDomains: Record<string, string>;
+	approvedScoringPolicies: Record<string, string>;
+};
+
+const CANONICAL_TRUST_DOMAIN = /^[a-z0-9](?:[a-z0-9._:/-]{0,126}[a-z0-9])?$/u;
+
+/** Stable policy identifier; deliberately excludes case and Unicode aliases. */
+export function isCanonicalTrustDomain(value: string): boolean {
+	return CANONICAL_TRUST_DOMAIN.test(value);
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+	return (
+		isPublicEvidenceRecord(value) &&
+		Object.values(value).every((item) => typeof item === "string")
+	);
+}
+
+function isEd25519PublicKey(value: unknown): value is string {
+	if (typeof value !== "string") return false;
+	try {
+		return createPublicKey(value).asymmetricKeyType === "ed25519";
+	} catch {
+		return false;
+	}
+}
+
+function isPublicKeyRecord(value: unknown): value is Record<string, string> {
+	return (
+		isPublicEvidenceRecord(value) &&
+		Object.values(value).every(isEd25519PublicKey)
+	);
+}
+
+export function isPublicEvidenceTrustPolicy(
+	value: unknown,
+): value is PublicEvidenceTrustPolicy {
+	if (!isPublicEvidenceRecord(value)) return false;
+	const nativeReviewers = value.nativeReviewerPublicKeysByLanguage;
+	return (
+		isPublicKeyRecord(value.publisherPublicKeys) &&
+		isPublicKeyRecord(value.enginePublicKeys) &&
+		isPublicKeyRecord(value.reviewerPublicKeys) &&
+		isPublicKeyRecord(value.datasetAuthorPublicKeys) &&
+		isPublicKeyRecord(value.datasetCustodianPublicKeys) &&
+		isPublicEvidenceRecord(nativeReviewers) &&
+		Object.values(nativeReviewers).every(isPublicKeyRecord) &&
+		isPublicKeyRecord(value.challengeIssuerPublicKeys) &&
+		isPublicKeyRecord(value.runnerPublicKeys) &&
+		typeof value.benchmarkOperatorTrustDomain === "string" &&
+		isCanonicalTrustDomain(value.benchmarkOperatorTrustDomain) &&
+		isStringRecord(value.datasetCustodianTrustDomains) &&
+		Object.values(value.datasetCustodianTrustDomains).every(
+			isCanonicalTrustDomain,
+		) &&
+		isStringRecord(value.runnerTrustDomains) &&
+		Object.values(value.runnerTrustDomains).every(isCanonicalTrustDomain) &&
+		isStringRecord(value.approvedScoringPolicies)
+	);
+}
+
+export type PublicDatasetAuthorAttestation = {
+	schemaVersion: "naia-memory-public-dataset-author-attestation-v1";
+	author: string;
+	datasetSha256: string;
+	statement: "AUTHORED_INDEPENDENTLY";
+	signatureBase64: string;
+};
+
+export type PublicDatasetNativeReviewAttestation = {
+	schemaVersion: "naia-memory-public-dataset-native-review-v1";
+	reviewer: string;
+	language: string;
+	datasetSha256: string;
+	verdict: "PASS";
+	signatureBase64: string;
+};
+
+export type PublicDatasetProvenance = {
+	schemaVersion: "naia-memory-public-dataset-provenance-v2";
+	datasetSha256: string;
+	authors: PublicDatasetAuthorAttestation[];
+	nativeReviews: PublicDatasetNativeReviewAttestation[];
+	custody: PublicDatasetCustodyAttestation;
+};
+
+export type PublicDatasetCustodyAttestation = {
+	schemaVersion: "naia-memory-public-dataset-custody-v1";
+	custodian: string;
+	datasetSha256: string;
+	sealedAt: string;
+	statement: "NO_BENCHMARK_OPERATOR_ACCESS_BEFORE_DISCLOSURE";
+	disclosures: Array<{
+		engine: string;
+		runner: string;
+		disclosedAt: string;
+	}>;
+	signatureBase64: string;
+};
+
+export const PUBLIC_EVIDENCE_SHA256 = /^[a-f0-9]{64}$/;
+
+export function isPublicEvidenceRecord(
+	value: unknown,
+): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export type PublicEvidenceReceipt = Omit<
+	PublicEvidenceEngine,
+	| "executed"
+	| "receiptPath"
+	| "receiptSha256"
+	| "challengePath"
+	| "challengeSha256"
+	| "attestationPath"
+	| "attestationSha256"
+	| "executionEvidencePath"
+	| "executionEvidenceSha256"
+> & {
+	schemaVersion: "naia-memory-public-engine-receipt-v4";
+	protocol: PublicEvidenceManifest["protocol"];
+	caseRecords: PublicCaseRecord[];
+	signatureBase64: string;
+};
+
+export type PublicDatasetCase = {
+	id: string;
+	language: string;
+	memories: Array<{
+		id: string;
+		content: string;
+		date?: string;
+	}>;
+	input: string;
+	expected: string[];
+	forbidden?: string[];
+	inputSha256: string;
+};
+
+export type PublicEvidenceDataset = {
+	schemaVersion: "naia-memory-public-dataset-v3";
+	cases: PublicDatasetCase[];
+};
+
+export type PublicCaseRecord = {
+	caseId: string;
+	inputSha256: string;
+	repetition: number;
+	output: string;
+	outputSha256: string;
+	score: number;
+	failed: boolean;
+	judgment: string;
+	judgmentSha256: string;
+};
+
+export type PublicAdversarialReview = {
+	schemaVersion: "naia-memory-public-adversarial-review-v2";
+	reviewer: string;
+	evidenceScopeSha256: string;
+	verdict: string;
+	signatureBase64: string;
+};

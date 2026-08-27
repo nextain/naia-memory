@@ -1,82 +1,131 @@
 {
-  "name": "@nextain/naia-memory",
-  "version": "0.1.4",
-  "description": "Naia Memory System — cognitive memory for Naia, the Visual Agent",
-  "type": "module",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nextain/naia-memory.git"
-  },
-  "keywords": [
-    "memory",
-    "ai",
-    "naia",
-    "vector-search",
-    "knowledge-graph",
-    "llm-memory"
-  ],
-  "exports": {
-    ".": {
-      "import": "./dist/memory/index.js",
-      "types": "./dist/memory/index.d.ts"
-    }
-  },
-  "types": "./dist/memory/index.d.ts",
-  "files": [
-    "dist/memory/",
-    "dist/utils/",
-    "src/memory/",
-    "src/utils/",
-    "README.md",
-    "README.en.md",
-    "LICENSE"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
-    "test": "vitest run",
-    "test:sqlite": "node scripts/test-sqlite.mjs",
-    "benchmark": "tsx src/benchmark/comparison/run-comparison.ts",
-    "check": "biome check --write ."
-  },
-  "peerDependencies": {
-    "@huggingface/transformers": "^3.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@huggingface/transformers": {
-      "optional": true
-    }
-  },
-  "dependencies": {
-    "@langchain/community": "^1.1.27",
-    "@langchain/core": "^1.1.42",
-    "@qdrant/js-client-rest": "^1.8.0",
-    "better-sqlite3": "^12.10.0",
-    "express": "^5.2.1",
-    "sqlite-vec": "^0.1.9"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.0",
-    "@types/better-sqlite3": "^7.6.13",
-    "@types/express": "^5.0.6",
-    "@types/node": "^22.0.0",
-    "@vitest/coverage-v8": "^4.1.5",
-    "mem0ai": "^2.4.2",
-    "tsx": "^4.19.0",
-    "typescript": "^5.6.0",
-    "vectra": "^0.2.2",
-    "vitest": "^4.0.18"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "better-sqlite3"
-    ]
-  }
+	"name": "@nextain/naia-memory",
+	"version": "0.1.4",
+	"description": "Naia Memory System — cognitive memory for Naia, the Visual Agent",
+	"type": "module",
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/nextain/naia-memory.git"
+	},
+	"keywords": [
+		"memory",
+		"ai",
+		"naia",
+		"vector-search",
+		"knowledge-graph",
+		"llm-memory"
+	],
+	"exports": {
+		".": {
+			"import": "./dist/memory/index.js",
+			"types": "./dist/memory/index.d.ts"
+		}
+	},
+	"types": "./dist/memory/index.d.ts",
+	"files": [
+		"dist/memory/",
+		"dist/utils/",
+		"src/memory/",
+		"src/utils/",
+		"README.md",
+		"README.en.md",
+		"LICENSE"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsc",
+		"typecheck": "tsc --noEmit -p tsconfig.typecheck.json && tsc --noEmit -p tsconfig.benchmark.json",
+		"test": "vitest run",
+		"test:sqlite": "node scripts/test-sqlite.mjs",
+		"benchmark": "tsx src/benchmark/comparison/run-comparison.ts",
+		"benchmark:semantic-raw": "tsx src/benchmark/quality/semantic-raw-cli.ts",
+		"benchmark:semantic-campaign": "tsx src/benchmark/quality/semantic-campaign-cli.ts",
+		"benchmark:semantic-blind-packet": "tsx src/benchmark/quality/semantic-blind-packet-cli.ts",
+		"benchmark:semantic-adjudication": "tsx src/benchmark/quality/semantic-adjudication-cli.ts",
+		"benchmark:semantic-model-adjudicator": "tsx src/benchmark/quality/semantic-model-adjudicator-cli.ts",
+		"benchmark:semantic-public-gate": "tsx src/benchmark/quality/semantic-public-gate-cli.ts",
+		"benchmark:semantic-qualification-anchor": "tsx src/benchmark/quality/semantic-competitive-qualification-trust-anchor-cli.ts",
+		"benchmark:semantic-qualification-release": "tsx src/benchmark/quality/semantic-qualification-release-cli.ts",
+		"benchmark:semantic-public-gate-manifest": "tsx src/benchmark/quality/semantic-public-gate-manifest-cli.ts",
+		"benchmark:semantic-public-gate-sealed-manifest": "tsx src/benchmark/quality/semantic-public-gate-sealed-manifest-cli.ts",
+		"benchmark:semantic-public-gate-manifest-generate": "tsx src/benchmark/quality/semantic-public-gate-manifest-generator-cli.ts",
+		"benchmark:semantic-public-gate-manifest-sign": "tsx src/benchmark/quality/semantic-public-gate-manifest-signing-cli.ts",
+		"benchmark:binary-quantization-gate": "tsx src/benchmark/quality/binary-quantization-gate-cli.ts",
+		"benchmark:hnsw-exact-gate": "tsx src/benchmark/quality/hnsw-exact-gate-cli.ts",
+		"benchmark:semantic-sample-size": "tsx src/benchmark/quality/semantic-sample-size-cli.ts",
+		"benchmark:semantic-corpus-gate": "tsx src/benchmark/quality/semantic-corpus-gate-cli.ts",
+		"benchmark:semantic-signing-packet": "tsx src/benchmark/quality/semantic-attestation-packet-cli.ts",
+		"benchmark:semantic-pilot-packet": "tsx src/benchmark/quality/semantic-pilot-collection-packet-cli.ts",
+		"benchmark:semantic-pilot-launch": "tsx src/benchmark/quality/semantic-pilot-launch-cli.ts",
+		"benchmark:semantic-pilot-timestamp": "tsx src/benchmark/quality/rfc3161-timestamp-cli.ts",
+		"benchmark:semantic-collect-signatures": "tsx src/benchmark/quality/semantic-attestation-collector-cli.ts",
+		"benchmark:public-evidence": "tsx src/benchmark/quality/public-evidence-cli.ts",
+		"benchmark:public-evidence-v10": "tsx src/benchmark/quality/public-evidence-v10-cli.ts",
+		"benchmark:custody-seal": "tsx src/benchmark/quality/public-dataset-custody-seal-cli.ts",
+		"benchmark:miracl-source": "tsx src/benchmark/quality/public-miracl-source-cli.ts",
+		"benchmark:miracl-multilingual-source-lock": "tsx src/benchmark/quality/miracl-multilingual-source-lock-cli.ts",
+		"benchmark:miracl-multilingual-download": "tsx src/benchmark/quality/miracl-multilingual-download-cli.ts",
+		"benchmark:miracl-corpus-identity": "tsx src/benchmark/quality/miracl-corpus-identity-cli.ts",
+		"benchmark:miracl-native-candidates": "tsx src/benchmark/quality/native-candidate-pool-cli.ts",
+		"benchmark:miracl-native-evaluation": "tsx src/benchmark/quality/native-evaluation-cli.ts",
+		"benchmark:miracl-full-corpus": "tsx src/benchmark/quality/native-full-corpus-evaluation-cli.ts",
+		"benchmark:miracl-full-corpus-true-batch-plan": "tsx src/benchmark/quality/native-full-corpus-candidate-launch-cli.ts",
+		"benchmark:miracl-full-corpus-true-batch-authorize": "tsx src/benchmark/quality/native-full-corpus-candidate-authorization-cli.ts",
+		"benchmark:miracl-true-batch-equivalence-observe": "tsx src/benchmark/quality/true-batch-equivalence-observation-cli.ts",
+		"benchmark:miracl-true-batch-equivalence-evidence": "tsx src/benchmark/quality/true-batch-equivalence-evidence-cli.ts",
+		"benchmark:miracl-true-batch-equivalence": "tsx src/benchmark/quality/true-batch-equivalence-runner-cli.ts",
+		"benchmark:miracl-multilingual-true-batch": "tsx src/benchmark/quality/miracl-multilingual-true-batch-runner-cli.ts",
+		"benchmark:miracl-multilingual-true-batch-authorize": "tsx src/benchmark/quality/miracl-multilingual-candidate-authorization-cli.ts",
+		"benchmark:miracl-full-corpus-launch-receipt": "tsx src/benchmark/quality/native-full-corpus-launch-receipt-cli.ts",
+		"benchmark:miracl-qdrant-service-binding": "tsx src/benchmark/quality/qdrant-service-binding-cli.ts",
+		"benchmark:miracl-qdrant-launch-plan": "tsx src/benchmark/quality/qdrant-service-launch-plan-cli.ts",
+		"benchmark:miracl-full-corpus-runtime-monitor": "tsx src/benchmark/quality/native-full-corpus-runtime-monitor-cli.ts",
+		"benchmark:miracl-full-corpus-evidence": "tsx src/benchmark/quality/native-full-corpus-evidence-cli.ts",
+		"benchmark:miracl-multilingual-completion-evidence": "env -u NODE_OPTIONS -u NODE_PATH -u TSX_TSCONFIG_PATH node --require \"$PWD/node_modules/tsx/dist/preflight.cjs\" --import \"$PWD/node_modules/tsx/dist/loader.mjs\" src/benchmark/quality/miracl-multilingual-completion-evidence-cli.ts",
+		"benchmark:miracl-global-comparison": "tsx src/benchmark/quality/miracl-global-comparison-cli.ts",
+		"benchmark:miracl-language-comparison": "tsx src/benchmark/quality/miracl-language-comparison-cli.ts",
+		"benchmark:miracl-multilingual-transfer-gate": "tsx src/benchmark/quality/miracl-multilingual-transfer-gate-cli.ts",
+		"benchmark:miracl-full-corpus-attestation": "tsx src/benchmark/quality/native-full-corpus-attestation-cli.ts",
+		"benchmark:miracl-ranking-ab": "tsx src/benchmark/quality/ranking-ab-analysis-cli.ts",
+		"benchmark:graphiti-smoke": "tsx src/benchmark/quality/graphiti-backend-smoke-cli.ts",
+		"benchmark:query-identity-evidence": "tsx src/benchmark/quality/query-identity-evidence-cli.ts",
+		"check": "biome check --write ."
+	},
+	"peerDependencies": {
+		"@huggingface/transformers": "^3.0.0"
+	},
+	"peerDependenciesMeta": {
+		"@huggingface/transformers": {
+			"optional": true
+		}
+	},
+	"dependencies": {
+		"@langchain/community": "^1.1.27",
+		"@langchain/core": "^1.1.42",
+		"@qdrant/js-client-rest": "^1.8.0",
+		"better-sqlite3": "^12.10.0",
+		"express": "^5.2.1",
+		"sqlite-vec": "^0.1.9"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.0",
+		"@types/better-sqlite3": "^7.6.13",
+		"@types/express": "^5.0.6",
+		"@types/node": "^22.0.0",
+		"@vitest/coverage-v8": "^4.1.5",
+		"mem0ai": "^2.4.2",
+		"tsx": "^4.19.0",
+		"typescript": "^5.6.0",
+		"vectra": "^0.2.2",
+		"vitest": "^4.0.18"
+	},
+	"engines": {
+		"node": ">=20"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": ["better-sqlite3"]
+	}
 }

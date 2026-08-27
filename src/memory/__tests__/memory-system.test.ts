@@ -12,6 +12,7 @@ import type {
 	FactExtractor,
 	MemoryInput,
 	RecallContext,
+	StructuredFact,
 } from "../index.js";
 
 /**
@@ -29,7 +30,6 @@ let rootDir: string;
 beforeEach(async () => {
 	rootDir = await mkdtemp(join(tmpdir(), "memory-system-test-"));
 });
-
 afterEach(async () => {
 	await rm(rootDir, { recursive: true, force: true }).catch(() => {});
 });
@@ -42,7 +42,7 @@ function tmpAdapter(): { adapter: LocalAdapter; path: string } {
 function makeSystem(opts: {
 	factExtractor?: FactExtractor;
 	consolidationIntervalMs?: number;
-} = {}): { system: MemorySystem; path: string } {
+} = {}): { system: MemorySystem; adapter: LocalAdapter; path: string } {
 	const { adapter, path } = tmpAdapter();
 	const sysOpts: ConstructorParameters<typeof MemorySystem>[0] = {
 		adapter,
@@ -50,7 +50,7 @@ function makeSystem(opts: {
 	};
 	if (opts.factExtractor) sysOpts.factExtractor = opts.factExtractor;
 	const system = new MemorySystem(sysOpts);
-	return { system, path };
+	return { system, adapter, path };
 }
 
 const DEFAULT_CTX: EncodingContext = {};
@@ -462,51 +462,3 @@ describe("MemorySystem.consolidateNow", () => {
 });
 
 // ─── RC-04 value-replacement (D.2) through the full orchestration ─────
-
-describe("[D.2 RC-04 integration] value-replacement flows through consolidation", () => {
-	it("MR-05 encode old fact → consolidate → encode replacement → consolidate → recall returns the replacement only", async () => {
-		const ts = Date.now() - 10 * 60 * 1000;
-		// Extractor that preserves entities so RC-04's sharedEntities check fires.
-		const extractor: FactExtractor = async (eps) =>
-			eps.map((ep) => ({
-				content: ep.content,
-				entities: ["Luke"],
-				topics: ["database"],
-				importance: 0.8,
-				sourceEpisodeIds: [ep.id],
-			}));
-		const { system } = makeSystem({ factExtractor: extractor });
-
-		await system.encode(
-			input({
-				content: "Luke prefers Postgres for the project database",
-				timestamp: ts,
-			}),
-			DEFAULT_CTX,
-		);
-		const r1 = await system.consolidateNow(true);
-		expect(r1.factsCreated).toBe(1);
-
-		await system.encode(
-			input({
-				content: "Luke prefers SQLite for the project database",
-				timestamp: ts + 120_000,
-			}),
-			DEFAULT_CTX,
-		);
-		const r2 = await system.consolidateNow(true);
-
-		// Either factsUpdated=1 (RC-04 kicked reconsolidation) OR factsCreated=1
-		// new + existing untouched. Observable behaviour we care about: when we
-		// recall, SQLite wins and Postgres is gone.
-		expect(r2.episodesProcessed).toBe(1);
-
-		const { facts } = await system.recall("database", RECALL_CTX);
-		const contents = facts.map((f) => f.content.toLowerCase());
-		expect(contents.some((c) => c.includes("sqlite"))).toBe(true);
-		// Postgres fact must be superseded (either deleted or content rewritten).
-		// Strict pin: exactly one fact about the database.
-		expect(facts).toHaveLength(1);
-		await system.close();
-	});
-});

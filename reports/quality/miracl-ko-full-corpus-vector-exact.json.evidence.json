@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 3,
+  "verdict": "LOCAL_PASS",
+  "assurance": "self-observed-local",
+  "publicClaimEligible": false,
+  "publicClaimRequirement": "independent signed execution attestation from a runner outside the benchmark operator trust boundary",
+  "benchmark": "miracl-ko-full-corpus-naia-vector-exact-v1",
+  "attestationBinding": {
+    "manifests": {
+      "dataset": {
+        "benchmark": "miracl-ko-full-corpus-naia-vector-exact-v1",
+        "sourceLockSha256": "742952715d6e31eaf9718f04c2bad0509c9d7c754210aa81d793a14430fbb69c",
+        "topicsSha256": "a365552cfc997a8915e948a3b5994883f641e7c3f12b6af87bbfaf89729e32a8",
+        "qrelsSha256": "88827ccc5b64e531b25f70eef30202d33daa9bfa3ac8cceadf5cdbd5ca5034df",
+        "documentCount": 1486752,
+        "queryCount": 213,
+        "corpusDocidsSha256": "6024e30f6c7aed244a5451a9552163a86f74b4254775022f4d4829fcaa87e879",
+        "passageComposition": "title + \"\\n\" + text"
+      },
+      "protocol": {
+        "benchmark": "miracl-ko-full-corpus-naia-vector-exact-v1",
+        "exactSearch": true,
+        "topK": 100,
+        "metrics": [
+          "ndcg_cut.10",
+          "recall.100"
+        ],
+        "metricTolerance": 0.00005,
+        "independentEvaluator": {
+          "name": "usnistgov/trec_eval",
+          "version": "10.0-rc3",
+          "commit": "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c",
+          "binarySha256": "e4b251b339db6ec556dc18e6b14d45fbdcfdb5166f7fb9dce6bb2e4ca6084987"
+        }
+      },
+      "implementation": {
+        "evaluationSourceSha256": "d2bb8406d342aba307d254a8aef57b32353246ce06527a3bd4d13a4f9d2ff15b",
+        "runtimeMonitorSourceSha256": "65a79853e511cd46a4ce83779b36c34151f21c4fb071312c19a0a2558e7d93f0",
+        "qdrantVersion": "1.15.5",
+        "qdrantCommit": "48203e414e4e7f639a6d394fb6e4df695f808e51",
+        "embeddingModel": "Xenova/multilingual-e5-large",
+        "embeddingModelRevision": "00fc3aeb3dbb95842de2ac1961d33c6319acf57b"
+      },
+      "configuration": {
+        "passageComposition": "title + \"\\n\" + text",
+        "embedding": {
+          "model": "Xenova/multilingual-e5-large",
+          "revision": "00fc3aeb3dbb95842de2ac1961d33c6319acf57b",
+          "dtype": "q8",
+          "dimensions": 1024,
+          "queryPrefix": "query: ",
+          "passagePrefix": "passage: ",
+          "pooling": "mean",
+          "normalize": true,
+          "tokenizerMaxLength": 512,
+          "truncation": true,
+          "titleConcatenation": "provider-receives-precomposed-text"
+        },
+        "vectorStore": "Qdrant",
+        "distance": "Cosine",
+        "exactSearch": true,
+        "topK": 100,
+        "cpuOnly": true,
+        "collectionName": "naia_miracl_ko_74295271_777d3b92",
+        "embeddingInferenceMode": "per-item-v1",
+        "embeddingPolicySha256": "777d3b922aca50364b5de2c9c8cd49b27c10b90bd9931df60919fe92fc8b23bb",
+        "embeddingExecutionPolicySha256": "777d3b922aca50364b5de2c9c8cd49b27c10b90bd9931df60919fe92fc8b23bb",
+        "qdrant": {
+          "version": "1.15.5",
+          "commit": "48203e414e4e7f639a6d394fb6e4df695f808e51",
+          "pointsCount": 1486752,
+          "status": "green",
+          "vectorSize": 1024,
+          "distance": "Cosine",
+          "hnswM": 0,
+          "indexingThreshold": 0,
+          "membership": {
+            "documentCount": 1486752,
+            "docidsSha256": "6024e30f6c7aed244a5451a9552163a86f74b4254775022f4d4829fcaa87e879",
+            "firstPointId": 1,
+            "lastPointId": 1486752
+          }
+        }
+      },
+      "executionEvidence": {
+        "resultSha256": "8e6d651aee1efab3c0d60dce0ffcafc0b7104830ce81673fa63d01177078b4ca",
+        "trecSha256": "acb64f58874012d4494ca6f974bc977011dd687af9aeae83f5bb1418f1474604",
+        "launchReceiptSha256": "a4cab3397cd18d56666f3f1d5c07ee07aa14c0dbf453a05f29c25716e97ece21",
+        "runtimeObservationSha256": "6757ded70c64019a256f3cca0610598677a2649fe4a4fddc7f21872ca98010b4",
+        "checkpointChain": {
+          "directory": ".cache/benchmark-runs/miracl-ko-full-v1/vectors",
+          "chunkCount": 2904,
+          "documentCount": 1486752,
+          "docidsSha256": "6024e30f6c7aed244a5451a9552163a86f74b4254775022f4d4829fcaa87e879",
+          "lastChunkReceiptSha256": "ab4f1268d49c640542a222becaca2f012d8ea08ae39b83947e9ef6712dbfef43"
+        },
+        "trecEvalStdoutSha256": "b1adda4ea50d17bb151a6c8d991836e35319caddb0e4dd344265bf088adb459a",
+        "evaluationStability": {
+          "trecBeforeSha256": "acb64f58874012d4494ca6f974bc977011dd687af9aeae83f5bb1418f1474604",
+          "trecAfterSha256": "acb64f58874012d4494ca6f974bc977011dd687af9aeae83f5bb1418f1474604",
+          "qrelsBeforeSha256": "88827ccc5b64e531b25f70eef30202d33daa9bfa3ac8cceadf5cdbd5ca5034df",
+          "qrelsAfterSha256": "88827ccc5b64e531b25f70eef30202d33daa9bfa3ac8cceadf5cdbd5ca5034df",
+          "binaryBeforeSha256": "e4b251b339db6ec556dc18e6b14d45fbdcfdb5166f7fb9dce6bb2e4ca6084987",
+          "binaryAfterSha256": "e4b251b339db6ec556dc18e6b14d45fbdcfdb5166f7fb9dce6bb2e4ca6084987",
+          "sourceCommitBefore": "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c",
+          "sourceCommitAfter": "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c"
+        }
+      }
+    },
+    "hashes": {
+      "datasetSha256": "0d2f24eb43cdb7f5f5c3be4152096c2b8073dbd32ec0fe4e51c375d616b553a9",
+      "protocolSha256": "355ae43a778da7fbf2a65ebdcf5b88b89eca127a838c0cc338ef784d6b533103",
+      "implementationArtifactSha256": "8b778132d6bcead28c66f835498ac8af07616ed814e9625797e22ca3d9a9ea8f",
+      "configurationSha256": "345f3a85561fa0059feb2a1eb8fac065228ff52e41f00ba58b0aecb692676a9f",
+      "executionEvidenceSha256": "6da7ae245cb81af4190b25a1b80690db50bfa4af9ee50d219ac272c941b60b1e"
+    }
+  },
+  "artifacts": {
+    "result": {
+      "path": "reports/quality/miracl-ko-full-corpus-vector-exact.json",
+      "sha256": "8e6d651aee1efab3c0d60dce0ffcafc0b7104830ce81673fa63d01177078b4ca"
+    },
+    "trec": {
+      "path": "reports/quality/miracl-ko-full-corpus-vector-exact.json.trec",
+      "sha256": "acb64f58874012d4494ca6f974bc977011dd687af9aeae83f5bb1418f1474604"
+    },
+    "topics": {
+      "path": ".cache/benchmark-sources/miracl-ko-v1.0/miracl-v1.0-ko/topics/topics.miracl-v1.0-ko-dev.tsv",
+      "sha256": "a365552cfc997a8915e948a3b5994883f641e7c3f12b6af87bbfaf89729e32a8"
+    },
+    "qrels": {
+      "path": ".cache/benchmark-sources/miracl-ko-v1.0/miracl-v1.0-ko/qrels/qrels.miracl-v1.0-ko-dev.tsv",
+      "sha256": "88827ccc5b64e531b25f70eef30202d33daa9bfa3ac8cceadf5cdbd5ca5034df"
+    },
+    "launchReceipt": {
+      "path": "reports/quality/miracl-ko-full-corpus-launch-receipt.json",
+      "sha256": "a4cab3397cd18d56666f3f1d5c07ee07aa14c0dbf453a05f29c25716e97ece21"
+    },
+    "runtimeObservation": {
+      "path": "reports/quality/miracl-ko-full-corpus-runtime-observation.json",
+      "sha256": "6757ded70c64019a256f3cca0610598677a2649fe4a4fddc7f21872ca98010b4"
+    },
+    "checkpointChain": {
+      "directory": ".cache/benchmark-runs/miracl-ko-full-v1/vectors",
+      "chunkCount": 2904,
+      "documentCount": 1486752,
+      "docidsSha256": "6024e30f6c7aed244a5451a9552163a86f74b4254775022f4d4829fcaa87e879",
+      "lastChunkReceiptSha256": "ab4f1268d49c640542a222becaca2f012d8ea08ae39b83947e9ef6712dbfef43"
+    }
+  },
+  "independentEvaluatorTool": {
+    "name": "usnistgov/trec_eval",
+    "version": "10.0-rc3",
+    "commit": "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c",
+    "binaryPath": ".cache/tools/trec_eval-ba38899/trec_eval",
+    "binarySha256": "e4b251b339db6ec556dc18e6b14d45fbdcfdb5166f7fb9dce6bb2e4ca6084987",
+    "sourceCommit": "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c",
+    "argv": [
+      "-m",
+      "ndcg_cut.10",
+      "-m",
+      "recall.100",
+      ".cache/benchmark-sources/miracl-ko-v1.0/miracl-v1.0-ko/qrels/qrels.miracl-v1.0-ko-dev.tsv",
+      "reports/quality/miracl-ko-full-corpus-vector-exact.json.trec"
+    ],
+    "stdout": "recall_100            \tall\t0.9233\nndcg_cut_10           \tall\t0.6526\n",
+    "stdoutSha256": "b1adda4ea50d17bb151a6c8d991836e35319caddb0e4dd344265bf088adb459a",
+    "executionStability": {
+      "trecBeforeSha256": "acb64f58874012d4494ca6f974bc977011dd687af9aeae83f5bb1418f1474604",
+      "trecAfterSha256": "acb64f58874012d4494ca6f974bc977011dd687af9aeae83f5bb1418f1474604",
+      "qrelsBeforeSha256": "88827ccc5b64e531b25f70eef30202d33daa9bfa3ac8cceadf5cdbd5ca5034df",
+      "qrelsAfterSha256": "88827ccc5b64e531b25f70eef30202d33daa9bfa3ac8cceadf5cdbd5ca5034df",
+      "binaryBeforeSha256": "e4b251b339db6ec556dc18e6b14d45fbdcfdb5166f7fb9dce6bb2e4ca6084987",
+      "binaryAfterSha256": "e4b251b339db6ec556dc18e6b14d45fbdcfdb5166f7fb9dce6bb2e4ca6084987",
+      "sourceCommitBefore": "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c",
+      "sourceCommitAfter": "ba38899cbd4de0fb699b47f39b64ef1c107e4a5c"
+    }
+  },
+  "metrics": {
+    "inProcess": {
+      "successAt1": 0.596244131455399,
+      "successAt5": 0.8685446009389671,
+      "successAt10": 0.92018779342723,
+      "recallAt10": 0.7474821995948756,
+      "ndcgAt10": 0.6526027330050439,
+      "mrr": 0.7227903212625504,
+      "recallAt100": 0.9232560345236401
+    },
+    "reproducedByIndependentTool": {
+      "ndcgAt10": 0.6526,
+      "recallAt100": 0.9233
+    },
+    "deltas": {
+      "ndcgAt10": 0.0000027330050439422493,
+      "recallAt100": 0.00004396547635987513
+    },
+    "tolerance": 0.00005
+  },
+  "runtime": {
+    "cpuOnly": true,
+    "launchReceipt": {
+      "schemaVersion": 1,
+      "pid": 973083,
+      "capturedAt": "2026-08-22T05:14:28.759Z",
+      "procStartTicks": "92310266",
+      "bootId": "d50db931-45ad-40ee-82cb-218c64d83a09",
+      "cmdline": [
+        "/var/home/linuxbrew/.linuxbrew/Cellar/node/26.3.0/bin/node",
+        "--require",
+        "/var/home/luke/alpha-adk/projects/naia-memory/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/preflight.cjs",
+        "--import",
+        "file:///var/home/luke/alpha-adk/projects/naia-memory/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/loader.mjs",
+        "src/benchmark/quality/native-full-corpus-evaluation-cli.ts"
+      ],
+      "cudaVisibleDevices": "",
+      "qdrantUrl": "http://127.0.0.1:6334",
+      "outputPath": "reports/quality/miracl-ko-full-corpus-vector-exact.json",
+      "evaluationSource": "/var/home/luke/alpha-adk/projects/naia-memory/src/benchmark/quality/native-full-corpus-evaluation-cli.ts",
+      "evaluationSourceSha256": "d2bb8406d342aba307d254a8aef57b32353246ce06527a3bd4d13a4f9d2ff15b"
+    },
+    "observation": {
+      "schemaVersion": 1,
+      "monitor": {
+        "source": "/var/home/luke/alpha-adk/projects/naia-memory/src/benchmark/quality/native-full-corpus-runtime-monitor-cli.ts",
+        "sourceSha256": "65a79853e511cd46a4ce83779b36c34151f21c4fb071312c19a0a2558e7d93f0"
+      },
+      "launchReceipt": {
+        "path": "reports/quality/miracl-ko-full-corpus-launch-receipt.json",
+        "sha256": "a4cab3397cd18d56666f3f1d5c07ee07aa14c0dbf453a05f29c25716e97ece21"
+      },
+      "process": {
+        "pid": 973083,
+        "bootId": "d50db931-45ad-40ee-82cb-218c64d83a09",
+        "procStartTicks": "92310266",
+        "cmdlineSha256": "d2d111895730153c0240fabbd12f279a8d0dea7c9bd051cff1440d942097dc45"
+      },
+      "observation": {
+        "startedAt": "2026-08-22T09:14:46.739Z",
+        "completedAt": "2026-08-23T00:18:40.375Z",
+        "pollMilliseconds": 5000,
+        "samples": 10839,
+        "peakRssBytes": 1981747200
+      },
+      "result": {
+        "path": "reports/quality/miracl-ko-full-corpus-vector-exact.json",
+        "sha256": "8e6d651aee1efab3c0d60dce0ffcafc0b7104830ce81673fa63d01177078b4ca"
+      }
+    },
+    "attachmentDelayMilliseconds": 14417980,
+    "observationBoundary": "monitor-attached-after-launch; Linux VmHWM is cumulative for the observed process lifetime",
+    "qdrant": {
+      "version": "1.15.5",
+      "commit": "48203e414e4e7f639a6d394fb6e4df695f808e51",
+      "pointsCount": 1486752,
+      "status": "green",
+      "vectorSize": 1024,
+      "distance": "Cosine",
+      "hnswM": 0,
+      "indexingThreshold": 0,
+      "membership": {
+        "documentCount": 1486752,
+        "docidsSha256": "6024e30f6c7aed244a5451a9552163a86f74b4254775022f4d4829fcaa87e879",
+        "firstPointId": 1,
+        "lastPointId": 1486752
+      }
+    },
+    "collectionName": "naia_miracl_ko_74295271_777d3b92",
+    "latencySemantics": "query-embedding-plus-exact-qdrant-search"
+  }
+}

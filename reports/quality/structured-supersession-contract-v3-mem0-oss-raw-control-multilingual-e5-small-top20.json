@@ -1,0 +1,4103 @@
+{
+  "benchmark": "structured-supersession-contract-v3-mem0-oss-raw-control",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-17T01:35:31.305Z",
+    "git": {
+      "revision": "722dfc5e2af7098b01b49a3229c5477b80a4e547",
+      "dirty": true
+    },
+    "datasets": {
+      "src/benchmark/quality/structured-supersession-contract-v3.json": "d745f16913d95a56aa5b5c10ebe6aa768b88a5c0899e7635e8bce8a26c5ce4c2"
+    },
+    "implementations": {
+      "src/benchmark/quality/structured-supersession-mem0-control.ts": "893809622a791f0a6fb1d6510bca7261bb99f25c0a73cbd14253039d84047543",
+      "src/benchmark/provenance.ts": "9119dfb795218cfb4759e0f21fcfde21ac6f6f58f413f1aa542e90a713ee31cc",
+      "src/memory/embeddings.ts": "ba87ddae55eb795a8d3ee1b35b9232dcc3265b8dde7ab8734699beb185d8b909",
+      "package.json": "04b30cbab48c380caeda218591d5d29829d2fbe595d593cc64ca03ca501e515b",
+      "pnpm-lock.yaml": "ec62124952aeffb10134cf3c57b50f4de30aec27c1e930013ad316fb457b4a1c"
+    },
+    "config": {
+      "engine": "mem0ai-oss",
+      "engineVersion": "2.4.5",
+      "mode": "infer:false raw memory",
+      "model": "multilingual-e5-small",
+      "modelRepository": "Xenova/multilingual-e5-small",
+      "modelRevision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+      "device": "cpu",
+      "embeddingDtype": "q8",
+      "topK": 20
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "interpretation": "Executable retrieval control only. infer:false disables Mem0 LLM extraction/update logic; lifecycle and history are unsupported by this control and are not scored.",
+  "score": {
+    "evaluated": 108,
+    "hitAt1": 0.6944444444444444,
+    "hitAtK": 1,
+    "completeAcceptableAtK": 1,
+    "acceptableRecallAtK": 1,
+    "mrr": 0.834104938271605,
+    "forbiddenAt1": 0.25925925925925924,
+    "forbiddenAtK": 0.6666666666666666,
+    "staleForbiddenAtK": 0.6666666666666666,
+    "activeDistractorAtK": 0.3333333333333333,
+    "cases": [
+      {
+        "id": "ko-replacement-1-1",
+        "language": "ko",
+        "query": "사용자에게 지금 적용되는 거주 도시 replacement 1는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-replacement-1-1-old",
+          "ko-replacement-2-1-old",
+          "ko-replacement-1-1-new",
+          "ko-replacement-2-1-new",
+          "ko-entity-confusion-1-1-old",
+          "en-replacement-1-1-old",
+          "ko-entity-confusion-2-1-old",
+          "ko-entity-confusion-1-1-new",
+          "ja-replacement-1-1-old",
+          "ja-replacement-1-1-new",
+          "en-replacement-1-1-new",
+          "en-replacement-2-1-old",
+          "ko-entity-confusion-2-1-new",
+          "ja-replacement-2-1-old",
+          "ko-replacement-1-3-new",
+          "en-replacement-2-1-new",
+          "ja-replacement-2-1-new",
+          "ko-replacement-1-3-old",
+          "ko-replacement-1-4-new",
+          "ko-entity-confusion-1-1-other"
+        ],
+        "acceptable_rank": 3,
+        "acceptable_ranks": [
+          3
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-replacement-1-2",
+        "language": "ko",
+        "query": "고객에게 지금 적용되는 선호 편집기 replacement 1는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-replacement-1-2-old",
+          "ko-replacement-1-2-new",
+          "ko-replacement-2-2-old",
+          "ko-replacement-2-2-new",
+          "ko-entity-confusion-1-2-old",
+          "ko-entity-confusion-1-2-new",
+          "ko-entity-confusion-2-2-new",
+          "ko-entity-confusion-1-2-other",
+          "ko-entity-confusion-2-2-old",
+          "ko-entity-confusion-2-2-other",
+          "ko-replacement-1-4-new",
+          "ko-replacement-1-4-old",
+          "en-replacement-1-2-old",
+          "ja-replacement-1-2-old",
+          "ko-replacement-1-1-old",
+          "ko-replacement-2-4-new",
+          "en-replacement-1-2-new",
+          "ko-replacement-2-4-old",
+          "ja-replacement-1-2-new",
+          "ko-replacement-1-6-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-replacement-1-3",
+        "language": "ko",
+        "query": "연구원에게 지금 적용되는 근무 지역 replacement 1는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-replacement-1-3-new",
+          "ko-replacement-1-3-old",
+          "ko-replacement-2-3-new",
+          "ko-replacement-2-3-old",
+          "en-replacement-1-3-old",
+          "ko-entity-confusion-1-3-old",
+          "en-replacement-1-3-new",
+          "ko-entity-confusion-1-3-new",
+          "ja-replacement-1-3-old",
+          "ko-replacement-1-1-old",
+          "ja-replacement-1-3-new",
+          "en-replacement-2-3-old",
+          "ko-entity-confusion-2-3-new",
+          "ko-entity-confusion-2-3-old",
+          "en-replacement-2-3-new",
+          "ja-replacement-2-3-old",
+          "ko-entity-confusion-1-3-other",
+          "en-entity-confusion-1-3-old",
+          "ko-replacement-1-4-new",
+          "ko-replacement-1-1-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-replacement-1-4",
+        "language": "ko",
+        "query": "기획자에게 지금 적용되는 기본 언어 replacement 1는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-replacement-1-4-new",
+          "ko-replacement-1-4-old",
+          "ko-replacement-2-4-new",
+          "ko-replacement-2-4-old",
+          "ko-entity-confusion-1-4-new",
+          "ko-entity-confusion-1-4-old",
+          "ja-replacement-1-4-old",
+          "ja-replacement-1-4-new",
+          "ko-entity-confusion-2-4-new",
+          "ko-entity-confusion-2-4-old",
+          "en-replacement-1-4-old",
+          "ko-replacement-1-5-new",
+          "ja-replacement-2-4-old",
+          "ko-replacement-1-5-old",
+          "ja-replacement-2-4-new",
+          "en-replacement-1-4-new",
+          "ja-entity-confusion-1-4-old",
+          "ko-entity-confusion-1-4-other",
+          "en-replacement-2-4-old",
+          "ko-replacement-1-6-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-replacement-1-5",
+        "language": "ko",
+        "query": "개발자에게 지금 적용되는 회의 요일 replacement 1는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-replacement-1-5-new",
+          "ko-replacement-1-5-old",
+          "ko-replacement-2-5-new",
+          "ko-replacement-2-5-old",
+          "ko-entity-confusion-1-5-new",
+          "ko-entity-confusion-1-5-old",
+          "ko-entity-confusion-2-5-new",
+          "ko-entity-confusion-1-5-other",
+          "en-replacement-1-5-old",
+          "ko-entity-confusion-2-5-old",
+          "en-replacement-1-5-new",
+          "ko-entity-confusion-2-5-other",
+          "ko-replacement-1-4-new",
+          "ja-replacement-1-5-new",
+          "ja-replacement-1-5-old",
+          "ko-replacement-2-4-new",
+          "ko-replacement-1-4-old",
+          "en-replacement-2-5-old",
+          "ja-replacement-2-5-new",
+          "en-replacement-2-5-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-replacement-1-6",
+        "language": "ko",
+        "query": "디자이너에게 지금 적용되는 배포 채널 replacement 1는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-replacement-1-6-new",
+          "ko-replacement-1-6-old",
+          "ko-replacement-2-6-new",
+          "ko-replacement-2-6-old",
+          "ko-entity-confusion-1-6-new",
+          "ko-entity-confusion-1-6-old",
+          "ko-entity-confusion-2-6-new",
+          "ko-entity-confusion-2-6-old",
+          "ko-entity-confusion-1-6-other",
+          "en-replacement-1-6-new",
+          "ja-replacement-1-6-old",
+          "ja-replacement-1-6-new",
+          "en-replacement-1-6-old",
+          "ko-replacement-1-4-new",
+          "ko-replacement-1-4-old",
+          "ja-replacement-2-6-old",
+          "ko-entity-confusion-2-6-other",
+          "en-replacement-2-6-new",
+          "ko-replacement-1-5-new",
+          "en-replacement-1-4-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-replacement-2-1",
+        "language": "ko",
+        "query": "사용자에게 지금 적용되는 거주 도시 replacement 2는 무엇인가? 최신 변경 기준으로.",
+        "retrieved_statement_ids": [
+          "ko-replacement-2-1-old",
+          "ko-replacement-1-1-old",
+          "ko-replacement-2-1-new",
+          "ko-replacement-1-1-new",
+          "ko-entity-confusion-2-1-old",
+          "en-replacement-2-1-old",
+          "ko-entity-confusion-2-1-new",
+          "en-replacement-2-1-new",
+          "ja-replacement-2-1-old",
+          "ja-replacement-2-1-new",
+          "en-replacement-1-1-old",
+          "ko-entity-confusion-1-1-old",
+          "ko-replacement-2-3-new",
+          "ko-replacement-2-4-new",
+          "en-entity-confusion-2-1-old",
+          "ko-entity-confusion-1-1-new",
+          "ko-replacement-2-2-new",
+          "ko-replacement-2-3-old",
+          "ko-replacement-2-4-old",
+          "ko-replacement-2-5-new"
+        ],
+        "acceptable_rank": 3,
+        "acceptable_ranks": [
+          3
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-replacement-2-2",
+        "language": "ko",
+        "query": "고객에게 지금 적용되는 선호 편집기 replacement 2는 무엇인가? 최신 변경 기준으로.",
+        "retrieved_statement_ids": [
+          "ko-replacement-2-2-old",
+          "ko-replacement-2-2-new",
+          "ko-entity-confusion-2-2-new",
+          "ko-replacement-1-2-new",
+          "ko-replacement-1-2-old",
+          "ko-entity-confusion-2-2-old",
+          "ko-entity-confusion-2-2-other",
+          "ko-entity-confusion-1-2-new",
+          "ko-entity-confusion-1-2-old",
+          "ko-replacement-2-4-new",
+          "en-replacement-2-2-old",
+          "ko-replacement-2-4-old",
+          "ko-entity-confusion-1-2-other",
+          "ko-multi-value-2-a",
+          "en-replacement-2-2-new",
+          "ja-replacement-2-2-new",
+          "ja-replacement-2-2-old",
+          "ko-replacement-2-6-old",
+          "ko-replacement-2-5-new",
+          "en-replacement-2-1-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-replacement-2-3",
+        "language": "ko",
+        "query": "연구원에게 지금 적용되는 근무 지역 replacement 2는 무엇인가? 최신 변경 기준으로.",
+        "retrieved_statement_ids": [
+          "ko-replacement-2-3-new",
+          "ko-replacement-2-3-old",
+          "ko-replacement-1-3-new",
+          "ko-replacement-1-3-old",
+          "ko-entity-confusion-2-3-new",
+          "ko-entity-confusion-2-3-old",
+          "en-replacement-2-3-old",
+          "en-replacement-2-3-new",
+          "ko-entity-confusion-1-3-old",
+          "ja-replacement-2-3-old",
+          "ko-entity-confusion-1-3-new",
+          "ja-replacement-2-3-new",
+          "ko-entity-confusion-2-3-other",
+          "ko-replacement-2-4-new",
+          "ko-replacement-2-1-old",
+          "en-replacement-1-3-old",
+          "ko-replacement-2-4-old",
+          "en-entity-confusion-2-3-old",
+          "en-entity-confusion-2-3-new",
+          "en-replacement-1-3-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-replacement-2-4",
+        "language": "ko",
+        "query": "기획자에게 지금 적용되는 기본 언어 replacement 2는 무엇인가? 최신 변경 기준으로.",
+        "retrieved_statement_ids": [
+          "ko-replacement-2-4-new",
+          "ko-replacement-2-4-old",
+          "ko-replacement-1-4-new",
+          "ko-replacement-1-4-old",
+          "ko-entity-confusion-2-4-old",
+          "ko-entity-confusion-2-4-new",
+          "en-replacement-2-4-old",
+          "ja-replacement-2-4-old",
+          "ko-replacement-2-5-new",
+          "ko-entity-confusion-1-4-old",
+          "ja-replacement-2-4-new",
+          "ko-entity-confusion-1-4-new",
+          "ko-replacement-2-5-old",
+          "ko-replacement-2-6-old",
+          "en-replacement-2-4-new",
+          "ko-replacement-1-5-new",
+          "ko-entity-confusion-2-4-other",
+          "ko-replacement-2-3-new",
+          "en-entity-confusion-2-4-old",
+          "ja-replacement-1-4-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-replacement-2-5",
+        "language": "ko",
+        "query": "개발자에게 지금 적용되는 회의 요일 replacement 2는 무엇인가? 최신 변경 기준으로.",
+        "retrieved_statement_ids": [
+          "ko-replacement-2-5-new",
+          "ko-replacement-2-5-old",
+          "ko-replacement-1-5-new",
+          "ko-entity-confusion-2-5-new",
+          "ko-replacement-1-5-old",
+          "ko-entity-confusion-2-5-old",
+          "ko-entity-confusion-2-5-other",
+          "ko-replacement-2-4-new",
+          "ko-entity-confusion-1-5-new",
+          "en-replacement-2-5-old",
+          "ko-entity-confusion-1-5-old",
+          "en-replacement-2-5-new",
+          "ko-replacement-2-4-old",
+          "ja-replacement-2-5-new",
+          "ja-replacement-2-5-old",
+          "ko-replacement-2-6-new",
+          "ko-replacement-2-3-new",
+          "ko-entity-confusion-1-5-other",
+          "ko-replacement-2-6-old",
+          "en-replacement-1-5-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-replacement-2-6",
+        "language": "ko",
+        "query": "디자이너에게 지금 적용되는 배포 채널 replacement 2는 무엇인가? 최신 변경 기준으로.",
+        "retrieved_statement_ids": [
+          "ko-replacement-2-6-new",
+          "ko-replacement-2-6-old",
+          "ko-replacement-1-6-old",
+          "ko-replacement-1-6-new",
+          "ko-entity-confusion-2-6-old",
+          "ko-entity-confusion-2-6-new",
+          "ko-entity-confusion-1-6-old",
+          "ko-entity-confusion-1-6-new",
+          "en-replacement-2-6-new",
+          "ko-entity-confusion-2-6-other",
+          "en-replacement-2-6-old",
+          "ko-replacement-2-4-new",
+          "ja-replacement-2-6-old",
+          "ko-replacement-2-4-old",
+          "ja-replacement-2-6-new",
+          "en-replacement-2-4-old",
+          "ko-replacement-2-5-new",
+          "ko-replacement-2-2-old",
+          "ja-entity-confusion-2-6-old",
+          "en-entity-confusion-2-6-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-entity-confusion-1-1",
+        "language": "ko",
+        "query": "사용자의 현재 거주 도시 entity 1는 무엇인가? 동료 정보는 제외해.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-1-1-old",
+          "ko-entity-confusion-1-1-new",
+          "ko-entity-confusion-2-1-old",
+          "ko-entity-confusion-1-1-other",
+          "ko-replacement-1-1-old",
+          "ko-entity-confusion-2-1-new",
+          "ko-entity-confusion-2-1-other",
+          "ko-entity-confusion-1-4-other",
+          "ko-entity-confusion-1-3-other",
+          "ko-replacement-2-1-old",
+          "ko-replacement-1-1-new",
+          "ko-entity-confusion-1-5-other",
+          "ko-entity-confusion-2-3-other",
+          "ja-entity-confusion-1-1-new",
+          "ko-entity-confusion-2-4-other",
+          "ko-entity-confusion-1-3-new",
+          "ja-entity-confusion-1-1-old",
+          "ko-replacement-2-1-new",
+          "ko-entity-confusion-1-3-old",
+          "en-entity-confusion-1-1-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1,
+          4
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": [
+          4
+        ]
+      },
+      {
+        "id": "ko-entity-confusion-1-2",
+        "language": "ko",
+        "query": "고객의 현재 선호 편집기 entity 1는 무엇인가? 동료 정보는 제외해.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-1-2-old",
+          "ko-entity-confusion-1-2-new",
+          "ko-entity-confusion-1-2-other",
+          "ko-entity-confusion-2-2-old",
+          "ko-entity-confusion-2-2-other",
+          "ko-entity-confusion-2-2-new",
+          "ko-replacement-1-2-old",
+          "ko-entity-confusion-1-4-other",
+          "ko-replacement-1-2-new",
+          "ko-replacement-2-2-old",
+          "ko-entity-confusion-2-4-other",
+          "ko-replacement-2-2-new",
+          "ko-entity-confusion-1-5-other",
+          "ko-entity-confusion-1-4-new",
+          "ko-entity-confusion-1-4-old",
+          "ko-entity-confusion-1-3-other",
+          "ko-entity-confusion-2-5-other",
+          "ja-entity-confusion-1-2-old",
+          "ko-entity-confusion-1-1-other",
+          "ko-entity-confusion-1-6-other"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "ko-entity-confusion-1-3",
+        "language": "ko",
+        "query": "연구원의 현재 근무 지역 entity 1는 무엇인가? 동료 정보는 제외해.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-1-3-old",
+          "ko-entity-confusion-1-3-new",
+          "ko-replacement-1-3-old",
+          "ko-replacement-1-3-new",
+          "ko-entity-confusion-2-3-old",
+          "ko-entity-confusion-2-3-new",
+          "ko-replacement-2-3-old",
+          "ko-replacement-2-3-new",
+          "ko-entity-confusion-1-3-other",
+          "ko-entity-confusion-1-4-other",
+          "ko-entity-confusion-2-3-other",
+          "en-entity-confusion-1-3-new",
+          "ko-entity-confusion-1-1-other",
+          "en-entity-confusion-1-3-old",
+          "ko-entity-confusion-2-4-other",
+          "ko-entity-confusion-1-1-old",
+          "ja-entity-confusion-1-3-old",
+          "ko-entity-confusion-1-2-other",
+          "ko-entity-confusion-1-5-other",
+          "ja-entity-confusion-1-3-new"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1,
+          9
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": [
+          9
+        ]
+      },
+      {
+        "id": "ko-entity-confusion-1-4",
+        "language": "ko",
+        "query": "기획자의 현재 기본 언어 entity 1는 무엇인가? 동료 정보는 제외해.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-1-4-new",
+          "ko-entity-confusion-1-4-other",
+          "ko-entity-confusion-1-4-old",
+          "ko-replacement-1-4-new",
+          "ko-entity-confusion-2-4-new",
+          "ko-entity-confusion-2-4-other",
+          "ko-replacement-1-4-old",
+          "ko-entity-confusion-2-4-old",
+          "ko-replacement-2-4-new",
+          "ko-replacement-2-4-old",
+          "ko-entity-confusion-1-5-other",
+          "ja-entity-confusion-1-4-old",
+          "ja-entity-confusion-1-4-new",
+          "ko-entity-confusion-1-3-other",
+          "ko-entity-confusion-1-5-new",
+          "ko-entity-confusion-1-5-old",
+          "ko-entity-confusion-1-2-old",
+          "ko-entity-confusion-2-5-other",
+          "en-entity-confusion-1-4-other",
+          "ko-entity-confusion-1-2-other"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          3
+        ],
+        "active_distractor_ranks": [
+          2
+        ]
+      },
+      {
+        "id": "ko-entity-confusion-1-5",
+        "language": "ko",
+        "query": "개발자의 현재 회의 요일 entity 1는 무엇인가? 동료 정보는 제외해.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-1-5-new",
+          "ko-entity-confusion-1-5-old",
+          "ko-entity-confusion-1-5-other",
+          "ko-entity-confusion-2-5-new",
+          "ko-entity-confusion-2-5-other",
+          "ko-entity-confusion-2-5-old",
+          "ko-replacement-1-5-new",
+          "ko-entity-confusion-1-4-other",
+          "ko-replacement-1-5-old",
+          "ko-replacement-2-5-new",
+          "ko-entity-confusion-2-4-other",
+          "ko-replacement-2-5-old",
+          "ko-entity-confusion-1-4-new",
+          "ko-entity-confusion-1-2-other",
+          "ko-entity-confusion-1-4-old",
+          "ja-entity-confusion-1-5-new",
+          "ko-entity-confusion-1-6-other",
+          "ko-entity-confusion-2-4-new",
+          "en-entity-confusion-1-5-old",
+          "ja-entity-confusion-1-5-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "ko-entity-confusion-1-6",
+        "language": "ko",
+        "query": "디자이너의 현재 배포 채널 entity 1는 무엇인가? 동료 정보는 제외해.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-1-6-new",
+          "ko-entity-confusion-1-6-old",
+          "ko-entity-confusion-1-6-other",
+          "ko-replacement-1-6-new",
+          "ko-entity-confusion-2-6-new",
+          "ko-replacement-1-6-old",
+          "ko-entity-confusion-2-6-old",
+          "ko-replacement-2-6-new",
+          "ko-entity-confusion-2-6-other",
+          "ko-replacement-2-6-old",
+          "ko-entity-confusion-1-4-other",
+          "ja-entity-confusion-1-6-new",
+          "ja-entity-confusion-1-6-old",
+          "en-entity-confusion-1-6-new",
+          "en-entity-confusion-1-6-old",
+          "ko-entity-confusion-1-5-new",
+          "ko-entity-confusion-1-2-other",
+          "ko-entity-confusion-1-4-new",
+          "ko-entity-confusion-1-5-old",
+          "ko-entity-confusion-1-5-other"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "ko-entity-confusion-2-1",
+        "language": "ko",
+        "query": "사용자의 현재 거주 도시 entity 2는 무엇인가? 동료 정보는 제외해. 최신값만.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-2-1-old",
+          "ko-entity-confusion-2-1-new",
+          "ko-entity-confusion-1-1-old",
+          "ko-entity-confusion-2-1-other",
+          "ko-entity-confusion-1-1-new",
+          "ko-replacement-2-1-old",
+          "ko-entity-confusion-1-1-other",
+          "en-entity-confusion-2-1-old",
+          "ko-replacement-2-1-new",
+          "ko-entity-confusion-2-3-other",
+          "ko-entity-confusion-2-2-other",
+          "ko-replacement-1-1-old",
+          "ko-entity-confusion-2-4-other",
+          "ja-entity-confusion-2-1-new",
+          "ko-entity-confusion-2-5-other",
+          "ja-entity-confusion-2-1-old",
+          "ko-entity-confusion-2-3-new",
+          "ko-replacement-1-1-new",
+          "en-entity-confusion-2-1-new",
+          "en-replacement-2-1-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1,
+          4
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": [
+          4
+        ]
+      },
+      {
+        "id": "ko-entity-confusion-2-2",
+        "language": "ko",
+        "query": "고객의 현재 선호 편집기 entity 2는 무엇인가? 동료 정보는 제외해. 최신값만.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-2-2-other",
+          "ko-entity-confusion-2-2-new",
+          "ko-entity-confusion-2-2-old",
+          "ko-entity-confusion-1-2-other",
+          "ko-entity-confusion-1-2-new",
+          "ko-replacement-2-2-old",
+          "ko-entity-confusion-1-2-old",
+          "ko-replacement-2-2-new",
+          "ko-entity-confusion-2-4-other",
+          "ko-replacement-1-2-new",
+          "ko-entity-confusion-2-5-other",
+          "ko-replacement-1-2-old",
+          "ja-entity-confusion-2-2-old",
+          "ko-multi-value-2-a",
+          "ja-entity-confusion-2-2-new",
+          "ko-entity-confusion-2-5-new",
+          "ko-entity-confusion-1-4-other",
+          "ko-entity-confusion-2-4-new",
+          "ko-entity-confusion-2-1-old",
+          "en-entity-confusion-2-2-new"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          3
+        ],
+        "active_distractor_ranks": [
+          1
+        ]
+      },
+      {
+        "id": "ko-entity-confusion-2-3",
+        "language": "ko",
+        "query": "연구원의 현재 근무 지역 entity 2는 무엇인가? 동료 정보는 제외해. 최신값만.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-2-3-new",
+          "ko-entity-confusion-2-3-old",
+          "ko-replacement-2-3-old",
+          "ko-replacement-2-3-new",
+          "ko-entity-confusion-1-3-old",
+          "ko-entity-confusion-2-3-other",
+          "ko-entity-confusion-1-3-new",
+          "ko-replacement-1-3-old",
+          "ko-replacement-1-3-new",
+          "ko-entity-confusion-2-4-other",
+          "ko-entity-confusion-2-2-other",
+          "ko-entity-confusion-1-3-other",
+          "en-entity-confusion-2-3-new",
+          "ko-entity-confusion-2-5-other",
+          "ko-entity-confusion-2-1-old",
+          "en-entity-confusion-2-3-old",
+          "ja-entity-confusion-2-3-old",
+          "ko-entity-confusion-1-4-other",
+          "ko-entity-confusion-2-1-other",
+          "ko-entity-confusion-2-1-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          6
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          6
+        ]
+      },
+      {
+        "id": "ko-entity-confusion-2-4",
+        "language": "ko",
+        "query": "기획자의 현재 기본 언어 entity 2는 무엇인가? 동료 정보는 제외해. 최신값만.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-2-4-new",
+          "ko-entity-confusion-2-4-other",
+          "ko-replacement-2-4-new",
+          "ko-entity-confusion-2-4-old",
+          "ko-entity-confusion-1-4-other",
+          "ko-entity-confusion-1-4-new",
+          "ko-replacement-2-4-old",
+          "ko-entity-confusion-1-4-old",
+          "ko-replacement-1-4-new",
+          "ko-replacement-1-4-old",
+          "ko-entity-confusion-2-5-new",
+          "ko-entity-confusion-2-5-other",
+          "ja-entity-confusion-2-4-old",
+          "ko-entity-confusion-2-2-other",
+          "ja-entity-confusion-2-4-new",
+          "ko-entity-confusion-2-5-old",
+          "ko-entity-confusion-2-2-old",
+          "ko-entity-confusion-2-3-other",
+          "ko-entity-confusion-2-2-new",
+          "en-entity-confusion-2-4-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          4
+        ],
+        "stale_forbidden_ranks": [
+          4
+        ],
+        "active_distractor_ranks": [
+          2
+        ]
+      },
+      {
+        "id": "ko-entity-confusion-2-5",
+        "language": "ko",
+        "query": "개발자의 현재 회의 요일 entity 2는 무엇인가? 동료 정보는 제외해. 최신값만.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-2-5-new",
+          "ko-entity-confusion-2-5-other",
+          "ko-entity-confusion-2-5-old",
+          "ko-replacement-2-5-new",
+          "ko-entity-confusion-1-5-new",
+          "ko-entity-confusion-1-5-old",
+          "ko-entity-confusion-1-5-other",
+          "ko-replacement-2-5-old",
+          "ko-replacement-1-5-new",
+          "ko-entity-confusion-2-4-other",
+          "ko-entity-confusion-2-2-other",
+          "ko-replacement-1-5-old",
+          "ko-entity-confusion-2-4-new",
+          "ja-entity-confusion-2-5-new",
+          "ko-entity-confusion-1-4-other",
+          "ja-entity-confusion-2-5-old",
+          "ko-entity-confusion-2-2-new",
+          "en-entity-confusion-2-5-old",
+          "ko-replacement-2-4-new",
+          "ko-entity-confusion-2-6-other"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          3
+        ],
+        "active_distractor_ranks": [
+          2
+        ]
+      },
+      {
+        "id": "ko-entity-confusion-2-6",
+        "language": "ko",
+        "query": "디자이너의 현재 배포 채널 entity 2는 무엇인가? 동료 정보는 제외해. 최신값만.",
+        "retrieved_statement_ids": [
+          "ko-entity-confusion-2-6-new",
+          "ko-entity-confusion-2-6-old",
+          "ko-entity-confusion-2-6-other",
+          "ko-replacement-2-6-new",
+          "ko-entity-confusion-1-6-new",
+          "ko-replacement-2-6-old",
+          "ko-entity-confusion-1-6-old",
+          "ko-entity-confusion-1-6-other",
+          "ko-replacement-1-6-new",
+          "ko-replacement-1-6-old",
+          "ko-entity-confusion-2-2-other",
+          "ko-entity-confusion-2-5-new",
+          "ko-entity-confusion-2-4-other",
+          "ja-entity-confusion-2-6-old",
+          "en-entity-confusion-2-6-new",
+          "ko-entity-confusion-2-5-other",
+          "ja-entity-confusion-2-6-new",
+          "ko-entity-confusion-2-5-old",
+          "en-entity-confusion-2-6-old",
+          "ko-entity-confusion-2-2-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "ko-multi-value-1",
+        "language": "ko",
+        "query": "사용자에게 지금 적용되는 기술 묶음 1는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-multi-value-1-a",
+          "ko-multi-value-1-b",
+          "ko-multi-value-2-a",
+          "ko-multi-value-2-b",
+          "ko-multi-value-6-a",
+          "ko-multi-value-5-a",
+          "ko-multi-value-4-b",
+          "ko-multi-value-4-a",
+          "ko-multi-value-3-a",
+          "ko-entity-confusion-1-2-old",
+          "ko-multi-value-5-b",
+          "ja-multi-value-1-a",
+          "ko-multi-value-6-b",
+          "en-multi-value-1-a",
+          "ko-entity-confusion-1-2-new",
+          "ko-replacement-1-2-old",
+          "ja-multi-value-1-b",
+          "ko-multi-value-3-b",
+          "ko-replacement-1-6-new",
+          "ko-replacement-1-1-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-multi-value-2",
+        "language": "ko",
+        "query": "고객에게 지금 적용되는 기술 묶음 2는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-multi-value-2-a",
+          "ko-multi-value-2-b",
+          "ko-multi-value-1-a",
+          "ko-entity-confusion-2-2-new",
+          "ko-multi-value-1-b",
+          "ja-multi-value-2-b",
+          "ko-entity-confusion-2-2-old",
+          "ko-replacement-2-2-old",
+          "en-multi-value-2-a",
+          "ja-multi-value-2-a",
+          "ko-multi-value-4-b",
+          "ko-replacement-2-4-new",
+          "en-multi-value-2-b",
+          "ko-multi-value-4-a",
+          "ko-replacement-2-2-new",
+          "ko-multi-value-6-a",
+          "en-entity-confusion-2-6-new",
+          "ko-entity-confusion-2-5-new",
+          "ko-replacement-2-4-old",
+          "ko-multi-value-5-a"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-multi-value-3",
+        "language": "ko",
+        "query": "연구원에게 지금 적용되는 기술 묶음 3는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-multi-value-3-a",
+          "ko-multi-value-3-b",
+          "ko-multi-value-1-b",
+          "ko-multi-value-1-a",
+          "ja-multi-value-3-a",
+          "ko-multi-value-2-a",
+          "ko-multi-value-6-a",
+          "ko-multi-value-5-a",
+          "en-multi-value-3-a",
+          "ko-multi-value-4-b",
+          "ko-multi-value-2-b",
+          "ko-multi-value-4-a",
+          "ja-multi-value-3-b",
+          "ko-replacement-2-3-new",
+          "ko-replacement-2-3-old",
+          "ko-multi-value-5-b",
+          "en-multi-value-3-b",
+          "ko-replacement-1-3-new",
+          "ko-replacement-1-3-old",
+          "ko-entity-confusion-2-3-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-multi-value-4",
+        "language": "ko",
+        "query": "기획자에게 지금 적용되는 기술 묶음 4는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-multi-value-4-a",
+          "ko-multi-value-4-b",
+          "ko-multi-value-1-b",
+          "ko-multi-value-2-a",
+          "ko-multi-value-1-a",
+          "ko-multi-value-6-a",
+          "ko-multi-value-2-b",
+          "ja-multi-value-4-a",
+          "ja-multi-value-4-b",
+          "ko-multi-value-5-a",
+          "ko-replacement-2-4-new",
+          "ko-multi-value-5-b",
+          "ko-replacement-1-4-new",
+          "ko-multi-value-3-a",
+          "ko-replacement-2-4-old",
+          "ko-multi-value-6-b",
+          "ko-replacement-1-4-old",
+          "en-multi-value-4-b",
+          "en-multi-value-4-a",
+          "ko-multi-value-3-b"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-multi-value-5",
+        "language": "ko",
+        "query": "개발자에게 지금 적용되는 기술 묶음 5는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-multi-value-5-a",
+          "ko-multi-value-5-b",
+          "ko-multi-value-4-a",
+          "ko-multi-value-1-a",
+          "ko-multi-value-1-b",
+          "ko-multi-value-4-b",
+          "ko-multi-value-6-a",
+          "ko-multi-value-2-a",
+          "ko-multi-value-3-a",
+          "ko-multi-value-6-b",
+          "ko-multi-value-2-b",
+          "ko-multi-value-3-b",
+          "ko-replacement-2-6-new",
+          "ja-multi-value-5-a",
+          "ja-multi-value-5-b",
+          "en-multi-value-5-b",
+          "ko-replacement-2-6-old",
+          "ko-replacement-1-6-new",
+          "ko-replacement-2-5-new",
+          "en-multi-value-5-a"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-multi-value-6",
+        "language": "ko",
+        "query": "디자이너에게 지금 적용되는 기술 묶음 6는 무엇인가?",
+        "retrieved_statement_ids": [
+          "ko-multi-value-6-a",
+          "ko-multi-value-6-b",
+          "ko-multi-value-1-b",
+          "ko-multi-value-1-a",
+          "en-multi-value-6-b",
+          "ja-multi-value-6-b",
+          "ja-multi-value-6-a",
+          "en-multi-value-6-a",
+          "ko-multi-value-5-b",
+          "ko-multi-value-5-a",
+          "ko-multi-value-4-b",
+          "ko-replacement-2-6-new",
+          "ko-multi-value-2-b",
+          "ko-multi-value-2-a",
+          "ko-replacement-1-6-old",
+          "ko-replacement-1-6-new",
+          "ko-replacement-2-6-old",
+          "ko-multi-value-4-a",
+          "ko-multi-value-3-a",
+          "ko-entity-confusion-2-6-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-project-boundary-1",
+        "language": "ko",
+        "query": "사용자에게 지금 적용되는 거주 도시는 무엇인가? personal",
+        "retrieved_statement_ids": [
+          "ko-project-boundary-1-personal",
+          "en-project-boundary-1-personal",
+          "ja-project-boundary-1-personal",
+          "ko-project-boundary-5-personal",
+          "ko-project-boundary-3-personal",
+          "ko-project-boundary-6-personal",
+          "ko-project-boundary-4-personal",
+          "ko-project-boundary-2-personal",
+          "en-project-boundary-4-personal",
+          "ja-project-boundary-5-personal",
+          "en-project-boundary-5-personal",
+          "ja-project-boundary-3-personal",
+          "en-project-boundary-3-personal",
+          "ja-project-boundary-4-personal",
+          "en-project-boundary-2-personal",
+          "ja-project-boundary-6-personal",
+          "ja-project-boundary-2-personal",
+          "en-project-boundary-6-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-project-boundary-2",
+        "language": "ko",
+        "query": "고객에게 지금 적용되는 선호 편집기는 무엇인가? personal",
+        "retrieved_statement_ids": [
+          "ko-project-boundary-2-personal",
+          "ko-project-boundary-4-personal",
+          "ko-project-boundary-6-personal",
+          "ja-project-boundary-2-personal",
+          "en-project-boundary-2-personal",
+          "ko-project-boundary-5-personal",
+          "ko-project-boundary-1-personal",
+          "ja-project-boundary-4-personal",
+          "ja-project-boundary-6-personal",
+          "en-project-boundary-1-personal",
+          "ja-project-boundary-1-personal",
+          "ko-project-boundary-3-personal",
+          "en-project-boundary-4-personal",
+          "ja-project-boundary-5-personal",
+          "en-project-boundary-5-personal",
+          "en-project-boundary-6-personal",
+          "ja-project-boundary-3-personal",
+          "en-project-boundary-3-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-project-boundary-3",
+        "language": "ko",
+        "query": "연구원에게 지금 적용되는 근무 지역는 무엇인가? personal",
+        "retrieved_statement_ids": [
+          "ko-project-boundary-3-personal",
+          "en-project-boundary-3-personal",
+          "ko-project-boundary-1-personal",
+          "ja-project-boundary-3-personal",
+          "ko-project-boundary-5-personal",
+          "ko-project-boundary-4-personal",
+          "ja-project-boundary-1-personal",
+          "en-project-boundary-1-personal",
+          "ko-project-boundary-2-personal",
+          "ko-project-boundary-6-personal",
+          "ja-project-boundary-5-personal",
+          "ja-project-boundary-4-personal",
+          "en-project-boundary-4-personal",
+          "ja-project-boundary-6-personal",
+          "ja-project-boundary-2-personal",
+          "en-project-boundary-5-personal",
+          "en-project-boundary-2-personal",
+          "en-project-boundary-6-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-project-boundary-4",
+        "language": "ko",
+        "query": "기획자에게 지금 적용되는 기본 언어는 무엇인가? personal",
+        "retrieved_statement_ids": [
+          "ko-project-boundary-4-personal",
+          "ja-project-boundary-4-personal",
+          "ko-project-boundary-5-personal",
+          "ko-project-boundary-2-personal",
+          "en-project-boundary-4-personal",
+          "ko-project-boundary-6-personal",
+          "ko-project-boundary-1-personal",
+          "ko-project-boundary-3-personal",
+          "ja-project-boundary-2-personal",
+          "ja-project-boundary-5-personal",
+          "ja-project-boundary-6-personal",
+          "en-project-boundary-2-personal",
+          "en-project-boundary-5-personal",
+          "en-project-boundary-1-personal",
+          "ja-project-boundary-1-personal",
+          "ja-project-boundary-3-personal",
+          "en-project-boundary-3-personal",
+          "en-project-boundary-6-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-project-boundary-5",
+        "language": "ko",
+        "query": "개발자에게 지금 적용되는 회의 요일는 무엇인가? personal",
+        "retrieved_statement_ids": [
+          "ko-project-boundary-5-personal",
+          "ja-project-boundary-5-personal",
+          "en-project-boundary-5-personal",
+          "ko-project-boundary-4-personal",
+          "ko-project-boundary-6-personal",
+          "ko-project-boundary-2-personal",
+          "ja-project-boundary-4-personal",
+          "ko-project-boundary-3-personal",
+          "ko-project-boundary-1-personal",
+          "ja-project-boundary-6-personal",
+          "en-project-boundary-4-personal",
+          "ja-project-boundary-2-personal",
+          "ja-project-boundary-1-personal",
+          "en-project-boundary-2-personal",
+          "en-project-boundary-1-personal",
+          "ja-project-boundary-3-personal",
+          "en-project-boundary-3-personal",
+          "en-project-boundary-6-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ko-project-boundary-6",
+        "language": "ko",
+        "query": "디자이너에게 지금 적용되는 배포 채널는 무엇인가? personal",
+        "retrieved_statement_ids": [
+          "ko-project-boundary-6-personal",
+          "ja-project-boundary-6-personal",
+          "en-project-boundary-6-personal",
+          "ko-project-boundary-5-personal",
+          "ko-project-boundary-4-personal",
+          "ko-project-boundary-2-personal",
+          "ja-project-boundary-2-personal",
+          "en-project-boundary-4-personal",
+          "ko-project-boundary-1-personal",
+          "en-project-boundary-2-personal",
+          "ja-project-boundary-5-personal",
+          "ja-project-boundary-4-personal",
+          "en-project-boundary-1-personal",
+          "en-project-boundary-5-personal",
+          "ja-project-boundary-1-personal",
+          "ko-project-boundary-3-personal",
+          "ja-project-boundary-3-personal",
+          "en-project-boundary-3-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-1-1",
+        "language": "en",
+        "query": "What home city replacement 1 currently applies to the user?",
+        "retrieved_statement_ids": [
+          "en-replacement-1-1-old",
+          "en-replacement-1-1-new",
+          "en-replacement-2-1-old",
+          "en-replacement-2-1-new",
+          "ja-replacement-1-1-old",
+          "ko-replacement-1-1-old",
+          "ja-replacement-1-1-new",
+          "en-entity-confusion-1-1-new",
+          "en-entity-confusion-1-1-old",
+          "en-replacement-1-2-old",
+          "ja-replacement-2-1-new",
+          "ja-replacement-2-1-old",
+          "ko-replacement-1-1-new",
+          "ko-replacement-2-1-old",
+          "ja-entity-confusion-1-1-new",
+          "ja-entity-confusion-1-1-old",
+          "en-entity-confusion-1-1-other",
+          "en-replacement-1-3-old",
+          "en-replacement-1-4-old",
+          "en-replacement-1-3-new"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-1-2",
+        "language": "en",
+        "query": "What preferred editor replacement 1 currently applies to the customer?",
+        "retrieved_statement_ids": [
+          "en-replacement-1-2-old",
+          "en-replacement-1-2-new",
+          "en-replacement-2-2-old",
+          "en-replacement-2-2-new",
+          "en-entity-confusion-1-2-old",
+          "en-entity-confusion-1-2-new",
+          "ja-replacement-1-2-old",
+          "ja-replacement-1-2-new",
+          "en-entity-confusion-1-2-other",
+          "ja-replacement-2-2-new",
+          "en-entity-confusion-2-2-new",
+          "ja-replacement-2-2-old",
+          "en-entity-confusion-2-2-old",
+          "en-replacement-1-6-new",
+          "en-replacement-1-6-old",
+          "ja-entity-confusion-1-2-old",
+          "en-replacement-1-4-new",
+          "en-replacement-1-5-old",
+          "en-replacement-1-5-new",
+          "ja-replacement-1-6-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-1-3",
+        "language": "en",
+        "query": "What work region replacement 1 currently applies to the researcher?",
+        "retrieved_statement_ids": [
+          "en-replacement-1-3-old",
+          "en-replacement-1-3-new",
+          "en-replacement-2-3-old",
+          "en-replacement-2-3-new",
+          "en-entity-confusion-1-3-old",
+          "en-entity-confusion-1-3-new",
+          "ja-replacement-1-3-old",
+          "ja-replacement-1-3-new",
+          "ko-replacement-1-3-new",
+          "ko-replacement-1-3-old",
+          "en-entity-confusion-2-3-old",
+          "en-entity-confusion-1-3-other",
+          "en-entity-confusion-2-3-new",
+          "ja-replacement-2-3-old",
+          "ja-replacement-2-3-new",
+          "ja-entity-confusion-1-3-old",
+          "ja-entity-confusion-1-3-new",
+          "ko-replacement-2-3-new",
+          "ko-replacement-2-3-old",
+          "ko-entity-confusion-1-3-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-1-4",
+        "language": "en",
+        "query": "What default language replacement 1 currently applies to the planner?",
+        "retrieved_statement_ids": [
+          "en-replacement-1-4-new",
+          "en-replacement-1-4-old",
+          "en-replacement-2-4-new",
+          "en-replacement-2-4-old",
+          "en-entity-confusion-1-4-new",
+          "en-entity-confusion-1-4-old",
+          "en-entity-confusion-2-4-new",
+          "ja-replacement-1-4-new",
+          "ko-replacement-1-4-new",
+          "ja-replacement-1-4-old",
+          "en-entity-confusion-2-4-old",
+          "en-entity-confusion-1-4-other",
+          "en-replacement-1-6-new",
+          "en-replacement-1-5-new",
+          "ko-replacement-1-4-old",
+          "en-replacement-1-5-old",
+          "en-replacement-1-2-old",
+          "ja-replacement-2-4-new",
+          "ja-replacement-1-6-old",
+          "en-replacement-1-1-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-1-5",
+        "language": "en",
+        "query": "What meeting day replacement 1 currently applies to the developer?",
+        "retrieved_statement_ids": [
+          "en-replacement-1-5-new",
+          "en-replacement-1-5-old",
+          "en-replacement-2-5-old",
+          "en-replacement-2-5-new",
+          "en-entity-confusion-1-5-old",
+          "en-entity-confusion-1-5-new",
+          "en-entity-confusion-2-5-new",
+          "ja-replacement-1-5-old",
+          "ja-replacement-1-5-new",
+          "en-entity-confusion-2-5-old",
+          "ja-replacement-2-5-new",
+          "en-entity-confusion-1-5-other",
+          "ja-replacement-2-5-old",
+          "ja-entity-confusion-1-5-new",
+          "ja-entity-confusion-1-5-old",
+          "ko-replacement-1-5-new",
+          "en-entity-confusion-2-5-other",
+          "ko-replacement-1-5-old",
+          "ko-replacement-2-5-new",
+          "ja-entity-confusion-2-5-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-1-6",
+        "language": "en",
+        "query": "What release channel replacement 1 currently applies to the designer?",
+        "retrieved_statement_ids": [
+          "en-replacement-1-6-new",
+          "en-replacement-1-6-old",
+          "en-replacement-2-6-new",
+          "en-replacement-2-6-old",
+          "en-entity-confusion-1-6-old",
+          "en-entity-confusion-1-6-new",
+          "ja-replacement-1-6-new",
+          "ja-replacement-1-6-old",
+          "en-entity-confusion-2-6-new",
+          "ja-replacement-2-6-old",
+          "ja-replacement-2-6-new",
+          "en-entity-confusion-2-6-old",
+          "en-entity-confusion-1-6-other",
+          "ja-entity-confusion-1-6-new",
+          "ja-entity-confusion-1-6-old",
+          "en-replacement-1-2-old",
+          "en-replacement-1-5-new",
+          "ko-replacement-1-6-new",
+          "en-replacement-1-5-old",
+          "ko-replacement-1-6-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-2-1",
+        "language": "en",
+        "query": "What home city replacement 2 currently applies to the user? Use the latest update.",
+        "retrieved_statement_ids": [
+          "en-replacement-2-1-old",
+          "en-replacement-2-1-new",
+          "en-replacement-1-1-old",
+          "en-replacement-1-1-new",
+          "en-replacement-2-2-old",
+          "en-entity-confusion-2-1-old",
+          "en-replacement-2-2-new",
+          "en-replacement-2-5-old",
+          "en-entity-confusion-2-1-new",
+          "ja-replacement-2-1-old",
+          "en-replacement-2-5-new",
+          "ja-replacement-2-1-new",
+          "en-replacement-2-4-old",
+          "ko-replacement-2-1-old",
+          "en-entity-confusion-2-2-new",
+          "en-replacement-2-4-new",
+          "en-replacement-2-6-new",
+          "en-replacement-1-2-new",
+          "en-replacement-2-6-old",
+          "ko-replacement-2-1-new"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-2-2",
+        "language": "en",
+        "query": "What preferred editor replacement 2 currently applies to the customer? Use the latest update.",
+        "retrieved_statement_ids": [
+          "en-replacement-2-2-old",
+          "en-replacement-2-2-new",
+          "en-entity-confusion-2-2-new",
+          "en-replacement-1-2-new",
+          "en-replacement-1-2-old",
+          "en-entity-confusion-2-2-old",
+          "en-entity-confusion-2-2-other",
+          "ja-replacement-2-2-new",
+          "ja-replacement-2-2-old",
+          "en-replacement-2-5-old",
+          "ja-replacement-1-2-new",
+          "en-entity-confusion-1-2-new",
+          "en-replacement-2-4-new",
+          "en-replacement-2-5-new",
+          "ja-entity-confusion-2-2-new",
+          "en-replacement-2-1-old",
+          "en-replacement-2-4-old",
+          "ja-entity-confusion-2-2-old",
+          "ja-replacement-1-2-old",
+          "en-entity-confusion-1-2-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-2-3",
+        "language": "en",
+        "query": "What work region replacement 2 currently applies to the researcher? Use the latest update.",
+        "retrieved_statement_ids": [
+          "en-replacement-2-3-old",
+          "en-replacement-2-3-new",
+          "en-replacement-1-3-old",
+          "en-replacement-1-3-new",
+          "en-entity-confusion-2-3-old",
+          "en-entity-confusion-2-3-new",
+          "en-entity-confusion-2-3-other",
+          "ja-replacement-2-3-old",
+          "ja-replacement-2-3-new",
+          "ko-replacement-2-3-new",
+          "ko-replacement-2-3-old",
+          "en-entity-confusion-1-3-old",
+          "en-entity-confusion-1-3-new",
+          "ja-replacement-1-3-old",
+          "en-replacement-2-1-old",
+          "en-replacement-2-4-old",
+          "ja-entity-confusion-2-3-old",
+          "en-replacement-2-2-new",
+          "ko-replacement-1-3-old",
+          "ja-replacement-1-3-new"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-2-4",
+        "language": "en",
+        "query": "What default language replacement 2 currently applies to the planner? Use the latest update.",
+        "retrieved_statement_ids": [
+          "en-replacement-2-4-new",
+          "en-replacement-2-4-old",
+          "en-replacement-1-4-new",
+          "en-replacement-1-4-old",
+          "en-entity-confusion-2-4-new",
+          "en-entity-confusion-2-4-old",
+          "en-entity-confusion-1-4-new",
+          "en-replacement-2-5-old",
+          "en-entity-confusion-1-4-old",
+          "en-entity-confusion-2-4-other",
+          "en-replacement-2-2-old",
+          "ja-replacement-2-4-new",
+          "en-replacement-2-1-old",
+          "en-replacement-2-5-new",
+          "ko-replacement-2-4-new",
+          "en-replacement-2-2-new",
+          "ko-replacement-2-4-old",
+          "en-replacement-2-6-new",
+          "en-replacement-2-1-new",
+          "ja-replacement-2-4-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-2-5",
+        "language": "en",
+        "query": "What meeting day replacement 2 currently applies to the developer? Use the latest update.",
+        "retrieved_statement_ids": [
+          "en-replacement-2-5-old",
+          "en-replacement-2-5-new",
+          "en-replacement-1-5-old",
+          "en-replacement-1-5-new",
+          "en-entity-confusion-2-5-new",
+          "en-entity-confusion-2-5-old",
+          "ja-replacement-2-5-new",
+          "ja-replacement-2-5-old",
+          "en-entity-confusion-2-5-other",
+          "en-entity-confusion-1-5-old",
+          "en-entity-confusion-1-5-new",
+          "ja-replacement-1-5-new",
+          "ja-replacement-1-5-old",
+          "ko-replacement-2-5-new",
+          "ja-entity-confusion-2-5-new",
+          "ja-entity-confusion-2-5-old",
+          "ko-replacement-2-5-old",
+          "en-replacement-2-6-new",
+          "en-replacement-2-4-old",
+          "en-replacement-2-4-new"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-replacement-2-6",
+        "language": "en",
+        "query": "What release channel replacement 2 currently applies to the designer? Use the latest update.",
+        "retrieved_statement_ids": [
+          "en-replacement-2-6-new",
+          "en-replacement-2-6-old",
+          "en-replacement-1-6-new",
+          "en-replacement-1-6-old",
+          "en-entity-confusion-2-6-new",
+          "en-entity-confusion-2-6-old",
+          "ja-replacement-2-6-old",
+          "ja-replacement-2-6-new",
+          "en-replacement-2-2-old",
+          "en-replacement-2-5-old",
+          "ja-replacement-1-6-new",
+          "en-entity-confusion-2-6-other",
+          "en-replacement-2-2-new",
+          "ja-entity-confusion-2-6-old",
+          "en-entity-confusion-1-6-old",
+          "ja-replacement-1-6-old",
+          "en-entity-confusion-1-6-new",
+          "en-replacement-2-5-new",
+          "en-replacement-2-4-new",
+          "ja-entity-confusion-2-6-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-entity-confusion-1-1",
+        "language": "en",
+        "query": "What is the user's current home city entity 1, excluding the colleague?",
+        "retrieved_statement_ids": [
+          "en-replacement-1-1-old",
+          "en-entity-confusion-1-1-old",
+          "en-replacement-1-1-new",
+          "en-entity-confusion-1-1-new",
+          "en-entity-confusion-1-1-other",
+          "en-replacement-2-1-old",
+          "ja-entity-confusion-1-1-old",
+          "en-entity-confusion-1-3-other",
+          "en-entity-confusion-2-1-old",
+          "ja-entity-confusion-1-1-new",
+          "en-replacement-2-1-new",
+          "en-entity-confusion-1-2-other",
+          "en-entity-confusion-1-5-other",
+          "ko-entity-confusion-1-1-old",
+          "en-entity-confusion-1-4-other",
+          "en-entity-confusion-1-3-new",
+          "en-entity-confusion-1-3-old",
+          "en-entity-confusion-2-1-other",
+          "en-entity-confusion-1-5-old",
+          "en-entity-confusion-1-5-new"
+        ],
+        "acceptable_rank": 4,
+        "acceptable_ranks": [
+          4
+        ],
+        "forbidden_ranks": [
+          2,
+          5
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          5
+        ]
+      },
+      {
+        "id": "en-entity-confusion-1-2",
+        "language": "en",
+        "query": "What is the customer's current preferred editor entity 1, excluding the colleague?",
+        "retrieved_statement_ids": [
+          "en-entity-confusion-1-2-new",
+          "en-entity-confusion-1-2-old",
+          "en-entity-confusion-1-2-other",
+          "en-replacement-1-2-old",
+          "en-replacement-1-2-new",
+          "en-replacement-2-2-old",
+          "en-entity-confusion-2-2-new",
+          "en-entity-confusion-2-2-old",
+          "en-entity-confusion-2-2-other",
+          "en-replacement-2-2-new",
+          "ja-entity-confusion-1-2-old",
+          "en-entity-confusion-1-4-other",
+          "ja-entity-confusion-1-2-new",
+          "en-entity-confusion-1-6-other",
+          "en-entity-confusion-1-3-other",
+          "en-entity-confusion-1-5-other",
+          "en-entity-confusion-1-5-old",
+          "ja-replacement-1-2-new",
+          "ja-entity-confusion-1-2-other",
+          "en-entity-confusion-1-5-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "en-entity-confusion-1-3",
+        "language": "en",
+        "query": "What is the researcher's current work region entity 1, excluding the colleague?",
+        "retrieved_statement_ids": [
+          "en-entity-confusion-1-3-new",
+          "en-replacement-1-3-new",
+          "en-entity-confusion-1-3-old",
+          "en-replacement-1-3-old",
+          "en-entity-confusion-1-3-other",
+          "en-replacement-2-3-old",
+          "en-replacement-2-3-new",
+          "en-entity-confusion-2-3-new",
+          "en-entity-confusion-2-3-old",
+          "ja-entity-confusion-1-3-old",
+          "ja-entity-confusion-1-3-new",
+          "en-entity-confusion-2-3-other",
+          "ja-replacement-1-3-old",
+          "ko-entity-confusion-1-3-new",
+          "ko-entity-confusion-1-3-old",
+          "ja-replacement-1-3-new",
+          "ja-entity-confusion-2-3-old",
+          "en-entity-confusion-1-4-other",
+          "en-entity-confusion-1-2-other",
+          "ja-entity-confusion-1-3-other"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          3,
+          5
+        ],
+        "stale_forbidden_ranks": [
+          3
+        ],
+        "active_distractor_ranks": [
+          5
+        ]
+      },
+      {
+        "id": "en-entity-confusion-1-4",
+        "language": "en",
+        "query": "What is the planner's current default language entity 1, excluding the colleague?",
+        "retrieved_statement_ids": [
+          "en-replacement-1-4-new",
+          "en-entity-confusion-1-4-new",
+          "en-replacement-1-4-old",
+          "en-entity-confusion-1-4-old",
+          "en-replacement-2-4-new",
+          "en-entity-confusion-1-4-other",
+          "en-entity-confusion-2-4-new",
+          "en-replacement-2-4-old",
+          "en-entity-confusion-2-4-other",
+          "en-entity-confusion-2-4-old",
+          "ja-entity-confusion-1-4-other",
+          "ja-entity-confusion-1-4-new",
+          "ja-entity-confusion-1-4-old",
+          "en-entity-confusion-1-5-other",
+          "en-entity-confusion-1-3-other",
+          "en-entity-confusion-1-6-other",
+          "ja-replacement-1-4-new",
+          "en-entity-confusion-1-2-other",
+          "ko-entity-confusion-1-4-new",
+          "ja-replacement-1-4-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          4,
+          6
+        ],
+        "stale_forbidden_ranks": [
+          4
+        ],
+        "active_distractor_ranks": [
+          6
+        ]
+      },
+      {
+        "id": "en-entity-confusion-1-5",
+        "language": "en",
+        "query": "What is the developer's current meeting day entity 1, excluding the colleague?",
+        "retrieved_statement_ids": [
+          "en-entity-confusion-1-5-old",
+          "en-replacement-1-5-new",
+          "en-replacement-1-5-old",
+          "en-entity-confusion-1-5-new",
+          "en-replacement-2-5-old",
+          "en-replacement-2-5-new",
+          "en-entity-confusion-1-5-other",
+          "en-entity-confusion-2-5-old",
+          "en-entity-confusion-2-5-new",
+          "en-entity-confusion-2-5-other",
+          "ja-entity-confusion-1-5-new",
+          "ja-entity-confusion-1-5-old",
+          "en-entity-confusion-1-6-other",
+          "ja-replacement-1-5-old",
+          "ja-replacement-1-5-new",
+          "ja-entity-confusion-2-5-new",
+          "en-entity-confusion-1-4-other",
+          "ja-entity-confusion-2-5-old",
+          "en-entity-confusion-1-2-other",
+          "ja-replacement-2-5-new"
+        ],
+        "acceptable_rank": 4,
+        "acceptable_ranks": [
+          4
+        ],
+        "forbidden_ranks": [
+          1,
+          7
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": [
+          7
+        ]
+      },
+      {
+        "id": "en-entity-confusion-1-6",
+        "language": "en",
+        "query": "What is the designer's current release channel entity 1, excluding the colleague?",
+        "retrieved_statement_ids": [
+          "en-replacement-1-6-new",
+          "en-replacement-1-6-old",
+          "en-entity-confusion-1-6-old",
+          "en-entity-confusion-1-6-new",
+          "en-replacement-2-6-new",
+          "en-replacement-2-6-old",
+          "en-entity-confusion-1-6-other",
+          "en-entity-confusion-2-6-new",
+          "en-entity-confusion-2-6-old",
+          "ja-entity-confusion-1-6-new",
+          "ja-entity-confusion-1-6-old",
+          "ja-replacement-1-6-new",
+          "en-entity-confusion-2-6-other",
+          "ja-replacement-1-6-old",
+          "ja-entity-confusion-1-6-other",
+          "en-entity-confusion-1-5-old",
+          "en-entity-confusion-1-2-other",
+          "en-entity-confusion-1-5-new",
+          "ja-entity-confusion-1-5-old",
+          "ja-entity-confusion-1-5-new"
+        ],
+        "acceptable_rank": 4,
+        "acceptable_ranks": [
+          4
+        ],
+        "forbidden_ranks": [
+          3,
+          7
+        ],
+        "stale_forbidden_ranks": [
+          3
+        ],
+        "active_distractor_ranks": [
+          7
+        ]
+      },
+      {
+        "id": "en-entity-confusion-2-1",
+        "language": "en",
+        "query": "What is the user's current home city entity 2, excluding the colleague? Latest value only.",
+        "retrieved_statement_ids": [
+          "en-entity-confusion-2-1-old",
+          "en-replacement-2-1-old",
+          "en-entity-confusion-2-1-new",
+          "en-entity-confusion-2-1-other",
+          "en-replacement-2-1-new",
+          "ja-entity-confusion-2-1-old",
+          "en-replacement-1-1-old",
+          "en-entity-confusion-2-3-other",
+          "en-entity-confusion-2-5-other",
+          "en-entity-confusion-2-2-other",
+          "en-entity-confusion-2-4-other",
+          "en-entity-confusion-2-5-old",
+          "en-entity-confusion-2-5-new",
+          "en-entity-confusion-2-2-new",
+          "ja-entity-confusion-2-1-new",
+          "en-replacement-1-1-new",
+          "ko-entity-confusion-2-1-old",
+          "en-entity-confusion-2-3-new",
+          "en-entity-confusion-1-1-old",
+          "en-entity-confusion-2-2-old"
+        ],
+        "acceptable_rank": 3,
+        "acceptable_ranks": [
+          3
+        ],
+        "forbidden_ranks": [
+          1,
+          4
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": [
+          4
+        ]
+      },
+      {
+        "id": "en-entity-confusion-2-2",
+        "language": "en",
+        "query": "What is the customer's current preferred editor entity 2, excluding the colleague? Latest value only.",
+        "retrieved_statement_ids": [
+          "en-entity-confusion-2-2-new",
+          "en-entity-confusion-2-2-old",
+          "en-entity-confusion-2-2-other",
+          "en-replacement-2-2-old",
+          "en-replacement-2-2-new",
+          "en-entity-confusion-1-2-other",
+          "en-entity-confusion-1-2-new",
+          "en-entity-confusion-2-4-other",
+          "en-entity-confusion-1-2-old",
+          "en-replacement-1-2-new",
+          "ja-entity-confusion-2-2-old",
+          "ja-entity-confusion-2-2-new",
+          "en-replacement-1-2-old",
+          "en-entity-confusion-2-6-other",
+          "en-entity-confusion-2-3-other",
+          "en-entity-confusion-2-5-other",
+          "en-entity-confusion-2-5-old",
+          "en-replacement-2-5-old",
+          "en-entity-confusion-2-6-new",
+          "en-entity-confusion-2-5-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "en-entity-confusion-2-3",
+        "language": "en",
+        "query": "What is the researcher's current work region entity 2, excluding the colleague? Latest value only.",
+        "retrieved_statement_ids": [
+          "en-entity-confusion-2-3-new",
+          "en-entity-confusion-2-3-old",
+          "en-replacement-2-3-old",
+          "en-replacement-2-3-new",
+          "en-entity-confusion-2-3-other",
+          "en-entity-confusion-1-3-new",
+          "en-entity-confusion-1-3-old",
+          "en-replacement-1-3-new",
+          "en-replacement-1-3-old",
+          "ja-entity-confusion-2-3-old",
+          "en-entity-confusion-1-3-other",
+          "ja-entity-confusion-2-3-new",
+          "ko-entity-confusion-2-3-new",
+          "en-entity-confusion-2-4-other",
+          "ko-entity-confusion-2-3-old",
+          "en-entity-confusion-2-2-other",
+          "ja-replacement-2-3-new",
+          "ja-entity-confusion-1-3-old",
+          "en-entity-confusion-2-5-other",
+          "ja-replacement-2-3-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          5
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          5
+        ]
+      },
+      {
+        "id": "en-entity-confusion-2-4",
+        "language": "en",
+        "query": "What is the planner's current default language entity 2, excluding the colleague? Latest value only.",
+        "retrieved_statement_ids": [
+          "en-entity-confusion-2-4-new",
+          "en-replacement-2-4-new",
+          "en-entity-confusion-2-4-other",
+          "en-replacement-2-4-old",
+          "en-entity-confusion-2-4-old",
+          "en-replacement-1-4-new",
+          "en-replacement-1-4-old",
+          "en-entity-confusion-1-4-new",
+          "en-entity-confusion-1-4-old",
+          "en-entity-confusion-1-4-other",
+          "ja-entity-confusion-2-4-other",
+          "en-entity-confusion-2-3-other",
+          "ja-entity-confusion-2-4-new",
+          "en-entity-confusion-2-5-other",
+          "ja-entity-confusion-2-4-old",
+          "en-replacement-2-5-old",
+          "en-entity-confusion-2-6-other",
+          "ja-replacement-2-4-new",
+          "en-entity-confusion-2-2-other",
+          "en-entity-confusion-2-5-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          3,
+          5
+        ],
+        "stale_forbidden_ranks": [
+          5
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "en-entity-confusion-2-5",
+        "language": "en",
+        "query": "What is the developer's current meeting day entity 2, excluding the colleague? Latest value only.",
+        "retrieved_statement_ids": [
+          "en-replacement-2-5-old",
+          "en-entity-confusion-2-5-old",
+          "en-entity-confusion-2-5-new",
+          "en-replacement-2-5-new",
+          "en-replacement-1-5-old",
+          "en-entity-confusion-2-5-other",
+          "en-replacement-1-5-new",
+          "en-entity-confusion-1-5-old",
+          "en-entity-confusion-1-5-new",
+          "ja-entity-confusion-2-5-new",
+          "en-entity-confusion-1-5-other",
+          "ja-entity-confusion-2-5-old",
+          "en-entity-confusion-2-6-other",
+          "en-entity-confusion-2-4-other",
+          "ja-replacement-2-5-new",
+          "ja-replacement-2-5-old",
+          "en-entity-confusion-2-2-other",
+          "ja-entity-confusion-2-5-other",
+          "ja-entity-confusion-1-5-new",
+          "ko-entity-confusion-2-5-new"
+        ],
+        "acceptable_rank": 3,
+        "acceptable_ranks": [
+          3
+        ],
+        "forbidden_ranks": [
+          2,
+          6
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          6
+        ]
+      },
+      {
+        "id": "en-entity-confusion-2-6",
+        "language": "en",
+        "query": "What is the designer's current release channel entity 2, excluding the colleague? Latest value only.",
+        "retrieved_statement_ids": [
+          "en-replacement-2-6-new",
+          "en-entity-confusion-2-6-new",
+          "en-replacement-2-6-old",
+          "en-replacement-1-6-new",
+          "en-entity-confusion-2-6-old",
+          "en-replacement-1-6-old",
+          "en-entity-confusion-2-6-other",
+          "en-entity-confusion-1-6-old",
+          "en-entity-confusion-1-6-new",
+          "ja-entity-confusion-2-6-old",
+          "ja-entity-confusion-2-6-new",
+          "en-replacement-2-5-old",
+          "en-entity-confusion-1-6-other",
+          "en-entity-confusion-2-5-old",
+          "en-entity-confusion-2-2-old",
+          "en-entity-confusion-2-2-other",
+          "en-replacement-2-2-old",
+          "en-entity-confusion-2-5-new",
+          "en-entity-confusion-2-2-new",
+          "ja-replacement-2-6-new"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          5,
+          7
+        ],
+        "stale_forbidden_ranks": [
+          5
+        ],
+        "active_distractor_ranks": [
+          7
+        ]
+      },
+      {
+        "id": "en-multi-value-1",
+        "language": "en",
+        "query": "What skill set 1 currently applies to the user?",
+        "retrieved_statement_ids": [
+          "en-multi-value-1-b",
+          "en-multi-value-1-a",
+          "en-multi-value-2-a",
+          "en-multi-value-5-b",
+          "en-multi-value-5-a",
+          "en-multi-value-6-a",
+          "en-multi-value-4-a",
+          "en-multi-value-4-b",
+          "en-multi-value-2-b",
+          "ja-multi-value-1-b",
+          "ja-multi-value-1-a",
+          "en-multi-value-3-a",
+          "en-entity-confusion-1-4-other",
+          "en-entity-confusion-1-6-old",
+          "en-entity-confusion-1-6-other",
+          "en-entity-confusion-1-5-old",
+          "en-entity-confusion-1-4-new",
+          "en-entity-confusion-1-2-old",
+          "en-entity-confusion-1-3-other",
+          "en-entity-confusion-1-1-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-multi-value-2",
+        "language": "en",
+        "query": "What skill set 2 currently applies to the customer?",
+        "retrieved_statement_ids": [
+          "en-multi-value-2-a",
+          "en-multi-value-2-b",
+          "en-entity-confusion-2-2-new",
+          "ja-multi-value-2-b",
+          "en-multi-value-1-b",
+          "ja-multi-value-2-a",
+          "en-entity-confusion-2-2-old",
+          "en-multi-value-1-a",
+          "en-entity-confusion-2-6-new",
+          "en-entity-confusion-2-6-old",
+          "en-entity-confusion-2-6-other",
+          "ko-multi-value-2-a",
+          "en-replacement-2-5-old",
+          "en-entity-confusion-2-5-old",
+          "en-replacement-2-2-old",
+          "en-entity-confusion-2-4-other",
+          "en-entity-confusion-2-5-other",
+          "en-entity-confusion-2-5-new",
+          "ja-entity-confusion-2-2-new",
+          "en-entity-confusion-2-3-other"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-multi-value-3",
+        "language": "en",
+        "query": "What skill set 3 currently applies to the researcher?",
+        "retrieved_statement_ids": [
+          "en-multi-value-3-a",
+          "en-multi-value-3-b",
+          "ja-multi-value-3-a",
+          "ja-multi-value-3-b",
+          "en-multi-value-1-b",
+          "ko-multi-value-3-b",
+          "en-multi-value-6-a",
+          "en-replacement-2-3-old",
+          "ko-multi-value-3-a",
+          "en-multi-value-1-a",
+          "en-replacement-1-3-old",
+          "en-replacement-2-3-new",
+          "en-replacement-1-3-new",
+          "en-multi-value-4-a",
+          "en-multi-value-5-b",
+          "en-multi-value-5-a",
+          "en-entity-confusion-1-3-old",
+          "en-entity-confusion-2-3-old",
+          "en-entity-confusion-1-3-new",
+          "en-entity-confusion-2-3-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-multi-value-4",
+        "language": "en",
+        "query": "What skill set 4 currently applies to the planner?",
+        "retrieved_statement_ids": [
+          "en-multi-value-4-a",
+          "en-multi-value-4-b",
+          "en-replacement-1-4-new",
+          "en-replacement-2-4-new",
+          "en-replacement-1-4-old",
+          "en-replacement-2-4-old",
+          "en-multi-value-1-b",
+          "en-multi-value-5-b",
+          "en-entity-confusion-1-4-new",
+          "en-multi-value-6-a",
+          "en-multi-value-1-a",
+          "en-entity-confusion-2-4-new",
+          "en-multi-value-5-a",
+          "ja-multi-value-4-b",
+          "en-multi-value-2-a",
+          "en-entity-confusion-1-4-old",
+          "en-replacement-1-5-new",
+          "en-replacement-1-5-old",
+          "en-replacement-2-5-new",
+          "en-replacement-2-5-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-multi-value-5",
+        "language": "en",
+        "query": "What skill set 5 currently applies to the developer?",
+        "retrieved_statement_ids": [
+          "en-multi-value-5-b",
+          "en-multi-value-5-a",
+          "ja-multi-value-5-a",
+          "ja-multi-value-5-b",
+          "en-multi-value-1-b",
+          "en-multi-value-6-a",
+          "en-multi-value-4-a",
+          "en-multi-value-4-b",
+          "en-multi-value-1-a",
+          "en-replacement-2-5-old",
+          "en-multi-value-6-b",
+          "en-multi-value-3-a",
+          "en-multi-value-2-a",
+          "en-replacement-1-5-old",
+          "en-multi-value-3-b",
+          "en-replacement-2-5-new",
+          "en-replacement-1-5-new",
+          "ko-multi-value-5-b",
+          "ko-multi-value-5-a",
+          "en-entity-confusion-1-5-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-multi-value-6",
+        "language": "en",
+        "query": "What skill set 6 currently applies to the designer?",
+        "retrieved_statement_ids": [
+          "en-multi-value-6-a",
+          "en-multi-value-6-b",
+          "en-multi-value-5-b",
+          "ja-multi-value-6-a",
+          "ja-multi-value-6-b",
+          "en-multi-value-5-a",
+          "en-multi-value-1-b",
+          "en-multi-value-1-a",
+          "en-multi-value-4-b",
+          "ko-multi-value-6-a",
+          "en-multi-value-4-a",
+          "en-entity-confusion-1-6-old",
+          "ko-multi-value-6-b",
+          "en-multi-value-3-a",
+          "en-replacement-1-6-new",
+          "en-multi-value-3-b",
+          "en-replacement-1-6-old",
+          "en-multi-value-2-a",
+          "en-entity-confusion-2-6-new",
+          "en-entity-confusion-2-6-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-project-boundary-1",
+        "language": "en",
+        "query": "What home city currently applies to the user? personal",
+        "retrieved_statement_ids": [
+          "en-project-boundary-1-personal",
+          "ko-project-boundary-1-personal",
+          "ja-project-boundary-1-personal",
+          "en-project-boundary-2-personal",
+          "en-project-boundary-4-personal",
+          "en-project-boundary-3-personal",
+          "en-project-boundary-5-personal",
+          "ja-project-boundary-3-personal",
+          "ko-project-boundary-2-personal",
+          "ja-project-boundary-5-personal",
+          "en-project-boundary-6-personal",
+          "ja-project-boundary-2-personal",
+          "ko-project-boundary-3-personal",
+          "ja-project-boundary-6-personal",
+          "ko-project-boundary-5-personal",
+          "ko-project-boundary-4-personal",
+          "ko-project-boundary-6-personal",
+          "ja-project-boundary-4-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-project-boundary-2",
+        "language": "en",
+        "query": "What preferred editor currently applies to the customer? personal",
+        "retrieved_statement_ids": [
+          "en-project-boundary-2-personal",
+          "ja-project-boundary-2-personal",
+          "en-project-boundary-5-personal",
+          "ko-project-boundary-2-personal",
+          "en-project-boundary-4-personal",
+          "ja-project-boundary-6-personal",
+          "ko-project-boundary-4-personal",
+          "en-project-boundary-6-personal",
+          "en-project-boundary-1-personal",
+          "ko-project-boundary-5-personal",
+          "ja-project-boundary-5-personal",
+          "en-project-boundary-3-personal",
+          "ja-project-boundary-1-personal",
+          "ja-project-boundary-4-personal",
+          "ko-project-boundary-1-personal",
+          "ko-project-boundary-6-personal",
+          "ja-project-boundary-3-personal",
+          "ko-project-boundary-3-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-project-boundary-3",
+        "language": "en",
+        "query": "What work region currently applies to the researcher? personal",
+        "retrieved_statement_ids": [
+          "en-project-boundary-3-personal",
+          "ko-project-boundary-3-personal",
+          "ja-project-boundary-3-personal",
+          "en-project-boundary-1-personal",
+          "en-project-boundary-4-personal",
+          "ja-project-boundary-5-personal",
+          "en-project-boundary-5-personal",
+          "ja-project-boundary-1-personal",
+          "ko-project-boundary-4-personal",
+          "ko-project-boundary-1-personal",
+          "en-project-boundary-2-personal",
+          "ko-project-boundary-5-personal",
+          "ja-project-boundary-6-personal",
+          "en-project-boundary-6-personal",
+          "ja-project-boundary-4-personal",
+          "ja-project-boundary-2-personal",
+          "ko-project-boundary-6-personal",
+          "ko-project-boundary-2-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-project-boundary-4",
+        "language": "en",
+        "query": "What default language currently applies to the planner? personal",
+        "retrieved_statement_ids": [
+          "en-project-boundary-4-personal",
+          "ja-project-boundary-6-personal",
+          "en-project-boundary-5-personal",
+          "ko-project-boundary-4-personal",
+          "ja-project-boundary-4-personal",
+          "ja-project-boundary-5-personal",
+          "ko-project-boundary-5-personal",
+          "en-project-boundary-6-personal",
+          "en-project-boundary-2-personal",
+          "en-project-boundary-1-personal",
+          "ja-project-boundary-2-personal",
+          "ko-project-boundary-6-personal",
+          "ja-project-boundary-1-personal",
+          "en-project-boundary-3-personal",
+          "ko-project-boundary-2-personal",
+          "ja-project-boundary-3-personal",
+          "ko-project-boundary-1-personal",
+          "ko-project-boundary-3-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-project-boundary-5",
+        "language": "en",
+        "query": "What meeting day currently applies to the developer? personal",
+        "retrieved_statement_ids": [
+          "en-project-boundary-5-personal",
+          "ja-project-boundary-5-personal",
+          "ko-project-boundary-5-personal",
+          "en-project-boundary-4-personal",
+          "en-project-boundary-2-personal",
+          "ja-project-boundary-6-personal",
+          "en-project-boundary-6-personal",
+          "en-project-boundary-1-personal",
+          "ko-project-boundary-6-personal",
+          "en-project-boundary-3-personal",
+          "ja-project-boundary-2-personal",
+          "ko-project-boundary-2-personal",
+          "ja-project-boundary-4-personal",
+          "ko-project-boundary-4-personal",
+          "ja-project-boundary-1-personal",
+          "ja-project-boundary-3-personal",
+          "ko-project-boundary-1-personal",
+          "ko-project-boundary-3-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "en-project-boundary-6",
+        "language": "en",
+        "query": "What release channel currently applies to the designer? personal",
+        "retrieved_statement_ids": [
+          "en-project-boundary-6-personal",
+          "ja-project-boundary-6-personal",
+          "ko-project-boundary-6-personal",
+          "en-project-boundary-5-personal",
+          "en-project-boundary-2-personal",
+          "ja-project-boundary-5-personal",
+          "en-project-boundary-4-personal",
+          "ja-project-boundary-2-personal",
+          "ko-project-boundary-5-personal",
+          "ko-project-boundary-4-personal",
+          "en-project-boundary-3-personal",
+          "en-project-boundary-1-personal",
+          "ko-project-boundary-2-personal",
+          "ja-project-boundary-4-personal",
+          "ja-project-boundary-1-personal",
+          "ja-project-boundary-3-personal",
+          "ko-project-boundary-1-personal",
+          "ko-project-boundary-3-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-1-1",
+        "language": "ja",
+        "query": "ユーザーに現在適用される居住都市 replacement 1は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-replacement-1-1-old",
+          "ja-replacement-1-1-new",
+          "ja-replacement-2-1-old",
+          "ja-replacement-2-1-new",
+          "ja-entity-confusion-1-1-new",
+          "ja-entity-confusion-1-1-old",
+          "ko-replacement-1-1-old",
+          "en-replacement-1-1-old",
+          "ja-entity-confusion-2-1-old",
+          "ja-replacement-1-2-old",
+          "en-replacement-1-1-new",
+          "ko-replacement-2-1-old",
+          "ja-entity-confusion-2-1-new",
+          "ja-replacement-1-3-new",
+          "ko-replacement-1-1-new",
+          "en-replacement-2-1-new",
+          "en-replacement-2-1-old",
+          "ja-replacement-2-2-old",
+          "ja-replacement-1-3-old",
+          "ja-entity-confusion-1-1-other"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-1-2",
+        "language": "ja",
+        "query": "顧客に現在適用される好みのエディター replacement 1は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-replacement-1-2-old",
+          "ja-replacement-1-2-new",
+          "ja-replacement-2-2-old",
+          "ja-replacement-2-2-new",
+          "ja-entity-confusion-1-2-old",
+          "ja-entity-confusion-1-2-new",
+          "ja-entity-confusion-2-2-old",
+          "ja-entity-confusion-2-2-new",
+          "en-replacement-1-2-old",
+          "ja-replacement-1-6-old",
+          "ja-entity-confusion-1-2-other",
+          "en-replacement-1-2-new",
+          "ja-replacement-1-4-new",
+          "ja-replacement-1-6-new",
+          "en-replacement-2-2-old",
+          "ja-replacement-1-4-old",
+          "ja-entity-confusion-2-2-other",
+          "ja-entity-confusion-1-6-new",
+          "ja-replacement-2-6-old",
+          "ja-entity-confusion-1-6-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-1-3",
+        "language": "ja",
+        "query": "研究者に現在適用される勤務地域 replacement 1は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-replacement-1-3-old",
+          "ja-replacement-1-3-new",
+          "ja-replacement-2-3-old",
+          "ja-replacement-2-3-new",
+          "ja-entity-confusion-1-3-old",
+          "en-replacement-1-3-old",
+          "en-replacement-1-3-new",
+          "ja-entity-confusion-1-3-new",
+          "ko-replacement-1-3-new",
+          "ko-replacement-1-3-old",
+          "en-replacement-2-3-old",
+          "ko-replacement-2-3-new",
+          "ja-entity-confusion-2-3-old",
+          "en-replacement-2-3-new",
+          "ja-entity-confusion-1-3-other",
+          "ja-entity-confusion-2-3-new",
+          "ja-replacement-1-4-new",
+          "ja-replacement-1-1-old",
+          "ko-replacement-2-3-old",
+          "ja-replacement-1-5-new"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-1-4",
+        "language": "ja",
+        "query": "企画者に現在適用される既定言語 replacement 1は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-replacement-1-4-new",
+          "ja-replacement-1-4-old",
+          "ja-replacement-2-4-new",
+          "ja-replacement-2-4-old",
+          "ja-entity-confusion-1-4-new",
+          "ja-entity-confusion-1-4-old",
+          "ja-entity-confusion-2-4-new",
+          "ja-entity-confusion-1-4-other",
+          "ko-replacement-1-4-old",
+          "ja-entity-confusion-2-4-old",
+          "ko-replacement-1-4-new",
+          "en-replacement-1-4-old",
+          "ko-replacement-2-4-old",
+          "ja-replacement-1-6-old",
+          "en-replacement-1-4-new",
+          "ja-replacement-1-6-new",
+          "ko-replacement-2-4-new",
+          "ja-entity-confusion-2-4-other",
+          "ja-replacement-1-5-old",
+          "ja-replacement-1-2-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-1-5",
+        "language": "ja",
+        "query": "開発者に現在適用される会議曜日 replacement 1は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-replacement-1-5-new",
+          "ja-replacement-1-5-old",
+          "ja-replacement-2-5-new",
+          "ja-replacement-2-5-old",
+          "ja-entity-confusion-1-5-new",
+          "en-replacement-1-5-new",
+          "ja-entity-confusion-1-5-old",
+          "en-replacement-1-5-old",
+          "ja-entity-confusion-2-5-new",
+          "ja-entity-confusion-2-5-old",
+          "en-replacement-2-5-new",
+          "ja-replacement-1-4-new",
+          "ja-entity-confusion-1-5-other",
+          "ko-replacement-1-5-new",
+          "en-replacement-2-5-old",
+          "ko-replacement-1-5-old",
+          "ja-replacement-2-4-new",
+          "ko-replacement-2-5-new",
+          "ja-replacement-1-6-old",
+          "ja-replacement-1-4-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-1-6",
+        "language": "ja",
+        "query": "デザイナーに現在適用される配布チャンネル replacement 1は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-replacement-1-6-old",
+          "ja-replacement-1-6-new",
+          "ja-replacement-2-6-old",
+          "ja-replacement-2-6-new",
+          "ja-entity-confusion-1-6-old",
+          "ja-entity-confusion-1-6-new",
+          "ja-entity-confusion-1-6-other",
+          "ja-entity-confusion-2-6-new",
+          "ja-entity-confusion-2-6-old",
+          "en-replacement-1-6-old",
+          "en-replacement-1-6-new",
+          "en-replacement-2-6-new",
+          "ja-replacement-1-2-old",
+          "en-replacement-2-6-old",
+          "ja-replacement-1-4-new",
+          "ja-replacement-1-5-new",
+          "ja-entity-confusion-2-6-other",
+          "ja-replacement-1-5-old",
+          "ja-replacement-1-4-old",
+          "ko-replacement-1-6-new"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-2-1",
+        "language": "ja",
+        "query": "ユーザーに現在適用される居住都市 replacement 2は何ですか？ 最新の変更を基準に。",
+        "retrieved_statement_ids": [
+          "ja-replacement-2-1-old",
+          "ja-replacement-2-1-new",
+          "ja-replacement-1-1-old",
+          "ja-replacement-1-1-new",
+          "ja-entity-confusion-2-1-old",
+          "ja-entity-confusion-2-1-new",
+          "en-replacement-2-1-old",
+          "en-replacement-2-1-new",
+          "ja-replacement-2-2-old",
+          "ko-replacement-2-1-old",
+          "ja-replacement-2-3-new",
+          "ja-replacement-2-2-new",
+          "ja-replacement-2-4-new",
+          "en-replacement-1-1-old",
+          "ja-replacement-2-5-old",
+          "ja-replacement-2-3-old",
+          "ko-replacement-1-1-old",
+          "ja-replacement-2-5-new",
+          "ja-entity-confusion-1-1-new",
+          "ja-entity-confusion-2-1-other"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-2-2",
+        "language": "ja",
+        "query": "顧客に現在適用される好みのエディター replacement 2は何ですか？ 最新の変更を基準に。",
+        "retrieved_statement_ids": [
+          "ja-replacement-2-2-old",
+          "ja-replacement-2-2-new",
+          "ja-replacement-1-2-new",
+          "ja-replacement-1-2-old",
+          "ja-entity-confusion-2-2-old",
+          "ja-entity-confusion-2-2-new",
+          "ja-replacement-2-4-new",
+          "en-replacement-2-2-old",
+          "ja-replacement-2-6-old",
+          "ja-entity-confusion-2-2-other",
+          "ja-entity-confusion-1-2-new",
+          "en-replacement-2-2-new",
+          "ja-entity-confusion-2-6-old",
+          "ja-replacement-2-6-new",
+          "ja-entity-confusion-1-2-old",
+          "ja-replacement-1-6-old",
+          "ja-replacement-2-4-old",
+          "ja-replacement-2-5-old",
+          "ja-replacement-2-5-new",
+          "ja-entity-confusion-2-6-new"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-2-3",
+        "language": "ja",
+        "query": "研究者に現在適用される勤務地域 replacement 2は何ですか？ 最新の変更を基準に。",
+        "retrieved_statement_ids": [
+          "ja-replacement-2-3-old",
+          "ja-replacement-2-3-new",
+          "ja-replacement-1-3-old",
+          "ja-replacement-1-3-new",
+          "ja-entity-confusion-2-3-old",
+          "ja-entity-confusion-2-3-new",
+          "ko-replacement-2-3-new",
+          "en-replacement-2-3-old",
+          "en-replacement-2-3-new",
+          "ja-entity-confusion-1-3-old",
+          "ja-replacement-2-4-new",
+          "ko-replacement-2-3-old",
+          "en-replacement-1-3-old",
+          "ko-replacement-1-3-new",
+          "en-replacement-1-3-new",
+          "ja-entity-confusion-1-3-new",
+          "ko-replacement-1-3-old",
+          "ja-entity-confusion-2-3-other",
+          "ja-replacement-2-5-old",
+          "ja-replacement-2-5-new"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-2-4",
+        "language": "ja",
+        "query": "企画者に現在適用される既定言語 replacement 2は何ですか？ 最新の変更を基準に。",
+        "retrieved_statement_ids": [
+          "ja-replacement-2-4-new",
+          "ja-replacement-1-4-new",
+          "ja-replacement-2-4-old",
+          "ja-replacement-1-4-old",
+          "ja-entity-confusion-2-4-new",
+          "ja-entity-confusion-2-4-old",
+          "ja-entity-confusion-1-4-new",
+          "ja-entity-confusion-2-4-other",
+          "ko-replacement-2-4-old",
+          "ko-replacement-2-4-new",
+          "ja-entity-confusion-1-4-old",
+          "ja-replacement-2-2-new",
+          "ja-replacement-2-6-old",
+          "en-replacement-2-4-new",
+          "ja-replacement-2-6-new",
+          "ja-replacement-2-5-old",
+          "en-replacement-2-4-old",
+          "ja-replacement-2-3-new",
+          "ja-replacement-2-5-new",
+          "ja-replacement-2-3-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          3
+        ],
+        "stale_forbidden_ranks": [
+          3
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-2-5",
+        "language": "ja",
+        "query": "開発者に現在適用される会議曜日 replacement 2は何ですか？ 最新の変更を基準に。",
+        "retrieved_statement_ids": [
+          "ja-replacement-2-5-new",
+          "ja-replacement-2-5-old",
+          "ja-replacement-1-5-new",
+          "ja-replacement-1-5-old",
+          "ja-entity-confusion-2-5-new",
+          "ja-entity-confusion-2-5-old",
+          "en-replacement-2-5-new",
+          "en-replacement-2-5-old",
+          "ja-replacement-2-4-new",
+          "en-replacement-1-5-new",
+          "ja-entity-confusion-2-5-other",
+          "ja-entity-confusion-1-5-new",
+          "ko-replacement-2-5-new",
+          "en-replacement-1-5-old",
+          "ja-entity-confusion-1-5-old",
+          "ko-replacement-2-5-old",
+          "ja-replacement-2-6-old",
+          "ko-replacement-1-5-new",
+          "ja-replacement-2-4-old",
+          "ja-replacement-1-4-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-replacement-2-6",
+        "language": "ja",
+        "query": "デザイナーに現在適用される配布チャンネル replacement 2は何ですか？ 最新の変更を基準に。",
+        "retrieved_statement_ids": [
+          "ja-replacement-2-6-old",
+          "ja-replacement-2-6-new",
+          "ja-replacement-1-6-old",
+          "ja-replacement-1-6-new",
+          "ja-entity-confusion-2-6-old",
+          "ja-entity-confusion-2-6-new",
+          "en-replacement-2-6-new",
+          "ja-entity-confusion-1-6-old",
+          "en-replacement-2-6-old",
+          "ja-entity-confusion-1-6-new",
+          "ja-entity-confusion-2-6-other",
+          "ja-replacement-2-2-old",
+          "ja-replacement-2-4-new",
+          "ja-replacement-2-2-new",
+          "ja-replacement-2-5-new",
+          "en-replacement-1-6-new",
+          "ja-replacement-2-4-old",
+          "ja-replacement-2-5-old",
+          "ko-replacement-2-6-new",
+          "en-replacement-1-6-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-entity-confusion-1-1",
+        "language": "ja",
+        "query": "ユーザーの現在の居住都市 entity 1は何ですか？同僚の情報は除外してください。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-1-1-new",
+          "ja-entity-confusion-1-1-old",
+          "ja-entity-confusion-1-1-other",
+          "ja-replacement-1-1-new",
+          "ja-replacement-1-1-old",
+          "ja-entity-confusion-2-1-new",
+          "ja-entity-confusion-1-3-other",
+          "ja-entity-confusion-2-1-old",
+          "ja-entity-confusion-1-4-other",
+          "ja-entity-confusion-1-2-other",
+          "ja-entity-confusion-2-1-other",
+          "ja-entity-confusion-1-2-old",
+          "ja-replacement-2-1-new",
+          "ja-entity-confusion-1-3-old",
+          "ja-replacement-2-1-old",
+          "ja-entity-confusion-1-5-other",
+          "ja-entity-confusion-1-5-old",
+          "ja-entity-confusion-1-5-new",
+          "ja-entity-confusion-1-2-new",
+          "ja-entity-confusion-1-3-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "ja-entity-confusion-1-2",
+        "language": "ja",
+        "query": "顧客の現在の好みのエディター entity 1は何ですか？同僚の情報は除外してください。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-1-2-new",
+          "ja-entity-confusion-1-2-old",
+          "ja-entity-confusion-1-2-other",
+          "ja-entity-confusion-2-2-old",
+          "ja-entity-confusion-2-2-new",
+          "ja-replacement-1-2-new",
+          "ja-entity-confusion-2-2-other",
+          "ja-entity-confusion-1-4-other",
+          "ja-replacement-1-2-old",
+          "ja-entity-confusion-1-6-other",
+          "ja-entity-confusion-1-5-other",
+          "ja-entity-confusion-1-5-new",
+          "ja-replacement-2-2-new",
+          "ja-entity-confusion-1-3-other",
+          "ja-replacement-2-2-old",
+          "ja-entity-confusion-1-5-old",
+          "ja-entity-confusion-1-4-new",
+          "ja-entity-confusion-2-4-other",
+          "ja-entity-confusion-2-6-other",
+          "ja-entity-confusion-1-1-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "ja-entity-confusion-1-3",
+        "language": "ja",
+        "query": "研究者の現在の勤務地域 entity 1は何ですか？同僚の情報は除外してください。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-1-3-old",
+          "ja-entity-confusion-1-3-new",
+          "ja-replacement-1-3-new",
+          "ja-replacement-1-3-old",
+          "ja-entity-confusion-1-3-other",
+          "ja-entity-confusion-2-3-old",
+          "ja-replacement-2-3-old",
+          "ja-replacement-2-3-new",
+          "ja-entity-confusion-2-3-new",
+          "ja-entity-confusion-1-4-other",
+          "ja-entity-confusion-1-2-other",
+          "ja-entity-confusion-1-1-other",
+          "ja-entity-confusion-2-3-other",
+          "en-entity-confusion-1-3-new",
+          "ko-entity-confusion-1-3-new",
+          "en-entity-confusion-1-3-old",
+          "ko-entity-confusion-1-3-old",
+          "ja-entity-confusion-1-1-new",
+          "ja-entity-confusion-1-5-other",
+          "en-replacement-1-3-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1,
+          5
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": [
+          5
+        ]
+      },
+      {
+        "id": "ja-entity-confusion-1-4",
+        "language": "ja",
+        "query": "企画者の現在の既定言語 entity 1は何ですか？同僚の情報は除外してください。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-1-4-new",
+          "ja-entity-confusion-1-4-old",
+          "ja-replacement-1-4-new",
+          "ja-entity-confusion-1-4-other",
+          "ja-entity-confusion-2-4-new",
+          "ja-replacement-1-4-old",
+          "ja-replacement-2-4-new",
+          "ja-entity-confusion-2-4-other",
+          "ja-entity-confusion-2-4-old",
+          "ja-replacement-2-4-old",
+          "ja-entity-confusion-1-2-other",
+          "ja-entity-confusion-1-6-other",
+          "ja-entity-confusion-1-3-other",
+          "ja-entity-confusion-1-2-new",
+          "ja-entity-confusion-1-5-other",
+          "ja-entity-confusion-1-5-old",
+          "ja-entity-confusion-1-5-new",
+          "ja-entity-confusion-1-3-old",
+          "ja-entity-confusion-1-1-other",
+          "ja-entity-confusion-1-2-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          4
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          4
+        ]
+      },
+      {
+        "id": "ja-entity-confusion-1-5",
+        "language": "ja",
+        "query": "開発者の現在の会議曜日 entity 1は何ですか？同僚の情報は除外してください。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-1-5-new",
+          "ja-entity-confusion-1-5-old",
+          "ja-replacement-1-5-new",
+          "ja-replacement-1-5-old",
+          "ja-entity-confusion-2-5-new",
+          "ja-entity-confusion-1-5-other",
+          "ja-replacement-2-5-new",
+          "ja-entity-confusion-2-5-old",
+          "ja-replacement-2-5-old",
+          "ja-entity-confusion-2-5-other",
+          "ja-entity-confusion-1-2-other",
+          "ja-entity-confusion-1-4-other",
+          "en-entity-confusion-1-5-new",
+          "ja-entity-confusion-1-6-other",
+          "en-replacement-1-5-new",
+          "en-entity-confusion-1-5-old",
+          "ko-entity-confusion-1-5-new",
+          "ja-entity-confusion-1-4-new",
+          "ja-entity-confusion-1-2-new",
+          "en-replacement-1-5-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          6
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          6
+        ]
+      },
+      {
+        "id": "ja-entity-confusion-1-6",
+        "language": "ja",
+        "query": "デザイナーの現在の配布チャンネル entity 1は何ですか？同僚の情報は除外してください。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-1-6-new",
+          "ja-entity-confusion-1-6-old",
+          "ja-entity-confusion-1-6-other",
+          "ja-replacement-1-6-new",
+          "ja-replacement-1-6-old",
+          "ja-entity-confusion-2-6-new",
+          "ja-entity-confusion-2-6-other",
+          "ja-entity-confusion-2-6-old",
+          "ja-replacement-2-6-new",
+          "ja-replacement-2-6-old",
+          "ja-entity-confusion-1-2-other",
+          "ja-entity-confusion-1-5-new",
+          "ja-entity-confusion-1-5-old",
+          "ja-entity-confusion-1-4-other",
+          "ja-entity-confusion-1-4-new",
+          "en-entity-confusion-1-6-new",
+          "ja-entity-confusion-1-5-other",
+          "ja-entity-confusion-1-2-old",
+          "ja-entity-confusion-1-2-new",
+          "en-entity-confusion-1-6-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "ja-entity-confusion-2-1",
+        "language": "ja",
+        "query": "ユーザーの現在の居住都市 entity 2は何ですか？同僚の情報は除外してください。 最新値のみ。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-2-1-new",
+          "ja-entity-confusion-2-1-old",
+          "ja-entity-confusion-2-1-other",
+          "ja-replacement-2-1-old",
+          "ja-replacement-2-1-new",
+          "ja-entity-confusion-1-1-new",
+          "ja-entity-confusion-2-5-other",
+          "ja-entity-confusion-2-2-other",
+          "ja-entity-confusion-1-1-old",
+          "ja-entity-confusion-2-3-other",
+          "ja-entity-confusion-2-2-old",
+          "ja-entity-confusion-2-2-new",
+          "ja-entity-confusion-2-5-new",
+          "ja-replacement-1-1-old",
+          "ja-replacement-1-1-new",
+          "ja-entity-confusion-2-5-old",
+          "ja-entity-confusion-2-4-other",
+          "ja-entity-confusion-2-3-old",
+          "ja-entity-confusion-1-1-other",
+          "ja-entity-confusion-2-6-other"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "ja-entity-confusion-2-2",
+        "language": "ja",
+        "query": "顧客の現在の好みのエディター entity 2は何ですか？同僚の情報は除外してください。 最新値のみ。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-2-2-new",
+          "ja-entity-confusion-2-2-old",
+          "ja-entity-confusion-2-2-other",
+          "ja-entity-confusion-1-2-new",
+          "ja-entity-confusion-1-2-other",
+          "ja-replacement-2-2-new",
+          "ja-entity-confusion-2-6-other",
+          "ja-entity-confusion-2-5-other",
+          "ja-entity-confusion-2-4-other",
+          "ja-replacement-2-2-old",
+          "ja-entity-confusion-1-2-old",
+          "ja-replacement-1-2-new",
+          "ja-entity-confusion-2-5-new",
+          "ja-entity-confusion-2-5-old",
+          "ja-entity-confusion-2-1-new",
+          "ja-entity-confusion-2-3-other",
+          "ja-entity-confusion-2-1-old",
+          "ja-entity-confusion-2-6-new",
+          "ja-replacement-1-2-old",
+          "ja-entity-confusion-2-6-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "ja-entity-confusion-2-3",
+        "language": "ja",
+        "query": "研究者の現在の勤務地域 entity 2は何ですか？同僚の情報は除外してください。 最新値のみ。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-2-3-old",
+          "ja-entity-confusion-2-3-new",
+          "ja-replacement-2-3-old",
+          "ja-replacement-2-3-new",
+          "ja-entity-confusion-2-3-other",
+          "ja-entity-confusion-1-3-old",
+          "ja-entity-confusion-1-3-new",
+          "ja-replacement-1-3-new",
+          "ja-replacement-1-3-old",
+          "ja-entity-confusion-2-4-other",
+          "ja-entity-confusion-2-2-other",
+          "ja-entity-confusion-2-5-other",
+          "ja-entity-confusion-2-1-other",
+          "ja-entity-confusion-2-1-new",
+          "en-entity-confusion-2-3-new",
+          "ja-entity-confusion-1-3-other",
+          "ja-entity-confusion-2-5-new",
+          "ko-entity-confusion-2-3-new",
+          "ja-entity-confusion-2-5-old",
+          "en-entity-confusion-2-3-old"
+        ],
+        "acceptable_rank": 2,
+        "acceptable_ranks": [
+          2
+        ],
+        "forbidden_ranks": [
+          1,
+          5
+        ],
+        "stale_forbidden_ranks": [
+          1
+        ],
+        "active_distractor_ranks": [
+          5
+        ]
+      },
+      {
+        "id": "ja-entity-confusion-2-4",
+        "language": "ja",
+        "query": "企画者の現在の既定言語 entity 2は何ですか？同僚の情報は除外してください。 最新値のみ。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-2-4-new",
+          "ja-entity-confusion-2-4-other",
+          "ja-replacement-2-4-new",
+          "ja-entity-confusion-2-4-old",
+          "ja-replacement-2-4-old",
+          "ja-entity-confusion-1-4-new",
+          "ja-replacement-1-4-new",
+          "ja-entity-confusion-1-4-other",
+          "ja-entity-confusion-2-6-other",
+          "ja-entity-confusion-1-4-old",
+          "ja-entity-confusion-2-5-other",
+          "ja-entity-confusion-2-2-other",
+          "ja-replacement-1-4-old",
+          "ja-entity-confusion-2-5-old",
+          "ja-entity-confusion-2-2-new",
+          "ja-entity-confusion-2-5-new",
+          "ja-entity-confusion-2-3-other",
+          "ja-entity-confusion-2-1-other",
+          "ja-entity-confusion-2-3-old",
+          "ja-entity-confusion-2-1-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          4
+        ],
+        "stale_forbidden_ranks": [
+          4
+        ],
+        "active_distractor_ranks": [
+          2
+        ]
+      },
+      {
+        "id": "ja-entity-confusion-2-5",
+        "language": "ja",
+        "query": "開発者の現在の会議曜日 entity 2は何ですか？同僚の情報は除外してください。 最新値のみ。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-2-5-new",
+          "ja-entity-confusion-2-5-old",
+          "ja-replacement-2-5-new",
+          "ja-entity-confusion-2-5-other",
+          "ja-replacement-2-5-old",
+          "ja-replacement-1-5-new",
+          "ja-entity-confusion-1-5-new",
+          "ja-replacement-1-5-old",
+          "ja-entity-confusion-1-5-old",
+          "ja-entity-confusion-2-6-other",
+          "ja-entity-confusion-2-2-other",
+          "ja-entity-confusion-2-4-other",
+          "ja-entity-confusion-1-5-other",
+          "ja-entity-confusion-2-2-new",
+          "ja-entity-confusion-2-1-new",
+          "en-entity-confusion-2-5-new",
+          "ja-entity-confusion-2-4-new",
+          "ja-entity-confusion-2-6-old",
+          "ja-entity-confusion-2-6-new",
+          "ja-entity-confusion-2-1-other"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          4
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          4
+        ]
+      },
+      {
+        "id": "ja-entity-confusion-2-6",
+        "language": "ja",
+        "query": "デザイナーの現在の配布チャンネル entity 2は何ですか？同僚の情報は除外してください。 最新値のみ。",
+        "retrieved_statement_ids": [
+          "ja-entity-confusion-2-6-new",
+          "ja-entity-confusion-2-6-old",
+          "ja-entity-confusion-2-6-other",
+          "ja-replacement-2-6-old",
+          "ja-entity-confusion-1-6-new",
+          "ja-entity-confusion-1-6-old",
+          "ja-replacement-2-6-new",
+          "ja-entity-confusion-1-6-other",
+          "ja-replacement-1-6-new",
+          "ja-replacement-1-6-old",
+          "ja-entity-confusion-2-2-other",
+          "ja-entity-confusion-2-2-new",
+          "ja-entity-confusion-2-5-new",
+          "ja-entity-confusion-2-5-old",
+          "ja-entity-confusion-2-2-old",
+          "ja-entity-confusion-2-5-other",
+          "ja-entity-confusion-2-4-other",
+          "ja-replacement-2-5-new",
+          "ja-entity-confusion-2-4-new",
+          "en-entity-confusion-2-6-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [
+          2,
+          3
+        ],
+        "stale_forbidden_ranks": [
+          2
+        ],
+        "active_distractor_ranks": [
+          3
+        ]
+      },
+      {
+        "id": "ja-multi-value-1",
+        "language": "ja",
+        "query": "ユーザーに現在適用される技術セット1は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-multi-value-1-a",
+          "ja-multi-value-1-b",
+          "ja-multi-value-2-a",
+          "ja-multi-value-2-b",
+          "ja-multi-value-3-a",
+          "ja-multi-value-5-b",
+          "ja-multi-value-5-a",
+          "ja-multi-value-4-a",
+          "ja-multi-value-6-a",
+          "ja-multi-value-3-b",
+          "ja-multi-value-4-b",
+          "ja-entity-confusion-1-6-old",
+          "ko-multi-value-1-b",
+          "en-multi-value-1-a",
+          "ja-entity-confusion-1-5-old",
+          "ja-entity-confusion-1-1-new",
+          "ja-entity-confusion-1-6-new",
+          "ja-multi-value-6-b",
+          "ja-entity-confusion-1-6-other",
+          "ja-entity-confusion-1-5-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-multi-value-2",
+        "language": "ja",
+        "query": "顧客に現在適用される技術セット2は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-multi-value-2-a",
+          "ja-multi-value-2-b",
+          "ja-multi-value-1-a",
+          "ja-multi-value-5-b",
+          "ja-entity-confusion-2-2-new",
+          "ja-multi-value-1-b",
+          "ja-entity-confusion-2-6-old",
+          "ja-entity-confusion-2-2-old",
+          "ja-multi-value-4-a",
+          "ja-multi-value-5-a",
+          "ko-multi-value-2-a",
+          "ja-multi-value-4-b",
+          "ja-entity-confusion-2-6-other",
+          "ja-entity-confusion-2-6-new",
+          "ja-multi-value-3-a",
+          "ja-entity-confusion-2-5-old",
+          "ja-replacement-2-2-new",
+          "ja-multi-value-3-b",
+          "ko-multi-value-2-b",
+          "ja-entity-confusion-2-5-new"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-multi-value-3",
+        "language": "ja",
+        "query": "研究者に現在適用される技術セット3は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-multi-value-3-a",
+          "ja-multi-value-3-b",
+          "ja-multi-value-1-b",
+          "ja-multi-value-1-a",
+          "ja-multi-value-5-a",
+          "ja-multi-value-5-b",
+          "ja-multi-value-4-a",
+          "ja-multi-value-6-a",
+          "ja-multi-value-2-a",
+          "ja-multi-value-4-b",
+          "ko-multi-value-3-b",
+          "ja-multi-value-2-b",
+          "ko-multi-value-3-a",
+          "ja-multi-value-6-b",
+          "ja-replacement-2-3-old",
+          "en-multi-value-3-a",
+          "ja-replacement-2-3-new",
+          "ja-replacement-1-3-old",
+          "ja-replacement-1-3-new",
+          "ja-entity-confusion-1-3-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-multi-value-4",
+        "language": "ja",
+        "query": "企画者に現在適用される技術セット4は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-multi-value-4-a",
+          "ja-multi-value-4-b",
+          "ja-multi-value-3-a",
+          "ja-multi-value-5-b",
+          "ja-multi-value-1-b",
+          "ja-multi-value-1-a",
+          "ja-multi-value-6-a",
+          "ja-multi-value-2-a",
+          "ja-multi-value-5-a",
+          "ja-replacement-2-4-new",
+          "ko-multi-value-4-b",
+          "ja-replacement-1-4-new",
+          "ja-multi-value-2-b",
+          "ko-multi-value-4-a",
+          "ja-multi-value-3-b",
+          "ja-multi-value-6-b",
+          "en-multi-value-4-b",
+          "ja-replacement-1-4-old",
+          "ja-entity-confusion-2-4-new",
+          "ja-replacement-2-4-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-multi-value-5",
+        "language": "ja",
+        "query": "開発者に現在適用される技術セット5は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-multi-value-5-b",
+          "ja-multi-value-5-a",
+          "ja-multi-value-1-b",
+          "ja-multi-value-4-a",
+          "ja-multi-value-3-a",
+          "ja-multi-value-6-a",
+          "ja-multi-value-1-a",
+          "ja-multi-value-4-b",
+          "ja-multi-value-6-b",
+          "ja-multi-value-2-a",
+          "ja-multi-value-3-b",
+          "ja-multi-value-2-b",
+          "en-multi-value-5-b",
+          "en-multi-value-5-a",
+          "ja-replacement-1-5-old",
+          "ko-multi-value-5-b",
+          "ja-replacement-2-5-old",
+          "ja-replacement-1-5-new",
+          "ja-replacement-2-5-new",
+          "ja-entity-confusion-2-6-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-multi-value-6",
+        "language": "ja",
+        "query": "デザイナーに現在適用される技術セット6は何ですか？",
+        "retrieved_statement_ids": [
+          "ja-multi-value-6-a",
+          "ja-multi-value-6-b",
+          "ja-multi-value-5-b",
+          "ja-multi-value-5-a",
+          "ja-multi-value-1-a",
+          "ja-multi-value-1-b",
+          "ja-multi-value-3-a",
+          "en-multi-value-6-b",
+          "en-multi-value-6-a",
+          "ko-multi-value-6-a",
+          "ja-multi-value-3-b",
+          "ja-multi-value-4-a",
+          "ja-multi-value-2-a",
+          "ja-multi-value-4-b",
+          "ja-multi-value-2-b",
+          "ko-multi-value-6-b",
+          "ja-entity-confusion-2-6-old",
+          "ja-entity-confusion-1-6-old",
+          "ja-entity-confusion-1-6-new",
+          "ja-replacement-1-6-old"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1,
+          2
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-project-boundary-1",
+        "language": "ja",
+        "query": "ユーザーに現在適用される居住都市は何ですか？ personal",
+        "retrieved_statement_ids": [
+          "ja-project-boundary-1-personal",
+          "ko-project-boundary-1-personal",
+          "en-project-boundary-1-personal",
+          "ja-project-boundary-2-personal",
+          "ja-project-boundary-3-personal",
+          "ja-project-boundary-5-personal",
+          "ja-project-boundary-6-personal",
+          "ko-project-boundary-2-personal",
+          "ko-project-boundary-3-personal",
+          "ja-project-boundary-4-personal",
+          "en-project-boundary-2-personal",
+          "en-project-boundary-3-personal",
+          "ko-project-boundary-5-personal",
+          "en-project-boundary-4-personal",
+          "ko-project-boundary-6-personal",
+          "en-project-boundary-5-personal",
+          "ko-project-boundary-4-personal",
+          "en-project-boundary-6-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-project-boundary-2",
+        "language": "ja",
+        "query": "顧客に現在適用される好みのエディターは何ですか？ personal",
+        "retrieved_statement_ids": [
+          "ja-project-boundary-2-personal",
+          "en-project-boundary-2-personal",
+          "ja-project-boundary-6-personal",
+          "ko-project-boundary-2-personal",
+          "ja-project-boundary-4-personal",
+          "ko-project-boundary-4-personal",
+          "ja-project-boundary-1-personal",
+          "ja-project-boundary-5-personal",
+          "ko-project-boundary-6-personal",
+          "ko-project-boundary-5-personal",
+          "ja-project-boundary-3-personal",
+          "ko-project-boundary-1-personal",
+          "en-project-boundary-4-personal",
+          "en-project-boundary-1-personal",
+          "en-project-boundary-5-personal",
+          "en-project-boundary-6-personal",
+          "ko-project-boundary-3-personal",
+          "en-project-boundary-3-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-project-boundary-3",
+        "language": "ja",
+        "query": "研究者に現在適用される勤務地域は何ですか？ personal",
+        "retrieved_statement_ids": [
+          "ja-project-boundary-3-personal",
+          "ko-project-boundary-3-personal",
+          "en-project-boundary-3-personal",
+          "ja-project-boundary-5-personal",
+          "ja-project-boundary-1-personal",
+          "ko-project-boundary-1-personal",
+          "ja-project-boundary-6-personal",
+          "ja-project-boundary-4-personal",
+          "ja-project-boundary-2-personal",
+          "ko-project-boundary-5-personal",
+          "en-project-boundary-1-personal",
+          "ko-project-boundary-4-personal",
+          "ko-project-boundary-6-personal",
+          "ko-project-boundary-2-personal",
+          "en-project-boundary-5-personal",
+          "en-project-boundary-4-personal",
+          "en-project-boundary-2-personal",
+          "en-project-boundary-6-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-project-boundary-4",
+        "language": "ja",
+        "query": "企画者に現在適用される既定言語は何ですか？ personal",
+        "retrieved_statement_ids": [
+          "ja-project-boundary-4-personal",
+          "ko-project-boundary-4-personal",
+          "ja-project-boundary-6-personal",
+          "ja-project-boundary-2-personal",
+          "en-project-boundary-4-personal",
+          "ja-project-boundary-5-personal",
+          "ja-project-boundary-3-personal",
+          "ko-project-boundary-5-personal",
+          "ja-project-boundary-1-personal",
+          "ko-project-boundary-2-personal",
+          "ko-project-boundary-6-personal",
+          "en-project-boundary-2-personal",
+          "ko-project-boundary-3-personal",
+          "en-project-boundary-5-personal",
+          "ko-project-boundary-1-personal",
+          "en-project-boundary-1-personal",
+          "en-project-boundary-3-personal",
+          "en-project-boundary-6-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-project-boundary-5",
+        "language": "ja",
+        "query": "開発者に現在適用される会議曜日は何ですか？ personal",
+        "retrieved_statement_ids": [
+          "ja-project-boundary-5-personal",
+          "ko-project-boundary-5-personal",
+          "en-project-boundary-5-personal",
+          "ja-project-boundary-6-personal",
+          "ja-project-boundary-4-personal",
+          "ja-project-boundary-2-personal",
+          "ja-project-boundary-3-personal",
+          "ja-project-boundary-1-personal",
+          "ko-project-boundary-6-personal",
+          "ko-project-boundary-4-personal",
+          "ko-project-boundary-3-personal",
+          "ko-project-boundary-2-personal",
+          "ko-project-boundary-1-personal",
+          "en-project-boundary-4-personal",
+          "en-project-boundary-6-personal",
+          "en-project-boundary-2-personal",
+          "en-project-boundary-3-personal",
+          "en-project-boundary-1-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      },
+      {
+        "id": "ja-project-boundary-6",
+        "language": "ja",
+        "query": "デザイナーに現在適用される配布チャンネルは何ですか？ personal",
+        "retrieved_statement_ids": [
+          "ja-project-boundary-6-personal",
+          "ja-project-boundary-2-personal",
+          "en-project-boundary-6-personal",
+          "ko-project-boundary-6-personal",
+          "ja-project-boundary-5-personal",
+          "ja-project-boundary-4-personal",
+          "ko-project-boundary-2-personal",
+          "ko-project-boundary-4-personal",
+          "en-project-boundary-2-personal",
+          "ja-project-boundary-1-personal",
+          "en-project-boundary-4-personal",
+          "ko-project-boundary-5-personal",
+          "ja-project-boundary-3-personal",
+          "en-project-boundary-5-personal",
+          "ko-project-boundary-1-personal",
+          "ko-project-boundary-3-personal",
+          "en-project-boundary-3-personal",
+          "en-project-boundary-1-personal"
+        ],
+        "acceptable_rank": 1,
+        "acceptable_ranks": [
+          1
+        ],
+        "forbidden_ranks": [],
+        "stale_forbidden_ranks": [],
+        "active_distractor_ranks": []
+      }
+    ]
+  }
+}

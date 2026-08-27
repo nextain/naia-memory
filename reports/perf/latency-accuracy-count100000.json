@@ -1,6 +1,29 @@
 {
   "benchmark": "retrieval-latency-accuracy",
-  "generatedAt": "2024-07-03T09:46:40.000Z",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-21T19:15:33.259Z",
+    "git": {
+      "revision": "d38c87133a0f7995743581183dc2b2829350b974",
+      "dirty": true
+    },
+    "datasets": {},
+    "implementations": {},
+    "config": {
+      "count": 100000,
+      "hot": 10000,
+      "samples": 300,
+      "topK": 10,
+      "dims": 384,
+      "benchmarkClock": "2024-07-03T09:46:40.000Z"
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
   "config": {
     "count": 100000,
     "hot": 10000,
@@ -10,36 +33,36 @@
   },
   "embedder": "deterministic-bag-of-tokens",
   "methodologyNote": "Latency isolates retrieval (SqliteAdapter+FTS5+sqlite-vec+worker-IPC) from embedding-model cost via a deterministic bag-of-tokens embedder. sqlite-vec brute-force scan latency depends on (dims, corpus-size), not vector values, so latency is representative of the real embedder at the same dims. precision@k is a relative signal on the synthetic (shared-token) corpus, NOT a semantic-quality claim.",
-  "injectionMs": 61315.560681999996,
-  "injectionThroughputPerSec": 1631,
+  "injectionMs": 5935.378843,
+  "injectionThroughputPerSec": 16848,
   "footprint": {
-    "rssMB": 287.7,
-    "dbFileMB": 196.5
+    "rssMB": 376.4,
+    "dbFileMB": 220.8
   },
   "results": {
     "surface": {
       "label": "surface (hot)",
       "samples": 300,
-      "p50": 3.995839999995951,
-      "p95": 5.338982000001124,
-      "p99": 8.466693000002124,
-      "max": 9.494127999998454,
-      "mean": 4.154035403333231,
-      "min": 3.5072479999944335,
+      "p50": 4.03659400000015,
+      "p95": 5.566214999999829,
+      "p99": 6.069238000000041,
+      "max": 6.7456529999999475,
+      "mean": 4.459674306666669,
+      "min": 3.5919149999999718,
       "hitRateAvg": 10,
-      "precisionAtKAvg": 0.5466666666666672
+      "precisionAtKAvg": 1
     },
     "deep": {
       "label": "deep (full corpus)",
       "samples": 300,
-      "p50": 40.6764000000112,
-      "p95": 43.77615099999821,
-      "p99": 49.28055199999653,
-      "max": 54.87847099998908,
-      "mean": 41.00929287333308,
-      "min": 39.54779100000451,
+      "p50": 38.52790900000036,
+      "p95": 48.81512500000099,
+      "p99": 49.47411500000089,
+      "max": 52.34414099999776,
+      "mean": 41.68010012000002,
+      "min": 35.887189999997645,
       "hitRateAvg": 10,
-      "precisionAtKAvg": 0.13333333333333333
+      "precisionAtKAvg": 1
     }
   }
 }

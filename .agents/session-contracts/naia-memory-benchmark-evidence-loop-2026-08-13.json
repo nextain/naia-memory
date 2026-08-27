@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0",
+  "id": "naia-memory-benchmark-evidence-loop-2026-08-13",
+  "status": "active",
+  "project_root": ".",
+  "goal": "나이아 메모리의 벤치마크를 다양화하고 증명 가능한 성능을 반복적으로 개선한다.",
+  "scope": [
+    "한국어 중심 검색·회상 벤치마크의 라벨·측정·재현성 계약을 정비한다.",
+    "현재 구현에서 재현 가능한 기준선과 경쟁 엔진 비교의 비교 가능 조건을 기록한다.",
+    "측정으로 뒷받침되는 개선만 구현하고 검증한다.",
+    "검증 결과와 한계를 보고서에 남기고 요청된 커밋·푸시를 수행한다.",
+    "실행 가능한 글로벌 OSS 메모리 엔진 비교군을 같은 고정 계약으로 측정하고, 실행 불가능한 비교군은 원인과 공식 공개 수치의 비동일 조건을 분리 기록한다.",
+    "최종 보고서를 GitHub 이슈에 기록하고 alpha-ds-bot의 기존 승인된 DM 경로로 사용자에게 전달한다."
+  ],
+  "non_goals": [
+    "GPU 1 사용 또는 다른 세션의 GPU 작업 변경",
+    "naia-adk·alpha-adk 루트나 다른 프로젝트 변경",
+    "나이아 메모리에서 자연어 의도·응답·abstention 결정을 구현",
+    "범주별 가중치·임계값 튜닝 또는 외부 엔진 수치의 비동일 조건 비교"
+  ],
+  "success_criteria": [
+    "실제 생성 시각, 코드 리비전, 데이터셋 해시, 설정과 실행 환경을 남기는 결과 형식을 확보한다.",
+    "한국어 검색 실패 유형을 구분하는 고정 평가 세트와 검증을 추가한다.",
+    "기준선·개선 결과·한계·경쟁 비교 가능 조건을 보고서에 명시한다.",
+    "관련 타입검사와 테스트를 통과하고 변경을 naia-memory 원격 브랜치에 푸시한다.",
+    "비교군별 버전·설정·실행 상태·동일조건 여부·영수증을 최종 보고서에서 구분한다.",
+    "OpenCode 또는 Claude headless 적대 리뷰를 통과하고 최종 보고서 DM의 전달 영수증을 남긴다."
+  ],
+  "allowed_paths": [
+    "src/benchmark/**",
+    "src/memory/**",
+    "reports/**",
+    "docs/**",
+    ".agents/progress/session-utterance-019fefbd-32a1-79a1-a74e-e6a5f659d478.json",
+    ".agents/context/process-status.json",
+    "package.json",
+    "pnpm-lock.yaml"
+    ,".agents/session-contracts/naia-memory-benchmark-evidence-loop-2026-08-13.json"
+    ,".agents/session-contracts/.session-map.json"
+  ],
+  "target_ownership": [
+    "src/benchmark/**",
+    "src/memory/**",
+    "reports/**",
+    "docs/**",
+    ".agents/progress/session-utterance-019fefbd-32a1-79a1-a74e-e6a5f659d478.json",
+    ".agents/context/process-status.json",
+    "package.json",
+    "pnpm-lock.yaml"
+    ,".agents/session-contracts/naia-memory-benchmark-evidence-loop-2026-08-13.json"
+    ,".agents/session-contracts/.session-map.json"
+  ],
+  "audiences": ["operator", "github_issue", "discord_dm"],
+  "source_refs": ["conversation://019fefbd-32a1-79a1-a74e-e6a5f659d478"],
+  "allowed_shell_commands": [
+    "pnpm typecheck",
+    "pnpm test",
+    "pnpm exec tsc --noEmit",
+    "pnpm exec vitest run",
+    "pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+    "pnpm exec tsx src/benchmark/quality/structured-supersession-mem0-control.ts",
+    "pnpm exec tsx src/benchmark/quality/structured-supersession-hindsight-control.ts",
+    "podman pull ghcr.io/vectorize-io/hindsight:latest",
+    "podman run ghcr.io/vectorize-io/hindsight:latest",
+    "podman stop naia-memory-hindsight-bench",
+    "podman rm naia-memory-hindsight-bench",
+    "git status --short",
+    "git status --short --branch",
+    "git diff --check",
+    "git diff --cached --check",
+    "git add",
+    "git commit",
+    "git push origin feat/memory-bench-harness-and-fixes",
+    "gh issue comment 39",
+    "opencode run --pure -m opencode/big-pickle",
+    "claude --print --permission-mode plan"
+  ],
+  "session_bindings": [
+    {
+      "session_id": "019fefbd-32a1-79a1-a74e-e6a5f659d478",
+      "contract_digest": "7761784226076edd4e686cf37e3f4d60fceeba5a7f24a54c7ed59e1d1dced14d"
+    }
+  ],
+  "progress_file": ".agents/progress/session-utterance-019fefbd-32a1-79a1-a74e-e6a5f659d478.json",
+  "contract_digest": "7761784226076edd4e686cf37e3f4d60fceeba5a7f24a54c7ed59e1d1dced14d"
+}

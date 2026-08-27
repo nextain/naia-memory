@@ -1,0 +1,546 @@
+{
+  "schemaVersion": "naia-memory-semantic-blind-seal-v1",
+  "interpretation": "Confidential engine/run mapping. Do not provide this file to adjudicators.",
+  "packetContentSha256": "1bf87236eb5d18238b81dab0bba7c0cd30901e3078a1d2012540e0121ab4452c",
+  "blindingSeedSha256": "9c12533bcb559d107e09b0f7307cdf69d4f5ca43931730973101cfad4d8bc5f0",
+  "samples": [
+    {
+      "sampleId": "sample-0001",
+      "caseId": "case_en_no_update_6",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "a53188e6d597dff3ac4026f1cc2a3fffc4c7e33ce358dbff015c9bbb2d41ebe5",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "0686ac0a-761b-38cb-1268-203880a49ce0"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0002",
+      "caseId": "case_ja_no_update_9",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "18bad1b596822d33a282bc90fc18b9671e5ca1eb3a5565cb82fc733bc83dd7c3",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "87ba3e43-529d-42e0-8c66-2e0012714c8b"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "9ece521a-4ae0-4c5c-ba4a-9e8ce849db3b"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0003",
+      "caseId": "case_ko_update_1",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "dd55870e68d5eaca7d83061c9e615942bfea195b2c81061324d1840aaab90f1f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "905dec0f-1d78-40ff-98fe-d8c1490351c6"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0004",
+      "caseId": "case_ja_delete_8",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "a53188e6d597dff3ac4026f1cc2a3fffc4c7e33ce358dbff015c9bbb2d41ebe5",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0005",
+      "caseId": "case_ja_no_update_9",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "5106314a4dc89d138199c4fc47da77213b07957f8c09c3ccf6b6be3d6fcd05d9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "12f1953f-112f-83d2-b4e9-1695df5b5f0a"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0006",
+      "caseId": "case_en_update_4",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "dd55870e68d5eaca7d83061c9e615942bfea195b2c81061324d1840aaab90f1f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "55d7ca8c-f57c-4056-91a6-3dd6d4a6e1b4"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0007",
+      "caseId": "case_ko_update_1",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "a53188e6d597dff3ac4026f1cc2a3fffc4c7e33ce358dbff015c9bbb2d41ebe5",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "d00d2320-a78a-ff2b-b861-c50d5b80dcce-v1787493881206"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0008",
+      "caseId": "case_en_update_4",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "5106314a4dc89d138199c4fc47da77213b07957f8c09c3ccf6b6be3d6fcd05d9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "aedb9677-2f73-2fac-6b21-e2a3400b1ddb-v1787494862605"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0009",
+      "caseId": "case_en_delete_5",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "18bad1b596822d33a282bc90fc18b9671e5ca1eb3a5565cb82fc733bc83dd7c3",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "8cefcfa7-4e22-47ec-a610-5895e7aa7907"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "a0a14910-df91-48bd-91ac-2e34e80a3f09"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0010",
+      "caseId": "case_ja_update_7",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "dd55870e68d5eaca7d83061c9e615942bfea195b2c81061324d1840aaab90f1f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "4d657ccb-ccbc-4cf1-a495-882f03c2b17c"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "94e0d89b-8d06-461f-9e5c-74ce7ec45278"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0011",
+      "caseId": "case_ja_delete_8",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "5106314a4dc89d138199c4fc47da77213b07957f8c09c3ccf6b6be3d6fcd05d9",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0012",
+      "caseId": "case_ko_no_update_3",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "18bad1b596822d33a282bc90fc18b9671e5ca1eb3a5565cb82fc733bc83dd7c3",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "9b1cf2f3-9406-4fee-8fc1-4db3820cc80a"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "d70b003a-4111-47a0-b3ab-1b52122adf97"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0013",
+      "caseId": "case_en_delete_5",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "dd55870e68d5eaca7d83061c9e615942bfea195b2c81061324d1840aaab90f1f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "9490046f-9dd5-4d21-9e74-6a0095a8c847"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0014",
+      "caseId": "case_ja_update_7",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "18bad1b596822d33a282bc90fc18b9671e5ca1eb3a5565cb82fc733bc83dd7c3",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "789a61a6-6494-4740-8e79-11547d222dc5"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "ad70f564-f546-48be-8939-9b679f29171d"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0015",
+      "caseId": "case_ko_update_1",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "18bad1b596822d33a282bc90fc18b9671e5ca1eb3a5565cb82fc733bc83dd7c3",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "795909bc-0a18-425a-8289-278e978cdc41"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0016",
+      "caseId": "case_ko_no_update_3",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "dd55870e68d5eaca7d83061c9e615942bfea195b2c81061324d1840aaab90f1f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "af85516a-df2f-4c99-b25b-8863be0acb56"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "a51b2d99-09e1-442d-82f9-97fe0aec5a4a"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0017",
+      "caseId": "case_ja_update_7",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "5106314a4dc89d138199c4fc47da77213b07957f8c09c3ccf6b6be3d6fcd05d9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "98f2eb18-b013-75db-9853-9e7c775cc422-v1787494898016"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0018",
+      "caseId": "case_en_update_4",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "a53188e6d597dff3ac4026f1cc2a3fffc4c7e33ce358dbff015c9bbb2d41ebe5",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "4d1dcaaa-b04d-5d4d-9ce8-3107df81082f-v1787493809035"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0019",
+      "caseId": "case_ko_no_update_3",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "5106314a4dc89d138199c4fc47da77213b07957f8c09c3ccf6b6be3d6fcd05d9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "df96edae-bf3b-ec30-0488-e8f030103d41"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "268819e1-3981-cd49-914b-a17d1f2a66b2"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0020",
+      "caseId": "case_ko_delete_2",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "a53188e6d597dff3ac4026f1cc2a3fffc4c7e33ce358dbff015c9bbb2d41ebe5",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0021",
+      "caseId": "case_ko_update_1",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "5106314a4dc89d138199c4fc47da77213b07957f8c09c3ccf6b6be3d6fcd05d9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "52f7b7ad-ae00-e610-28b9-eb9c29ecc13e-v1787494813975"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0022",
+      "caseId": "case_ko_delete_2",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "dd55870e68d5eaca7d83061c9e615942bfea195b2c81061324d1840aaab90f1f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "b7ca6ddc-9a2a-4fd0-bb14-4032786cd8dc"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0023",
+      "caseId": "case_en_update_4",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "18bad1b596822d33a282bc90fc18b9671e5ca1eb3a5565cb82fc733bc83dd7c3",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "becb22dc-94ca-4319-804d-a2f711d207a2"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0024",
+      "caseId": "case_ja_update_7",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "a53188e6d597dff3ac4026f1cc2a3fffc4c7e33ce358dbff015c9bbb2d41ebe5",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "6151b653-9d95-e637-2b8a-2eb7ae0022b6-v1787493843083"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0025",
+      "caseId": "case_ja_delete_8",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "dd55870e68d5eaca7d83061c9e615942bfea195b2c81061324d1840aaab90f1f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "94e66e5f-b926-4869-826e-fce6d8efaff1"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0026",
+      "caseId": "case_en_no_update_6",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "5106314a4dc89d138199c4fc47da77213b07957f8c09c3ccf6b6be3d6fcd05d9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "6cb10a3a-5787-9a32-c650-09e25254ff11"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0027",
+      "caseId": "case_ko_delete_2",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "5106314a4dc89d138199c4fc47da77213b07957f8c09c3ccf6b6be3d6fcd05d9",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0028",
+      "caseId": "case_ja_delete_8",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "18bad1b596822d33a282bc90fc18b9671e5ca1eb3a5565cb82fc733bc83dd7c3",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "4f0de086-523d-4019-a5e1-e91dd6d604b3"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0029",
+      "caseId": "case_en_no_update_6",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "18bad1b596822d33a282bc90fc18b9671e5ca1eb3a5565cb82fc733bc83dd7c3",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "c219e0d6-3075-460f-a8f2-93f88b9a44bd"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0030",
+      "caseId": "case_ja_no_update_9",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "a53188e6d597dff3ac4026f1cc2a3fffc4c7e33ce358dbff015c9bbb2d41ebe5",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "19d71ac5-4201-4fae-358d-44a984d7a1a9"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0031",
+      "caseId": "case_en_delete_5",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "a53188e6d597dff3ac4026f1cc2a3fffc4c7e33ce358dbff015c9bbb2d41ebe5",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0032",
+      "caseId": "case_ja_no_update_9",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "dd55870e68d5eaca7d83061c9e615942bfea195b2c81061324d1840aaab90f1f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "2ab92aaa-1131-4122-88cf-9498409cc582"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0033",
+      "caseId": "case_en_delete_5",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "5106314a4dc89d138199c4fc47da77213b07957f8c09c3ccf6b6be3d6fcd05d9",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0034",
+      "caseId": "case_ko_delete_2",
+      "engine": "graphiti",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-graphiti.json",
+      "artifactSha256": "18bad1b596822d33a282bc90fc18b9671e5ca1eb3a5565cb82fc733bc83dd7c3",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "15866af7-c598-4926-bbd5-ea94655ff79c"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0035",
+      "caseId": "case_ko_no_update_3",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "a53188e6d597dff3ac4026f1cc2a3fffc4c7e33ce358dbff015c9bbb2d41ebe5",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "9639c2dd-7c83-7858-e8c4-3cbd766b160a"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0036",
+      "caseId": "case_en_no_update_6",
+      "engine": "graphiti",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-graphiti.json",
+      "artifactSha256": "dd55870e68d5eaca7d83061c9e615942bfea195b2c81061324d1840aaab90f1f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "acdddb84-4651-4a52-8193-7f8909dd84f8"
+        }
+      ]
+    }
+  ]
+}

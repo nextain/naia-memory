@@ -1,0 +1,1295 @@
+{
+  "schemaVersion": "naia-memory-semantic-blind-seal-v1",
+  "interpretation": "Confidential engine/run mapping. Do not provide this file to adjudicators.",
+  "packetContentSha256": "d3f339cd0d2fcd4faa1a5c3efc6e0ae561ddb23e795572b7f19533b8dcdf628f",
+  "blindingSeedSha256": "35b9e43cf7c68b3d6292488836941e23411cd4510379919ecb5909180817fa4f",
+  "samples": [
+    {
+      "sampleId": "sample-0001",
+      "caseId": "ko-residence-update",
+      "engine": "mem0",
+      "repetition": 3,
+      "enginePosition": 1,
+      "artifactFile": "repetition-03-mem0.json",
+      "artifactSha256": "fb0920f27b06d33d1cffa20ee177b6714b1adf9148a54233c7cdb7a43282293f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "c4f1d4d8-ad03-448e-a1ef-a84beda05f60"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0002",
+      "caseId": "ko-allergy-delete",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 3,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "203b7be8dc607070d3caba84a72e0cf3e14efe96e44c4b71681d44a71a89c7fe",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0003",
+      "caseId": "ko-residence-update",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 3,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "203b7be8dc607070d3caba84a72e0cf3e14efe96e44c4b71681d44a71a89c7fe",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "5acab144-6559-d34b-443e-ddf9eab47477-v1787139776253"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0004",
+      "caseId": "ko-coffee-no-update",
+      "engine": "mem0",
+      "repetition": 3,
+      "enginePosition": 1,
+      "artifactFile": "repetition-03-mem0.json",
+      "artifactSha256": "fb0920f27b06d33d1cffa20ee177b6714b1adf9148a54233c7cdb7a43282293f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "332fb6c8-7bb0-4dbe-afa1-09244aa7155a"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0005",
+      "caseId": "en-residence-update",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 3,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "203b7be8dc607070d3caba84a72e0cf3e14efe96e44c4b71681d44a71a89c7fe",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "f62c4931-d9ab-595b-e8c3-aba8d404a144-v1787139745987"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0006",
+      "caseId": "ja-coffee-no-update",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "804dcb2e71ab65bad504094ac89d2d15a85e1a3a44625ca201f820a87cd74cf9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "86e06eec-fcd5-691e-0af4-19a55c519df0"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0007",
+      "caseId": "ja-residence-update",
+      "engine": "naia",
+      "repetition": 3,
+      "enginePosition": 2,
+      "artifactFile": "repetition-03-naia.json",
+      "artifactSha256": "7ee85aad16705eec8ab60fca5927c285e27e44275c3932a79b03472cefdf1dae",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "8803a35e-1edb-f211-903d-eabec90b42f3-v1787139917465"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0008",
+      "caseId": "ja-allergy-delete",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 3,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "203b7be8dc607070d3caba84a72e0cf3e14efe96e44c4b71681d44a71a89c7fe",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0009",
+      "caseId": "en-coffee-no-update",
+      "engine": "hindsight",
+      "repetition": 3,
+      "enginePosition": 3,
+      "artifactFile": "repetition-03-hindsight.json",
+      "artifactSha256": "b4cd4e5da109c5940daa33463801a74811d2c3f1a6aa55df35e7717c8fe82f91",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "07f23d75-3b02-4f9f-adc2-f1c5d65d1da2"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "3556ae8c-8ec8-41bd-afc5-783e09aef909"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0010",
+      "caseId": "ja-allergy-delete",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "804dcb2e71ab65bad504094ac89d2d15a85e1a3a44625ca201f820a87cd74cf9",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0011",
+      "caseId": "ko-coffee-no-update",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 3,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "203b7be8dc607070d3caba84a72e0cf3e14efe96e44c4b71681d44a71a89c7fe",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "9207d343-6d49-9247-e5e1-3d822bb76bdc"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0012",
+      "caseId": "ja-coffee-no-update",
+      "engine": "hindsight",
+      "repetition": 3,
+      "enginePosition": 3,
+      "artifactFile": "repetition-03-hindsight.json",
+      "artifactSha256": "b4cd4e5da109c5940daa33463801a74811d2c3f1a6aa55df35e7717c8fe82f91",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "009ff571-e40a-4647-82ef-c05e25290557"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "f4c6711b-f2a0-496c-8a3d-75c54d9194fd"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0013",
+      "caseId": "en-allergy-delete",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "804dcb2e71ab65bad504094ac89d2d15a85e1a3a44625ca201f820a87cd74cf9",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0014",
+      "caseId": "en-allergy-delete",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "b748ae1cbbb4af4ec08614e78bc7b87f1f5a84e7ba88d59ef91c076761c6ec43",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "25b583b4-0a0b-4b9b-b5ae-d24b0436e142"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "6b6fa956-4dff-463c-a1f6-e383163bef6f"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "78b2994a-b8d0-4a61-ac09-c148026f04a1"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0015",
+      "caseId": "en-coffee-no-update",
+      "engine": "mem0",
+      "repetition": 3,
+      "enginePosition": 1,
+      "artifactFile": "repetition-03-mem0.json",
+      "artifactSha256": "fb0920f27b06d33d1cffa20ee177b6714b1adf9148a54233c7cdb7a43282293f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "8dda0d66-9caa-4169-9f57-0394f09bd4af"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0016",
+      "caseId": "ko-allergy-delete",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "b748ae1cbbb4af4ec08614e78bc7b87f1f5a84e7ba88d59ef91c076761c6ec43",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "4ec6fcf7-1799-4938-b9de-133104da09c1"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "356d65a9-573f-4370-9bd1-93d235c2f6ae"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "c19997d8-4da9-41cc-8010-e9839e29c2b6"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0017",
+      "caseId": "ja-coffee-no-update",
+      "engine": "mem0",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-mem0.json",
+      "artifactSha256": "d4a4643b3cecbb118e69a18d2786809df9796a357b89a7e87723fa165e467f84",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "02b90a42-5730-47d4-860d-fe3f49836084"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0018",
+      "caseId": "ko-coffee-no-update",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "804dcb2e71ab65bad504094ac89d2d15a85e1a3a44625ca201f820a87cd74cf9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "1cea6fd0-a86f-1a12-3300-a8f5328b0206"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0019",
+      "caseId": "en-coffee-no-update",
+      "engine": "mem0",
+      "repetition": 1,
+      "enginePosition": 3,
+      "artifactFile": "repetition-01-mem0.json",
+      "artifactSha256": "06f82e12e732e456678aa5f9049ee2f7264920d3cbb432c1a31afd3ce5383922",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "43fe2b35-5258-4e19-b2cf-5f8a71aaff58"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0020",
+      "caseId": "ja-residence-update",
+      "engine": "mem0",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-mem0.json",
+      "artifactSha256": "d4a4643b3cecbb118e69a18d2786809df9796a357b89a7e87723fa165e467f84",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "eb8a3c1f-ea8c-4787-847c-b13278ead0dd"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "f0ebcf67-0302-4fe5-8566-2812ff0fcd08"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0021",
+      "caseId": "ko-residence-update",
+      "engine": "mem0",
+      "repetition": 1,
+      "enginePosition": 3,
+      "artifactFile": "repetition-01-mem0.json",
+      "artifactSha256": "06f82e12e732e456678aa5f9049ee2f7264920d3cbb432c1a31afd3ce5383922",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "63d6d793-db87-4a0b-b330-a72bf304df4e"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "e72bc245-0240-4b52-89a0-f346958d8609"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0022",
+      "caseId": "ja-coffee-no-update",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "b748ae1cbbb4af4ec08614e78bc7b87f1f5a84e7ba88d59ef91c076761c6ec43",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "81850c14-c57a-4248-981f-5e205d3d6cb3"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "a954b973-8360-4ec4-95e2-0cad2d4edde3"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0023",
+      "caseId": "ko-allergy-delete",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "535314bb6392331d861ad96dec6629546d3866b5d0ff12007521040393bac4a9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "f957c833-4abf-4993-9b91-22f36f107bc4"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "49b1b7c2-21ea-4c69-ac0a-2700429310e9"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "ab4bf19f-95d9-4c40-a062-0689464e66ea"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0024",
+      "caseId": "ja-coffee-no-update",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "535314bb6392331d861ad96dec6629546d3866b5d0ff12007521040393bac4a9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "9a5e56d9-2d02-4638-9f76-00378f29a0d8"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "4b01fcaa-8bdc-4623-8e4f-7b5420096657"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0025",
+      "caseId": "en-coffee-no-update",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "804dcb2e71ab65bad504094ac89d2d15a85e1a3a44625ca201f820a87cd74cf9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "81d70944-31df-0e7d-1d23-c48a15dac17a"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0026",
+      "caseId": "ja-allergy-delete",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "b748ae1cbbb4af4ec08614e78bc7b87f1f5a84e7ba88d59ef91c076761c6ec43",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "b81430b1-33fa-407f-9dc7-06ea38810539"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "d30b8d73-749b-46ca-bfca-74b18a1b4518"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0027",
+      "caseId": "en-coffee-no-update",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "535314bb6392331d861ad96dec6629546d3866b5d0ff12007521040393bac4a9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "db53197b-f645-4a9c-bd66-3d70677a6647"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "101a307a-a012-4ec0-8204-b72d1955f60a"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0028",
+      "caseId": "en-allergy-delete",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "535314bb6392331d861ad96dec6629546d3866b5d0ff12007521040393bac4a9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "2b037089-90a1-4cea-90f0-db4fe2e72361"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "49e575be-76b5-46aa-9448-5e464359af09"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0029",
+      "caseId": "ja-coffee-no-update",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 3,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "203b7be8dc607070d3caba84a72e0cf3e14efe96e44c4b71681d44a71a89c7fe",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "6105e63a-ee06-458c-6658-a69b26b211f3"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0030",
+      "caseId": "ko-residence-update",
+      "engine": "mem0",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-mem0.json",
+      "artifactSha256": "d4a4643b3cecbb118e69a18d2786809df9796a357b89a7e87723fa165e467f84",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "b52221ce-2764-4e2f-9952-e5895f328649"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0031",
+      "caseId": "ja-residence-update",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 3,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "203b7be8dc607070d3caba84a72e0cf3e14efe96e44c4b71681d44a71a89c7fe",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "95324474-76cd-fac7-7880-acc8260e5ed3-v1787139768648"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0032",
+      "caseId": "ja-residence-update",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "804dcb2e71ab65bad504094ac89d2d15a85e1a3a44625ca201f820a87cd74cf9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "3d69980b-d5a2-706f-2164-7cb274bc195d-v1787139231474"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0033",
+      "caseId": "ko-allergy-delete",
+      "engine": "mem0",
+      "repetition": 1,
+      "enginePosition": 3,
+      "artifactFile": "repetition-01-mem0.json",
+      "artifactSha256": "06f82e12e732e456678aa5f9049ee2f7264920d3cbb432c1a31afd3ce5383922",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0034",
+      "caseId": "ja-coffee-no-update",
+      "engine": "mem0",
+      "repetition": 1,
+      "enginePosition": 3,
+      "artifactFile": "repetition-01-mem0.json",
+      "artifactSha256": "06f82e12e732e456678aa5f9049ee2f7264920d3cbb432c1a31afd3ce5383922",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "05e2b232-623a-469e-986f-11a69ab3c0b4"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0035",
+      "caseId": "en-coffee-no-update",
+      "engine": "naia",
+      "repetition": 3,
+      "enginePosition": 2,
+      "artifactFile": "repetition-03-naia.json",
+      "artifactSha256": "7ee85aad16705eec8ab60fca5927c285e27e44275c3932a79b03472cefdf1dae",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "1e0dfd0e-8390-bbc9-ac64-4bca7520fc6e"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0036",
+      "caseId": "ja-allergy-delete",
+      "engine": "mem0",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-mem0.json",
+      "artifactSha256": "d4a4643b3cecbb118e69a18d2786809df9796a357b89a7e87723fa165e467f84",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0037",
+      "caseId": "ko-coffee-no-update",
+      "engine": "mem0",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-mem0.json",
+      "artifactSha256": "d4a4643b3cecbb118e69a18d2786809df9796a357b89a7e87723fa165e467f84",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "734d68a1-a3da-4519-adc2-7180166692ff"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0038",
+      "caseId": "en-residence-update",
+      "engine": "mem0",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-mem0.json",
+      "artifactSha256": "d4a4643b3cecbb118e69a18d2786809df9796a357b89a7e87723fa165e467f84",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "1459e787-97e6-461b-8483-e9d6fe5f2f62"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "02f76f07-0670-4d2c-8b0c-94f6f471b55f"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0039",
+      "caseId": "en-allergy-delete",
+      "engine": "hindsight",
+      "repetition": 3,
+      "enginePosition": 3,
+      "artifactFile": "repetition-03-hindsight.json",
+      "artifactSha256": "b4cd4e5da109c5940daa33463801a74811d2c3f1a6aa55df35e7717c8fe82f91",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "79a902ae-6bd2-4cdd-9edb-1cc03ed61180"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "08b6f7c5-ee95-4c49-ab80-69be67836cbb"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0040",
+      "caseId": "ko-allergy-delete",
+      "engine": "naia",
+      "repetition": 3,
+      "enginePosition": 2,
+      "artifactFile": "repetition-03-naia.json",
+      "artifactSha256": "7ee85aad16705eec8ab60fca5927c285e27e44275c3932a79b03472cefdf1dae",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0041",
+      "caseId": "en-coffee-no-update",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 3,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "203b7be8dc607070d3caba84a72e0cf3e14efe96e44c4b71681d44a71a89c7fe",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "048a9813-d323-d739-fe30-ae04a8bd8e15"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0042",
+      "caseId": "en-allergy-delete",
+      "engine": "naia",
+      "repetition": 2,
+      "enginePosition": 3,
+      "artifactFile": "repetition-02-naia.json",
+      "artifactSha256": "203b7be8dc607070d3caba84a72e0cf3e14efe96e44c4b71681d44a71a89c7fe",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0043",
+      "caseId": "en-residence-update",
+      "engine": "mem0",
+      "repetition": 1,
+      "enginePosition": 3,
+      "artifactFile": "repetition-01-mem0.json",
+      "artifactSha256": "06f82e12e732e456678aa5f9049ee2f7264920d3cbb432c1a31afd3ce5383922",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "e116aa7a-e638-42e5-85cf-0ea95e2dc041"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0044",
+      "caseId": "en-residence-update",
+      "engine": "mem0",
+      "repetition": 3,
+      "enginePosition": 1,
+      "artifactFile": "repetition-03-mem0.json",
+      "artifactSha256": "fb0920f27b06d33d1cffa20ee177b6714b1adf9148a54233c7cdb7a43282293f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "992fa6b5-781f-42ea-8118-bd9fb37bfd01"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0045",
+      "caseId": "en-allergy-delete",
+      "engine": "mem0",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-mem0.json",
+      "artifactSha256": "d4a4643b3cecbb118e69a18d2786809df9796a357b89a7e87723fa165e467f84",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0046",
+      "caseId": "ja-coffee-no-update",
+      "engine": "mem0",
+      "repetition": 3,
+      "enginePosition": 1,
+      "artifactFile": "repetition-03-mem0.json",
+      "artifactSha256": "fb0920f27b06d33d1cffa20ee177b6714b1adf9148a54233c7cdb7a43282293f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "a05323d8-58ce-4cf4-b1fa-679e02444986"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0047",
+      "caseId": "ja-allergy-delete",
+      "engine": "mem0",
+      "repetition": 1,
+      "enginePosition": 3,
+      "artifactFile": "repetition-01-mem0.json",
+      "artifactSha256": "06f82e12e732e456678aa5f9049ee2f7264920d3cbb432c1a31afd3ce5383922",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0048",
+      "caseId": "en-residence-update",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "535314bb6392331d861ad96dec6629546d3866b5d0ff12007521040393bac4a9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "3eb65287-b521-4587-8fae-4400136a649e"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "4b4ad95c-45e5-4bac-ae1f-32c95eca2faf"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0049",
+      "caseId": "ko-coffee-no-update",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "b748ae1cbbb4af4ec08614e78bc7b87f1f5a84e7ba88d59ef91c076761c6ec43",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "5ed11fdc-73c5-4ecc-856d-759b2faa583e"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "247405d0-1080-400b-ad5f-7ada021be507"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0050",
+      "caseId": "ko-allergy-delete",
+      "engine": "mem0",
+      "repetition": 3,
+      "enginePosition": 1,
+      "artifactFile": "repetition-03-mem0.json",
+      "artifactSha256": "fb0920f27b06d33d1cffa20ee177b6714b1adf9148a54233c7cdb7a43282293f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "f34e836c-04e7-481d-89f8-048bc7e5248a"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "81230adf-749d-4734-abc3-c02ea305cf29"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0051",
+      "caseId": "ja-residence-update",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "b748ae1cbbb4af4ec08614e78bc7b87f1f5a84e7ba88d59ef91c076761c6ec43",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "2cc48952-8c4e-4edb-88b4-6d5c98cce7de"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "e656946b-dfb3-413c-8967-211084be52b8"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0052",
+      "caseId": "ja-allergy-delete",
+      "engine": "hindsight",
+      "repetition": 3,
+      "enginePosition": 3,
+      "artifactFile": "repetition-03-hindsight.json",
+      "artifactSha256": "b4cd4e5da109c5940daa33463801a74811d2c3f1a6aa55df35e7717c8fe82f91",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "7c26075f-1068-4106-8b29-1947ab6884e3"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "49e425df-acfa-4068-82fa-8fb65ecb0dad"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0053",
+      "caseId": "ja-allergy-delete",
+      "engine": "mem0",
+      "repetition": 3,
+      "enginePosition": 1,
+      "artifactFile": "repetition-03-mem0.json",
+      "artifactSha256": "fb0920f27b06d33d1cffa20ee177b6714b1adf9148a54233c7cdb7a43282293f",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0054",
+      "caseId": "ko-allergy-delete",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "804dcb2e71ab65bad504094ac89d2d15a85e1a3a44625ca201f820a87cd74cf9",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0055",
+      "caseId": "en-residence-update",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "b748ae1cbbb4af4ec08614e78bc7b87f1f5a84e7ba88d59ef91c076761c6ec43",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "3f5f60d2-8bd2-41c3-8a51-68885e917c55"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "dfc19ef2-589e-4ee2-b23c-35f695a83eef"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0056",
+      "caseId": "en-allergy-delete",
+      "engine": "mem0",
+      "repetition": 1,
+      "enginePosition": 3,
+      "artifactFile": "repetition-01-mem0.json",
+      "artifactSha256": "06f82e12e732e456678aa5f9049ee2f7264920d3cbb432c1a31afd3ce5383922",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0057",
+      "caseId": "ko-coffee-no-update",
+      "engine": "hindsight",
+      "repetition": 3,
+      "enginePosition": 3,
+      "artifactFile": "repetition-03-hindsight.json",
+      "artifactSha256": "b4cd4e5da109c5940daa33463801a74811d2c3f1a6aa55df35e7717c8fe82f91",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "43a5803d-a355-478c-8430-aa6f890bded4"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "6b41bd25-17ae-4522-995d-6a65d512c03a"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0058",
+      "caseId": "en-coffee-no-update",
+      "engine": "mem0",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-mem0.json",
+      "artifactSha256": "d4a4643b3cecbb118e69a18d2786809df9796a357b89a7e87723fa165e467f84",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "e8d6204e-e346-4acd-9d95-229b0dd417f5"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0059",
+      "caseId": "ko-residence-update",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "b748ae1cbbb4af4ec08614e78bc7b87f1f5a84e7ba88d59ef91c076761c6ec43",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "74e94494-28bc-4bf8-9363-e4894dbe4b40"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "a359be3b-e5df-4f85-8a31-84a7c01a75e2"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0060",
+      "caseId": "ja-residence-update",
+      "engine": "hindsight",
+      "repetition": 3,
+      "enginePosition": 3,
+      "artifactFile": "repetition-03-hindsight.json",
+      "artifactSha256": "b4cd4e5da109c5940daa33463801a74811d2c3f1a6aa55df35e7717c8fe82f91",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "d3350090-7a25-46f6-bc14-588561c08cf0"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "55eedcb9-5e19-4da5-a8a3-bb68492bfe3d"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0061",
+      "caseId": "ko-residence-update",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "535314bb6392331d861ad96dec6629546d3866b5d0ff12007521040393bac4a9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "985ed1be-abfa-4b99-8c1d-6c8999b5ebac"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "aaff07e4-0193-4a68-a6c5-ef717f4f37ba"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "d388a3d6-ed99-4049-841a-0fa50d2af3be"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0062",
+      "caseId": "en-residence-update",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "804dcb2e71ab65bad504094ac89d2d15a85e1a3a44625ca201f820a87cd74cf9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "768030b5-84d5-e094-508c-bc5608309002-v1787139265261"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0063",
+      "caseId": "ja-allergy-delete",
+      "engine": "naia",
+      "repetition": 3,
+      "enginePosition": 2,
+      "artifactFile": "repetition-03-naia.json",
+      "artifactSha256": "7ee85aad16705eec8ab60fca5927c285e27e44275c3932a79b03472cefdf1dae",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0064",
+      "caseId": "ja-residence-update",
+      "engine": "mem0",
+      "repetition": 3,
+      "enginePosition": 1,
+      "artifactFile": "repetition-03-mem0.json",
+      "artifactSha256": "fb0920f27b06d33d1cffa20ee177b6714b1adf9148a54233c7cdb7a43282293f",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "c66749f2-975b-48d6-aabe-e4515f87dfc0"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "a1247a39-e5e2-4d77-b248-07a8ce8b8b4f"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0065",
+      "caseId": "ko-residence-update",
+      "engine": "naia",
+      "repetition": 3,
+      "enginePosition": 2,
+      "artifactFile": "repetition-03-naia.json",
+      "artifactSha256": "7ee85aad16705eec8ab60fca5927c285e27e44275c3932a79b03472cefdf1dae",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "67cb2ae9-99d8-fed1-342e-a4d723be3609-v1787139932314"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0066",
+      "caseId": "ko-allergy-delete",
+      "engine": "mem0",
+      "repetition": 2,
+      "enginePosition": 2,
+      "artifactFile": "repetition-02-mem0.json",
+      "artifactSha256": "d4a4643b3cecbb118e69a18d2786809df9796a357b89a7e87723fa165e467f84",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "1d8f1937-a0ae-450c-b79a-630f059e83c9"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0067",
+      "caseId": "en-allergy-delete",
+      "engine": "mem0",
+      "repetition": 3,
+      "enginePosition": 1,
+      "artifactFile": "repetition-03-mem0.json",
+      "artifactSha256": "fb0920f27b06d33d1cffa20ee177b6714b1adf9148a54233c7cdb7a43282293f",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0068",
+      "caseId": "ko-residence-update",
+      "engine": "naia",
+      "repetition": 1,
+      "enginePosition": 1,
+      "artifactFile": "repetition-01-naia.json",
+      "artifactSha256": "804dcb2e71ab65bad504094ac89d2d15a85e1a3a44625ca201f820a87cd74cf9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "96b5f431-f256-644c-9101-bd3825c627c2-v1787139255743"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0069",
+      "caseId": "ja-coffee-no-update",
+      "engine": "naia",
+      "repetition": 3,
+      "enginePosition": 2,
+      "artifactFile": "repetition-03-naia.json",
+      "artifactSha256": "7ee85aad16705eec8ab60fca5927c285e27e44275c3932a79b03472cefdf1dae",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "7beaac3d-91bf-6664-7bae-28c4a57f5723"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0070",
+      "caseId": "en-residence-update",
+      "engine": "hindsight",
+      "repetition": 3,
+      "enginePosition": 3,
+      "artifactFile": "repetition-03-hindsight.json",
+      "artifactSha256": "b4cd4e5da109c5940daa33463801a74811d2c3f1a6aa55df35e7717c8fe82f91",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "62f91fc2-d6f9-4cd4-9551-5cccc4a8f1ed"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "34a4e8e3-c3bf-4027-bd1f-e2728e85014b"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0071",
+      "caseId": "en-allergy-delete",
+      "engine": "naia",
+      "repetition": 3,
+      "enginePosition": 2,
+      "artifactFile": "repetition-03-naia.json",
+      "artifactSha256": "7ee85aad16705eec8ab60fca5927c285e27e44275c3932a79b03472cefdf1dae",
+      "retrieved": []
+    },
+    {
+      "sampleId": "sample-0072",
+      "caseId": "ko-allergy-delete",
+      "engine": "hindsight",
+      "repetition": 3,
+      "enginePosition": 3,
+      "artifactFile": "repetition-03-hindsight.json",
+      "artifactSha256": "b4cd4e5da109c5940daa33463801a74811d2c3f1a6aa55df35e7717c8fe82f91",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "46293846-d0dd-4139-9b21-b9f42b28d61c"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "398442e6-e825-47bf-b994-cb5aecec3e18"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "cd4ee04f-d5be-4fad-8a3c-a87dfb1100fb"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0073",
+      "caseId": "ja-allergy-delete",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "535314bb6392331d861ad96dec6629546d3866b5d0ff12007521040393bac4a9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "dfe43838-7aa2-4dbe-a7ea-6a9df8633fd3"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "80b75ed3-e955-4b8e-be3a-d672feb3d280"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0074",
+      "caseId": "en-coffee-no-update",
+      "engine": "hindsight",
+      "repetition": 2,
+      "enginePosition": 1,
+      "artifactFile": "repetition-02-hindsight.json",
+      "artifactSha256": "b748ae1cbbb4af4ec08614e78bc7b87f1f5a84e7ba88d59ef91c076761c6ec43",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "2d4c51b3-695d-4e31-9f97-3f1838acd1d9"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "d58b6671-1215-4ba1-a2b7-ee4e14b65cb2"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0075",
+      "caseId": "ko-coffee-no-update",
+      "engine": "mem0",
+      "repetition": 1,
+      "enginePosition": 3,
+      "artifactFile": "repetition-01-mem0.json",
+      "artifactSha256": "06f82e12e732e456678aa5f9049ee2f7264920d3cbb432c1a31afd3ce5383922",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "152754af-e25d-409b-8c6e-c8fc2766fc77"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0076",
+      "caseId": "en-residence-update",
+      "engine": "naia",
+      "repetition": 3,
+      "enginePosition": 2,
+      "artifactFile": "repetition-03-naia.json",
+      "artifactSha256": "7ee85aad16705eec8ab60fca5927c285e27e44275c3932a79b03472cefdf1dae",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "c6487adb-e10a-9800-1d0e-e8866c928903-v1787139903949"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0077",
+      "caseId": "ja-residence-update",
+      "engine": "mem0",
+      "repetition": 1,
+      "enginePosition": 3,
+      "artifactFile": "repetition-01-mem0.json",
+      "artifactSha256": "06f82e12e732e456678aa5f9049ee2f7264920d3cbb432c1a31afd3ce5383922",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "f7cc6ad1-c235-46f8-a04b-19dabbaac01a"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0078",
+      "caseId": "ko-coffee-no-update",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "535314bb6392331d861ad96dec6629546d3866b5d0ff12007521040393bac4a9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "b18d89a7-0309-4c83-8635-a7d726dcc69e"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "635efc20-1073-4d49-b5df-7c7312d629ad"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0079",
+      "caseId": "ja-residence-update",
+      "engine": "hindsight",
+      "repetition": 1,
+      "enginePosition": 2,
+      "artifactFile": "repetition-01-hindsight.json",
+      "artifactSha256": "535314bb6392331d861ad96dec6629546d3866b5d0ff12007521040393bac4a9",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "9ff5bbb6-953f-4268-81ef-4063caa7b132"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "5437b81b-45cd-4295-8063-61bbba068546"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0080",
+      "caseId": "ko-residence-update",
+      "engine": "hindsight",
+      "repetition": 3,
+      "enginePosition": 3,
+      "artifactFile": "repetition-03-hindsight.json",
+      "artifactSha256": "b4cd4e5da109c5940daa33463801a74811d2c3f1a6aa55df35e7717c8fe82f91",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "ce9d2bcd-a3ac-4665-9817-527c3d58704a"
+        },
+        {
+          "memoryId": "memory-02",
+          "nativeId": "b6e42ab1-fc2c-4c6e-a223-f61a9421ea8a"
+        },
+        {
+          "memoryId": "memory-03",
+          "nativeId": "c5f160c7-3790-4ada-a425-ae57148f88d3"
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0081",
+      "caseId": "ko-coffee-no-update",
+      "engine": "naia",
+      "repetition": 3,
+      "enginePosition": 2,
+      "artifactFile": "repetition-03-naia.json",
+      "artifactSha256": "7ee85aad16705eec8ab60fca5927c285e27e44275c3932a79b03472cefdf1dae",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "nativeId": "58441e16-45de-eca9-f478-491c4d9c4262"
+        }
+      ]
+    }
+  ]
+}

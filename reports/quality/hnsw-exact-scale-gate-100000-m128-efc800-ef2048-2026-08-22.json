@@ -1,0 +1,1942 @@
+{
+  "benchmark": "qdrant-hnsw-exact-quality-gate",
+  "status": "scale_quality_gate_passed",
+  "selectedEf": 2048,
+  "gate": {
+    "topK": 10,
+    "minOverlapAt10": 0.98,
+    "minTop1Agreement": 0.99,
+    "maxRecallLoss": 0.01,
+    "geometryPolicy": "density-inflation-guard",
+    "geometryMaxAllowedDelta": {
+      "p50": 0.03,
+      "p95": 0.03,
+      "p99": 0.03
+    },
+    "geometryPairCount": 10000,
+    "geometrySeed": 2654435769,
+    "hnswM": 128,
+    "hnswEfConstruct": 800
+  },
+  "service": {
+    "engine": "Qdrant",
+    "version": "1.15.5",
+    "url": "http://127.0.0.1:6334"
+  },
+  "model": {
+    "name": "multilingual-e5-large",
+    "dims": 1024,
+    "embeddingSpaceId": "offline:Xenova/multilingual-e5-large@00fc3aeb3dbb95842de2ac1961d33c6319acf57b:dims=1024:dtype=q8:mean-normalized:query-passage-v2",
+    "device": "cpu"
+  },
+  "limitations": [
+    "This experiment qualifies approximate-vs-exact retrieval preservation only; it does not establish cross-engine superiority.",
+    "Scale distractors are deterministic synthetic facts, not independently authored user memories; passing does not establish production workload validity.",
+    "English is a deterministic translation of the Korean corpus, not an independently authored multilingual benchmark.",
+    "Exact and approximate searches use the same Qdrant service, so latency includes local REST overhead and is not a cross-engine comparison.",
+    "Passing does not authorize product integration or a public competitiveness claim."
+  ],
+  "results": [
+    {
+      "language": "ko",
+      "buildIndex": 1,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99993,
+        "baseDuplicateStatements": 7,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "domainCount": 32,
+        "templateFamilyCount": 32,
+        "construction": "deterministic-multi-domain-diagnostic",
+        "corpusSha256": "f73b7e3a6cbb1cc2971b2bcefadaa062babc987a71b97522362d3531642e0413"
+      },
+      "geometryReceipt": {
+        "policy": "density-inflation-guard",
+        "normalization": "cosine-with-measured-l2-norms",
+        "normRange": {
+          "min": 0.9999989513516147,
+          "max": 1.0000009959540357
+        },
+        "seed": 2654435769,
+        "pairCount": 10000,
+        "base": {
+          "min": 0.7455312480465611,
+          "p05": 0.8005318760089044,
+          "p50": 0.83770459332934,
+          "p95": 0.875052997980313,
+          "p99": 0.8941141034949976,
+          "max": 0.9819182094820481
+        },
+        "generated": {
+          "min": 0.7588440381108188,
+          "p05": 0.7949032220922851,
+          "p50": 0.8270464161432208,
+          "p95": 0.8716004562714685,
+          "p99": 0.9091793424674525,
+          "max": 0.9576020533284956
+        },
+        "delta": {
+          "p50": -0.010658177186119167,
+          "p95": -0.0034525417088444588,
+          "p99": 0.01506523897245482
+        },
+        "maxAllowedDelta": {
+          "p50": 0.03,
+          "p95": 0.03,
+          "p99": 0.03
+        },
+        "passed": true
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 128,
+          "ef_construct": 800,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.1650485436893204,
+          "recall5": 0.5194174757281553,
+          "recall10": 0.5533980582524272,
+          "mrr": 0.3056692094313454
+        },
+        "generatedInterference": {
+          "top1Rate": 0.0048543689320388345,
+          "top10QueryRate": 0.08737864077669903,
+          "meanGeneratedAt10": 0.18932038834951456
+        },
+        "generatedInterferenceDetails": {
+          "byCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.05,
+              "meanGeneratedAt10": 0.05
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "top1Rate": 0,
+              "top10QueryRate": 0,
+              "meanGeneratedAt10": 0
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "top1Rate": 0,
+              "top10QueryRate": 0.04081632653061224,
+              "meanGeneratedAt10": 0.10204081632653061
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "top1Rate": 0.05,
+              "top10QueryRate": 0.15,
+              "meanGeneratedAt10": 0.6
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "top1Rate": 0,
+              "top10QueryRate": 0.13333333333333333,
+              "meanGeneratedAt10": 0.26666666666666666
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.1,
+              "meanGeneratedAt10": 0.15
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "top1Rate": 0,
+              "top10QueryRate": 0.05555555555555555,
+              "meanGeneratedAt10": 0.2222222222222222
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "top1Rate": 0,
+              "top10QueryRate": 0.1111111111111111,
+              "meanGeneratedAt10": 0.1111111111111111
+            },
+            "temporal": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.25,
+              "meanGeneratedAt10": 0.4
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "top1Rate": 0,
+              "top10QueryRate": 0,
+              "meanGeneratedAt10": 0
+            }
+          },
+          "byTemplate": [
+            {
+              "templateIndex": 25,
+              "hitCount": 8,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 2,
+              "hitCount": 6,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 22,
+              "hitCount": 5,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 7,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 13,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 6,
+              "hitCount": 3,
+              "top1Count": 1
+            },
+            {
+              "templateIndex": 19,
+              "hitCount": 3,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 18,
+              "hitCount": 2,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 31,
+              "hitCount": 2,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 0,
+              "hitCount": 1,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 27,
+              "hitCount": 1,
+              "top1Count": 0
+            }
+          ]
+        },
+        "latencyMs": {
+          "p50": 20.67605100000219,
+          "p95": 22.507574999995995
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 2048,
+          "overlapAt10": 1,
+          "agreementAt1": 0.9951456310679612,
+          "metrics": {
+            "recall1": 0.1650485436893204,
+            "recall5": 0.5194174757281553,
+            "recall10": 0.5533980582524272,
+            "mrr": 0.30526467868700885
+          },
+          "recallLoss": {
+            "recall1": 0,
+            "recall5": 0,
+            "recall10": 0,
+            "mrr": 0.0004045307443365509
+          },
+          "stableAcrossRepeats": true,
+          "preservationByCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "temporal": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "overlapAt10": 1,
+              "agreementAt1": 0.9090909090909091
+            }
+          },
+          "latencyMs": {
+            "p50": 7.243005999989691,
+            "p95": 10.551390000007814
+          },
+          "passesQualityGate": true
+        }
+      ]
+    },
+    {
+      "language": "ko",
+      "buildIndex": 2,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99993,
+        "baseDuplicateStatements": 7,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "domainCount": 32,
+        "templateFamilyCount": 32,
+        "construction": "deterministic-multi-domain-diagnostic",
+        "corpusSha256": "f73b7e3a6cbb1cc2971b2bcefadaa062babc987a71b97522362d3531642e0413"
+      },
+      "geometryReceipt": {
+        "policy": "density-inflation-guard",
+        "normalization": "cosine-with-measured-l2-norms",
+        "normRange": {
+          "min": 0.9999989513516147,
+          "max": 1.0000009959540357
+        },
+        "seed": 2654435769,
+        "pairCount": 10000,
+        "base": {
+          "min": 0.7455312480465611,
+          "p05": 0.8005318760089044,
+          "p50": 0.83770459332934,
+          "p95": 0.875052997980313,
+          "p99": 0.8941141034949976,
+          "max": 0.9819182094820481
+        },
+        "generated": {
+          "min": 0.7588440381108188,
+          "p05": 0.7949032220922851,
+          "p50": 0.8270464161432208,
+          "p95": 0.8716004562714685,
+          "p99": 0.9091793424674525,
+          "max": 0.9576020533284956
+        },
+        "delta": {
+          "p50": -0.010658177186119167,
+          "p95": -0.0034525417088444588,
+          "p99": 0.01506523897245482
+        },
+        "maxAllowedDelta": {
+          "p50": 0.03,
+          "p95": 0.03,
+          "p99": 0.03
+        },
+        "passed": true
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 128,
+          "ef_construct": 800,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.1650485436893204,
+          "recall5": 0.5194174757281553,
+          "recall10": 0.5533980582524272,
+          "mrr": 0.3056692094313454
+        },
+        "generatedInterference": {
+          "top1Rate": 0.0048543689320388345,
+          "top10QueryRate": 0.08737864077669903,
+          "meanGeneratedAt10": 0.18932038834951456
+        },
+        "generatedInterferenceDetails": {
+          "byCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.05,
+              "meanGeneratedAt10": 0.05
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "top1Rate": 0,
+              "top10QueryRate": 0,
+              "meanGeneratedAt10": 0
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "top1Rate": 0,
+              "top10QueryRate": 0.04081632653061224,
+              "meanGeneratedAt10": 0.10204081632653061
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "top1Rate": 0.05,
+              "top10QueryRate": 0.15,
+              "meanGeneratedAt10": 0.6
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "top1Rate": 0,
+              "top10QueryRate": 0.13333333333333333,
+              "meanGeneratedAt10": 0.26666666666666666
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.1,
+              "meanGeneratedAt10": 0.15
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "top1Rate": 0,
+              "top10QueryRate": 0.05555555555555555,
+              "meanGeneratedAt10": 0.2222222222222222
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "top1Rate": 0,
+              "top10QueryRate": 0.1111111111111111,
+              "meanGeneratedAt10": 0.1111111111111111
+            },
+            "temporal": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.25,
+              "meanGeneratedAt10": 0.4
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "top1Rate": 0,
+              "top10QueryRate": 0,
+              "meanGeneratedAt10": 0
+            }
+          },
+          "byTemplate": [
+            {
+              "templateIndex": 25,
+              "hitCount": 8,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 2,
+              "hitCount": 6,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 22,
+              "hitCount": 5,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 7,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 13,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 6,
+              "hitCount": 3,
+              "top1Count": 1
+            },
+            {
+              "templateIndex": 19,
+              "hitCount": 3,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 18,
+              "hitCount": 2,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 31,
+              "hitCount": 2,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 0,
+              "hitCount": 1,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 27,
+              "hitCount": 1,
+              "top1Count": 0
+            }
+          ]
+        },
+        "latencyMs": {
+          "p50": 19.129790999984834,
+          "p95": 21.95167899999069
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 2048,
+          "overlapAt10": 1,
+          "agreementAt1": 1,
+          "metrics": {
+            "recall1": 0.1650485436893204,
+            "recall5": 0.5194174757281553,
+            "recall10": 0.5533980582524272,
+            "mrr": 0.30526467868700885
+          },
+          "recallLoss": {
+            "recall1": 0,
+            "recall5": 0,
+            "recall10": 0,
+            "mrr": 0.0004045307443365509
+          },
+          "stableAcrossRepeats": true,
+          "preservationByCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "temporal": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            }
+          },
+          "latencyMs": {
+            "p50": 7.247612000006484,
+            "p95": 9.846412999992026
+          },
+          "passesQualityGate": true
+        }
+      ]
+    },
+    {
+      "language": "ko",
+      "buildIndex": 3,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99993,
+        "baseDuplicateStatements": 7,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "domainCount": 32,
+        "templateFamilyCount": 32,
+        "construction": "deterministic-multi-domain-diagnostic",
+        "corpusSha256": "f73b7e3a6cbb1cc2971b2bcefadaa062babc987a71b97522362d3531642e0413"
+      },
+      "geometryReceipt": {
+        "policy": "density-inflation-guard",
+        "normalization": "cosine-with-measured-l2-norms",
+        "normRange": {
+          "min": 0.9999989513516147,
+          "max": 1.0000009959540357
+        },
+        "seed": 2654435769,
+        "pairCount": 10000,
+        "base": {
+          "min": 0.7455312480465611,
+          "p05": 0.8005318760089044,
+          "p50": 0.83770459332934,
+          "p95": 0.875052997980313,
+          "p99": 0.8941141034949976,
+          "max": 0.9819182094820481
+        },
+        "generated": {
+          "min": 0.7588440381108188,
+          "p05": 0.7949032220922851,
+          "p50": 0.8270464161432208,
+          "p95": 0.8716004562714685,
+          "p99": 0.9091793424674525,
+          "max": 0.9576020533284956
+        },
+        "delta": {
+          "p50": -0.010658177186119167,
+          "p95": -0.0034525417088444588,
+          "p99": 0.01506523897245482
+        },
+        "maxAllowedDelta": {
+          "p50": 0.03,
+          "p95": 0.03,
+          "p99": 0.03
+        },
+        "passed": true
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 128,
+          "ef_construct": 800,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.1650485436893204,
+          "recall5": 0.5194174757281553,
+          "recall10": 0.5533980582524272,
+          "mrr": 0.3056692094313454
+        },
+        "generatedInterference": {
+          "top1Rate": 0.0048543689320388345,
+          "top10QueryRate": 0.08737864077669903,
+          "meanGeneratedAt10": 0.18932038834951456
+        },
+        "generatedInterferenceDetails": {
+          "byCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.05,
+              "meanGeneratedAt10": 0.05
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "top1Rate": 0,
+              "top10QueryRate": 0,
+              "meanGeneratedAt10": 0
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "top1Rate": 0,
+              "top10QueryRate": 0.04081632653061224,
+              "meanGeneratedAt10": 0.10204081632653061
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "top1Rate": 0.05,
+              "top10QueryRate": 0.15,
+              "meanGeneratedAt10": 0.6
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "top1Rate": 0,
+              "top10QueryRate": 0.13333333333333333,
+              "meanGeneratedAt10": 0.26666666666666666
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.1,
+              "meanGeneratedAt10": 0.15
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "top1Rate": 0,
+              "top10QueryRate": 0.05555555555555555,
+              "meanGeneratedAt10": 0.2222222222222222
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "top1Rate": 0,
+              "top10QueryRate": 0.1111111111111111,
+              "meanGeneratedAt10": 0.1111111111111111
+            },
+            "temporal": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.25,
+              "meanGeneratedAt10": 0.4
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "top1Rate": 0,
+              "top10QueryRate": 0,
+              "meanGeneratedAt10": 0
+            }
+          },
+          "byTemplate": [
+            {
+              "templateIndex": 25,
+              "hitCount": 8,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 2,
+              "hitCount": 6,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 22,
+              "hitCount": 5,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 7,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 13,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 6,
+              "hitCount": 3,
+              "top1Count": 1
+            },
+            {
+              "templateIndex": 19,
+              "hitCount": 3,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 18,
+              "hitCount": 2,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 31,
+              "hitCount": 2,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 0,
+              "hitCount": 1,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 27,
+              "hitCount": 1,
+              "top1Count": 0
+            }
+          ]
+        },
+        "latencyMs": {
+          "p50": 20.40529800002696,
+          "p95": 22.381085999979405
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 2048,
+          "overlapAt10": 1,
+          "agreementAt1": 0.9902912621359223,
+          "metrics": {
+            "recall1": 0.1650485436893204,
+            "recall5": 0.5194174757281553,
+            "recall10": 0.5533980582524272,
+            "mrr": 0.30526467868700885
+          },
+          "recallLoss": {
+            "recall1": 0,
+            "recall5": 0,
+            "recall10": 0,
+            "mrr": 0.0004045307443365509
+          },
+          "stableAcrossRepeats": true,
+          "preservationByCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 0.95
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "temporal": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "overlapAt10": 1,
+              "agreementAt1": 0.9090909090909091
+            }
+          },
+          "latencyMs": {
+            "p50": 7.305644000007305,
+            "p95": 9.94733900000574
+          },
+          "passesQualityGate": true
+        }
+      ]
+    },
+    {
+      "language": "en-translated",
+      "buildIndex": 1,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99992,
+        "baseDuplicateStatements": 8,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "domainCount": 32,
+        "templateFamilyCount": 32,
+        "construction": "deterministic-multi-domain-diagnostic",
+        "corpusSha256": "2522fac2e17d874e6e7c9759e718d1f7c74789db742a9fde5fadfd97ba751e1c"
+      },
+      "geometryReceipt": {
+        "policy": "density-inflation-guard",
+        "normalization": "cosine-with-measured-l2-norms",
+        "normRange": {
+          "min": 0.999999024743314,
+          "max": 1.0000010125949277
+        },
+        "seed": 2654435769,
+        "pairCount": 10000,
+        "base": {
+          "min": 0.6699160155738224,
+          "p05": 0.735877597360848,
+          "p50": 0.7920644371646539,
+          "p95": 0.8449348050008816,
+          "p99": 0.8686593969156946,
+          "max": 0.9746959384988412
+        },
+        "generated": {
+          "min": 0.7313871018913377,
+          "p05": 0.7740327207500893,
+          "p50": 0.8056808785828976,
+          "p95": 0.855140395682321,
+          "p99": 0.8902667713479325,
+          "max": 0.9698344234320193
+        },
+        "delta": {
+          "p50": 0.013616441418243697,
+          "p95": 0.010205590681439447,
+          "p99": 0.021607374432237925
+        },
+        "maxAllowedDelta": {
+          "p50": 0.03,
+          "p95": 0.03,
+          "p99": 0.03
+        },
+        "passed": true
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 128,
+          "ef_construct": 800,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.16990291262135923,
+          "recall5": 0.3155339805825243,
+          "recall10": 0.3786407766990291,
+          "mrr": 0.2368546771459393
+        },
+        "generatedInterference": {
+          "top1Rate": 0.043689320388349516,
+          "top10QueryRate": 0.23786407766990292,
+          "meanGeneratedAt10": 1.0922330097087378
+        },
+        "generatedInterferenceDetails": {
+          "byCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.2,
+              "meanGeneratedAt10": 0.75
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "top1Rate": 0,
+              "top10QueryRate": 0.3333333333333333,
+              "meanGeneratedAt10": 1.0666666666666667
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "top1Rate": 0.04081632653061224,
+              "top10QueryRate": 0.08163265306122448,
+              "meanGeneratedAt10": 0.5510204081632653
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.1,
+              "meanGeneratedAt10": 0.25
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "top1Rate": 0.13333333333333333,
+              "top10QueryRate": 0.4,
+              "meanGeneratedAt10": 2.7333333333333334
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.2,
+              "meanGeneratedAt10": 0.75
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "top1Rate": 0.05555555555555555,
+              "top10QueryRate": 0.3333333333333333,
+              "meanGeneratedAt10": 1.7222222222222223
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "top1Rate": 0,
+              "top10QueryRate": 0.16666666666666666,
+              "meanGeneratedAt10": 0.3333333333333333
+            },
+            "temporal": {
+              "queryCount": 20,
+              "top1Rate": 0.2,
+              "top10QueryRate": 0.65,
+              "meanGeneratedAt10": 3.35
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "top1Rate": 0,
+              "top10QueryRate": 0.18181818181818182,
+              "meanGeneratedAt10": 0.18181818181818182
+            }
+          },
+          "byTemplate": [
+            {
+              "templateIndex": 23,
+              "hitCount": 83,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 15,
+              "hitCount": 46,
+              "top1Count": 2
+            },
+            {
+              "templateIndex": 13,
+              "hitCount": 20,
+              "top1Count": 4
+            },
+            {
+              "templateIndex": 30,
+              "hitCount": 12,
+              "top1Count": 1
+            },
+            {
+              "templateIndex": 12,
+              "hitCount": 10,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 16,
+              "hitCount": 10,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 18,
+              "hitCount": 7,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 27,
+              "hitCount": 6,
+              "top1Count": 2
+            },
+            {
+              "templateIndex": 17,
+              "hitCount": 6,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 31,
+              "hitCount": 6,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 10,
+              "hitCount": 5,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 19,
+              "hitCount": 5,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 25,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 29,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 26,
+              "hitCount": 1,
+              "top1Count": 0
+            }
+          ]
+        },
+        "latencyMs": {
+          "p50": 19.475488999974914,
+          "p95": 21.839139999996405
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 2048,
+          "overlapAt10": 0.9966019417475729,
+          "agreementAt1": 0.9951456310679612,
+          "metrics": {
+            "recall1": 0.16990291262135923,
+            "recall5": 0.3155339805825243,
+            "recall10": 0.3786407766990291,
+            "mrr": 0.2368546771459393
+          },
+          "recallLoss": {
+            "recall1": 0,
+            "recall5": 0,
+            "recall10": 0,
+            "mrr": 0
+          },
+          "stableAcrossRepeats": true,
+          "preservationByCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "temporal": {
+              "queryCount": 20,
+              "overlapAt10": 0.9650000000000001,
+              "agreementAt1": 0.95
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            }
+          },
+          "latencyMs": {
+            "p50": 7.2212990000261925,
+            "p95": 9.095956999983173
+          },
+          "passesQualityGate": true
+        }
+      ]
+    },
+    {
+      "language": "en-translated",
+      "buildIndex": 2,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99992,
+        "baseDuplicateStatements": 8,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "domainCount": 32,
+        "templateFamilyCount": 32,
+        "construction": "deterministic-multi-domain-diagnostic",
+        "corpusSha256": "2522fac2e17d874e6e7c9759e718d1f7c74789db742a9fde5fadfd97ba751e1c"
+      },
+      "geometryReceipt": {
+        "policy": "density-inflation-guard",
+        "normalization": "cosine-with-measured-l2-norms",
+        "normRange": {
+          "min": 0.999999024743314,
+          "max": 1.0000010125949277
+        },
+        "seed": 2654435769,
+        "pairCount": 10000,
+        "base": {
+          "min": 0.6699160155738224,
+          "p05": 0.735877597360848,
+          "p50": 0.7920644371646539,
+          "p95": 0.8449348050008816,
+          "p99": 0.8686593969156946,
+          "max": 0.9746959384988412
+        },
+        "generated": {
+          "min": 0.7313871018913377,
+          "p05": 0.7740327207500893,
+          "p50": 0.8056808785828976,
+          "p95": 0.855140395682321,
+          "p99": 0.8902667713479325,
+          "max": 0.9698344234320193
+        },
+        "delta": {
+          "p50": 0.013616441418243697,
+          "p95": 0.010205590681439447,
+          "p99": 0.021607374432237925
+        },
+        "maxAllowedDelta": {
+          "p50": 0.03,
+          "p95": 0.03,
+          "p99": 0.03
+        },
+        "passed": true
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 128,
+          "ef_construct": 800,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.16990291262135923,
+          "recall5": 0.3155339805825243,
+          "recall10": 0.3786407766990291,
+          "mrr": 0.2368546771459393
+        },
+        "generatedInterference": {
+          "top1Rate": 0.043689320388349516,
+          "top10QueryRate": 0.23786407766990292,
+          "meanGeneratedAt10": 1.0922330097087378
+        },
+        "generatedInterferenceDetails": {
+          "byCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.2,
+              "meanGeneratedAt10": 0.75
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "top1Rate": 0,
+              "top10QueryRate": 0.3333333333333333,
+              "meanGeneratedAt10": 1.0666666666666667
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "top1Rate": 0.04081632653061224,
+              "top10QueryRate": 0.08163265306122448,
+              "meanGeneratedAt10": 0.5510204081632653
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.1,
+              "meanGeneratedAt10": 0.25
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "top1Rate": 0.13333333333333333,
+              "top10QueryRate": 0.4,
+              "meanGeneratedAt10": 2.7333333333333334
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.2,
+              "meanGeneratedAt10": 0.75
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "top1Rate": 0.05555555555555555,
+              "top10QueryRate": 0.3333333333333333,
+              "meanGeneratedAt10": 1.7222222222222223
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "top1Rate": 0,
+              "top10QueryRate": 0.16666666666666666,
+              "meanGeneratedAt10": 0.3333333333333333
+            },
+            "temporal": {
+              "queryCount": 20,
+              "top1Rate": 0.2,
+              "top10QueryRate": 0.65,
+              "meanGeneratedAt10": 3.35
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "top1Rate": 0,
+              "top10QueryRate": 0.18181818181818182,
+              "meanGeneratedAt10": 0.18181818181818182
+            }
+          },
+          "byTemplate": [
+            {
+              "templateIndex": 23,
+              "hitCount": 83,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 15,
+              "hitCount": 46,
+              "top1Count": 2
+            },
+            {
+              "templateIndex": 13,
+              "hitCount": 20,
+              "top1Count": 4
+            },
+            {
+              "templateIndex": 30,
+              "hitCount": 12,
+              "top1Count": 1
+            },
+            {
+              "templateIndex": 12,
+              "hitCount": 10,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 16,
+              "hitCount": 10,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 18,
+              "hitCount": 7,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 27,
+              "hitCount": 6,
+              "top1Count": 2
+            },
+            {
+              "templateIndex": 17,
+              "hitCount": 6,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 31,
+              "hitCount": 6,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 10,
+              "hitCount": 5,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 19,
+              "hitCount": 5,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 25,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 29,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 26,
+              "hitCount": 1,
+              "top1Count": 0
+            }
+          ]
+        },
+        "latencyMs": {
+          "p50": 21.225290999980643,
+          "p95": 23.54420200001914
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 2048,
+          "overlapAt10": 0.9990291262135923,
+          "agreementAt1": 0.9951456310679612,
+          "metrics": {
+            "recall1": 0.16990291262135923,
+            "recall5": 0.3155339805825243,
+            "recall10": 0.3786407766990291,
+            "mrr": 0.23604561565726617
+          },
+          "recallLoss": {
+            "recall1": 0,
+            "recall5": 0,
+            "recall10": 0,
+            "mrr": 0.0008090614886731295
+          },
+          "stableAcrossRepeats": true,
+          "preservationByCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 0.95
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "temporal": {
+              "queryCount": 20,
+              "overlapAt10": 0.99,
+              "agreementAt1": 1
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            }
+          },
+          "latencyMs": {
+            "p50": 7.0915660000173375,
+            "p95": 9.598540999984834
+          },
+          "passesQualityGate": true
+        }
+      ]
+    },
+    {
+      "language": "en-translated",
+      "buildIndex": 3,
+      "corpusSize": 100000,
+      "sourceQueryCount": 241,
+      "queryCount": 206,
+      "negativeQueryCount": 35,
+      "contaminationReceipt": {
+        "targetSize": 100000,
+        "baseSize": 1310,
+        "generatedSize": 98690,
+        "uniqueIds": 100000,
+        "uniqueStatements": 99992,
+        "baseDuplicateStatements": 8,
+        "generatedStatementCollisions": 0,
+        "exactReferenceCollisions": 0,
+        "referenceSubstringCollisions": 0,
+        "domainCount": 32,
+        "templateFamilyCount": 32,
+        "construction": "deterministic-multi-domain-diagnostic",
+        "corpusSha256": "2522fac2e17d874e6e7c9759e718d1f7c74789db742a9fde5fadfd97ba751e1c"
+      },
+      "geometryReceipt": {
+        "policy": "density-inflation-guard",
+        "normalization": "cosine-with-measured-l2-norms",
+        "normRange": {
+          "min": 0.999999024743314,
+          "max": 1.0000010125949277
+        },
+        "seed": 2654435769,
+        "pairCount": 10000,
+        "base": {
+          "min": 0.6699160155738224,
+          "p05": 0.735877597360848,
+          "p50": 0.7920644371646539,
+          "p95": 0.8449348050008816,
+          "p99": 0.8686593969156946,
+          "max": 0.9746959384988412
+        },
+        "generated": {
+          "min": 0.7313871018913377,
+          "p05": 0.7740327207500893,
+          "p50": 0.8056808785828976,
+          "p95": 0.855140395682321,
+          "p99": 0.8902667713479325,
+          "max": 0.9698344234320193
+        },
+        "delta": {
+          "p50": 0.013616441418243697,
+          "p95": 0.010205590681439447,
+          "p99": 0.021607374432237925
+        },
+        "maxAllowedDelta": {
+          "p50": 0.03,
+          "p95": 0.03,
+          "p99": 0.03
+        },
+        "passed": true
+      },
+      "indexReceipt": {
+        "status": "green",
+        "pointsCount": 100000,
+        "indexedVectorsCount": 100000,
+        "segmentsCount": 2,
+        "hnswConfig": {
+          "m": 128,
+          "ef_construct": 800,
+          "full_scan_threshold": 10,
+          "max_indexing_threads": 0,
+          "on_disk": false
+        },
+        "optimizerConfig": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 1,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 1,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        }
+      },
+      "baseline": {
+        "metrics": {
+          "recall1": 0.16990291262135923,
+          "recall5": 0.3155339805825243,
+          "recall10": 0.3786407766990291,
+          "mrr": 0.2368546771459393
+        },
+        "generatedInterference": {
+          "top1Rate": 0.043689320388349516,
+          "top10QueryRate": 0.23786407766990292,
+          "meanGeneratedAt10": 1.0922330097087378
+        },
+        "generatedInterferenceDetails": {
+          "byCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.2,
+              "meanGeneratedAt10": 0.75
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "top1Rate": 0,
+              "top10QueryRate": 0.3333333333333333,
+              "meanGeneratedAt10": 1.0666666666666667
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "top1Rate": 0.04081632653061224,
+              "top10QueryRate": 0.08163265306122448,
+              "meanGeneratedAt10": 0.5510204081632653
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.1,
+              "meanGeneratedAt10": 0.25
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "top1Rate": 0.13333333333333333,
+              "top10QueryRate": 0.4,
+              "meanGeneratedAt10": 2.7333333333333334
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "top1Rate": 0,
+              "top10QueryRate": 0.2,
+              "meanGeneratedAt10": 0.75
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "top1Rate": 0.05555555555555555,
+              "top10QueryRate": 0.3333333333333333,
+              "meanGeneratedAt10": 1.7222222222222223
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "top1Rate": 0,
+              "top10QueryRate": 0.16666666666666666,
+              "meanGeneratedAt10": 0.3333333333333333
+            },
+            "temporal": {
+              "queryCount": 20,
+              "top1Rate": 0.2,
+              "top10QueryRate": 0.65,
+              "meanGeneratedAt10": 3.35
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "top1Rate": 0,
+              "top10QueryRate": 0.18181818181818182,
+              "meanGeneratedAt10": 0.18181818181818182
+            }
+          },
+          "byTemplate": [
+            {
+              "templateIndex": 23,
+              "hitCount": 83,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 15,
+              "hitCount": 46,
+              "top1Count": 2
+            },
+            {
+              "templateIndex": 13,
+              "hitCount": 20,
+              "top1Count": 4
+            },
+            {
+              "templateIndex": 30,
+              "hitCount": 12,
+              "top1Count": 1
+            },
+            {
+              "templateIndex": 12,
+              "hitCount": 10,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 16,
+              "hitCount": 10,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 18,
+              "hitCount": 7,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 27,
+              "hitCount": 6,
+              "top1Count": 2
+            },
+            {
+              "templateIndex": 17,
+              "hitCount": 6,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 31,
+              "hitCount": 6,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 10,
+              "hitCount": 5,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 19,
+              "hitCount": 5,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 25,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 29,
+              "hitCount": 4,
+              "top1Count": 0
+            },
+            {
+              "templateIndex": 26,
+              "hitCount": 1,
+              "top1Count": 0
+            }
+          ]
+        },
+        "latencyMs": {
+          "p50": 21.50874700001441,
+          "p95": 23.091929999995045
+        }
+      },
+      "candidates": [
+        {
+          "hnswEf": 2048,
+          "overlapAt10": 0.9975728155339806,
+          "agreementAt1": 0.9902912621359223,
+          "metrics": {
+            "recall1": 0.16990291262135923,
+            "recall5": 0.3155339805825243,
+            "recall10": 0.3786407766990291,
+            "mrr": 0.2369702573586069
+          },
+          "recallLoss": {
+            "recall1": 0,
+            "recall5": 0,
+            "recall10": 0,
+            "mrr": -0.00011558021266760976
+          },
+          "stableAcrossRepeats": true,
+          "preservationByCategory": {
+            "contradiction_direct": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "contradiction_indirect": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "direct_recall": {
+              "queryCount": 49,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "entity_disambiguation": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 0.95
+            },
+            "multi_fact_synthesis": {
+              "queryCount": 15,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "noise_resilience": {
+              "queryCount": 20,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "proactive_recall": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "semantic_search": {
+              "queryCount": 18,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            },
+            "temporal": {
+              "queryCount": 20,
+              "overlapAt10": 0.975,
+              "agreementAt1": 0.95
+            },
+            "unchanged_persistence": {
+              "queryCount": 11,
+              "overlapAt10": 1,
+              "agreementAt1": 1
+            }
+          },
+          "latencyMs": {
+            "p50": 7.297875999938697,
+            "p95": 9.818472999962978
+          },
+          "passesQualityGate": true
+        }
+      ]
+    }
+  ],
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-22T00:55:19.347Z",
+    "git": {
+      "revision": "17ae84c5e45e269594169cb6542dbc28183b5701",
+      "dirty": true
+    },
+    "datasets": {
+      "src/benchmark/fact-bank-v2.json": "e1ff0e495f81f9bc6123fdad9f164434781fb4c87da9ad7ad8bca866651d361a",
+      "src/benchmark/fact-bank.json": "3133825669c5bfe86718c5185f2c68b9bb81010da568abe6a4e26d27701b9774",
+      "src/benchmark/query-templates-v2.json": "b9282493f7a6785134c7b6f2250bf5841d67f221a36fd01fdf57dc235e1db09a",
+      "src/benchmark/fact-bank-v2.en.json": "a7fada96e55c0ff64296408d797cedfc88a8e95a0a2172c74f9bfbb53cd32aca",
+      "src/benchmark/fact-bank.en.json": "4965bcfd82dba3a59a44b4dc916adeef88bfe9d1ff39d82225ee085b19f38809",
+      "src/benchmark/query-templates-v2.en.json": "4e4b85e07a8e978111cfd4ffbf8a231e4615ba7a57073a2ddeb92c57e45e3619"
+    },
+    "implementations": {
+      "src/benchmark/quality/binary-quantization-gate.ts": "4827b88ca17e464e556ac6ffc9eb21298cd295b3fc235edb19339fb979cae564",
+      "src/benchmark/quality/hnsw-exact-gate.ts": "674be6703de9dbf135037ca0bda1d9e9408880fcfea54616b13e73160fbd6605",
+      "src/benchmark/quality/hnsw-exact-gate-cli.ts": "de4f70ab4a24e31871f31c9c59f0612f26429d0051a1d05db04f143795c688e5",
+      "src/benchmark/quality/hnsw-exact-gate-cli.test.ts": "57c906501a7097900fe800565c5c61d1ca1a80f00d2ce09c7347b6bd2faba72b",
+      "src/benchmark/quality/hnsw-scale-corpus.ts": "5746f0c26f6d8f6b8e74911ee45cd85e88ffb25f309c667ca3574d7c58c3f3f4",
+      "src/benchmark/quality/hnsw-scale-corpus.test.ts": "c7f1843be73370fba7a448affa045590dff34111577d84b86aa1e0c8e7d4f62b",
+      "src/benchmark/quality/hnsw-vector-cache.ts": "a57cc6d8bc1f850ec0603442f92efdfc8132c546f70d48cc567c6aa95ccb67f0",
+      "src/benchmark/quality/hnsw-vector-cache.test.ts": "df94cbe46eeccb9ebc31a93e40bd09c019e8e9a1a20b3fb7daeecaeaecde4c59",
+      "src/benchmark/quality/hnsw-corpus-geometry.ts": "950ff7e95b7fae746a40df035a7526da2616795ea22077e41698ac0be0fda829",
+      "src/benchmark/quality/hnsw-corpus-geometry.test.ts": "aaa2de6af597cd4a568e235abcbffe98a92890e0eef607275343767172746797"
+    },
+    "config": {
+      "model": "multilingual-e5-large",
+      "device": "cpu",
+      "qdrantVersion": "1.15.5",
+      "topK": 10,
+      "hnswEfValues": [
+        2048
+      ],
+      "hnswM": 128,
+      "hnswEfConstruct": 800,
+      "repeats": 3,
+      "buildRepeats": 3,
+      "targetCorpusSize": 100000,
+      "embeddingBatchSize": 32,
+      "upsertBatchSize": 250,
+      "indexTimeoutMs": 600000,
+      "indexStablePolls": 5,
+      "indexBuildStrategy": "upload-with-indexing-disabled-then-build-single-segment"
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  }
+}

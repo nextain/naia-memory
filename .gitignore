@@ -11,6 +11,7 @@ dist/
 *.raw.txt
 
 # benchmark runtime artifacts
+.cache/benchmark-sources/
 reports/checkpoint-*.json
 reports/checkpoint-*.json.heuristic-*
 reports/checkpoint-*.json.heuristic-baseline

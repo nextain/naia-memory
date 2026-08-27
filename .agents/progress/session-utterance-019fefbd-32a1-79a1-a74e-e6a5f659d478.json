@@ -1,0 +1,146 @@
+{
+  "schema_version": "1.0",
+  "contract_id": "naia-memory-benchmark-evidence-loop-2026-08-13",
+  "contract_digest": "7761784226076edd4e686cf37e3f4d60fceeba5a7f24a54c7ed59e1d1dced14d",
+  "issue": "https://github.com/nextain/naia-memory/issues/12#issuecomment-5301734882",
+  "current_phase": "in-progress",
+  "current_task": "Public evidence v7 now rejects duplicated or contradictory cases and requires receipt-recomputed language-stratified metrics without a Naia-specific admission rule. Next obtain an independently governed ko/en/ja corpus and verifier-challenged same-input receipts from Naia and at least two global engines.",
+  "gates_cleared": ["P01", "P02", "P03", "P04", "P05"],
+  "key_decisions": [
+    "Use CPU only; GPU 1 belongs to another session.",
+    "Treat existing reports without revision, dataset digest, configuration, and environment as historical evidence, not certified comparisons.",
+    "Keep retrieval measurement separate from agent response and abstention decisions.",
+    "Do not adopt vector-only as the default: it improved hit@1 and MRR but increased forbidden-fact exposure at top-5 on the fixed Korean contract.",
+    "Discord DM delivery was verified through the configured alpha-ds-bot direct-message route; concise notices are reserved for material improvements."
+    ,"Reject the RRF zero-score candidate: forbidden@1 rose from 25.0% to 31.3% and forbidden@5 from 43.8% to 50.0% on two reproducible CPU runs.",
+    "Separate structured-supersession mechanism evidence from broad retrieval evidence: the new fixed Korean/English/Japanese contract scores lifecycle preservation, retrieval relevance, and stale/foreign exposure without language-specific tuning.",
+    "Reject vector-only as a default candidate: on the structured contract it matched RRF safety and improved MRR only from 0.564 to 0.571, while the broad Korean contract still has higher forbidden@5 exposure (56.3% versus 43.8%).",
+    "Reject KG-spreading configuration as a quality candidate: disabling it produced identical results on all six Korean-contract measures, so this corpus contains no discriminating graph path.",
+    "Reject the global MMR-off candidate: it left every v2 multilingual and broad Korean contract metric unchanged, including Japanese entity-confusion retrieval; the bottleneck is candidate relevance before diversification.",
+    "Defer the optional CPU BGE reranker: the v2 ten-case run loaded successfully but exceeded eight minutes without a completed receipt. It cannot be accepted for quality and is unsuitable as a default CPU path without batched warm-run evidence.",
+    "Reject the corrected batched q8 BGE reranker as a ranking candidate: on v2 explicit structure, hit@5 rose 60.0% to 70.0% but hit@1 fell 40.0% to 30.0%, MRR fell 0.500 to 0.433, and the ten-case run cost 210.12 seconds with 1,729,480 KB max RSS. Keep the pair-scoring correctness fix optional; do not change the default path.",
+    "Correct benchmark case-state contamination: restore recallCount, lastAccessed, and strength before every measured query. Earlier sequential ranking values are superseded; independent broad Korean RRF is hit@1 50.0%, hit@5 81.3%, MRR 0.635, forbidden@1 31.3%, forbidden@5 56.3%.",
+    "Reject candidate-pool expansion: multipliers 6 and 12 were metric-identical to 3 on corrected v2 and broad Korean contracts, so configurable broad-factor product code was removed.",
+    "Supersede the pre-correction multilingual-e5-large rejection: two independent-case repetitions produced identical material gains. Broad Korean moved from 50.0/81.3/.635 to 68.8/87.5/.781 and forbidden@1 fell 31.3% to 12.5% while forbidden@5 stayed 56.3%; v2 moved from 40.0/70.0/.525 to 50.0/70.0/.570 with zero stale exposure and 100% lifecycle.",
+    "Keep E5-large as a measured candidate, not yet the default: max RSS was approximately 1.80-1.85 GB and the cached model is roughly 562 MB. Require a smaller-model quality/resource curve and Shell/Agent dimension compatibility gate.",
+    "Select multilingual-e5-small q8 as the resource-balanced candidate: two broad Korean runs reproduced 62.5% hit@1, 87.5% hit@5, 0.740 MRR, 18.8% forbidden@1, and 56.3% forbidden@5; v2 preserved 40.0/70.0/0.525, zero stale exposure, and 100% lifecycle at approximately 648-659 MB max RSS.",
+    "Reject multilingual-e5-base q8: it matched small hit@1/hit@5, reduced broad MRR from 0.740 to 0.729, and increased max RSS to approximately 0.97-1.04 GB; its lower forbidden@1 did not change forbidden@5.",
+    "Integration trace: the existing E5-large path is wired Shell settings -> Agent closed union -> Naia Memory, but E5-small is not accepted by the Shell/Agent unions. Do not claim small is product-selectable until separately authorized repository contracts update those boundaries.",
+    "Keep the lifecycle prefilter correctness fix: inactive rows can no longer starve active rows before candidate truncation; targeted regression tests pass, with no quality-score uplift claimed.",
+    "Block any embedding default switch until storage migration is explicit: Local JSON persists vectors without model identity, so same-dimension MiniLM to E5-small can silently mix incompatible vector spaces; SQLite vec0 can retain an incompatible dimension schema."
+    ,"Implement the Local JSON migration floor: persist a preprocessing-versioned embedding-space ID, fail loudly on mismatched or unidentified vectors, and require explicit full reindex before recall. SQLite and Agent/Shell gates remain open."
+    ,"Require verifier-owned Ed25519 trust roots for publisher, engine, and reviewer identities; submitted evidence cannot select its own trust root."
+    ,"Pin each approved scoring policy to an exact scorer artifact SHA-256 and bind every case judgment to engine, case, repetition, output, score, failure state, and policy identity."
+    ,"Keep the public benchmark claim blocked: the v3 gate implementation passed adversarial review, but independent multilingual corpus construction and real external-engine receipts remain absent."
+    ,"Replay every public retrieval record from raw signed output under exact-current-hit-at-k-v1; bind top-k to the metric identity and fail a case when any forbidden or stale ID appears in the frozen window."
+    ,"Do not equate deterministic receipt consistency with execution provenance: require verifier-issued run nonces, immutable adapter/configuration/executable digests, independent reproduction, and signed corpus author/native-reviewer attestations before public comparison."
+    ,"Authorize only the exact claim that artifacts are tamper-evident under the frozen public evidence protocol; reject performance, multilingual-quality, generalization, organizational-independence, and semantic-execution claims."
+    ,"Reject non-zero result claims on unexecuted engines and require receipt hash completeness against the full executed-engine set."
+    ,"Keep public readiness blocked until externally owned corpus, challenge, runner, and real global-engine receipts exist; this gate improves evidence integrity, not benchmark performance."
+    ,"Reject publisher self-attestation as proof of corpus independence: require trusted author signatures and language-scoped native-reviewer signatures bound to the exact dataset digest."
+    ,"Accept the provenance gate after two unchanged-tree OpenCode/DeepSeek adversarial rounds returned CLEAN; record that Claude headless failed and an additional Azure-hosted GPT review was rate-limited, so this is not a multi-model consensus claim."
+    ,"Remove answerModel and judgeModel from public evidence schema v6: exact-current-hit-at-k-v1 is a deterministic model-free retrieval scorer, so retaining dead model identities would misrepresent comparison fairness. Reject legacy, mislabeled, and extra-field protocol shapes."
+    ,"Reject an engine-vocabulary-intersection admission gate after OpenCode identified that it could exclude a valid zero-performing competitor and appear Naia-biased. Score only against each frozen case's expected and forbidden labels."
+    ,"Treat public benchmark cases as independent evidence units: reject normalized duplicate inputs, answer-ID reuse across cases, and expected/forbidden label contradictions that could inflate effective sample size or make the contract incoherent."
+    ,"Narrow scoring-policy wording after adversarial review: compare outputs only against each frozen case's labels; do not claim or enforce a complete shared-ID registry that could exclude a valid zero-scoring competitor."
+    ,"Require language-stratified primary metrics in manifest v7 and receipt v4, with exact dataset-language coverage and recomputation from per-case records."
+    ,"Reject public dataset v2 as non-executable: query and answer IDs without an ordered memory state cannot reproduce a real memory-engine comparison."
+    ,"Require dataset v3 cases to bind ordered memories with stable IDs and require labels to reference inserted memories; manifest v8 rejects legacy non-executable bundles."
+    ,"Require engine bridges to round-trip frozen dataset IDs through native metadata and fail closed when that capability is absent; do not infer identity from retrieved text."
+    ,"Keep each engine's production retrieval mode and disclose it through the immutable configuration artifact; reject a forced embedding-only mode as a component ablation rather than a product comparison."
+  ],
+  "evidence": {
+    "commit": "838e91b",
+    "reports": [
+      "reports/perf/latency-accuracy-count1000.json",
+      "reports/quality/korean-retrieval-contract-v1-rrf.json",
+      "reports/quality/korean-retrieval-contract-v1-vector-only.json",
+      "reports/quality/korean-retrieval-contract-v1-rrf-no-kg-spreading.json",
+      "reports/benchmark-evidence-loop-2026-08-13.md"
+      ,"reports/rrf-correction-adversarial-review-2026-08-13.md",
+      "reports/quality/structured-supersession-research-2026-08-14.md",
+      "reports/quality/structured-supersession-contract-v1.json",
+      "reports/quality/structured-supersession-contract-v1-vector-only.json",
+      "reports/quality/structured-supersession-contract-v2.json",
+      "reports/quality/structured-supersession-contract-v2-vector-only.json",
+      "reports/quality/structured-supersession-contract-v2-no-mmr.json",
+      "reports/quality/korean-retrieval-contract-v1-rrf-no-mmr.json",
+      "reports/quality/structured-supersession-contract-v2-bge-reranker-base-q8.json"
+      ,"reports/quality/structured-supersession-contract-v2-multilingual-e5-large.json"
+      ,"reports/quality/structured-supersession-contract-v2-top20.json"
+      ,"reports/quality/public-evidence-authenticity-gate-2026-08-18.md"
+      ,"reports/quality/public-evidence-semantic-replay-2026-08-18.md"
+      ,"reports/quality/public-execution-attestation-2026-08-18.md"
+      ,"reports/quality/public-evidence-intake-cli-2026-08-18.md"
+      ,"reports/quality/public-model-free-protocol-v6-2026-08-18.md"
+      ,"reports/quality/public-case-independence-policy-v2-2026-08-18.md"
+      ,"reports/quality/public-executable-dataset-contract-v3-2026-08-18.md"
+    ],
+    "verification": [
+      "pnpm typecheck",
+      "pnpm exec vitest run src/memory/__tests__/ko-normalize.test.ts",
+      "pnpm typecheck",
+      "pnpm exec vitest run src/memory/__tests__/structured-facts.test.ts",
+      "pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "BENCH_SEARCH_MODE=vector-only pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "BENCH_CONTRACT=src/benchmark/quality/structured-supersession-contract-v2.json pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "BENCH_CONTRACT=src/benchmark/quality/structured-supersession-contract-v2.json BENCH_SEARCH_MODE=vector-only pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "BENCH_DISABLE_KG_SPREADING=1 pnpm exec tsx src/benchmark/quality/korean-retrieval-contract.ts",
+      "BENCH_CONTRACT=src/benchmark/quality/structured-supersession-contract-v2.json NAIA_MMR=off pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "NAIA_MMR=off pnpm exec tsx src/benchmark/quality/korean-retrieval-contract.ts",
+      "node scripts/check-doc-graph.mjs docs docs/README.md reaction-signal.md --exempt progress --exempt reports --exempt archive",
+      "git diff --check",
+      "BENCH_VALIDATE_ONLY=1 pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts",
+      "BENCH_VALIDATE_ONLY=1 pnpm exec tsx src/benchmark/quality/korean-retrieval-contract.ts",
+      "BENCH_CONTRACT=src/benchmark/quality/structured-supersession-contract-v2.json BENCH_RERANKER=bge-reranker-base pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts (interrupted after eight minutes without a receipt)",
+      "pnpm exec vitest run src/memory/__tests__/reranker.test.ts (2 passed)",
+      "pnpm typecheck",
+      "BENCH_CONTRACT=src/benchmark/quality/structured-supersession-contract-v2.json BENCH_RERANKER=bge-reranker-base pnpm exec tsx src/benchmark/quality/structured-supersession-contract.ts (q8: 210.12 seconds, 1,729,480 KB max RSS)",
+      "pnpm exec vitest run src/memory/__tests__/lifecycle-candidate-filter.test.ts src/memory/__tests__/reranker.test.ts (3 passed)",
+      "pnpm exec tsc --noEmit",
+      "Independent-case structured v2 RRF: hit@1 40.0%, hit@5 70.0%, MRR 0.525, forbidden@5 0.0%, lifecycle 100.0%",
+      "Independent-case broad Korean RRF: hit@1 50.0%, hit@5 81.3%, MRR 0.635, forbidden@1 31.3%, forbidden@5 56.3%",
+      "Independent-case broad Korean vector-only: hit@1 37.5%, hit@5 68.8%, MRR 0.497, forbidden@1 25.0%, forbidden@5 50.0%"
+      ,"multilingual-e5-small broad Korean repeated: hit@1 62.5%, hit@5 87.5%, MRR 0.740, forbidden@1 18.8%, forbidden@5 56.3%, cached max RSS 648,304 KB"
+      ,"multilingual-e5-small structured v2: hit@1 40.0%, hit@5 70.0%, MRR 0.525, forbidden@5 0.0%, lifecycle 100.0%, max RSS 659,240 KB"
+      ,"multilingual-e5-base broad Korean: hit@1 62.5%, hit@5 87.5%, MRR 0.729, forbidden@1 12.5%, forbidden@5 56.3%, max RSS 972,176 KB"
+      ,"multilingual-e5-base structured v2: hit@1 40.0%, hit@5 70.0%, MRR 0.533, forbidden@5 0.0%, lifecycle 100.0%, max RSS 1,040,264 KB"
+      ,"pnpm test: 28 files, 403 tests passed after Local embedding-space migration guard"
+      ,"pnpm exec tsc --noEmit and git diff --check passed"
+      ,"Public evidence v3 targeted gate tests: 22 passed"
+      ,"Public evidence v3 full suite: 31 files, 462 tests passed"
+      ,"pnpm typecheck, pnpm build, and git diff --check passed after authenticity gate"
+      ,"OpenCode adversarial review PASS under fixed honest trust-policy and uncompromised-key threat model"
+      ,"Public semantic replay targeted tests: 34 passed"
+      ,"Public semantic replay full suite: 32 files, 474 tests passed"
+      ,"pnpm typecheck and pnpm build passed after semantic replay gate"
+      ,"Two adversarial rounds from OpenCode and Claude headless found no actionable replay, top-k, stale-ID, neutrality, or overfit defect; execution provenance remains explicitly out of scope"
+      ,"Public execution evidence full suite: 36 files, 490 tests passed"
+      ,"Biome public evidence checks, strict main/benchmark typecheck, production build, and git diff --check passed"
+      ,"Two consecutive unchanged-tree adversarial rounds: security CLEAN/CLEAN, claim scope CLEAN/CLEAN, architecture ACCEPTED/ACCEPTED"
+      ,"Public dataset provenance full suite: 36 files, 494 tests passed"
+      ,"Strict main/benchmark typecheck, production build, Biome checks, doc graph, and git diff --check passed"
+      ,"Public dataset provenance unchanged-tree OpenCode/DeepSeek adversarial review: CLEAN/CLEAN; no actionable signature replay, role/language confusion, undeclared-language, key-reuse, or fail-open defect"
+      ,"Review diversity limitation: Claude headless failed to complete and an additional Azure-hosted GPT review was rate-limited"
+      ,"Public evidence intake CLI: 37 files, 501 tests passed; strict typecheck and production build passed"
+      ,"Initial valid OpenCode adversarial review found segment-insensitive containment, unbounded reads, and raw error disclosure; all were fixed, and malformed Ed25519 trust keys were rejected at intake"
+      ,"Fixed-tree OpenCode re-review inspected intake, crypto, gate, and attack tests and returned VERDICT: CLEAN; rate-limited/non-terminating attempts were not counted"
+      ,"Claim limitation: external verifier independence and pre-run seal/freeze ordering remain out-of-band protocol facts, not cryptographic proofs"
+      ,"Public evidence schema v6 full suite: 37 files, 502 tests passed; Biome, strict typecheck, and production build passed"
+      ,"OpenCode challenge review rejected binding nonexistent answer/judge dependencies to engines; fixed-tree review found and verified repairs for schema-version confusion and missing compatibility controls; final verdict CLEAN"
+      ,"Claim limitation: schema v6 improves protocol truthfulness only; no retrieval-performance or global-engine superiority claim is added"
+      ,"Public scoring policy v2 full suite: 37 files, 504 tests passed; public quality subset 8 files, 69 tests passed; Biome, strict typecheck, and production build passed"
+      ,"OpenCode review round 1 found and caused removal of a Naia-biased vocabulary-intersection gate; round 2 confirmed engine neutrality and exposed cross-case answer-ID reuse, which was then closed"
+      ,"Claim limitation: case-independence validation improves statistical integrity only; independent multilingual corpus and real global-engine receipts remain absent"
+      ,"Public evidence v7 quality subset: 8 files, 71 tests passed; missing, extra, malformed, and receipt-tampered language metrics are rejected"
+      ,"OpenCode later review BLOCKed unenforced shared-namespace wording; remediation narrowed the contract to frozen per-case labels without a competitor admission gate"
+      ,"Claim limitation: language-stratified evidence prevents aggregate masking but does not establish multilingual quality or performance uplift"
+      ,"Public evidence v7 final regression: 37 files, 506 tests passed; Biome, strict main/benchmark typecheck, production build, and git diff check passed"
+      ,"Post-remediation OpenCode analysis found no new concrete publication-integrity bypass in policy v2 or language metrics v7; retain PASS-WITH-LIMITATIONS because independent corpus and real engine receipts are still absent"
+      ,"Public executable dataset v3 regression: 38 files, 510 tests passed; Biome, strict main/benchmark typecheck, production build, and git diff check passed"
+      ,"OpenCode identified dataset v2 as non-reproducible because it omitted stored memories and ID mapping; fixed-design review returned CLEAN and its ID-preservation concern was hardened with a fail-closed bridge policy"
+      ,"Claim limitation: manifest v8 makes real same-input runs expressible but no external bridge receipt, independent multilingual corpus, or performance uplift exists yet"
+    ]
+  },
+  "updated_at": "2026-08-18T18:49:00+09:00"
+}

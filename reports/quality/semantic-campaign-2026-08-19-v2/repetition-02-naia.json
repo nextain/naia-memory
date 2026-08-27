@@ -1,0 +1,326 @@
+{
+  "schemaVersion": "naia-memory-semantic-raw-artifact-v2",
+  "interpretation": "Unscored engine-native semantic memories and retrievals; not quality evidence by itself.",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-19T11:43:06.086Z",
+    "git": {
+      "revision": "544adf2d727f4fd4d3de527e60e001a55942a5e3",
+      "dirty": true
+    },
+    "datasets": {
+      "/var/home/luke/alpha-adk/projects/naia-memory/src/benchmark/quality/memory-update-semantic-diagnostic-v1.json": "48e46e10fe736415a209d33af8f19468f5f3ff47821e7de6d1ab549839148a90"
+    },
+    "implementations": {
+      "src/benchmark/quality/semantic-raw-cli.ts": "664bce17aadea127a5af23d22c64431b4c9cfa6e90f80f4fcb16d57f75bf7b6c",
+      "src/benchmark/quality/memory-semantic-runner.ts": "8f1e1456e4ab1195e9c5b397abd36c9d31d5f02482385ba3cab9bd3453dd5ad1",
+      "src/benchmark/quality/bridge-naia-semantic.ts": "cafcee3ac6a93fe885d20c5a4407fcd2a49e72a75f26b3a35277ae0d7566d87b"
+    },
+    "config": {
+      "engine": "naia",
+      "topK": 5,
+      "executionSeed": "8958d35c3e9c8eb157f3dde4cedd1b33d137de7b6b362919b7b8b598269cd500",
+      "embeddingModel": "gemini-embedding-001",
+      "embeddingRevision": "gemini-embedding-001",
+      "embeddingDimensions": 3072,
+      "llmModel": "gemini-2.5-flash",
+      "authScheme": "bearer",
+      "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/"
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "disclosure": {
+    "engine": "naia",
+    "topK": 5,
+    "executionSeed": "8958d35c3e9c8eb157f3dde4cedd1b33d137de7b6b362919b7b8b598269cd500",
+    "embeddingModel": "gemini-embedding-001",
+    "embeddingRevision": "gemini-embedding-001",
+    "embeddingDimensions": 3072,
+    "llmModel": "gemini-2.5-flash",
+    "authScheme": "bearer",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/openai/"
+  },
+  "cases": [
+    {
+      "caseId": "ja-allergy-delete",
+      "executionPosition": 1,
+      "language": "ja",
+      "fixtureSha256": "cb3e6d0325ce40b86b63b00e57d0e73d6cb8b2009435e78a3cba27b03e582d2a",
+      "engineInputSha256": "8bacbace559a6aa8b949167dacfd021ea0e7e506afd19ef85652d31690943f07",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "b533de25-409d-0fb5-632d-4ccef434c773",
+          "content": "ユーザーはピーナッツアレルギーがあります"
+        }
+      ],
+      "retrieved": [],
+      "outputSha256": "40f9de512feff092c95561f7a07dbc8885befc3d6de44b4d28403dbdde30b130"
+    },
+    {
+      "caseId": "en-coffee-no-update",
+      "executionPosition": 2,
+      "language": "en",
+      "fixtureSha256": "8a1ae5e2af30c393af2eb4e3a08a87800a79f43bc5a4052803cd78148ba0d69b",
+      "engineInputSha256": "e98468ec4e4449748b01e4834cca451a1c2e90dd4b91e2d8900717239fc9466a",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "048a9813-d323-d739-fe30-ae04a8bd8e15",
+          "content": "User does not drink coffee"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "048a9813-d323-d739-fe30-ae04a8bd8e15",
+          "content": "User does not drink coffee"
+        }
+      ],
+      "outputSha256": "46179b190031d16954fc7180f4d65a748f7127593fa7152393501437f780ef59"
+    },
+    {
+      "caseId": "en-allergy-delete",
+      "executionPosition": 3,
+      "language": "en",
+      "fixtureSha256": "fbbe6e807d0055129c463e31d1113f19bfceff95ff77adcfc05ecf0ed27ec836",
+      "engineInputSha256": "0f12526d7417b3132ba0fffdb30245b8abbdbb1a516750e373ce45a03a973d12",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "92d4c83b-332e-34a0-69c8-a64500b6f467",
+          "content": "User allergy: peanut"
+        }
+      ],
+      "retrieved": [],
+      "outputSha256": "23f99ca6127dc71342e822c21975850b8790979fa951524dac2ce8aa0a1fe6bc"
+    },
+    {
+      "caseId": "en-residence-update",
+      "executionPosition": 4,
+      "language": "en",
+      "fixtureSha256": "751ab6c8da87e0f89aa3331816c6c13f555f535d52272481dcf6c7d628e769cd",
+      "engineInputSha256": "e15210f3a5185b14ee03ada26361535dc6d5d057d8547bd597a6409981f012d5",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "f62c4931-d9ab-595b-e8c3-aba8d404a144",
+          "content": "User residence: London"
+        },
+        {
+          "nativeId": "f62c4931-d9ab-595b-e8c3-aba8d404a144-v1787139745987",
+          "content": "User residence: Bristol"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "f62c4931-d9ab-595b-e8c3-aba8d404a144-v1787139745987",
+          "content": "User residence: Bristol"
+        }
+      ],
+      "outputSha256": "4c6fa099a74256497a85e19ce7932c86deb6c5df63f3d61ff56739f587a3fffe"
+    },
+    {
+      "caseId": "ja-coffee-no-update",
+      "executionPosition": 5,
+      "language": "ja",
+      "fixtureSha256": "f29fe92228b6b0b1293e662fa75eaddb648b99abe401d92b3d0928f1b3d1b543",
+      "engineInputSha256": "e5d95d6361dd612ff2da7c2f114dcdd07755b4a910d8b0c310ca7d467f9042a5",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "6105e63a-ee06-458c-6658-a69b26b211f3",
+          "content": "ユーザーはコーヒーを飲みません。"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "6105e63a-ee06-458c-6658-a69b26b211f3",
+          "content": "ユーザーはコーヒーを飲みません。"
+        }
+      ],
+      "outputSha256": "a77ca25090281de1b8c01c958c81a5d8bcbf22deb6fb7641b8c43045a46ac3d3"
+    },
+    {
+      "caseId": "ko-allergy-delete",
+      "executionPosition": 6,
+      "language": "ko",
+      "fixtureSha256": "abb82e7ccd3b1490ac5658970b0997d30eb1768bf85959103e23387ee38e38a2",
+      "engineInputSha256": "815ab02072a6da7a93132cf7a916506fba89341cc87d2f4e907f14181f489f14",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "bcbb09f7-7f42-09ec-856b-325daa9b0234",
+          "content": "사용자 알레르기: 땅콩"
+        }
+      ],
+      "retrieved": [],
+      "outputSha256": "61fa437319572df61a7651b8e54bf6b0827da5d637e5c9483905bb0e07b93dd9"
+    },
+    {
+      "caseId": "ja-residence-update",
+      "executionPosition": 7,
+      "language": "ja",
+      "fixtureSha256": "195c0ae20cb70b84d6604f4711c55d3a2eefd20c85555c54bd135920bfe76944",
+      "engineInputSha256": "8df41bd8b35bae5c0fc6d850e8193b16c8314430f64c5d48f0fb8f274841032f",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "95324474-76cd-fac7-7880-acc8260e5ed3",
+          "content": "ユーザーの居住地: 東京"
+        },
+        {
+          "nativeId": "95324474-76cd-fac7-7880-acc8260e5ed3-v1787139768648",
+          "content": "ユーザーの居住地: 大阪"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "95324474-76cd-fac7-7880-acc8260e5ed3-v1787139768648",
+          "content": "ユーザーの居住地: 大阪"
+        }
+      ],
+      "outputSha256": "f40ff4c0c6aa176000b3caaa365a33a4b7456057fd730ae5a34ddef202a47fd9"
+    },
+    {
+      "caseId": "ko-residence-update",
+      "executionPosition": 8,
+      "language": "ko",
+      "fixtureSha256": "46234ef4c29d897e530ca1009a6e05ad3c5a1cedc575ce395e4581740d153e6b",
+      "engineInputSha256": "e37ca48f328ba6f7fbd3be833e03ed4eb5a99994c8ae6548819a69f910dcb940",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "5acab144-6559-d34b-443e-ddf9eab47477",
+          "content": "사용자 거주지: 서울"
+        },
+        {
+          "nativeId": "5acab144-6559-d34b-443e-ddf9eab47477-v1787139776253",
+          "content": "사용자 거주지: 부산"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "5acab144-6559-d34b-443e-ddf9eab47477-v1787139776253",
+          "content": "사용자 거주지: 부산"
+        }
+      ],
+      "outputSha256": "9736a9703572429f3f1a05ab0659fa5173b160e764e13490d48a458f21913014"
+    },
+    {
+      "caseId": "ko-coffee-no-update",
+      "executionPosition": 9,
+      "language": "ko",
+      "fixtureSha256": "96d7d15736708b1064c3edc3ce8291a9272d81e4bda1304e4fc22d8d654d5143",
+      "engineInputSha256": "9acedf2980973cc0c47d9c4d0cb981ce16185215d7b3e943b5d69c6517dcf3ac",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "opaque"
+        },
+        {
+          "outcome": "opaque"
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "9207d343-6d49-9247-e5e1-3d822bb76bdc",
+          "content": "사용자는 커피를 마시지 않는다."
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "9207d343-6d49-9247-e5e1-3d822bb76bdc",
+          "content": "사용자는 커피를 마시지 않는다."
+        }
+      ],
+      "outputSha256": "b6964c140b4a115c911ec960694440a6b972c20c65c45e22e14eb7b392837f49"
+    }
+  ]
+}

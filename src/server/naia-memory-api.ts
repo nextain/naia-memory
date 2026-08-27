@@ -1,18 +1,21 @@
 import express from "express";
-import type { MemoryAdapter } from "../memory/types.js";
-import { MemorySystem } from "../memory/index.js";
 import { LocalAdapter } from "../memory/adapters/local.js";
 import { Mem0Adapter } from "../memory/adapters/mem0.js";
-import { buildLLMFactExtractor } from "../memory/llm-fact-extractor.js";
 import { OpenAICompatEmbeddingProvider } from "../memory/embeddings.js";
+import { MemorySystem } from "../memory/index.js";
+import { buildLLMDeleteVerifier } from "../memory/llm-delete-verifier.js";
+import { buildLLMFactExtractor } from "../memory/llm-fact-extractor.js";
+import type { MemoryAdapter } from "../memory/types.js";
 import { createConsolidationGate } from "./consolidation-gate.js";
+import { resolveDeleteVerifierConfig } from "./delete-verifier-config.js";
+import { createMemoryPostHandler } from "./memory-post-handler.js";
 import { VectorStore } from "./vector-store.js";
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 
 const apiKey = process.env.GEMINI_API_KEY || "";
-const port = parseInt(process.env.PORT || "9876", 10);
+const port = Number.parseInt(process.env.PORT || "9876", 10);
 const storePath = process.env.STORE_PATH || "/tmp/locomo-naia-memory.json";
 const vectorStorePath =
 	process.env.VECTOR_STORE_PATH ||
@@ -24,17 +27,24 @@ const GATEWAY_URL = process.env.GATEWAY_URL || "";
 const GATEWAY_KEY = process.env.GATEWAY_MASTER_KEY || "";
 
 const useGateway = GATEWAY_URL && GATEWAY_KEY;
-const llmBase = useGateway ? `${GATEWAY_URL.replace(/\/+$/, "")}/v1/` : GEMINI_BASE;
+const llmBase = useGateway
+	? `${GATEWAY_URL.replace(/\/+$/, "")}/v1/`
+	: GEMINI_BASE;
 const llmKey = useGateway ? GATEWAY_KEY : apiKey;
 
-const embedBaseUrl = process.env.VLLM_EMBED_BASE
-	|| (useGateway ? GATEWAY_URL.replace(/\/+$/, "") : GEMINI_BASE);
+const embedBaseUrl =
+	process.env.VLLM_EMBED_BASE ||
+	(useGateway ? GATEWAY_URL.replace(/\/+$/, "") : GEMINI_BASE);
 const embedApiKey = process.env.VLLM_EMBED_BASE
-	? "empty" : (useGateway ? GATEWAY_KEY : apiKey);
-const embedModel = process.env.VLLM_EMBED_MODEL
-	|| (useGateway ? "vertexai/gemini-embedding-001" : "gemini-embedding-001");
+	? "empty"
+	: useGateway
+		? GATEWAY_KEY
+		: apiKey;
+const embedModel =
+	process.env.VLLM_EMBED_MODEL ||
+	(useGateway ? "vertexai/gemini-embedding-001" : "gemini-embedding-001");
 const embedDims = process.env.VLLM_EMBED_DIM
-	? parseInt(process.env.VLLM_EMBED_DIM, 10)
+	? Number.parseInt(process.env.VLLM_EMBED_DIM, 10)
 	: 3072;
 
 const embedder = new OpenAICompatEmbeddingProvider(
@@ -50,14 +60,19 @@ let adapter: MemoryAdapter;
 if (adapterType === "mem0") {
 	// mem0 OSS adapter — local CPU embedding (transformers.js) + GLM LLM
 	// Override via env: MEM0_LLM_BASE_URL, MEM0_LLM_MODEL, EMBED_MODEL
-	const embedModel = process.env.EMBED_MODEL || "Xenova/paraphrase-multilingual-MiniLM-L12-v2";
-	const embedDim = parseInt(process.env.EMBED_DIM || "384", 10);
-	const mem0LlmBase = process.env.MEM0_LLM_BASE_URL || "https://open.bigmodel.cn/api/paas/v4";
+	const embedModel =
+		process.env.EMBED_MODEL || "Xenova/paraphrase-multilingual-MiniLM-L12-v2";
+	const embedDim = Number.parseInt(process.env.EMBED_DIM || "384", 10);
+	const mem0LlmBase =
+		process.env.MEM0_LLM_BASE_URL || "https://open.bigmodel.cn/api/paas/v4";
 	const mem0LlmModel = process.env.MEM0_LLM_MODEL || "glm-4.5";
-	const mem0LlmKey = process.env.MEM0_LLM_API_KEY || process.env.GLM_API_KEY || "";
+	const mem0LlmKey =
+		process.env.MEM0_LLM_API_KEY || process.env.GLM_API_KEY || "";
 
 	// LangChain HuggingFaceTransformersEmbeddings — ONNX CPU 실행, zero-cost
-	const { HuggingFaceTransformersEmbeddings } = await import("@langchain/community/embeddings/huggingface_transformers");
+	const { HuggingFaceTransformersEmbeddings } = await import(
+		"@langchain/community/embeddings/huggingface_transformers"
+	);
 	const embedderInstance = new HuggingFaceTransformersEmbeddings({
 		model: embedModel,
 	});
@@ -88,18 +103,37 @@ if (adapterType === "mem0") {
 			},
 		},
 	});
-	console.log(`  adapter: Mem0Adapter (in-memory, embedder=local-CPU/${embedModel} ${embedDim}d, llm=${mem0LlmModel})`);
+	console.log(
+		`  adapter: Mem0Adapter (in-memory, embedder=local-CPU/${embedModel} ${embedDim}d, llm=${mem0LlmModel})`,
+	);
 } else {
 	adapter = new LocalAdapter({ storePath, embeddingProvider: embedder });
 	console.log(`  adapter: LocalAdapter`);
 }
 
+const extractorModel = useGateway
+	? "vertexai/gemini-2.5-flash-lite"
+	: "gemini-2.5-flash-lite";
 const factExtractor = buildLLMFactExtractor({
 	apiKey: llmKey,
 	baseURL: llmBase,
-	model: useGateway ? "vertexai/gemini-2.5-flash-lite" : undefined,
+	model: extractorModel,
 });
-const system = new MemorySystem({ adapter, factExtractor });
+const deleteVerifierConfig = resolveDeleteVerifierConfig({
+	extractorBaseURL: llmBase,
+	extractorModel,
+	extractorProvider: useGateway ? "vertexai" : "google",
+	environment: process.env,
+});
+if (!deleteVerifierConfig) {
+	console.warn(
+		"[naia-memory] structured deletion is disabled; configure explicit DELETE_VERIFIER_API_KEY, DELETE_VERIFIER_BASE_URL, DELETE_VERIFIER_MODEL, and DELETE_VERIFIER_PROVIDER distinct from the extractor endpoint, model, and provider",
+	);
+}
+const deleteVerifier = deleteVerifierConfig
+	? buildLLMDeleteVerifier(deleteVerifierConfig)
+	: undefined;
+const system = new MemorySystem({ adapter, factExtractor, deleteVerifier });
 
 const gate = createConsolidationGate({
 	consolidate: async () => {
@@ -113,7 +147,7 @@ let addCount = 0;
 const CONSOLIDATE_EVERY = 10;
 
 // Server-side throttle for LLM-heavy adapters (Mem0Adapter triggers GLM call per add)
-const ADD_INTERVAL_MS = parseInt(process.env.ADD_INTERVAL_MS || "0", 10);
+const ADD_INTERVAL_MS = Number.parseInt(process.env.ADD_INTERVAL_MS || "0", 10);
 let lastAddTs = 0;
 async function addThrottle() {
 	if (ADD_INTERVAL_MS <= 0) return;
@@ -123,11 +157,13 @@ async function addThrottle() {
 	lastAddTs = Date.now();
 }
 
-const unconsolidatedCount = (adapter as any).store?.episodes?.filter(
-	(e: any) => !e.consolidated,
-).length ?? 0;
+const unconsolidatedCount =
+	(adapter as any).store?.episodes?.filter((e: any) => !e.consolidated)
+		.length ?? 0;
 if (unconsolidatedCount > 0) {
-	console.log(`Found ${unconsolidatedCount} unconsolidated episodes, consolidating...`);
+	console.log(
+		`Found ${unconsolidatedCount} unconsolidated episodes, consolidating...`,
+	);
 	gate.markDirty();
 	gate.ensureConsolidated();
 }
@@ -140,37 +176,20 @@ interface SearchResult {
 	updated_at?: string;
 }
 
-app.post("/memories", async (req, res) => {
-	try {
-		const { messages, user_id, timestamp } = req.body;
-		if (!messages || !user_id) {
-			res.status(400).json({ error: "messages and user_id required" });
-			return;
-		}
-
-		const content = messages
-			.map((m: { role: string; content: string }) => m.content)
-			.join("\n");
-		const ts = timestamp ? Number(timestamp) : undefined;
-
-		await addThrottle();
-		await system.encode(
-			{ content, role: "user", timestamp: ts },
-			{ project: user_id },
-		);
-
-		gate.markDirty();
-		addCount++;
-		if (addCount % CONSOLIDATE_EVERY === 0) {
-			gate.ensureConsolidated();
-		}
-
-		res.json({ results: [] });
-	} catch (err: any) {
-		console.error("ADD error:", err.message?.slice(0, 300));
-		res.status(500).json({ error: err.message?.slice(0, 200) });
-	}
-});
+app.post(
+	"/memories",
+	createMemoryPostHandler({
+		system,
+		throttle: addThrottle,
+		afterEncoded: () => {
+			gate.markDirty();
+			addCount++;
+			if (addCount % CONSOLIDATE_EVERY === 0) {
+				gate.ensureConsolidated();
+			}
+		},
+	}),
+);
 
 app.post("/consolidate", async (_req, res) => {
 	try {
@@ -267,16 +286,17 @@ app.post("/memories/vector", async (req, res) => {
 			return;
 		}
 		if (!metadata?.source_model) {
-			res.status(400).json({ error: "metadata.source_model required (embedding versioning)" });
+			res.status(400).json({
+				error: "metadata.source_model required (embedding versioning)",
+			});
 			return;
 		}
 
-		const ts =
-			metadata?.timestamp
-				? typeof metadata.timestamp === "number"
-					? metadata.timestamp
-					: Date.parse(metadata.timestamp)
-				: Date.now();
+		const ts = metadata?.timestamp
+			? typeof metadata.timestamp === "number"
+				? metadata.timestamp
+				: Date.parse(metadata.timestamp)
+			: Date.now();
 
 		await addThrottle();
 		const id = vectorStore.add({
@@ -323,11 +343,15 @@ app.post("/search/vector", async (req, res) => {
 			return;
 		}
 		if (!Array.isArray(query_vector) || query_vector.length === 0) {
-			res.status(400).json({ error: "query_vector (non-empty array) required" });
+			res
+				.status(400)
+				.json({ error: "query_vector (non-empty array) required" });
 			return;
 		}
 		if (!source_model) {
-			res.status(400).json({ error: "source_model required (embedding versioning)" });
+			res
+				.status(400)
+				.json({ error: "source_model required (embedding versioning)" });
 			return;
 		}
 		const results = vectorStore.search({
@@ -352,8 +376,12 @@ app.listen(port, () => {
 	console.log(`naia-memory naia-memory API server on port ${port}`);
 	console.log(`  store: ${storePath}`);
 	console.log(`  vector store: ${vectorStorePath}`);
-	console.log(`  embedder: ${process.env.VLLM_EMBED_BASE ? `${embedModel} (${embedDims}d, vLLM)` : `gemini-embedding-001 (3072d)`}`);
-	console.log(`  fact extraction: ${useGateway ? `gateway (${GATEWAY_URL})` : "gemini direct"}`);
+	console.log(
+		`  embedder: ${process.env.VLLM_EMBED_BASE ? `${embedModel} (${embedDims}d, vLLM)` : `gemini-embedding-001 (3072d)`}`,
+	);
+	console.log(
+		`  fact extraction: ${useGateway ? `gateway (${GATEWAY_URL})` : "gemini direct"}`,
+	);
 	console.log(`  lazy consolidation (consolidates on first search)`);
 });
 

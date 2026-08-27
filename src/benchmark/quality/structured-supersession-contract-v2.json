@@ -1,0 +1,89 @@
+{
+  "schema_version": "naia-memory-structured-supersession-contract-v2",
+  "purpose": "Frozen multilingual expansion of v1. Adds native query paraphrases and same-property third-party distractors; it remains a mechanism evaluation, not a general retrieval benchmark.",
+  "cases": [
+    {
+      "id": "ko-residence-replacement", "language": "ko", "query": "사용자의 현재 거주지는 어디인가?",
+      "statements": [
+        { "id": "ko-residence-old", "content": "사용자 거주지: 서울", "project": "profile", "structured": { "subject": "사용자", "property": "거주지", "value": "서울", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "ko-residence-new", "content": "사용자 거주지: 부산", "project": "profile", "structured": { "subject": "사용자", "property": "거주지", "value": "부산", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } }
+      ],
+      "acceptable_statement_ids": ["ko-residence-new"], "forbidden_statement_ids": ["ko-residence-old"], "expected_active_statement_ids": ["ko-residence-new"], "expected_inactive_statement_ids": ["ko-residence-old"], "expected_history_statement_ids": ["ko-residence-old", "ko-residence-new"]
+    },
+    {
+      "id": "en-editor-replacement", "language": "en", "query": "Which editor does the user currently prefer?",
+      "statements": [
+        { "id": "en-editor-old", "content": "User preferred editor: Vim", "project": "profile", "structured": { "subject": "user", "property": "preferred editor", "value": "Vim", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "en-editor-new", "content": "User preferred editor: Helix", "project": "profile", "structured": { "subject": "USER", "property": "preferred   editor", "value": "Helix", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } }
+      ],
+      "acceptable_statement_ids": ["en-editor-new"], "forbidden_statement_ids": ["en-editor-old"], "expected_active_statement_ids": ["en-editor-new"], "expected_inactive_statement_ids": ["en-editor-old"], "expected_history_statement_ids": ["en-editor-old", "en-editor-new"]
+    },
+    {
+      "id": "ja-timezone-replacement", "language": "ja", "query": "ユーザーの現在のタイムゾーンは何ですか？",
+      "statements": [
+        { "id": "ja-timezone-old", "content": "ユーザーのタイムゾーン: Asia/Tokyo", "project": "profile", "structured": { "subject": "ユーザー", "property": "タイムゾーン", "value": "Asia/Tokyo", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "ja-timezone-new", "content": "ユーザーのタイムゾーン: Asia/Seoul", "project": "profile", "structured": { "subject": "ユーザー", "property": "タイムゾーン", "value": "Asia/Seoul", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } }
+      ],
+      "acceptable_statement_ids": ["ja-timezone-new"], "forbidden_statement_ids": ["ja-timezone-old"], "expected_active_statement_ids": ["ja-timezone-new"], "expected_inactive_statement_ids": ["ja-timezone-old"], "expected_history_statement_ids": ["ja-timezone-old", "ja-timezone-new"]
+    },
+    {
+      "id": "ko-multi-value-retention", "language": "ko", "query": "사용자의 기술은 무엇인가?",
+      "statements": [
+        { "id": "ko-skill-ts", "content": "사용자 기술: TypeScript", "project": "profile", "structured": { "subject": "사용자", "property": "기술", "value": "TypeScript", "polarity": "affirmed", "cardinality": "multi", "provenance": "caller" } },
+        { "id": "ko-skill-rust", "content": "사용자 기술: Rust", "project": "profile", "structured": { "subject": "사용자", "property": "기술", "value": "Rust", "polarity": "affirmed", "cardinality": "multi", "provenance": "caller" } }
+      ],
+      "acceptable_statement_ids": ["ko-skill-ts", "ko-skill-rust"], "forbidden_statement_ids": [], "expected_active_statement_ids": ["ko-skill-ts", "ko-skill-rust"], "expected_inactive_statement_ids": [], "expected_history_statement_ids": ["ko-skill-ts", "ko-skill-rust"]
+    },
+    {
+      "id": "en-negated-retention", "language": "en", "query": "What is known about the user's residence?",
+      "statements": [
+        { "id": "en-residence", "content": "User residence: Seoul", "project": "profile", "structured": { "subject": "user", "property": "residence", "value": "Seoul", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "en-not-residence", "content": "User does not currently live in Seoul", "project": "profile", "structured": { "subject": "user", "property": "residence", "value": "Seoul", "polarity": "negated", "cardinality": "single", "provenance": "caller" } }
+      ],
+      "acceptable_statement_ids": ["en-residence", "en-not-residence"], "forbidden_statement_ids": [], "expected_active_statement_ids": ["en-residence", "en-not-residence"], "expected_inactive_statement_ids": [], "expected_history_statement_ids": ["en-residence", "en-not-residence"]
+    },
+    {
+      "id": "ja-property-boundary", "language": "ja", "query": "ユーザーの居住地と勤務先はどこですか？",
+      "statements": [
+        { "id": "ja-residence", "content": "ユーザー居住地: 東京", "project": "profile", "structured": { "subject": "ユーザー", "property": "居住地", "value": "東京", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "ja-office", "content": "ユーザー勤務先: 東京", "project": "profile", "structured": { "subject": "ユーザー", "property": "勤務先", "value": "東京", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } }
+      ],
+      "acceptable_statement_ids": ["ja-residence", "ja-office"], "forbidden_statement_ids": [], "expected_active_statement_ids": ["ja-residence", "ja-office"], "expected_inactive_statement_ids": [], "expected_history_statement_ids": ["ja-residence", "ja-office"]
+    },
+    {
+      "id": "ko-project-boundary", "language": "ko", "query": "개인 프로필의 사용자는 어디에 사는가?",
+      "statements": [
+        { "id": "ko-personal-residence", "content": "개인 프로필 사용자 거주지: 서울", "project": "personal", "structured": { "subject": "사용자", "property": "거주지", "value": "서울", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "ko-work-residence", "content": "업무 프로필 사용자 거주지: 부산", "project": "work", "structured": { "subject": "사용자", "property": "거주지", "value": "부산", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } }
+      ],
+      "acceptable_statement_ids": ["ko-personal-residence"], "forbidden_statement_ids": ["ko-work-residence"], "expected_active_statement_ids": ["ko-personal-residence", "ko-work-residence"], "expected_inactive_statement_ids": [], "expected_history_statement_ids": ["ko-personal-residence"], "recall_project": "personal"
+    },
+    {
+      "id": "ko-paraphrase-entity-confusion", "language": "ko", "query": "서울에 살던 사용자가 요즘 머무는 곳은 어디야? 동료 이야기는 제외해.",
+      "statements": [
+        { "id": "ko-current-city-old", "content": "사용자 현재 거주 도시: 서울", "project": "profile", "structured": { "subject": "사용자", "property": "현재 거주 도시", "value": "서울", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "ko-current-city-new", "content": "사용자 현재 거주 도시: 대전", "project": "profile", "structured": { "subject": "사용자", "property": "현재 거주 도시", "value": "대전", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "ko-colleague-city", "content": "동료 현재 거주 도시: 대전", "project": "profile", "structured": { "subject": "동료", "property": "현재 거주 도시", "value": "대전", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } }
+      ],
+      "acceptable_statement_ids": ["ko-current-city-new"], "forbidden_statement_ids": ["ko-current-city-old", "ko-colleague-city"], "expected_active_statement_ids": ["ko-current-city-new", "ko-colleague-city"], "expected_inactive_statement_ids": ["ko-current-city-old"], "expected_history_statement_ids": ["ko-current-city-old", "ko-current-city-new"]
+    },
+    {
+      "id": "en-paraphrase-entity-confusion", "language": "en", "query": "Where is the user based these days, rather than Alex?",
+      "statements": [
+        { "id": "en-home-old", "content": "User home base: Berlin", "project": "profile", "structured": { "subject": "user", "property": "home base", "value": "Berlin", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "en-home-new", "content": "User home base: Lisbon", "project": "profile", "structured": { "subject": "user", "property": "home base", "value": "Lisbon", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "en-alex-home", "content": "Alex home base: Lisbon", "project": "profile", "structured": { "subject": "Alex", "property": "home base", "value": "Lisbon", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } }
+      ],
+      "acceptable_statement_ids": ["en-home-new"], "forbidden_statement_ids": ["en-home-old", "en-alex-home"], "expected_active_statement_ids": ["en-home-new", "en-alex-home"], "expected_inactive_statement_ids": ["en-home-old"], "expected_history_statement_ids": ["en-home-old", "en-home-new"]
+    },
+    {
+      "id": "ja-paraphrase-entity-confusion", "language": "ja", "query": "以前大阪にいたユーザーは、今はどこを拠点にしていますか？同僚の情報ではありません。",
+      "statements": [
+        { "id": "ja-work-base-old", "content": "ユーザーの勤務拠点: 大阪", "project": "profile", "structured": { "subject": "ユーザー", "property": "勤務拠点", "value": "大阪", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "ja-work-base-new", "content": "ユーザーの勤務拠点: 名古屋", "project": "profile", "structured": { "subject": "ユーザー", "property": "勤務拠点", "value": "名古屋", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } },
+        { "id": "ja-colleague-work-base", "content": "同僚の勤務拠点: 名古屋", "project": "profile", "structured": { "subject": "同僚", "property": "勤務拠点", "value": "名古屋", "polarity": "affirmed", "cardinality": "single", "provenance": "caller" } }
+      ],
+      "acceptable_statement_ids": ["ja-work-base-new"], "forbidden_statement_ids": ["ja-work-base-old", "ja-colleague-work-base"], "expected_active_statement_ids": ["ja-work-base-new", "ja-colleague-work-base"], "expected_inactive_statement_ids": ["ja-work-base-old"], "expected_history_statement_ids": ["ja-work-base-old", "ja-work-base-new"]
+    }
+  ]
+}

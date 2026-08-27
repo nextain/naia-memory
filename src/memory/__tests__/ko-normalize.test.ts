@@ -54,6 +54,16 @@ describe("ko-normalize", () => {
 			expect(tokens.some((t) => t.includes("neovim"))).toBe(true);
 			expect(tokens.some((t) => t.includes("사용"))).toBe(true);
 		});
+
+		it("preserves taste compounds and exposes their conversational stem", () => {
+			expect(tokenize("매운맛 음식 취향")).toEqual([
+				"매운맛",
+				"매운",
+				"음식",
+				"취향",
+			]);
+			expect(tokenize("감칠맛을 좋아해")).toContain("감칠");
+		});
 	});
 
 	describe("normalize", () => {
