@@ -79,6 +79,7 @@ export class IdentityReranker implements RerankerProvider {
  */
 export class OfflineRerankerProvider implements RerankerProvider {
 	readonly name = "offline-reranker";
+	private static readonly BATCH_SIZE = 8;
 	private pipeline: any = null;
 	private readonly modelName: string;
 	private initPromise: Promise<void> | null = null;
@@ -107,10 +108,35 @@ export class OfflineRerankerProvider implements RerankerProvider {
 				}
 				// HF Xenova mirror — transformers.js compatible.
 				const hfModel = `Xenova/${this.modelName}`;
-				this.pipeline = await pipelineFn("text-classification", hfModel);
+				// Node defaults to fp32. The q8 ONNX variant is substantially smaller
+				// and is the supported CPU baseline for the offline provider.
+				this.pipeline = await pipelineFn("text-classification", hfModel, {
+					device: "cpu",
+					dtype: "q8",
+				});
 			})();
 		}
 		return this.initPromise;
+	}
+
+	private async scorePairs(query: string, passages: string[]): Promise<number[]> {
+		const inputs = this.pipeline.tokenizer(
+			passages.map(() => query),
+			{
+				text_pair: passages,
+				padding: true,
+				truncation: true,
+			},
+		);
+		const output = await this.pipeline.model(inputs);
+		const rows = output.logits.tolist() as number[][];
+		return rows.map((row) => {
+			if (row.length === 1) return 1 / (1 + Math.exp(-row[0]));
+			const max = Math.max(...row);
+			const probabilities = row.map((value) => Math.exp(value - max));
+			const total = probabilities.reduce((sum, value) => sum + value, 0);
+			return probabilities[probabilities.length - 1] / total;
+		});
 	}
 
 	async rerank<T extends { content: string }>(
@@ -121,25 +147,28 @@ export class OfflineRerankerProvider implements RerankerProvider {
 		if (candidates.length === 0) return [];
 		await this.init();
 
-		// Cross-encoder receives [query, passage] pairs. transformers.js
-		// pipeline expects {text, text_pair} format for sentence-pair tasks.
 		const scored: Array<T & { rerankScore: number }> = [];
-		for (const c of candidates) {
+		for (let offset = 0; offset < candidates.length; offset += OfflineRerankerProvider.BATCH_SIZE) {
+			const batch = candidates.slice(offset, offset + OfflineRerankerProvider.BATCH_SIZE);
 			try {
-				const result = await this.pipeline({
-					text: query,
-					text_pair: c.content,
-				});
-				// result = [{label: "LABEL_0", score: 0.85}] or scalar
-				const score = Array.isArray(result)
-					? (result[0]?.score ?? 0)
-					: ((result as any)?.score ?? 0);
-				scored.push({ ...c, rerankScore: score });
+				const scores = await this.scorePairs(query, batch.map((candidate) => candidate.content));
+				if (scores.length !== batch.length) throw new Error("reranker returned an unexpected batch size");
+				for (let index = 0; index < batch.length; index++) {
+					scored.push({ ...batch[index], rerankScore: scores[index] });
+				}
 			} catch (e: any) {
-				console.warn(
-					`[OfflineRerankerProvider] rerank failed for "${c.content.slice(0, 50)}": ${e.message}`,
-				);
-				scored.push({ ...c, rerankScore: 0 });
+				console.warn(`[OfflineRerankerProvider] batch rerank failed; retrying individually: ${e.message}`);
+				for (const candidate of batch) {
+					try {
+						const [score] = await this.scorePairs(query, [candidate.content]);
+						scored.push({ ...candidate, rerankScore: score ?? 0 });
+					} catch (candidateError: any) {
+						console.warn(
+							`[OfflineRerankerProvider] rerank failed for "${candidate.content.slice(0, 50)}": ${candidateError.message}`,
+						);
+						scored.push({ ...candidate, rerankScore: 0 });
+					}
+				}
 			}
 		}
 

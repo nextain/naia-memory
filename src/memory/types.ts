@@ -176,6 +176,8 @@ export interface RecallContext {
 	 * 미설정 시 query 그대로 embedding (현재 동작).
 	 */
 	queryHint?: string;
+	/** Optional language-agnostic identity extracted from the query by the caller. */
+	structuredQuery?: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">;
 	/**
 	 * #27 Retrieval ranking 강화 — minimum confidence threshold.
 	 *
@@ -204,6 +206,32 @@ export interface RecallContext {
 }
 
 // ─── Semantic Memory (Neocortex) ─────────────────────────────────────────────
+
+/**
+ * Optional, language-agnostic structure supplied with an extracted fact.
+ *
+ * Values are opaque strings: this package does not translate, detect a
+ * language, or infer a user's intent.  A replacement is safe only when an
+ * extractor explicitly marks both facts as the same single-valued property.
+ */
+export interface StructuredFact {
+	/** Stable subject label, such as "user" or "사용자". */
+	subject: string;
+	/** Optional caller-owned, language-neutral subject identity. */
+	subjectId?: string;
+	/** Stable property label, such as "residence" or "거주지". */
+	property: string;
+	/** Optional caller-owned, language-neutral property identity. */
+	propertyId?: string;
+	/** Original-language value; never translated or normalized for storage. */
+	value: string;
+	/** Whether the statement affirms or negates the property value. */
+	polarity: "affirmed" | "negated";
+	/** `single` may supersede; `multi` is append-only. */
+	cardinality: "single" | "multi";
+	/** Informational origin only; it is not a retrieval threshold. */
+	provenance?: "extractor" | "caller" | "heuristic";
+}
 
 /** A semantic fact — general knowledge extracted from episodes */
 export interface Fact extends Record<string, unknown> {
@@ -252,6 +280,8 @@ export interface Fact extends Record<string, unknown> {
 	relevanceScore?: number;
 	/** Encoding context inherited from source episodes — used for project-scoped retrieval */
 	encodingContext?: EncodingContext;
+	/** Optional structure used only for conservative write-time supersession. */
+	structured?: StructuredFact;
 }
 
 // ─── Procedural Memory (Basal Ganglia / Cerebellum) ──────────────────────────
@@ -331,11 +361,14 @@ export interface MemoryAdapter {
 	semantic: {
 		/** Insert or update a fact (includes reconsolidation logic) */
 		upsert(fact: Fact): Promise<void>;
+		/** Apply a related fact set as one in-memory batch when supported.
+		 * Durable crash atomicity remains adapter-specific. */
+		upsertMany?(facts: Fact[]): Promise<void>;
 		/** Search facts by query string. deepRecall ignores decay for long-term retrieval.
 		 *  context.atTimestamp (optional, ms): bi-temporal recall — only fact versions valid
 		 *  at the given timestamp are considered. Adapters without bi-temporal support may
 		 *  ignore this option (degrades to standard search). */
-		search(query: string, topK: number, deepRecall?: boolean, context?: { project?: string; atTimestamp?: number; mode?: "latest" | "history" | "at-time"; minConfidence?: number; queryHint?: string; scopeMode?: "strict" | "soft"; crossProject?: boolean; epochAnchor?: string }): Promise<Fact[]>;
+		search(query: string, topK: number, deepRecall?: boolean, context?: { project?: string; atTimestamp?: number; mode?: "latest" | "history" | "at-time"; minConfidence?: number; queryHint?: string; structuredQuery?: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">; scopeMode?: "strict" | "soft"; crossProject?: boolean; epochAnchor?: string }): Promise<Fact[]>;
 		/** Run Ebbinghaus decay sweep, returns number of pruned memories */
 		decay(now: number): Promise<number>;
 		/** Strengthen association between two entities (Hebbian) */

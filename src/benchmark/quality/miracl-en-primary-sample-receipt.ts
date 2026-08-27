@@ -1,0 +1,476 @@
+import { createHash } from "node:crypto";
+import { linkSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
+import { MIRACL_EN_PREFLIGHT_RETRIEVAL_QUERIES } from "./miracl-en-primary-execution-policy.js";
+import {
+	type EnglishPreflightPassage,
+	EnglishPreflightSampler,
+} from "./miracl-en-primary-preflight.js";
+import {
+	MIRACL_EN_PREFLIGHT_PER_STRATUM,
+	MIRACL_EN_PREFLIGHT_SAMPLE_SEED,
+	MIRACL_EN_PREFLIGHT_STRATA,
+	compareCanonicalText,
+	englishPreflightStratumFor,
+} from "./miracl-en-primary-sampling-contract.js";
+import { MIRACL_MULTILINGUAL_CONTRACT } from "./miracl-multilingual-contract.js";
+import type {
+	NativeCorpusDocument,
+	NativeCorpusScanReceipt,
+} from "./native-corpus-extract.js";
+import type { NativeRuntimeSourceManifest } from "./native-runtime-source-manifest.js";
+import { validateNativeRuntimeSourceManifest } from "./native-runtime-source-manifest.js";
+import { parseQrelsTsv, parseTopicsTsv } from "./public-miracl-source.js";
+
+export interface MiraclEnPrimarySampleReceipt {
+	schemaVersion: 1;
+	artifactClass: "miracl-en-primary-source-derived-sample-v1";
+	claimBoundary: string;
+	sourceLockSha256: string;
+	corpus: NativeCorpusScanReceipt;
+	inputs: {
+		topicsSha256: string;
+		qrelsSha256: string;
+	};
+	sample: {
+		method: "sha256-seeded-length-stratified-ordinal-v1";
+		seed: typeof MIRACL_EN_PREFLIGHT_SAMPLE_SEED;
+		passages: EnglishPreflightPassage[];
+		passagesSha256: string;
+	};
+	queries: {
+		method: "sha256-seeded-topic-id-v1";
+		seed: typeof MIRACL_EN_PREFLIGHT_SAMPLE_SEED;
+		ids: string[];
+		idsSha256: string;
+		relevantByQuerySha256: string;
+	};
+	retrievalCorpus: {
+		method: "all-selected-qrel-documents-plus-length-stratified-negatives-v1";
+		relevantDocumentCount: number;
+		relevantDocids: string[];
+		relevantDocidsSha256: string;
+		passages: EnglishPreflightPassage[];
+		passagesSha256: string;
+	};
+	producerSourceManifest: NativeRuntimeSourceManifest;
+}
+
+const sha256 = (value: string | Uint8Array) =>
+	createHash("sha256").update(value).digest("hex");
+
+function canonicalPassages(
+	passages: readonly EnglishPreflightPassage[],
+): string {
+	return `${passages
+		.map(({ ordinal, docid, content }) =>
+			JSON.stringify({ ordinal, docid, content }),
+		)
+		.join("\n")}\n`;
+}
+
+const expectedPassageCount =
+	(MIRACL_EN_PREFLIGHT_STRATA.length - 1) * MIRACL_EN_PREFLIGHT_PER_STRATUM;
+
+export function validateMiraclEnPassageStrata(
+	passages: readonly EnglishPreflightPassage[],
+): void {
+	const stratumCounts = Array.from(
+		{ length: MIRACL_EN_PREFLIGHT_STRATA.length - 1 },
+		() => 0,
+	);
+	for (const passage of passages) {
+		const stratum = englishPreflightStratumFor(
+			Buffer.byteLength(passage.content, "utf8"),
+		);
+		stratumCounts[stratum] = (stratumCounts[stratum] ?? 0) + 1;
+	}
+	if (stratumCounts.some((count) => count !== MIRACL_EN_PREFLIGHT_PER_STRATUM))
+		throw new Error("English source-derived passage strata are inconsistent");
+}
+
+export function selectMiraclEnPreflightQueryIds(
+	topicsText: string,
+	qrelsText: string,
+): string[] {
+	const topics = parseTopicsTsv(topicsText);
+	const qrels = parseQrelsTsv(qrelsText);
+	if (
+		topics.size !== MIRACL_MULTILINGUAL_CONTRACT.en.topics.queryCount ||
+		[...topics.keys()].some((id) => !qrels.has(id))
+	)
+		throw new Error("locked English topics/qrels query set mismatch");
+	return [...topics.keys()]
+		.sort((left, right) => {
+			const leftRank = sha256(`${MIRACL_EN_PREFLIGHT_SAMPLE_SEED}\0${left}`);
+			const rightRank = sha256(`${MIRACL_EN_PREFLIGHT_SAMPLE_SEED}\0${right}`);
+			return (
+				compareCanonicalText(leftRank, rightRank) ||
+				compareCanonicalText(left, right)
+			);
+		})
+		.slice(0, MIRACL_EN_PREFLIGHT_RETRIEVAL_QUERIES)
+		.sort(compareCanonicalText);
+}
+
+export function miraclEnSelectedQrelsSha256(
+	qrelsText: string,
+	queryIds: readonly string[],
+): string {
+	const rows = selectedQrelRows(qrelsText, queryIds);
+	return sha256(`${JSON.stringify(rows)}\n`);
+}
+
+function selectedQrelRows(qrelsText: string, queryIds: readonly string[]) {
+	const qrels = parseQrelsTsv(qrelsText);
+	return queryIds.map((queryId) => {
+		const docids = qrels.get(queryId);
+		if (!docids || docids.length === 0)
+			throw new Error(`locked English qrels missing query ${queryId}`);
+		return [queryId, [...new Set(docids)].sort(compareCanonicalText)] as const;
+	});
+}
+
+export function miraclEnSelectedRelevantDocids(
+	qrelsText: string,
+	queryIds: readonly string[],
+): string[] {
+	return [
+		...new Set(selectedQrelRows(qrelsText, queryIds).flatMap(([, ids]) => ids)),
+	].sort(compareCanonicalText);
+}
+
+export function miraclEnSelectedRelevantDocidsSha256(
+	qrelsText: string,
+	queryIds: readonly string[],
+): string {
+	return sha256(
+		`${miraclEnSelectedRelevantDocids(qrelsText, queryIds).join("\n")}\n`,
+	);
+}
+
+export function buildMiraclEnRetrievalCorpus(
+	samplePassages: readonly EnglishPreflightPassage[],
+	relevantPassages: readonly EnglishPreflightPassage[],
+	relevantDocids: readonly string[],
+): EnglishPreflightPassage[] {
+	const expectedRelevantDocids = [...new Set(relevantDocids)].sort(
+		compareCanonicalText,
+	);
+	if (expectedRelevantDocids.length !== relevantDocids.length)
+		throw new Error("English selected qrel document identities are not unique");
+	const relevantByDocid = new Map(
+		relevantPassages.map((passage) => [passage.docid, passage]),
+	);
+	if (
+		relevantByDocid.size !== relevantPassages.length ||
+		expectedRelevantDocids.some((docid) => !relevantByDocid.has(docid)) ||
+		relevantByDocid.size !== expectedRelevantDocids.length
+	)
+		throw new Error(
+			"English retrieval corpus does not cover every selected qrel",
+		);
+	const union = new Map<string, EnglishPreflightPassage>();
+	for (const passage of [...samplePassages, ...relevantPassages]) {
+		const existing = union.get(passage.docid);
+		if (
+			existing &&
+			(existing.ordinal !== passage.ordinal ||
+				existing.content !== passage.content)
+		)
+			throw new Error(
+				"English retrieval corpus has conflicting document identities",
+			);
+		union.set(passage.docid, passage);
+	}
+	const passages = [...union.values()].sort(
+		(left, right) => left.ordinal - right.ordinal,
+	);
+	if (new Set(passages.map(({ ordinal }) => ordinal)).size !== passages.length)
+		throw new Error("English retrieval corpus has duplicate ordinals");
+	return passages;
+}
+
+export function verifyMiraclEnSourcePassage(
+	expected: EnglishPreflightPassage,
+	document: NativeCorpusDocument,
+	ordinal: number,
+): void {
+	if (
+		expected.ordinal !== ordinal ||
+		expected.docid !== document.docid ||
+		expected.content !== `${document.title}\n${document.text}`
+	)
+		throw new Error(
+			"English source-derived retrieval passage does not match the locked corpus",
+		);
+}
+
+export class MiraclEnPrimarySampleSourceVerifier {
+	private readonly sampler = new EnglishPreflightSampler(
+		"verified-corpus-stream",
+	);
+	private readonly expectedRetrievalByOrdinal: Map<
+		number,
+		EnglishPreflightPassage
+	>;
+	private readonly observedRetrievalOrdinals = new Set<number>();
+
+	constructor(private readonly receipt: MiraclEnPrimarySampleReceipt) {
+		validateMiraclEnPrimarySampleReceipt(receipt);
+		this.expectedRetrievalByOrdinal = new Map(
+			receipt.retrievalCorpus.passages.map((passage) => [
+				passage.ordinal,
+				passage,
+			]),
+		);
+	}
+
+	consider(document: NativeCorpusDocument, ordinal: number): void {
+		const passage = {
+			ordinal,
+			docid: document.docid,
+			content: `${document.title}\n${document.text}`,
+		};
+		this.sampler.consider(passage);
+		const expected = this.expectedRetrievalByOrdinal.get(ordinal);
+		if (!expected) return;
+		verifyMiraclEnSourcePassage(expected, document, ordinal);
+		this.observedRetrievalOrdinals.add(ordinal);
+	}
+
+	finish(scan: NativeCorpusScanReceipt): void {
+		if (JSON.stringify(scan) !== JSON.stringify(this.receipt.corpus))
+			throw new Error("English source-derived corpus scan receipt changed");
+		if (
+			this.observedRetrievalOrdinals.size !==
+			this.receipt.retrievalCorpus.passages.length
+		)
+			throw new Error(
+				"English source-derived retrieval passage is missing from the locked corpus",
+			);
+		const selected = this.sampler.finish();
+		if (
+			canonicalPassages(selected) !==
+			canonicalPassages(this.receipt.sample.passages)
+		)
+			throw new Error(
+				"English source-derived passage sample does not match the locked corpus",
+			);
+	}
+}
+
+export function buildMiraclEnPrimarySampleReceipt(input: {
+	sourceLockSha256: string;
+	scan: NativeCorpusScanReceipt;
+	topicsBytes: Uint8Array;
+	qrelsBytes: Uint8Array;
+	passages: readonly EnglishPreflightPassage[];
+	retrievalPassages: readonly EnglishPreflightPassage[];
+	producerSourceManifest: NativeRuntimeSourceManifest;
+}): MiraclEnPrimarySampleReceipt {
+	const contract = MIRACL_MULTILINGUAL_CONTRACT.en;
+	if (
+		input.sourceLockSha256 !== contract.corpus.expectedSourceLockSha256 ||
+		input.scan.documentCount !== contract.corpus.expectedDocumentCount ||
+		input.scan.docidsSha256 !== contract.corpus.expectedDocidsSha256 ||
+		input.scan.compressedShardCount !== contract.corpus.shardCount ||
+		input.scan.duplicateDocidCount !== 0
+	)
+		throw new Error("English corpus scan does not match the locked identity");
+	if (
+		sha256(input.topicsBytes) !== contract.topics.sha256 ||
+		input.topicsBytes.byteLength !== contract.topics.size ||
+		sha256(input.qrelsBytes) !== contract.qrels.sha256 ||
+		input.qrelsBytes.byteLength !== contract.qrels.size
+	)
+		throw new Error("English topics/qrels bytes do not match the lock");
+	if (input.passages.length !== expectedPassageCount)
+		throw new Error("English source-derived passage sample count mismatch");
+	const ordered = [...input.passages].sort(
+		(left, right) => left.ordinal - right.ordinal,
+	);
+	if (canonicalPassages(ordered) !== canonicalPassages(input.passages))
+		throw new Error("English source-derived passages are not ordinal ordered");
+	validateNativeRuntimeSourceManifest(input.producerSourceManifest);
+	const topicsText = new TextDecoder("utf-8", { fatal: true }).decode(
+		input.topicsBytes,
+	);
+	const qrelsText = new TextDecoder("utf-8", { fatal: true }).decode(
+		input.qrelsBytes,
+	);
+	const queryIds = selectMiraclEnPreflightQueryIds(topicsText, qrelsText);
+	const relevantDocids = miraclEnSelectedRelevantDocids(qrelsText, queryIds);
+	const retrievalPassages = buildMiraclEnRetrievalCorpus(
+		ordered,
+		input.retrievalPassages,
+		relevantDocids,
+	);
+	const receipt: MiraclEnPrimarySampleReceipt = {
+		schemaVersion: 1,
+		artifactClass: "miracl-en-primary-source-derived-sample-v1",
+		claimBoundary:
+			"Input provenance only; this receipt contains no embedding-quality, retrieval-quality, throughput, equivalence, multilingual-transfer, or public-comparison claim.",
+		sourceLockSha256: input.sourceLockSha256,
+		corpus: input.scan,
+		inputs: {
+			topicsSha256: sha256(input.topicsBytes),
+			qrelsSha256: sha256(input.qrelsBytes),
+		},
+		sample: {
+			method: "sha256-seeded-length-stratified-ordinal-v1",
+			seed: MIRACL_EN_PREFLIGHT_SAMPLE_SEED,
+			passages: ordered,
+			passagesSha256: sha256(canonicalPassages(ordered)),
+		},
+		queries: {
+			method: "sha256-seeded-topic-id-v1",
+			seed: MIRACL_EN_PREFLIGHT_SAMPLE_SEED,
+			ids: queryIds,
+			idsSha256: sha256(`${queryIds.join("\n")}\n`),
+			relevantByQuerySha256: miraclEnSelectedQrelsSha256(qrelsText, queryIds),
+		},
+		retrievalCorpus: {
+			method: "all-selected-qrel-documents-plus-length-stratified-negatives-v1",
+			relevantDocumentCount: relevantDocids.length,
+			relevantDocids,
+			relevantDocidsSha256: miraclEnSelectedRelevantDocidsSha256(
+				qrelsText,
+				queryIds,
+			),
+			passages: retrievalPassages,
+			passagesSha256: sha256(canonicalPassages(retrievalPassages)),
+		},
+		producerSourceManifest: input.producerSourceManifest,
+	};
+	validateMiraclEnPrimarySampleReceipt(receipt);
+	return receipt;
+}
+
+export function canonicalMiraclEnPrimarySampleReceipt(
+	receipt: MiraclEnPrimarySampleReceipt,
+): string {
+	return `${JSON.stringify(receipt, null, 2)}\n`;
+}
+
+export function validateMiraclEnPrimarySampleReceipt(
+	value: unknown,
+): asserts value is MiraclEnPrimarySampleReceipt {
+	if (typeof value !== "object" || value === null)
+		throw new Error("English source-derived sample receipt is not an object");
+	const receipt = value as Partial<MiraclEnPrimarySampleReceipt>;
+	const contract = MIRACL_MULTILINGUAL_CONTRACT.en;
+	if (
+		receipt.schemaVersion !== 1 ||
+		receipt.artifactClass !== "miracl-en-primary-source-derived-sample-v1" ||
+		receipt.sourceLockSha256 !== contract.corpus.expectedSourceLockSha256 ||
+		receipt.corpus?.documentCount !== contract.corpus.expectedDocumentCount ||
+		receipt.corpus.docidsSha256 !== contract.corpus.expectedDocidsSha256 ||
+		receipt.corpus.compressedShardCount !== contract.corpus.shardCount ||
+		receipt.corpus.duplicateDocidCount !== 0 ||
+		receipt.inputs?.topicsSha256 !== contract.topics.sha256 ||
+		receipt.inputs.qrelsSha256 !== contract.qrels.sha256 ||
+		receipt.sample?.method !== "sha256-seeded-length-stratified-ordinal-v1" ||
+		receipt.sample.seed !== MIRACL_EN_PREFLIGHT_SAMPLE_SEED ||
+		receipt.sample.passages?.length !== expectedPassageCount ||
+		receipt.queries?.method !== "sha256-seeded-topic-id-v1" ||
+		receipt.queries.seed !== MIRACL_EN_PREFLIGHT_SAMPLE_SEED ||
+		receipt.queries.ids?.length !== MIRACL_EN_PREFLIGHT_RETRIEVAL_QUERIES ||
+		!receipt.queries.relevantByQuerySha256 ||
+		receipt.retrievalCorpus?.method !==
+			"all-selected-qrel-documents-plus-length-stratified-negatives-v1" ||
+		!Number.isSafeInteger(receipt.retrievalCorpus.relevantDocumentCount) ||
+		receipt.retrievalCorpus.relevantDocumentCount < 1 ||
+		!receipt.retrievalCorpus.relevantDocidsSha256 ||
+		!Array.isArray(receipt.retrievalCorpus.relevantDocids) ||
+		!receipt.retrievalCorpus.passagesSha256 ||
+		!receipt.producerSourceManifest
+	)
+		throw new Error("English source-derived sample receipt shape mismatch");
+	const passages = receipt.sample.passages;
+	if (
+		passages.some(
+			(passage, index) =>
+				!Number.isSafeInteger(passage.ordinal) ||
+				passage.ordinal < 0 ||
+				!passage.docid ||
+				typeof passage.content !== "string" ||
+				(index > 0 && passage.ordinal <= (passages[index - 1]?.ordinal ?? -1)),
+		) ||
+		new Set(passages.map(({ docid }) => docid)).size !== passages.length ||
+		receipt.sample.passagesSha256 !== sha256(canonicalPassages(passages))
+	)
+		throw new Error("English source-derived passage sample is inconsistent");
+	validateMiraclEnPassageStrata(passages);
+	const queryIds = receipt.queries.ids;
+	if (
+		new Set(queryIds).size !== queryIds.length ||
+		queryIds.some((id, index) =>
+			index > 0 ? id <= (queryIds[index - 1] ?? "") : !id,
+		) ||
+		receipt.queries.idsSha256 !== sha256(`${queryIds.join("\n")}\n`)
+	)
+		throw new Error("English source-derived query sample is inconsistent");
+	if (!/^[a-f0-9]{64}$/u.test(receipt.queries.relevantByQuerySha256))
+		throw new Error("English source-derived qrels digest is inconsistent");
+	const retrievalPassages = receipt.retrievalCorpus.passages;
+	const relevantDocids = receipt.retrievalCorpus.relevantDocids;
+	const retrievalByDocid = new Map(
+		retrievalPassages.map((passage) => [passage.docid, passage]),
+	);
+	if (
+		relevantDocids.length !== receipt.retrievalCorpus.relevantDocumentCount ||
+		new Set(relevantDocids).size !== relevantDocids.length ||
+		relevantDocids.some((docid, index) =>
+			index > 0 ? docid <= (relevantDocids[index - 1] ?? "") : !docid,
+		) ||
+		retrievalPassages.length < receipt.retrievalCorpus.relevantDocumentCount ||
+		new Set(retrievalPassages.map(({ docid }) => docid)).size !==
+			retrievalPassages.length ||
+		new Set(retrievalPassages.map(({ ordinal }) => ordinal)).size !==
+			retrievalPassages.length ||
+		receipt.retrievalCorpus.relevantDocidsSha256 !==
+			sha256(`${relevantDocids.join("\n")}\n`) ||
+		relevantDocids.some((docid) => !retrievalByDocid.has(docid)) ||
+		passages.some((passage) => {
+			const retrieved = retrievalByDocid.get(passage.docid);
+			return (
+				!retrieved ||
+				retrieved.ordinal !== passage.ordinal ||
+				retrieved.content !== passage.content
+			);
+		}) ||
+		retrievalPassages.some(
+			(passage, index) =>
+				!Number.isSafeInteger(passage.ordinal) ||
+				passage.ordinal < 0 ||
+				!passage.docid ||
+				typeof passage.content !== "string" ||
+				(index > 0 &&
+					passage.ordinal <= (retrievalPassages[index - 1]?.ordinal ?? -1)),
+		) ||
+		receipt.retrievalCorpus.passagesSha256 !==
+			sha256(canonicalPassages(retrievalPassages))
+	)
+		throw new Error("English retrieval corpus is inconsistent");
+	validateNativeRuntimeSourceManifest(receipt.producerSourceManifest);
+}
+
+export function publishMiraclEnPrimarySampleReceipt(
+	output: string,
+	receipt: MiraclEnPrimarySampleReceipt,
+): void {
+	mkdirSync(dirname(output), { recursive: true, mode: 0o700 });
+	const temporary = `${output}.${process.pid}.tmp`;
+	let temporaryCreated = false;
+	try {
+		writeFileSync(temporary, canonicalMiraclEnPrimarySampleReceipt(receipt), {
+			flag: "wx",
+			mode: 0o600,
+		});
+		temporaryCreated = true;
+		linkSync(temporary, output);
+	} finally {
+		if (temporaryCreated) rmSync(temporary, { force: true });
+	}
+}

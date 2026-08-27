@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "miracl-ko-full-corpus-naia-vector-exact-v1",
+  "sourceReceiptSha256": "e3c52a2c1daef82425c1dd1e462f8544ad07d291eb1e37b1c5bb3fe75ec3718a",
+  "publicClaimEligible": false,
+  "comparisonScope": "historical protocol-matched MIRACL Korean development retrieval rows only",
+  "evidenceIdentity": {
+    "datasetSha256": "0d2f24eb43cdb7f5f5c3be4152096c2b8073dbd32ec0fe4e51c375d616b553a9",
+    "protocolSha256": "355ae43a778da7fbf2a65ebdcf5b88b89eca127a838c0cc338ef784d6b533103",
+    "implementationArtifactSha256": "8b778132d6bcead28c66f835498ac8af07616ed814e9625797e22ca3d9a9ea8f",
+    "configurationSha256": "345f3a85561fa0059feb2a1eb8fac065228ff52e41f00ba58b0aecb692676a9f",
+    "executionEvidenceSha256": "6da7ae245cb81af4190b25a1b80690db50bfa4af9ee50d219ac272c941b60b1e"
+  },
+  "baseRetriever": {
+    "model": "Xenova/multilingual-e5-large",
+    "revision": "00fc3aeb3dbb95842de2ac1961d33c6319acf57b",
+    "dtype": "q8",
+    "dimensions": 1024,
+    "queryPrefix": "query: ",
+    "passagePrefix": "passage: ",
+    "pooling": "mean",
+    "normalize": true,
+    "tokenizerMaxLength": 512,
+    "truncation": true,
+    "titleConcatenation": "provider-receives-precomposed-text"
+  },
+  "retrievalProtocol": {
+    "sourceLockSha256": "742952715d6e31eaf9718f04c2bad0509c9d7c754210aa81d793a14430fbb69c",
+    "topicsSha256": "a365552cfc997a8915e948a3b5994883f641e7c3f12b6af87bbfaf89729e32a8",
+    "qrelsSha256": "88827ccc5b64e531b25f70eef30202d33daa9bfa3ac8cceadf5cdbd5ca5034df",
+    "corpusDocidsSha256": "6024e30f6c7aed244a5451a9552163a86f74b4254775022f4d4829fcaa87e879",
+    "passageComposition": "title + \"\\n\" + text",
+    "vectorStore": "Qdrant",
+    "distance": "Cosine",
+    "exactSearch": true,
+    "topK": 100,
+    "cpuOnly": true,
+    "documentCount": 1486752,
+    "queryCount": 213
+  },
+  "provenanceBoundary": "Canonical source bytes and index membership are established by the source-lock, checkpoint chain, runtime evidence, and signed attestation bundle; this projection verifies their bound identities but does not independently re-read the corpus.",
+  "knownLimitations": [
+    {
+      "id": "MIRACL_TRAIN_SPLIT_MODEL_OVERLAP",
+      "statement": "The base multilingual-e5-large retriever reports MIRACL training-split use; this development run is label-free at execution time, not dataset-family zero-shot."
+    }
+  ],
+  "notEstablished": [
+    "receipt authenticity outside the local operator trust boundary",
+    "current state of the art",
+    "memory-engine superiority",
+    "Naia-specific retrieval innovation",
+    "multilingual quality",
+    "statistical significance versus historical rows"
+  ],
+  "interpretationThreshold": "Beating BM25 or mDPR alone is not a publishable differentiator. Differences no larger than 0.001 on both metrics are within the resolution of the three-decimal historical row. Exceeding that resolution on both metrics is a strong base retrieval result, not a Naia-specific innovation.",
+  "metrics": {
+    "ndcgAt10": 0.6526,
+    "recallAt100": 0.9233
+  },
+  "hybridTier": "MATCHES_OR_EXCEEDS_BOTH",
+  "rows": [
+    {
+      "system": "BM25",
+      "ndcgAt10": 0.419,
+      "recallAt100": 0.783,
+      "class": "lexical",
+      "deltas": {
+        "ndcgAt10": 0.23359999999999997,
+        "recallAt100": 0.14029999999999998
+      }
+    },
+    {
+      "system": "mDPR",
+      "ndcgAt10": 0.419,
+      "recallAt100": 0.737,
+      "class": "dense",
+      "deltas": {
+        "ndcgAt10": 0.23359999999999997,
+        "recallAt100": 0.18630000000000002
+      }
+    },
+    {
+      "system": "BM25 + mDPR",
+      "ndcgAt10": 0.609,
+      "recallAt100": 0.9,
+      "class": "hybrid",
+      "deltas": {
+        "ndcgAt10": 0.04359999999999997,
+        "recallAt100": 0.023299999999999987
+      }
+    },
+    {
+      "system": "mColBERT",
+      "ndcgAt10": 0.487,
+      "recallAt100": 0.722,
+      "class": "late interaction",
+      "deltas": {
+        "ndcgAt10": 0.16559999999999997,
+        "recallAt100": 0.20130000000000003
+      }
+    },
+    {
+      "system": "mContriever",
+      "ndcgAt10": 0.483,
+      "recallAt100": 0.875,
+      "class": "dense",
+      "deltas": {
+        "ndcgAt10": 0.16959999999999997,
+        "recallAt100": 0.04830000000000001
+      }
+    },
+    {
+      "system": "in-language retriever",
+      "ndcgAt10": 0.472,
+      "recallAt100": 0.807,
+      "class": "dense",
+      "deltas": {
+        "ndcgAt10": 0.18059999999999998,
+        "recallAt100": 0.11629999999999996
+      }
+    }
+  ]
+}

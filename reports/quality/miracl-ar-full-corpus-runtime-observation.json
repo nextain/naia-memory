@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "monitor": {
+    "source": "/var/home/luke/alpha-adk/projects/naia-memory/src/benchmark/quality/native-full-corpus-runtime-monitor-cli.ts",
+    "sourceSha256": "a45834908980b0a1ea2e6eb4dee8ffb5ed6f848d1ef71015ddac409773f0a1a0"
+  },
+  "launchReceipt": {
+    "path": "reports/quality/miracl-ar-full-corpus-launch-receipt.json",
+    "sha256": "2cdee086dba0833842772a5b9c441cf3a7ca99eaf22acdfab00b64c312e4031f"
+  },
+  "process": {
+    "pid": 409189,
+    "bootId": "d50db931-45ad-40ee-82cb-218c64d83a09",
+    "procStartTicks": "99728315",
+    "cmdlineSha256": "d2d111895730153c0240fabbd12f279a8d0dea7c9bd051cff1440d942097dc45"
+  },
+  "observation": {
+    "startedAt": "2026-08-23T01:29:59.942Z",
+    "completedAt": "2026-08-24T06:25:52.406Z",
+    "pollMilliseconds": 5000,
+    "samples": 20816,
+    "peakRssBytes": 2072608768
+  },
+  "result": {
+    "path": "reports/quality/miracl-ar-full-corpus-vector-exact.json",
+    "sha256": "4be7f9d583452ee815c8f808172ad6536f4161f356449b46bdf28c052253776d"
+  }
+}

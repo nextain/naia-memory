@@ -1,0 +1,308 @@
+{
+  "benchmark": "binary-quantization-quality-gate",
+  "status": "no_practical_candidate_at_internal_scale",
+  "limitations": [
+    "English is deterministically translated from Korean and is not an independent multilingual corpus.",
+    "The 310-row corpus is too small to predict candidate fractions or latency at production scale.",
+    "Only single-fact labeled retrieval is evaluated; synthesis, abstention, and lifecycle correctness are out of scope.",
+    "Passing this internal gate does not authorize production integration or a public competitiveness claim."
+  ],
+  "selectedCoarse": null,
+  "gate": {
+    "topK": 10,
+    "minOverlapAt10": 0.95,
+    "maxRecallLoss": 0.01,
+    "maxMrrLoss": 0.01,
+    "maxCandidateFraction": 0.25
+  },
+  "model": {
+    "name": "multilingual-e5-large",
+    "embeddingSpaceId": "offline:Xenova/multilingual-e5-large@00fc3aeb3dbb95842de2ac1961d33c6319acf57b:dims=1024:dtype=q8:mean-normalized:query-passage-v2",
+    "dims": 1024,
+    "device": "cpu"
+  },
+  "results": [
+    {
+      "language": "ko",
+      "corpusSize": 310,
+      "queryCount": 172,
+      "baseline": {
+        "recall1": 0.26744186046511625,
+        "recall5": 0.6802325581395349,
+        "recall10": 0.6976744186046512,
+        "mrr": 0.4541735880398671
+      },
+      "candidates": [
+        {
+          "coarse": 20,
+          "corpusFraction": 0.06451612903225806,
+          "overlapAt10": 0.5197674418604651,
+          "metrics": {
+            "recall1": 0.26744186046511625,
+            "recall5": 0.5988372093023255,
+            "recall10": 0.6453488372093024,
+            "mrr": 0.42888289036544847
+          },
+          "losses": {
+            "recall1": 0,
+            "recall5": 0.08139534883720934,
+            "recall10": 0.05232558139534882,
+            "mrr": 0.02529069767441866
+          },
+          "searchLatencyMs": {
+            "p50": 0.06551300000046467,
+            "p95": 0.07853499999964697
+          },
+          "passesInternalGate": false
+        },
+        {
+          "coarse": 50,
+          "corpusFraction": 0.16129032258064516,
+          "overlapAt10": 0.7354651162790697,
+          "metrics": {
+            "recall1": 0.27325581395348836,
+            "recall5": 0.6395348837209303,
+            "recall10": 0.6802325581395349,
+            "mrr": 0.4472614433370247
+          },
+          "losses": {
+            "recall1": -0.005813953488372103,
+            "recall5": 0.04069767441860461,
+            "recall10": 0.01744186046511631,
+            "mrr": 0.006912144702842404
+          },
+          "searchLatencyMs": {
+            "p50": 0.14908900000045833,
+            "p95": 0.1628259999997681
+          },
+          "passesInternalGate": false
+        },
+        {
+          "coarse": 100,
+          "corpusFraction": 0.3225806451612903,
+          "overlapAt10": 0.884302325581396,
+          "metrics": {
+            "recall1": 0.26744186046511625,
+            "recall5": 0.6627906976744186,
+            "recall10": 0.686046511627907,
+            "mrr": 0.4480135658914728
+          },
+          "losses": {
+            "recall1": 0,
+            "recall5": 0.01744186046511631,
+            "recall10": 0.011627906976744207,
+            "mrr": 0.00616002214839434
+          },
+          "searchLatencyMs": {
+            "p50": 0.2816899999997986,
+            "p95": 0.30110899999999674
+          },
+          "passesInternalGate": false
+        },
+        {
+          "coarse": 200,
+          "corpusFraction": 0.6451612903225806,
+          "overlapAt10": 0.9860465116279071,
+          "metrics": {
+            "recall1": 0.26744186046511625,
+            "recall5": 0.6802325581395349,
+            "recall10": 0.6976744186046512,
+            "mrr": 0.4541735880398671
+          },
+          "losses": {
+            "recall1": 0,
+            "recall5": 0,
+            "recall10": 0,
+            "mrr": 0
+          },
+          "searchLatencyMs": {
+            "p50": 0.5756769999998141,
+            "p95": 0.5974930000002132
+          },
+          "passesInternalGate": false
+        },
+        {
+          "coarse": 310,
+          "corpusFraction": 1,
+          "overlapAt10": 1,
+          "metrics": {
+            "recall1": 0.26744186046511625,
+            "recall5": 0.6802325581395349,
+            "recall10": 0.6976744186046512,
+            "mrr": 0.4541735880398671
+          },
+          "losses": {
+            "recall1": 0,
+            "recall5": 0,
+            "recall10": 0,
+            "mrr": 0
+          },
+          "searchLatencyMs": {
+            "p50": 0.8986859999995431,
+            "p95": 0.9292619999996532
+          },
+          "passesInternalGate": false
+        }
+      ]
+    },
+    {
+      "language": "en-translated",
+      "corpusSize": 310,
+      "queryCount": 172,
+      "baseline": {
+        "recall1": 0.3430232558139535,
+        "recall5": 0.563953488372093,
+        "recall10": 0.5988372093023255,
+        "mrr": 0.4302717792543374
+      },
+      "candidates": [
+        {
+          "coarse": 20,
+          "corpusFraction": 0.06451612903225806,
+          "overlapAt10": 0.5837209302325578,
+          "metrics": {
+            "recall1": 0.3372093023255814,
+            "recall5": 0.4883720930232558,
+            "recall10": 0.5116279069767442,
+            "mrr": 0.4054655777039498
+          },
+          "losses": {
+            "recall1": 0.005813953488372103,
+            "recall5": 0.07558139534883723,
+            "recall10": 0.08720930232558133,
+            "mrr": 0.024806201550387597
+          },
+          "searchLatencyMs": {
+            "p50": 0.059720999999626656,
+            "p95": 0.07268199999998615
+          },
+          "passesInternalGate": false
+        },
+        {
+          "coarse": 50,
+          "corpusFraction": 0.16129032258064516,
+          "overlapAt10": 0.8540697674418614,
+          "metrics": {
+            "recall1": 0.3430232558139535,
+            "recall5": 0.5406976744186046,
+            "recall10": 0.5581395348837209,
+            "mrr": 0.424047157622739
+          },
+          "losses": {
+            "recall1": 0,
+            "recall5": 0.023255813953488413,
+            "recall10": 0.04069767441860461,
+            "mrr": 0.006224621631598426
+          },
+          "searchLatencyMs": {
+            "p50": 0.13800600000104168,
+            "p95": 0.17320999999901687
+          },
+          "passesInternalGate": false
+        },
+        {
+          "coarse": 100,
+          "corpusFraction": 0.3225806451612903,
+          "overlapAt10": 0.9604651162790707,
+          "metrics": {
+            "recall1": 0.3430232558139535,
+            "recall5": 0.5523255813953488,
+            "recall10": 0.5872093023255814,
+            "mrr": 0.4283660944998155
+          },
+          "losses": {
+            "recall1": 0,
+            "recall5": 0.011627906976744207,
+            "recall10": 0.011627906976744096,
+            "mrr": 0.001905684754521908
+          },
+          "searchLatencyMs": {
+            "p50": 0.2719969999998284,
+            "p95": 0.2902670000003127
+          },
+          "passesInternalGate": false
+        },
+        {
+          "coarse": 200,
+          "corpusFraction": 0.6451612903225806,
+          "overlapAt10": 0.9982558139534885,
+          "metrics": {
+            "recall1": 0.3430232558139535,
+            "recall5": 0.563953488372093,
+            "recall10": 0.5988372093023255,
+            "mrr": 0.4302717792543374
+          },
+          "losses": {
+            "recall1": 0,
+            "recall5": 0,
+            "recall10": 0,
+            "mrr": 0
+          },
+          "searchLatencyMs": {
+            "p50": 0.571180999999342,
+            "p95": 0.6482950000008714
+          },
+          "passesInternalGate": false
+        },
+        {
+          "coarse": 310,
+          "corpusFraction": 1,
+          "overlapAt10": 1,
+          "metrics": {
+            "recall1": 0.3430232558139535,
+            "recall5": 0.563953488372093,
+            "recall10": 0.5988372093023255,
+            "mrr": 0.4302717792543374
+          },
+          "losses": {
+            "recall1": 0,
+            "recall5": 0,
+            "recall10": 0,
+            "mrr": 0
+          },
+          "searchLatencyMs": {
+            "p50": 0.8865649999988818,
+            "p95": 0.9570679999997083
+          },
+          "passesInternalGate": false
+        }
+      ]
+    }
+  ],
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-21T20:00:49.970Z",
+    "git": {
+      "revision": "fe17d42d630176c65856de39d0d54143e1fbe0f2",
+      "dirty": true
+    },
+    "datasets": {
+      "src/benchmark/fact-bank-v2.json": "e1ff0e495f81f9bc6123fdad9f164434781fb4c87da9ad7ad8bca866651d361a",
+      "src/benchmark/query-templates-v2.json": "b9282493f7a6785134c7b6f2250bf5841d67f221a36fd01fdf57dc235e1db09a",
+      "src/benchmark/fact-bank-v2.en.json": "a7fada96e55c0ff64296408d797cedfc88a8e95a0a2172c74f9bfbb53cd32aca",
+      "src/benchmark/query-templates-v2.en.json": "4e4b85e07a8e978111cfd4ffbf8a231e4615ba7a57073a2ddeb92c57e45e3619"
+    },
+    "implementations": {
+      "src/benchmark/quality/binary-quantization-gate.ts": "4827b88ca17e464e556ac6ffc9eb21298cd295b3fc235edb19339fb979cae564",
+      "src/benchmark/quality/binary-quantization-gate-cli.ts": "2b3a76ba51ae2132b21c69ac50d7251d728936a1528d212fa536e9b486046c33"
+    },
+    "config": {
+      "model": "multilingual-e5-large",
+      "device": "cpu",
+      "topK": 10,
+      "coarseSizes": [
+        20,
+        50,
+        100,
+        200,
+        310
+      ]
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  }
+}

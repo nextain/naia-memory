@@ -1,0 +1,151 @@
+{
+  "schemaVersion": "naia-memory-update-contract-v1",
+  "tier": "semantic-update-interpretation",
+  "construction": "generated-diagnostic",
+  "cases": [
+    {
+      "id": "ko-residence-update",
+      "familyId": "residence-update",
+      "split": "diagnostic",
+      "language": "ko",
+      "turns": [
+        { "content": "나는 서울에 살고 있어.", "at": "2026-01-01T00:00:00Z" },
+        { "content": "부산으로 이사해서 이제 부산에 살아.", "at": "2026-01-02T00:00:00Z" }
+      ],
+      "query": "나는 지금 어디에 살고 있지?",
+      "expectedCurrentIds": ["residence-busan"],
+      "forbiddenStaleIds": ["residence-seoul"],
+      "expectedDeletedIds": [],
+      "noUpdateIds": [],
+      "expectedDecision": "update"
+    },
+    {
+      "id": "ko-allergy-delete",
+      "familyId": "allergy-delete",
+      "split": "diagnostic",
+      "language": "ko",
+      "turns": [
+        { "content": "나는 땅콩 알레르기가 있어.", "at": "2026-01-01T00:00:00Z" },
+        { "content": "검사를 다시 받았는데 땅콩 알레르기가 아니래. 그 정보는 기억하지 마.", "at": "2026-01-02T00:00:00Z" }
+      ],
+      "query": "내 알레르기에 대해 기억하는 게 있어?",
+      "expectedCurrentIds": [],
+      "forbiddenStaleIds": [],
+      "expectedDeletedIds": ["allergy-peanut"],
+      "noUpdateIds": [],
+      "expectedDecision": "delete"
+    },
+    {
+      "id": "ko-coffee-no-update",
+      "familyId": "coffee-no-update",
+      "split": "diagnostic",
+      "language": "ko",
+      "turns": [
+        { "content": "나는 커피를 마시지 않아.", "at": "2026-01-01T00:00:00Z" },
+        { "content": "맞아, 나는 여전히 커피를 안 마셔.", "at": "2026-01-02T00:00:00Z" }
+      ],
+      "query": "나는 커피를 마시나?",
+      "expectedCurrentIds": [],
+      "forbiddenStaleIds": [],
+      "expectedDeletedIds": [],
+      "noUpdateIds": ["coffee-abstains"],
+      "expectedDecision": "no-update"
+    },
+    {
+      "id": "en-residence-update",
+      "familyId": "residence-update",
+      "split": "diagnostic",
+      "language": "en",
+      "turns": [
+        { "content": "I live in London.", "at": "2026-01-01T00:00:00Z" },
+        { "content": "I moved to Bristol, so I live in Bristol now.", "at": "2026-01-02T00:00:00Z" }
+      ],
+      "query": "Where do I live now?",
+      "expectedCurrentIds": ["residence-bristol"],
+      "forbiddenStaleIds": ["residence-london"],
+      "expectedDeletedIds": [],
+      "noUpdateIds": [],
+      "expectedDecision": "update"
+    },
+    {
+      "id": "en-allergy-delete",
+      "familyId": "allergy-delete",
+      "split": "diagnostic",
+      "language": "en",
+      "turns": [
+        { "content": "I have a peanut allergy.", "at": "2026-01-01T00:00:00Z" },
+        { "content": "I was retested and I am not allergic to peanuts. Forget that allergy information.", "at": "2026-01-02T00:00:00Z" }
+      ],
+      "query": "What do you remember about my allergies?",
+      "expectedCurrentIds": [],
+      "forbiddenStaleIds": [],
+      "expectedDeletedIds": ["allergy-peanut"],
+      "noUpdateIds": [],
+      "expectedDecision": "delete"
+    },
+    {
+      "id": "en-coffee-no-update",
+      "familyId": "coffee-no-update",
+      "split": "diagnostic",
+      "language": "en",
+      "turns": [
+        { "content": "I do not drink coffee.", "at": "2026-01-01T00:00:00Z" },
+        { "content": "That is still true: I do not drink coffee.", "at": "2026-01-02T00:00:00Z" }
+      ],
+      "query": "Do I drink coffee?",
+      "expectedCurrentIds": [],
+      "forbiddenStaleIds": [],
+      "expectedDeletedIds": [],
+      "noUpdateIds": ["coffee-abstains"],
+      "expectedDecision": "no-update"
+    },
+    {
+      "id": "ja-residence-update",
+      "familyId": "residence-update",
+      "split": "diagnostic",
+      "language": "ja",
+      "turns": [
+        { "content": "私は東京に住んでいます。", "at": "2026-01-01T00:00:00Z" },
+        { "content": "大阪に引っ越したので、今は大阪に住んでいます。", "at": "2026-01-02T00:00:00Z" }
+      ],
+      "query": "私は今どこに住んでいますか？",
+      "expectedCurrentIds": ["residence-osaka"],
+      "forbiddenStaleIds": ["residence-tokyo"],
+      "expectedDeletedIds": [],
+      "noUpdateIds": [],
+      "expectedDecision": "update"
+    },
+    {
+      "id": "ja-allergy-delete",
+      "familyId": "allergy-delete",
+      "split": "diagnostic",
+      "language": "ja",
+      "turns": [
+        { "content": "私はピーナッツアレルギーがあります。", "at": "2026-01-01T00:00:00Z" },
+        { "content": "再検査でピーナッツアレルギーではないと分かりました。その情報は忘れてください。", "at": "2026-01-02T00:00:00Z" }
+      ],
+      "query": "私のアレルギーについて何を覚えていますか？",
+      "expectedCurrentIds": [],
+      "forbiddenStaleIds": [],
+      "expectedDeletedIds": ["allergy-peanut"],
+      "noUpdateIds": [],
+      "expectedDecision": "delete"
+    },
+    {
+      "id": "ja-coffee-no-update",
+      "familyId": "coffee-no-update",
+      "split": "diagnostic",
+      "language": "ja",
+      "turns": [
+        { "content": "私はコーヒーを飲みません。", "at": "2026-01-01T00:00:00Z" },
+        { "content": "今も変わらず、コーヒーは飲みません。", "at": "2026-01-02T00:00:00Z" }
+      ],
+      "query": "私はコーヒーを飲みますか？",
+      "expectedCurrentIds": [],
+      "forbiddenStaleIds": [],
+      "expectedDeletedIds": [],
+      "noUpdateIds": ["coffee-abstains"],
+      "expectedDecision": "no-update"
+    }
+  ]
+}

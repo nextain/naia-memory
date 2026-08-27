@@ -1,0 +1,32 @@
+{
+	"schemaVersion": 1,
+	"executedAt": "2026-08-22T22:01:40+09:00",
+	"upstreamRevision": "993e081a6d7948a0d8851c12a5fbdbeb49fed862",
+	"containerImageId": "30c063747a6ce10c670520fdf6d573989caf26d2d64c4186aaa319c83193c416",
+	"environment": {
+		"graphitiCore": "0.28.2",
+		"neo4jImage": "neo4j:5.26.2",
+		"neo4jDriver": "5.28.1",
+		"providerAdapter": "google-genai@1.62.0",
+		"llmModel": "gemini-2.5-flash",
+		"embeddingModel": "gemini-embedding-001",
+		"network": "loopback-isolated",
+		"accelerator": "cpu-only"
+	},
+	"passed": true,
+	"checks": {
+		"episodeCommit": true,
+		"namespaceIsolation": true,
+		"supersessionObserved": true,
+		"searchStateIdentity": true
+	},
+	"counts": {
+		"beforeUpdate": 1,
+		"afterUpdate": 4,
+		"isolatedGroup": 2,
+		"expiredFromCurrentState": 1,
+		"newInCurrentState": 4,
+		"searchResults": 4
+	},
+	"claimBoundary": "Backend eligibility only; no competitive quality claim."
+}

@@ -68,12 +68,14 @@ contradiction = true ONLY when ALL of the following hold:
 - existing and new are about the SAME entity (same person, same tool, same project, etc.)
 - they describe the SAME attribute (location, tool used, preference, schedule, etc.)
 - the new value REPLACES the old value — not adds, not refines, not reaffirms
+- OR the new information unambiguously says that exact existing state has durably ended ("no longer", "stopped", "더 이상", "やめた"). In that case the negative state supersedes the old affirmative state.
 
 contradiction = false (do NOT supersede) for:
 - different attribute of the same entity (e.g. existing="uses Cursor", new="bought a MacBook" — same person, different attribute)
 - additional/qualifying detail (e.g. existing="lives in Seoul", new="lives in Seoul, Gangnam-gu" — refinement, not replacement)
 - reaffirmation (e.g. existing="prefers tabs", new="still prefers tabs over spaces")
 - temporal continuation (e.g. existing="went to Kyoto last summer", new="going to Kyoto this winter" — separate events)
+- uncertainty, inability, future intent, temporary exceptions, or scoped negation that does not durably end the existing state
 - unrelated facts that share an entity by coincidence
 
 Caution against false positives — common over-aggressive patterns:

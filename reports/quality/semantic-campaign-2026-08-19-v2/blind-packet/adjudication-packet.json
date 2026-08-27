@@ -1,0 +1,2393 @@
+{
+  "schemaVersion": "naia-memory-semantic-blind-packet-v1",
+  "instructions": {
+    "engineIdentity": "withheld",
+    "recurrenceDisclosure": "Each conversation recurs once per engine in each repetition. Judge every sample independently; do not compare or group recurring conversations.",
+    "sealHandling": "The campaign manifest and adjudication seal must remain unavailable to adjudicators until judgments are frozen.",
+    "labelEachRetrievedMemory": "Label every retrieved memory as current, stale, deleted, irrelevant, or uncertain using only the turns and query.",
+    "qualityClaim": "This packet is an adjudication input, not quality evidence until independently completed and unsealed."
+  },
+  "source": {
+    "contractSha256": "48e46e10fe736415a209d33af8f19468f5f3ff47821e7de6d1ab549839148a90",
+    "campaignSha256": "abc630c864d8a7d2332972e937747aabe00d03913c65fb5bc8ce95ece61756cf",
+    "construction": "generated-diagnostic"
+  },
+  "samples": [
+    {
+      "sampleId": "sample-0001",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 서울에 살고 있어."
+        },
+        {
+          "content": "부산으로 이사해서 이제 부산에 살아."
+        }
+      ],
+      "query": "나는 지금 어디에 살고 있지?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "이제 부산에 산다"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0002",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 땅콩 알레르기가 있어."
+        },
+        {
+          "content": "검사를 다시 받았는데 땅콩 알레르기가 아니래. 그 정보는 기억하지 마."
+        }
+      ],
+      "query": "내 알레르기에 대해 기억하는 게 있어?",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0003",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 서울에 살고 있어."
+        },
+        {
+          "content": "부산으로 이사해서 이제 부산에 살아."
+        }
+      ],
+      "query": "나는 지금 어디에 살고 있지?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자 거주지: 부산"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0004",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 커피를 마시지 않아."
+        },
+        {
+          "content": "맞아, 나는 여전히 커피를 안 마셔."
+        }
+      ],
+      "query": "나는 커피를 마시나?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "커피를 마시지 않는다"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0005",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I live in London."
+        },
+        {
+          "content": "I moved to Bristol, so I live in Bristol now."
+        }
+      ],
+      "query": "Where do I live now?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User residence: Bristol"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0006",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はコーヒーを飲みません。"
+        },
+        {
+          "content": "今も変わらず、コーヒーは飲みません。"
+        }
+      ],
+      "query": "私はコーヒーを飲みますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーはコーヒーを飲みません"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0007",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私は東京に住んでいます。"
+        },
+        {
+          "content": "大阪に引っ越したので、今は大阪に住んでいます。"
+        }
+      ],
+      "query": "私は今どこに住んでいますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーの居住地: 大阪"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0008",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はピーナッツアレルギーがあります。"
+        },
+        {
+          "content": "再検査でピーナッツアレルギーではないと分かりました。その情報は忘れてください。"
+        }
+      ],
+      "query": "私のアレルギーについて何を覚えていますか？",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0009",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I do not drink coffee."
+        },
+        {
+          "content": "That is still true: I do not drink coffee."
+        }
+      ],
+      "query": "Do I drink coffee?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User does not drink coffee. | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "User does not drink coffee. | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0010",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はピーナッツアレルギーがあります。"
+        },
+        {
+          "content": "再検査でピーナッツアレルギーではないと分かりました。その情報は忘れてください。"
+        }
+      ],
+      "query": "私のアレルギーについて何を覚えていますか？",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0011",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 커피를 마시지 않아."
+        },
+        {
+          "content": "맞아, 나는 여전히 커피를 안 마셔."
+        }
+      ],
+      "query": "나는 커피를 마시나?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자는 커피를 마시지 않는다."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0012",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はコーヒーを飲みません。"
+        },
+        {
+          "content": "今も変わらず、コーヒーは飲みません。"
+        }
+      ],
+      "query": "私はコーヒーを飲みますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーは今も変わらずコーヒーを飲みません。 | When: 継続的に | Involving: ユーザー"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "ユーザーはコーヒーを飲みません。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0013",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I have a peanut allergy."
+        },
+        {
+          "content": "I was retested and I am not allergic to peanuts. Forget that allergy information."
+        }
+      ],
+      "query": "What do you remember about my allergies?",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0014",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I have a peanut allergy."
+        },
+        {
+          "content": "I was retested and I am not allergic to peanuts. Forget that allergy information."
+        }
+      ],
+      "query": "What do you remember about my allergies?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User instructed to disregard any previous information about a peanut allergy. | Involving: user | The retest confirmed user is not allergic to peanuts."
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "User has a peanut allergy."
+        },
+        {
+          "memoryId": "memory-03",
+          "rank": 3,
+          "content": "User is not allergic to peanuts, as confirmed by a retest. | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-03",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0015",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I do not drink coffee."
+        },
+        {
+          "content": "That is still true: I do not drink coffee."
+        }
+      ],
+      "query": "Do I drink coffee?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "Does not drink coffee"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0016",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 땅콩 알레르기가 있어."
+        },
+        {
+          "content": "검사를 다시 받았는데 땅콩 알레르기가 아니래. 그 정보는 기억하지 마."
+        }
+      ],
+      "query": "내 알레르기에 대해 기억하는 게 있어?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자는 어시스턴트에게 이전의 땅콩 알레르기 관련 정보를 기억하지 말라고 지시했다. | When: 2026년 8월 19일 수요일 | Involving: 사용자, 어시스턴트 | 이전 정보가 잘못된 것으로 확인되었기 때문이다."
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "사용자는 재검사를 통해 땅콩 알레르기가 없음을 확인했다. | When: 2026년 8월 19일 수요일 | Involving: 사용자 | 이전의 땅콩 알레르기 정보가 잘못되었음을 정정하기 위함이다."
+        },
+        {
+          "memoryId": "memory-03",
+          "rank": 3,
+          "content": "사용자는 땅콩 알레르기가 있습니다."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-03",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0017",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はコーヒーを飲みません。"
+        },
+        {
+          "content": "今も変わらず、コーヒーは飲みません。"
+        }
+      ],
+      "query": "私はコーヒーを飲みますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "コーヒーを飲みません"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0018",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 커피를 마시지 않아."
+        },
+        {
+          "content": "맞아, 나는 여전히 커피를 안 마셔."
+        }
+      ],
+      "query": "나는 커피를 마시나?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자는 커피를 마시지 않는다."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0019",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I do not drink coffee."
+        },
+        {
+          "content": "That is still true: I do not drink coffee."
+        }
+      ],
+      "query": "Do I drink coffee?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "Does not drink coffee"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0020",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私は東京に住んでいます。"
+        },
+        {
+          "content": "大阪に引っ越したので、今は大阪に住んでいます。"
+        }
+      ],
+      "query": "私は今どこに住んでいますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "今は大阪に住んでいます"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "大阪に引っ越した"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0021",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 서울에 살고 있어."
+        },
+        {
+          "content": "부산으로 이사해서 이제 부산에 살아."
+        }
+      ],
+      "query": "나는 지금 어디에 살고 있지?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "부산에 산다"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "부산으로 이사했다"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0022",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はコーヒーを飲みません。"
+        },
+        {
+          "content": "今も変わらず、コーヒーは飲みません。"
+        }
+      ],
+      "query": "私はコーヒーを飲みますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーはコーヒーを飲みません。"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "ユーザーはコーヒーを飲みません。 | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0023",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 땅콩 알레르기가 있어."
+        },
+        {
+          "content": "검사를 다시 받았는데 땅콩 알레르기가 아니래. 그 정보는 기억하지 마."
+        }
+      ],
+      "query": "내 알레르기에 대해 기억하는 게 있어?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자가 어시스턴트에게 이전에 땅콩 알레르기가 있다는 정보를 기억하지 말라고 지시했습니다. | Involving: 사용자, 어시스턴트 | 이전 정보가 잘못되었기 때문입니다."
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "사용자가 재검사를 받았고 땅콩 알레르기가 없음을 확인했습니다. | When: 2026년 8월 19일 | Involving: 사용자 | 이전에 잘못 알려진 땅콩 알레르기 정보를 수정하기 위함입니다."
+        },
+        {
+          "memoryId": "memory-03",
+          "rank": 3,
+          "content": "사용자는 땅콩 알레르기가 있다."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-03",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0024",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はコーヒーを飲みません。"
+        },
+        {
+          "content": "今も変わらず、コーヒーは飲みません。"
+        }
+      ],
+      "query": "私はコーヒーを飲みますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーはコーヒーを飲みません。 | Involving: ユーザー"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "ユーザーはコーヒーを飲みません。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0025",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I do not drink coffee."
+        },
+        {
+          "content": "That is still true: I do not drink coffee."
+        }
+      ],
+      "query": "Do I drink coffee?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User does not drink coffee"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0026",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はピーナッツアレルギーがあります。"
+        },
+        {
+          "content": "再検査でピーナッツアレルギーではないと分かりました。その情報は忘れてください。"
+        }
+      ],
+      "query": "私のアレルギーについて何を覚えていますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーは再検査の結果、ピーナッツアレルギーではないことが判明した。 | Involving: ユーザー"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "ユーザーはピーナッツアレルギーを持っています。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0027",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I do not drink coffee."
+        },
+        {
+          "content": "That is still true: I do not drink coffee."
+        }
+      ],
+      "query": "Do I drink coffee?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User does not drink coffee. | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "User does not drink coffee | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0028",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I have a peanut allergy."
+        },
+        {
+          "content": "I was retested and I am not allergic to peanuts. Forget that allergy information."
+        }
+      ],
+      "query": "What do you remember about my allergies?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User was retested and is not allergic to peanuts, contradicting previous allergy information. | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "User has a peanut allergy."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0029",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はコーヒーを飲みません。"
+        },
+        {
+          "content": "今も変わらず、コーヒーは飲みません。"
+        }
+      ],
+      "query": "私はコーヒーを飲みますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーはコーヒーを飲みません。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0030",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 서울에 살고 있어."
+        },
+        {
+          "content": "부산으로 이사해서 이제 부산에 살아."
+        }
+      ],
+      "query": "나는 지금 어디에 살고 있지?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "이제 부산에 산다"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0031",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私は東京に住んでいます。"
+        },
+        {
+          "content": "大阪に引っ越したので、今は大阪に住んでいます。"
+        }
+      ],
+      "query": "私は今どこに住んでいますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーの居住地: 大阪"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0032",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私は東京に住んでいます。"
+        },
+        {
+          "content": "大阪に引っ越したので、今は大阪に住んでいます。"
+        }
+      ],
+      "query": "私は今どこに住んでいますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーの居住地: 大阪"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0033",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 땅콩 알레르기가 있어."
+        },
+        {
+          "content": "검사를 다시 받았는데 땅콩 알레르기가 아니래. 그 정보는 기억하지 마."
+        }
+      ],
+      "query": "내 알레르기에 대해 기억하는 게 있어?",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0034",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はコーヒーを飲みません。"
+        },
+        {
+          "content": "今も変わらず、コーヒーは飲みません。"
+        }
+      ],
+      "query": "私はコーヒーを飲みますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "コーヒーを飲みません"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0035",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I do not drink coffee."
+        },
+        {
+          "content": "That is still true: I do not drink coffee."
+        }
+      ],
+      "query": "Do I drink coffee?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User does not drink coffee."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0036",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はピーナッツアレルギーがあります。"
+        },
+        {
+          "content": "再検査でピーナッツアレルギーではないと分かりました。その情報は忘れてください。"
+        }
+      ],
+      "query": "私のアレルギーについて何を覚えていますか？",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0037",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 커피를 마시지 않아."
+        },
+        {
+          "content": "맞아, 나는 여전히 커피를 안 마셔."
+        }
+      ],
+      "query": "나는 커피를 마시나?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "Doesn't drink coffee"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0038",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I live in London."
+        },
+        {
+          "content": "I moved to Bristol, so I live in Bristol now."
+        }
+      ],
+      "query": "Where do I live now?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "Moved to Bristol"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "Lives in Bristol"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0039",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I have a peanut allergy."
+        },
+        {
+          "content": "I was retested and I am not allergic to peanuts. Forget that allergy information."
+        }
+      ],
+      "query": "What do you remember about my allergies?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User was retested and is not allergic to peanuts; previous allergy information should be disregarded. | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "User has a peanut allergy."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0040",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 땅콩 알레르기가 있어."
+        },
+        {
+          "content": "검사를 다시 받았는데 땅콩 알레르기가 아니래. 그 정보는 기억하지 마."
+        }
+      ],
+      "query": "내 알레르기에 대해 기억하는 게 있어?",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0041",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I do not drink coffee."
+        },
+        {
+          "content": "That is still true: I do not drink coffee."
+        }
+      ],
+      "query": "Do I drink coffee?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User does not drink coffee"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0042",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I have a peanut allergy."
+        },
+        {
+          "content": "I was retested and I am not allergic to peanuts. Forget that allergy information."
+        }
+      ],
+      "query": "What do you remember about my allergies?",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0043",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I live in London."
+        },
+        {
+          "content": "I moved to Bristol, so I live in Bristol now."
+        }
+      ],
+      "query": "Where do I live now?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "Lives in Bristol now"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0044",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I live in London."
+        },
+        {
+          "content": "I moved to Bristol, so I live in Bristol now."
+        }
+      ],
+      "query": "Where do I live now?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "Lives in Bristol now"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0045",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I have a peanut allergy."
+        },
+        {
+          "content": "I was retested and I am not allergic to peanuts. Forget that allergy information."
+        }
+      ],
+      "query": "What do you remember about my allergies?",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0046",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はコーヒーを飲みません。"
+        },
+        {
+          "content": "今も変わらず、コーヒーは飲みません。"
+        }
+      ],
+      "query": "私はコーヒーを飲みますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "コーヒーを飲みません"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0047",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はピーナッツアレルギーがあります。"
+        },
+        {
+          "content": "再検査でピーナッツアレルギーではないと分かりました。その情報は忘れてください。"
+        }
+      ],
+      "query": "私のアレルギーについて何を覚えていますか？",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0048",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I live in London."
+        },
+        {
+          "content": "I moved to Bristol, so I live in Bristol now."
+        }
+      ],
+      "query": "Where do I live now?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User lives in London."
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "User moved to Bristol and currently lives there. | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0049",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 커피를 마시지 않아."
+        },
+        {
+          "content": "맞아, 나는 여전히 커피를 안 마셔."
+        }
+      ],
+      "query": "나는 커피를 마시나?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자는 커피를 마시지 않습니다. | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "사용자는 커피를 마시지 않습니다. | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0050",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 땅콩 알레르기가 있어."
+        },
+        {
+          "content": "검사를 다시 받았는데 땅콩 알레르기가 아니래. 그 정보는 기억하지 마."
+        }
+      ],
+      "query": "내 알레르기에 대해 기억하는 게 있어?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "나는 땅콩 알레르기가 있어"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "검사를 다시 받았다"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0051",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私は東京に住んでいます。"
+        },
+        {
+          "content": "大阪に引っ越したので、今は大阪に住んでいます。"
+        }
+      ],
+      "query": "私は今どこに住んでいますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーは大阪に引っ越し、現在そこに住んでいる。 | When: 現在 | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "ユーザーは東京に住んでいます。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0052",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はピーナッツアレルギーがあります。"
+        },
+        {
+          "content": "再検査でピーナッツアレルギーではないと分かりました。その情報は忘れてください。"
+        }
+      ],
+      "query": "私のアレルギーについて何を覚えていますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーは再検査の結果、ピーナッツアレルギーではないことが判明しました。 | Involving: ユーザー"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "ユーザーはピーナッツアレルギーを持っています。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0053",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はピーナッツアレルギーがあります。"
+        },
+        {
+          "content": "再検査でピーナッツアレルギーではないと分かりました。その情報は忘れてください。"
+        }
+      ],
+      "query": "私のアレルギーについて何を覚えていますか？",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0054",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 땅콩 알레르기가 있어."
+        },
+        {
+          "content": "검사를 다시 받았는데 땅콩 알레르기가 아니래. 그 정보는 기억하지 마."
+        }
+      ],
+      "query": "내 알레르기에 대해 기억하는 게 있어?",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0055",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I live in London."
+        },
+        {
+          "content": "I moved to Bristol, so I live in Bristol now."
+        }
+      ],
+      "query": "Where do I live now?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User lives in London."
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "User moved to Bristol and currently lives there. | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0056",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I have a peanut allergy."
+        },
+        {
+          "content": "I was retested and I am not allergic to peanuts. Forget that allergy information."
+        }
+      ],
+      "query": "What do you remember about my allergies?",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0057",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 커피를 마시지 않아."
+        },
+        {
+          "content": "맞아, 나는 여전히 커피를 안 마셔."
+        }
+      ],
+      "query": "나는 커피를 마시나?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자는 커피를 마시지 않습니다. | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "User does not drink coffee. | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0058",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I do not drink coffee."
+        },
+        {
+          "content": "That is still true: I do not drink coffee."
+        }
+      ],
+      "query": "Do I drink coffee?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "Does not drink coffee"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0059",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 서울에 살고 있어."
+        },
+        {
+          "content": "부산으로 이사해서 이제 부산에 살아."
+        }
+      ],
+      "query": "나는 지금 어디에 살고 있지?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자가 부산으로 이사했고, 현재 부산에 살고 있다. | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "사용자는 서울에 살고 있습니다."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0060",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私は東京に住んでいます。"
+        },
+        {
+          "content": "大阪に引っ越したので、今は大阪に住んでいます。"
+        }
+      ],
+      "query": "私は今どこに住んでいますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーは大阪に引っ越したので、現在大阪に住んでいます。 | Involving: ユーザー"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "ユーザーは東京に住んでいます。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0061",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 서울에 살고 있어."
+        },
+        {
+          "content": "부산으로 이사해서 이제 부산에 살아."
+        }
+      ],
+      "query": "나는 지금 어디에 살고 있지?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자는 현재 부산에 거주한다. | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "사용자는 서울에 살고 있습니다."
+        },
+        {
+          "memoryId": "memory-03",
+          "rank": 3,
+          "content": "사용자가 부산으로 이사했다. | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-03",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0062",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I live in London."
+        },
+        {
+          "content": "I moved to Bristol, so I live in Bristol now."
+        }
+      ],
+      "query": "Where do I live now?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User residence: Bristol"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0063",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はピーナッツアレルギーがあります。"
+        },
+        {
+          "content": "再検査でピーナッツアレルギーではないと分かりました。その情報は忘れてください。"
+        }
+      ],
+      "query": "私のアレルギーについて何を覚えていますか？",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0064",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私は東京に住んでいます。"
+        },
+        {
+          "content": "大阪に引っ越したので、今は大阪に住んでいます。"
+        }
+      ],
+      "query": "私は今どこに住んでいますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "今は大阪に住んでいます"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "大阪に引っ越した"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0065",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 서울에 살고 있어."
+        },
+        {
+          "content": "부산으로 이사해서 이제 부산에 살아."
+        }
+      ],
+      "query": "나는 지금 어디에 살고 있지?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자 거주지: 부산"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0066",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 땅콩 알레르기가 있어."
+        },
+        {
+          "content": "검사를 다시 받았는데 땅콩 알레르기가 아니래. 그 정보는 기억하지 마."
+        }
+      ],
+      "query": "내 알레르기에 대해 기억하는 게 있어?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "땅콩 알레르기가 있어"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0067",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I have a peanut allergy."
+        },
+        {
+          "content": "I was retested and I am not allergic to peanuts. Forget that allergy information."
+        }
+      ],
+      "query": "What do you remember about my allergies?",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0068",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 서울에 살고 있어."
+        },
+        {
+          "content": "부산으로 이사해서 이제 부산에 살아."
+        }
+      ],
+      "query": "나는 지금 어디에 살고 있지?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자 거주지: 부산"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0069",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はコーヒーを飲みません。"
+        },
+        {
+          "content": "今も変わらず、コーヒーは飲みません。"
+        }
+      ],
+      "query": "私はコーヒーを飲みますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーはコーヒーを飲みません"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0070",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I live in London."
+        },
+        {
+          "content": "I moved to Bristol, so I live in Bristol now."
+        }
+      ],
+      "query": "Where do I live now?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User lives in London."
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "User moved to Bristol and currently resides there. | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0071",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I have a peanut allergy."
+        },
+        {
+          "content": "I was retested and I am not allergic to peanuts. Forget that allergy information."
+        }
+      ],
+      "query": "What do you remember about my allergies?",
+      "retrieved": [],
+      "judgments": []
+    },
+    {
+      "sampleId": "sample-0072",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 땅콩 알레르기가 있어."
+        },
+        {
+          "content": "검사를 다시 받았는데 땅콩 알레르기가 아니래. 그 정보는 기억하지 마."
+        }
+      ],
+      "query": "내 알레르기에 대해 기억하는 게 있어?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자는 어시스턴트에게 이전에 가지고 있던 땅콩 알레르기에 대한 잘못된 정보를 기억하지 말라고 지시했습니다. | When: 2026년 8월 19일 수요일 | Involving: 사용자, 어시스턴트 | 어시스턴트의 지식 기반을 정확하게 유지하기 위함."
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "사용자는 최근 재검사를 통해 땅콩 알레르기가 없음을 확인했습니다. | When: 2026년 8월 19일 수요일 | Involving: 사용자 | 이전 의료 정보의 정정."
+        },
+        {
+          "memoryId": "memory-03",
+          "rank": 3,
+          "content": "사용자는 땅콩 알레르기가 있다."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-03",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0073",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私はピーナッツアレルギーがあります。"
+        },
+        {
+          "content": "再検査でピーナッツアレルギーではないと分かりました。その情報は忘れてください。"
+        }
+      ],
+      "query": "私のアレルギーについて何を覚えていますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーは再検査の結果、ピーナッツアレルギーではないことが判明しました。 | When: 2026年8月19日水曜日 | Involving: user | 以前のピーナッツアレルギーに関する情報を訂正するため。"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "ユーザーはピーナッツアレルギーを持っています。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0074",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I do not drink coffee."
+        },
+        {
+          "content": "That is still true: I do not drink coffee."
+        }
+      ],
+      "query": "Do I drink coffee?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User does not drink coffee. | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "User does not drink coffee. | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0075",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 커피를 마시지 않아."
+        },
+        {
+          "content": "맞아, 나는 여전히 커피를 안 마셔."
+        }
+      ],
+      "query": "나는 커피를 마시나?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "커피를 마시지 않아"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0076",
+      "language": "en",
+      "turns": [
+        {
+          "content": "I live in London."
+        },
+        {
+          "content": "I moved to Bristol, so I live in Bristol now."
+        }
+      ],
+      "query": "Where do I live now?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "User residence: Bristol"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0077",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私は東京に住んでいます。"
+        },
+        {
+          "content": "大阪に引っ越したので、今は大阪に住んでいます。"
+        }
+      ],
+      "query": "私は今どこに住んでいますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "Lives in Osaka"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0078",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 커피를 마시지 않아."
+        },
+        {
+          "content": "맞아, 나는 여전히 커피를 안 마셔."
+        }
+      ],
+      "query": "나는 커피를 마시나?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자는 커피를 마시지 않습니다. | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "사용자는 커피를 마시지 않습니다. | Involving: user"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0079",
+      "language": "ja",
+      "turns": [
+        {
+          "content": "私は東京に住んでいます。"
+        },
+        {
+          "content": "大阪に引っ越したので、今は大阪に住んでいます。"
+        }
+      ],
+      "query": "私は今どこに住んでいますか？",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "ユーザーは大阪に引っ越したため、現在大阪に住んでいます。 | When: 現在 | Involving: user"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "ユーザーは東京に住んでいます。"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0080",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 서울에 살고 있어."
+        },
+        {
+          "content": "부산으로 이사해서 이제 부산에 살아."
+        }
+      ],
+      "query": "나는 지금 어디에 살고 있지?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자는 현재 부산에 거주한다. | Involving: 사용자"
+        },
+        {
+          "memoryId": "memory-02",
+          "rank": 2,
+          "content": "사용자는 서울에 살고 있습니다."
+        },
+        {
+          "memoryId": "memory-03",
+          "rank": 3,
+          "content": "사용자가 부산으로 이사했다. | Involving: 사용자"
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": null,
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-03",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "sampleId": "sample-0081",
+      "language": "ko",
+      "turns": [
+        {
+          "content": "나는 커피를 마시지 않아."
+        },
+        {
+          "content": "맞아, 나는 여전히 커피를 안 마셔."
+        }
+      ],
+      "query": "나는 커피를 마시나?",
+      "retrieved": [
+        {
+          "memoryId": "memory-01",
+          "rank": 1,
+          "content": "사용자는 커피를 마시지 않는다."
+        }
+      ],
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": null,
+          "notes": ""
+        }
+      ]
+    }
+  ],
+  "packetContentSha256": "d3f339cd0d2fcd4faa1a5c3efc6e0ae561ddb23e795572b7f19533b8dcdf628f"
+}

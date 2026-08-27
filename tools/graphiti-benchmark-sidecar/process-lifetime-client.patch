@@ -1,0 +1,117 @@
+diff --git a/server/graph_service/main.py b/server/graph_service/main.py
+index e85638e..2cd6513 100644
+--- a/server/graph_service/main.py
++++ b/server/graph_service/main.py
+@@ -5,16 +5,18 @@ from fastapi.responses import JSONResponse
+ 
+ from graph_service.config import get_settings
+ from graph_service.routers import ingest, retrieve
+-from graph_service.zep_graphiti import initialize_graphiti
++from graph_service.graphiti_benchmark_sidecar import router as benchmark_router
++from graph_service.zep_graphiti import close_graphiti, initialize_graphiti
+ 
+ 
+ @asynccontextmanager
+ async def lifespan(_: FastAPI):
+     settings = get_settings()
+     await initialize_graphiti(settings)
+-    yield
+-    # Shutdown
+-    # No need to close Graphiti here, as it's handled per-request
++    try:
++        yield
++    finally:
++        await close_graphiti()
+ 
+ 
+ app = FastAPI(lifespan=lifespan)
+@@ -22,6 +24,7 @@ app = FastAPI(lifespan=lifespan)
+ 
+ app.include_router(retrieve.router)
+ app.include_router(ingest.router)
++app.include_router(benchmark_router)
+ 
+ 
+ @app.get('/healthcheck')
+diff --git a/server/graph_service/zep_graphiti.py b/server/graph_service/zep_graphiti.py
+index 29e188b..41fa1fa 100644
+--- a/server/graph_service/zep_graphiti.py
++++ b/server/graph_service/zep_graphiti.py
+@@ -1,11 +1,12 @@
++import asyncio
+ import logging
+ from typing import Annotated
+ 
+ from fastapi import Depends, HTTPException
+ from graphiti_core import Graphiti  # type: ignore
+ from graphiti_core.edges import EntityEdge  # type: ignore
+ from graphiti_core.errors import EdgeNotFoundError, GroupsEdgesNotFoundError, NodeNotFoundError
+ from graphiti_core.llm_client import LLMClient  # type: ignore
+ from graphiti_core.nodes import EntityNode, EpisodicNode  # type: ignore
+ 
+ from graph_service.config import ZepEnvDep
+@@ -78,6 +82,9 @@ class ZepGraphiti(Graphiti):
+             raise HTTPException(status_code=404, detail=e.message) from e
+ 
+ 
++_graphiti_client: ZepGraphiti | None = None
++
++
+ def _create_graphiti_client(settings: ZepEnvDep) -> ZepGraphiti:
+     """Create a ZepGraphiti client based on the configured database backend."""
+     if settings.db_backend == 'falkordb':
+@@ -96,15 +103,14 @@ def _create_graphiti_client(settings: ZepEnvDep) -> ZepGraphiti:
+                 'Neo4j configuration (neo4j_uri, neo4j_user, neo4j_password) is required '
+                 "when db_backend is 'neo4j'"
+             )
+         return ZepGraphiti(
+             uri=settings.neo4j_uri,
+             user=settings.neo4j_user,
+             password=settings.neo4j_password,
+         )
+ 
+ 
+-async def get_graphiti(settings: ZepEnvDep):
+-    client = _create_graphiti_client(settings)
++def _configure_graphiti_client(client: ZepGraphiti, settings: ZepEnvDep) -> None:
+     if settings.openai_base_url is not None:
+         client.llm_client.config.base_url = settings.openai_base_url
+     if settings.openai_api_key is not None:
+@@ -112,15 +118,31 @@ async def get_graphiti(settings: ZepEnvDep):
+     if settings.model_name is not None:
+         client.llm_client.model = settings.model_name
+ 
+-    try:
+-        yield client
+-    finally:
+-        await client.close()
++
++async def get_graphiti(settings: ZepEnvDep):
++    if _graphiti_client is None:
++        raise HTTPException(status_code=503, detail='Graphiti is not initialized')
++    yield _graphiti_client
+ 
+ 
+ async def initialize_graphiti(settings: ZepEnvDep):
+-    client = _create_graphiti_client(settings)
++    global _graphiti_client
++    if _graphiti_client is not None:
++        return
++
++    client = await asyncio.to_thread(_create_graphiti_client, settings)
++    _configure_graphiti_client(client, settings)
+     try:
+         await client.build_indices_and_constraints()
+-    finally:
++    except BaseException:
++        await client.close()
++        raise
++    _graphiti_client = client
++
++
++async def close_graphiti():
++    global _graphiti_client
++    client = _graphiti_client
++    _graphiti_client = None
++    if client is not None:
+         await client.close()

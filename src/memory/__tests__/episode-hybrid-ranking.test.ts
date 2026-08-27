@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
 import { rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { EmbeddingProvider } from "../embeddings.js";
 import { LocalAdapter } from "../adapters/local.js";
+import type { EmbeddingProvider } from "../embeddings.js";
 import type { Episode } from "../types.js";
 
 const QUERY = "CONNECTION_OK prior response";
@@ -12,6 +12,7 @@ const QUERY = "CONNECTION_OK prior response";
 class BroadNoiseEmbedder implements EmbeddingProvider {
 	readonly dims = 2;
 	readonly name = "broad-noise-test";
+	readonly embeddingSpaceId = "broad-noise-test-v1";
 
 	async embed(text: string): Promise<number[]> {
 		if (text === QUERY) return [1, 0];

@@ -12,29 +12,31 @@ import {
 	HeuristicContradictionFilter,
 	selectFilter,
 } from "./contradiction-filter.js";
-import { MemorySystem } from "./index.js";
-import type { MemoryAdapter } from "./types.js";
-import type { FactExtractor } from "./index.js";
-import { findContradictionsWith } from "./reconsolidation.js";
 import { scoreImportance as scoreImportanceFn } from "./importance.js";
-import {
+import { MemorySystem } from "./index.js";
+import type { DeleteVerifier, FactExtractor } from "./index.js";
+import type {
 	BackupCapableProvider,
+	CompactableCapableProvider,
 	ImportanceScoringCapable,
 	ReconsolidationCapableProvider,
 	TemporalCapableProvider,
-	CompactableCapableProvider,
 } from "./provider-types.js";
 import type {
+	ConsolidationSummary,
+	MemoryHit,
 	MemoryProvider,
 	MemoryProviderInput,
-	MemoryHit,
 	RecallOptions,
-	ConsolidationSummary,
 } from "./provider-types.js";
+import { findContradictionsWith } from "./reconsolidation.js";
+import type { MemoryAdapter } from "./types.js";
 
 export interface NaiaMemoryProviderOptions {
 	adapter: MemoryAdapter;
 	factExtractor?: FactExtractor;
+	/** Independent fail-closed authorization for destructive memory updates. */
+	deleteVerifier?: DeleteVerifier;
 	/** R2.5 — pluggable contradiction filter. Defaults to env-based selection
 	 *  (Vllm > Gemini > Heuristic). */
 	contradictionFilter?: ContradictionFilterProvider;
@@ -61,11 +63,15 @@ export class NaiaMemoryProvider
 		this.system = new MemorySystem({
 			adapter: opts.adapter,
 			factExtractor: opts.factExtractor,
+			deleteVerifier: opts.deleteVerifier,
 			contradictionFilter: this.contradictionFilter,
 		});
 	}
 
-	async encode(input: MemoryProviderInput, opts?: { project?: string }): Promise<void> {
+	async encode(
+		input: MemoryProviderInput,
+		opts?: { project?: string },
+	): Promise<void> {
 		await this.system.encode(
 			{
 				content: input.content,
@@ -73,7 +79,9 @@ export class NaiaMemoryProvider
 				timestamp: input.timestamp,
 				context: input.context,
 				...(input.emotion !== undefined ? { emotion: input.emotion } : {}),
-				...(input.importance !== undefined ? { importance: input.importance } : {}),
+				...(input.importance !== undefined
+					? { importance: input.importance }
+					: {}),
 			},
 			{ project: opts?.project },
 		);
@@ -139,16 +147,24 @@ export class NaiaMemoryProvider
 	// ─── Capability: BackupCapable ────────────────────────────────────────────
 
 	exportBackup(password: string): Promise<Uint8Array> {
+		// biome-ignore lint/complexity/useLiteralKeys: bracket access intentionally reaches a protected integration seam.
 		const adapter = this.system["adapter"];
-		if ("exportBackup" in adapter && typeof adapter.exportBackup === "function") {
+		if (
+			"exportBackup" in adapter &&
+			typeof adapter.exportBackup === "function"
+		) {
 			return adapter.exportBackup(password);
 		}
 		throw new Error("BackupCapable not supported by current adapter");
 	}
 
 	importBackup(blob: Uint8Array, password: string): Promise<void> {
+		// biome-ignore lint/complexity/useLiteralKeys: bracket access intentionally reaches a protected integration seam.
 		const adapter = this.system["adapter"];
-		if ("importBackup" in adapter && typeof adapter.importBackup === "function") {
+		if (
+			"importBackup" in adapter &&
+			typeof adapter.importBackup === "function"
+		) {
 			return adapter.importBackup(blob, password);
 		}
 		throw new Error("BackupCapable not supported by current adapter");
@@ -156,7 +172,12 @@ export class NaiaMemoryProvider
 
 	// ─── Capability: ImportanceScoring ────────────────────────────────────────
 
-	scoreImportance(text: string): { importance: number; surprise: number; emotion: number; utility: number } {
+	scoreImportance(text: string): {
+		importance: number;
+		surprise: number;
+		emotion: number;
+		utility: number;
+	} {
 		return scoreImportanceFn({ content: text, role: "user" });
 	}
 
@@ -165,7 +186,13 @@ export class NaiaMemoryProvider
 	async findContradictions(
 		newContent: string,
 		_existingIds?: string[],
-	): Promise<{ conflictingId: string; conflictType: "direct" | "indirect"; reason: string }[]> {
+	): Promise<
+		{
+			conflictingId: string;
+			conflictType: "direct" | "indirect";
+			reason: string;
+		}[]
+	> {
 		const result = await this.system.recall(newContent, { topK: 10 });
 		const contradictions = await findContradictionsWith(
 			result.facts,
@@ -174,7 +201,8 @@ export class NaiaMemoryProvider
 		);
 		return contradictions.map(({ fact, result: r }) => ({
 			conflictingId: fact.id,
-			conflictType: r.action === "update" ? "direct" as const : "indirect" as const,
+			conflictType:
+				r.action === "update" ? ("direct" as const) : ("indirect" as const),
 			reason: r.reason,
 		}));
 	}
@@ -182,6 +210,7 @@ export class NaiaMemoryProvider
 	// ─── Capability: Temporal ─────────────────────────────────────────────────
 
 	async applyDecay(): Promise<number> {
+		// biome-ignore lint/complexity/useLiteralKeys: bracket access intentionally reaches a protected integration seam.
 		const adapter = this.system["adapter"] as MemoryAdapter;
 		return adapter.semantic.decay(Date.now());
 	}
@@ -191,13 +220,12 @@ export class NaiaMemoryProvider
 		atTimestamp: number,
 		opts?: RecallOptions,
 	): Promise<MemoryHit[]> {
+		// biome-ignore lint/complexity/useLiteralKeys: bracket access intentionally reaches a protected integration seam.
 		const adapter = this.system["adapter"] as MemoryAdapter;
-		const facts = await adapter.semantic.search(
-			query,
-			opts?.topK ?? 50,
-			true,
-			{ project: opts?.project, atTimestamp },
-		);
+		const facts = await adapter.semantic.search(query, opts?.topK ?? 50, true, {
+			project: opts?.project,
+			atTimestamp,
+		});
 
 		return facts.map((f) => ({
 			id: f.id,
@@ -228,11 +256,17 @@ export class NaiaMemoryProvider
 	}
 }
 
-export type { MemoryProvider, MemoryProviderInput, MemoryHit, RecallOptions, ConsolidationSummary };
-export {
+export type {
+	MemoryProvider,
+	MemoryProviderInput,
+	MemoryHit,
+	RecallOptions,
+	ConsolidationSummary,
+};
+export type {
 	BackupCapableProvider,
 	ImportanceScoringCapable,
 	ReconsolidationCapableProvider,
 	TemporalCapableProvider,
-	isCapable,
 } from "./provider-types.js";
+export { isCapable } from "./provider-types.js";

@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0",
+  "contract_id": "naia-memory-residual-benchmark-2026-08-28",
+  "contract_digest": "27df9e812a849c1db452aee9e239264f42726cd3fd42706d0fea66cf29a31393",
+  "issue": "https://github.com/nextain/naia-memory/issues/40",
+  "current_phase": "main-integration",
+  "current_task": "Commit and publish the verified benchmark and reliability integration to main.",
+  "gates_cleared": [
+    "preregistration",
+    "development-window-early-stop",
+    "unit-and-regression-tests",
+    "typecheck-and-build",
+    "benchmark-contract",
+    "entry-point-and-context-tests",
+    "naia-agent-memory-integration",
+    "naia-shell-memory-wiring"
+  ],
+  "key_decisions": [
+    "Preserve the existing dirty benchmark worktree and continue in an isolated clean worktree.",
+    "Keep public competitive status NOT QUALIFIED until the complete public gate passes.",
+    "Reject length-bucketed-array-batch-v1 because minimum cosine was 0.927233, below 0.95.",
+    "Reject length-bucketed-hybrid-v1 because warmed throughput was 0.8371x control and minimum cosine was 0.927233.",
+    "Do not retain failed experimental runtime modes in the product API."
+  ],
+  "evidence": {
+    "baseline": "reports/quality/miracl-en-primary-preflight-2026-08-25.md",
+    "candidate_report": "reports/quality/miracl-en-length-bucket-preregistration-2026-08-28.md",
+    "verification": [
+      "pnpm test: 1413 passed, 1 skipped",
+      "pnpm typecheck: passed",
+      "pnpm build: passed",
+      "pnpm exec biome check: passed",
+      "git diff --check: passed",
+      "alpha-adk benchmark-contract tests: passed",
+      "alpha-adk entry-point/context tests: passed",
+      "naia-agent candidate integration: 105 passed",
+      "naia-agent build: passed",
+      "naia-shell memory contracts: 23 passed",
+      "naia-shell settings UI: 48 passed",
+      "naia-shell browser memory E2E: 10 passed, 10 environment-gated skipped",
+      "naia-shell build: passed"
+    ]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "naia-memory-graphiti-backend-smoke-v2",
+  "evidenceClass": "local-backend-integration-smoke",
+  "publicCompetitiveEvidence": false,
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-22T23:53:23.311Z",
+    "git": {
+      "revision": "b60e8f89b320ced684e4ed2c73158c33681fbece",
+      "dirty": true
+    },
+    "datasets": {},
+    "implementations": {
+      "src/benchmark/quality/graphiti-backend-smoke-cli.ts": "872ad3fe6f48c4be3b749c7a8cd4a9260f03564f26e494daea6ed1f89171dd42",
+      "src/benchmark/quality/graphiti-backend-smoke.ts": "ce651c460157332dc14d3a771bf31cf21e1164a6c86624e5591cc0d4b535beec",
+      "src/benchmark/quality/graphiti-rest-semantic-client.ts": "5bc89c7d4c802721db713b39571567d5d0769c6a3114498fe4c831aa4fce9e30",
+      "tools/graphiti-benchmark-sidecar/pin.json": "ec84f3c5ed0f80c174eae29d41d5b38144e1579c46c915ea157baddf50594b15",
+      "tools/graphiti-benchmark-sidecar/process-lifetime-client.patch": "d385631bcfa9de2209eb7686ae403556fc082cf1e4ac8308ca6677efe0ee5949",
+      "tools/graphiti-benchmark-sidecar/provider-adapter.patch": "49da7da55d85d615190903ebd06f9677458b786de26db30a5353346a00379c3b",
+      "tools/graphiti-benchmark-sidecar/router.py": "417c41eafe64fa121fc0450d274df7998cb09d50a537c255f82a5b05e58dfdc9",
+      "tools/graphiti-benchmark-sidecar/test_process_lifetime_client.py": "beec605b5941a084178d1408f799cac89927ba1e0bfcba0aac4e15e70b28c925"
+    },
+    "config": {
+      "runtime": {
+        "GRAPHITI_REVISION": "993e081a6d7948a0d8851c12a5fbdbeb49fed862",
+        "GRAPHITI_IMAGE_ID": "335f407ef6a04d55ca1454e1a1239d0e1f056d65c582837ee8ce9f3e7ce6ad94",
+        "GRAPHITI_CORE_VERSION": "0.28.2",
+        "GRAPHITI_NEO4J_DRIVER_VERSION": "5.28.1",
+        "GRAPHITI_SERVER_LOCK_SHA256": "92a27d54a559dec86d3f2b3e4369bdaf954b491537d0b4c0579d97aa569a8ffd",
+        "GRAPHITI_DEPLOYED_SIDECAR_SHA256": "2e8ff0dab5a152900ad19bf72d9000042fe2c3addbdfb629ea66d4b5f0ec6016",
+        "GRAPHITI_LLM_MODEL": "gemini-2.5-flash",
+        "GRAPHITI_EMBEDDING_MODEL": "gemini-embedding-001"
+      }
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "runtime": {
+    "serviceRevision": "993e081a6d7948a0d8851c12a5fbdbeb49fed862",
+    "serviceImageId": "335f407ef6a04d55ca1454e1a1239d0e1f056d65c582837ee8ce9f3e7ce6ad94",
+    "graphitiCoreVersion": "0.28.2",
+    "neo4jDriverVersion": "5.28.1",
+    "serverLockSha256": "92a27d54a559dec86d3f2b3e4369bdaf954b491537d0b4c0579d97aa569a8ffd",
+    "deployedSidecarSha256": "2e8ff0dab5a152900ad19bf72d9000042fe2c3addbdfb629ea66d4b5f0ec6016",
+    "llmModel": "gemini-2.5-flash",
+    "embeddingModel": "gemini-embedding-001",
+    "modelNetworkPolicy": "external-gemini-api-required-non-hermetic"
+  },
+  "smoke": {
+    "schemaVersion": 2,
+    "passed": false,
+    "checks": {
+      "episodeCommit": true,
+      "namespaceIsolation": true,
+      "supersessionObserved": true,
+      "searchStateIdentity": false
+    },
+    "counts": {
+      "beforeUpdate": 1,
+      "afterUpdate": 1,
+      "isolatedGroup": 2,
+      "expiredFromCurrentState": 1,
+      "newInCurrentState": 1,
+      "searchResults": 1,
+      "rawSearchResults": 3,
+      "staleRawSearchResults": 2,
+      "committedEpisodes": 3
+    }
+  },
+  "limitations": [
+    "This receipt proves only local backend lifecycle and integration behavior.",
+    "It does not establish comparative quality, generalization, or external reproducibility.",
+    "The external Gemini dependency makes this run non-hermetic."
+  ]
+}

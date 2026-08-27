@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "bindings": {
+    "019fefbd-32a1-79a1-a74e-e6a5f659d478": {
+      "contract_id": "naia-memory-benchmark-evidence-loop-2026-08-13",
+      "contract_path": ".agents/session-contracts/naia-memory-benchmark-evidence-loop-2026-08-13.json",
+      "contract_digest": "7761784226076edd4e686cf37e3f4d60fceeba5a7f24a54c7ed59e1d1dced14d"
+    },
+    "01a0439f-82d0-7613-bd98-8d2365cc6a06": {
+      "contract_id": "naia-memory-residual-benchmark-2026-08-28",
+      "contract_path": ".agents/session-contracts/naia-memory-residual-benchmark-2026-08-28.json",
+      "contract_digest": "27df9e812a849c1db452aee9e239264f42726cd3fd42706d0fea66cf29a31393"
+    }
+  }
+}

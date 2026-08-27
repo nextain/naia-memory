@@ -1,0 +1,569 @@
+{
+  "schemaVersion": "naia-memory-semantic-raw-artifact-v2",
+  "interpretation": "Unscored engine-native semantic memories and retrievals; not quality evidence by itself.",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-22T23:08:39.742Z",
+    "git": {
+      "revision": "b60e8f89b320ced684e4ed2c73158c33681fbece",
+      "dirty": true
+    },
+    "datasets": {
+      "/var/home/luke/alpha-adk/projects/naia-memory/reports/quality/semantic-heldout-model-authored-2026-08-19.json": "c6ea38eba5d97bfab7c519fc1d4087cb461b85f295a0d8eb354cef6575c6ce36"
+    },
+    "implementations": {
+      "src/benchmark/quality/semantic-raw-cli.ts": "b973b0bbe8e51406f2d4b72ec76c3172b04dd8e78b641772d1776c2397ba24d0",
+      "src/benchmark/quality/memory-semantic-runner.ts": "51016b17d690ecf335dede17992580ab577ef12dc66a8395d189f8273e3f97f5",
+      "src/benchmark/quality/bridge-hindsight-semantic.ts": "b2d6502387e222d7c85267074df6fc2128b30dc3caace5bd427885c21c2a7e98"
+    },
+    "config": {
+      "engine": "hindsight",
+      "topK": 5,
+      "executionSeed": "cf87d46f7a2f0f6dc6144fb3b01e4bf10e3023ca9cf1ebfbc4777422cd12acd3",
+      "mutationAuthorizationPolicy": "engine-native-mutation-policy-v1",
+      "providerPolicy": "engine-server-native-configuration-v1",
+      "endpoint": "http://127.0.0.1:18888/",
+      "hindsightRuntime": {
+        "version": "0.9.1",
+        "imageDigest": "sha256:8a305bc7de1acbabd26da01820b2c31d77c6092d186f262029f5db0deda33729",
+        "llmProvider": "gemini",
+        "llmModel": "gemini-2.5-flash"
+      }
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "disclosure": {
+    "engine": "hindsight",
+    "topK": 5,
+    "executionSeed": "cf87d46f7a2f0f6dc6144fb3b01e4bf10e3023ca9cf1ebfbc4777422cd12acd3",
+    "mutationAuthorizationPolicy": "engine-native-mutation-policy-v1",
+    "providerPolicy": "engine-server-native-configuration-v1",
+    "endpoint": "http://127.0.0.1:18888/",
+    "hindsightRuntime": {
+      "version": "0.9.1",
+      "imageDigest": "sha256:8a305bc7de1acbabd26da01820b2c31d77c6092d186f262029f5db0deda33729",
+      "llmProvider": "gemini",
+      "llmModel": "gemini-2.5-flash"
+    }
+  },
+  "cases": [
+    {
+      "caseId": "case_ja_update_7",
+      "executionPosition": 1,
+      "language": "ja",
+      "fixtureSha256": "098678bdf34c8de2740918cf05625917ebbb59fdf034244e21069a9e0beea1c4",
+      "engineInputSha256": "8811c5cb46fd9c5ea933bf7d37439bc107de83f5b9bc6b517ad49dc9f91a8fbd",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "19add20c-8c31-455f-84ca-f82abc284428",
+          "content": "ユーザーは最近、読書ではなく瞑想を日課にしています。 | When: 最近 | Involving: ユーザー"
+        },
+        {
+          "nativeId": "0a65825a-c2ca-4436-9f52-355ff5d4c5fc",
+          "content": "ユーザーは朝の読書をしている。 | Involving: ユーザー"
+        },
+        {
+          "nativeId": "063c7cbf-e344-44e8-9c0b-ff2e8ceaf70e",
+          "content": "ユーザーは毎朝読書をしています。"
+        },
+        {
+          "nativeId": "c598d65f-221b-45a8-8671-bda700f72aba",
+          "content": "ユーザーは毎朝読書をしています。 | When: 毎朝 | Involving: ユーザー"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "0a65825a-c2ca-4436-9f52-355ff5d4c5fc",
+          "content": "ユーザーは朝の読書をしている。 | Involving: ユーザー"
+        },
+        {
+          "nativeId": "063c7cbf-e344-44e8-9c0b-ff2e8ceaf70e",
+          "content": "ユーザーは毎朝読書をしています。"
+        },
+        {
+          "nativeId": "19add20c-8c31-455f-84ca-f82abc284428",
+          "content": "ユーザーは最近、読書ではなく瞑想を日課にしています。 | When: 最近 | Involving: ユーザー"
+        }
+      ],
+      "outputSha256": "cd0ddcce9307533db962539fa879b40171d69c23585b66a08b6a28ae03b0fae4"
+    },
+    {
+      "caseId": "case_en_no_update_6",
+      "executionPosition": 2,
+      "language": "en",
+      "fixtureSha256": "334a48ad65aa714efbeb004ac6f27ab472849d22999db0499a89acbe7c888a89",
+      "engineInputSha256": "e8e5dd3277a98a6586c4a3ba2155c429d46521f88bb35c8d91096e7bc35c9ae6",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "5ef24b71-9e53-4707-921b-f00a1d42ea53",
+          "content": "The user's favorite animal is a dolphin. | Involving: user"
+        },
+        {
+          "nativeId": "bb28bb12-cd81-411e-8d9f-b11a7723ee84",
+          "content": "User's favorite animal is a dolphin."
+        },
+        {
+          "nativeId": "3018edee-10ec-4913-8a9f-0ca4acf0dfc2",
+          "content": "User's favorite animal is a dolphin. | Involving: user"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "bb28bb12-cd81-411e-8d9f-b11a7723ee84",
+          "content": "User's favorite animal is a dolphin."
+        },
+        {
+          "nativeId": "5ef24b71-9e53-4707-921b-f00a1d42ea53",
+          "content": "The user's favorite animal is a dolphin. | Involving: user"
+        }
+      ],
+      "outputSha256": "f61edd78659fa62b5b997a7d0a89aa7dc22c5c1789760d5a7b2c5a141fb22582"
+    },
+    {
+      "caseId": "case_ja_delete_8",
+      "executionPosition": 3,
+      "language": "ja",
+      "fixtureSha256": "df101e7f8229c7008a08bfdb174a42ed4e0b8d90e74d8e4c1ce3c8fa2d44681a",
+      "engineInputSha256": "067541f999429bedfd59404455eedd040092b67924d395a80e8fe23ddbc242c9",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "a484a22c-1fbe-4ce2-8552-0abdc779857b",
+          "content": "User no longer likes spicy food because they have recently become bad at it. | Involving: user"
+        },
+        {
+          "nativeId": "7690c983-83d6-4c68-baa6-1a81f1e5cd64",
+          "content": "ユーザーは辛い料理が好きです。 | Involving: ユーザー"
+        },
+        {
+          "nativeId": "47f5898d-9d9b-4b26-aa3c-5ea211d01190",
+          "content": "ユーザーは辛い料理が好きです。"
+        },
+        {
+          "nativeId": "b09aa98b-e87f-4178-913b-f9f12cfb84db",
+          "content": "ユーザーは辛い料理が好きです。 | Involving: ユーザー"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "47f5898d-9d9b-4b26-aa3c-5ea211d01190",
+          "content": "ユーザーは辛い料理が好きです。"
+        },
+        {
+          "nativeId": "7690c983-83d6-4c68-baa6-1a81f1e5cd64",
+          "content": "ユーザーは辛い料理が好きです。 | Involving: ユーザー"
+        },
+        {
+          "nativeId": "a484a22c-1fbe-4ce2-8552-0abdc779857b",
+          "content": "User no longer likes spicy food because they have recently become bad at it. | Involving: user"
+        }
+      ],
+      "outputSha256": "7ebb8bce808effa5901117442add5254046cdd2beb009045df873bf3e48f7dde"
+    },
+    {
+      "caseId": "case_en_update_4",
+      "executionPosition": 4,
+      "language": "en",
+      "fixtureSha256": "9310909eff4dc1d1441d756a80f617ac59fadbde620c5640a29bc0f0648de49a",
+      "engineInputSha256": "074b61dfc67bf2535fe1dc1a876ea0b713adbeaf70968fbcbc8a18c7076856de",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "5177c1b3-d3dc-4fc5-ba9a-b8d2531ea265",
+          "content": "User prefers jazz music. | Involving: user"
+        },
+        {
+          "nativeId": "6005d2ee-a9ae-4833-be05-0025b4e4fc1f",
+          "content": "The user has chosen classical music. | Involving: user"
+        },
+        {
+          "nativeId": "5b7c6b87-51c9-4370-bc37-6ce114f02f6e",
+          "content": "User's preferred music genre is classical."
+        },
+        {
+          "nativeId": "663040cd-ecc4-44fd-87f1-f3c4b4ec4100",
+          "content": "User's preferred music genre is classical. | Involving: user"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "5177c1b3-d3dc-4fc5-ba9a-b8d2531ea265",
+          "content": "User prefers jazz music. | Involving: user"
+        },
+        {
+          "nativeId": "5b7c6b87-51c9-4370-bc37-6ce114f02f6e",
+          "content": "User's preferred music genre is classical."
+        },
+        {
+          "nativeId": "6005d2ee-a9ae-4833-be05-0025b4e4fc1f",
+          "content": "The user has chosen classical music. | Involving: user"
+        }
+      ],
+      "outputSha256": "fbed1dccab56cb9a662d05fa6a2501b079ce8c6a3f5ceb4beaad59020ce179cd"
+    },
+    {
+      "caseId": "case_ko_no_update_3",
+      "executionPosition": 5,
+      "language": "ko",
+      "fixtureSha256": "aa820b7ff8d77e61860c6716eddc43e48fb6fc2bd179db9fab8c6e4f53966029",
+      "engineInputSha256": "3f69ee6a62bd9088fd36f9d94ca455e914063d6fd0d1df8dd0cec1f3b9166704",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "ac00f92e-d250-485e-b5aa-97551adec842",
+          "content": "User's favorite travel destination is Jeju Island. | Involving: user"
+        },
+        {
+          "nativeId": "ffe43451-5669-467d-98a0-c070b54ac749",
+          "content": "사용자는 제주도를 좋아합니다. | Involving: 사용자"
+        },
+        {
+          "nativeId": "75f4b453-a43d-44d5-be15-c6df227326b1",
+          "content": "가장 좋아하는 여행지는 제주도입니다."
+        },
+        {
+          "nativeId": "65b76a8d-58e6-4d25-a83a-b92aa541399b",
+          "content": "가장 좋아하는 여행지는 제주도입니다. | Involving: user"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "75f4b453-a43d-44d5-be15-c6df227326b1",
+          "content": "가장 좋아하는 여행지는 제주도입니다."
+        },
+        {
+          "nativeId": "ffe43451-5669-467d-98a0-c070b54ac749",
+          "content": "사용자는 제주도를 좋아합니다. | Involving: 사용자"
+        },
+        {
+          "nativeId": "ac00f92e-d250-485e-b5aa-97551adec842",
+          "content": "User's favorite travel destination is Jeju Island. | Involving: user"
+        }
+      ],
+      "outputSha256": "e04a6d7435b747d918201342aad139d433dbd3d3e59a45e516f78b3bcb2878a9"
+    },
+    {
+      "caseId": "case_ko_update_1",
+      "executionPosition": 6,
+      "language": "ko",
+      "fixtureSha256": "74dff3bbbcab5f54c70de17c8767cb6a839c7f45ff6b55139e31a5b74a97a7ad",
+      "engineInputSha256": "bafe5e14fa62767946c0d57bbc21eba88981fcc3bdd5490a41b1358e87292c69",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "4effbd81-7bb9-4d1a-a29b-9e0571d56952",
+          "content": "User prefers the color green these days. | Involving: user"
+        },
+        {
+          "nativeId": "4e373a9f-922c-4d53-a840-ea2f7c32e2b0",
+          "content": "사용자는 파란색을 선호합니다. | Involving: user"
+        },
+        {
+          "nativeId": "be2102d8-e430-4a22-bfd9-c2b5dd2e11e8",
+          "content": "가장 좋아하는 색깔은 파란색이에요."
+        },
+        {
+          "nativeId": "0e384ada-3665-480a-8482-d957438a1088",
+          "content": "가장 좋아하는 색깔은 파란색이에요. | Involving: user"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "4e373a9f-922c-4d53-a840-ea2f7c32e2b0",
+          "content": "사용자는 파란색을 선호합니다. | Involving: user"
+        },
+        {
+          "nativeId": "be2102d8-e430-4a22-bfd9-c2b5dd2e11e8",
+          "content": "가장 좋아하는 색깔은 파란색이에요."
+        },
+        {
+          "nativeId": "4effbd81-7bb9-4d1a-a29b-9e0571d56952",
+          "content": "User prefers the color green these days. | Involving: user"
+        }
+      ],
+      "outputSha256": "72375e85bc64249220f9280c59e9b2d6d1582162c8fac30779cd888bc38798b9"
+    },
+    {
+      "caseId": "case_ja_no_update_9",
+      "executionPosition": 7,
+      "language": "ja",
+      "fixtureSha256": "e74ea13b8df03fb7aef4f08488cbe63d29d5a42f3e704e74007d61fbe80ac77d",
+      "engineInputSha256": "39497ff71b33f69cd536b60ee8cf57caad4eeb547e157e17bdd877ab31f063bb",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "110a0cc6-04d6-44b0-8f4e-42df78214bf2",
+          "content": "ユーザーは好きな本のジャンルがSF小説であるか確認を求めている。 | Involving: ユーザー"
+        },
+        {
+          "nativeId": "30f03961-436d-407f-8d34-f4f132f69cea",
+          "content": "ユーザーはSF小説が好きです。 | Involving: ユーザー"
+        },
+        {
+          "nativeId": "c18a2648-fea2-4bd5-847c-484417fc954f",
+          "content": "ユーザーはSF小説を読むことを好む。"
+        },
+        {
+          "nativeId": "7d24d1b6-066f-4a81-9139-8a35648e2d0a",
+          "content": "ユーザーはSF小説を読むことを好む。 | Involving: ユーザー"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "110a0cc6-04d6-44b0-8f4e-42df78214bf2",
+          "content": "ユーザーは好きな本のジャンルがSF小説であるか確認を求めている。 | Involving: ユーザー"
+        },
+        {
+          "nativeId": "c18a2648-fea2-4bd5-847c-484417fc954f",
+          "content": "ユーザーはSF小説を読むことを好む。"
+        },
+        {
+          "nativeId": "30f03961-436d-407f-8d34-f4f132f69cea",
+          "content": "ユーザーはSF小説が好きです。 | Involving: ユーザー"
+        }
+      ],
+      "outputSha256": "a1d6f3453e10992dc3f73b931d92de42848f95d551009652793c45495eb4d621"
+    },
+    {
+      "caseId": "case_ko_delete_2",
+      "executionPosition": 8,
+      "language": "ko",
+      "fixtureSha256": "a435bcdd7159679c75966e396d58464e5f5ea2d62e8db478ad68bd29fa6b829b",
+      "engineInputSha256": "1ec1418926b7daa66192c6d2f12627f10d9d3bac08c9b4c02079629f2bc8e5e2",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "69d841fc-d33e-471a-a196-f4eb794d3c31",
+          "content": "사용자는 더 이상 우표를 수집하지 않습니다. | Involving: user"
+        },
+        {
+          "nativeId": "a23c7e4d-b697-473b-bf95-e7943b429192",
+          "content": "우표 수집이 사용자의 취미입니다. | Involving: 사용자"
+        },
+        {
+          "nativeId": "a96719f2-bc24-4a2e-be29-b5d082e760bf",
+          "content": "사용자는 우표 수집을 취미로 하고 있습니다."
+        },
+        {
+          "nativeId": "586095f5-bc7b-4a72-beac-e37d162163f1",
+          "content": "사용자는 우표 수집을 취미로 하고 있습니다. | Involving: 사용자"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "69d841fc-d33e-471a-a196-f4eb794d3c31",
+          "content": "사용자는 더 이상 우표를 수집하지 않습니다. | Involving: user"
+        },
+        {
+          "nativeId": "a96719f2-bc24-4a2e-be29-b5d082e760bf",
+          "content": "사용자는 우표 수집을 취미로 하고 있습니다."
+        },
+        {
+          "nativeId": "a23c7e4d-b697-473b-bf95-e7943b429192",
+          "content": "우표 수집이 사용자의 취미입니다. | Involving: 사용자"
+        }
+      ],
+      "outputSha256": "1b3e0f4615d9a8bd2f0cb285e328defe6bb36f9c4257776e5f53130a97f24570"
+    },
+    {
+      "caseId": "case_en_delete_5",
+      "executionPosition": 9,
+      "language": "en",
+      "fixtureSha256": "d102261930fe6e6c6bdc1015e555d4ed2f23c96666fdfd3b3a6ed27507f2d221",
+      "engineInputSha256": "c3a5433fee4e91aa46d4d857c1cb905e271a64192bc7ba0cf21cd52093d821df",
+      "ingestionPolicy": "sequential-turn-commit-v1",
+      "temporalInputPolicy": "engine-default-ingest-time-v1",
+      "retrievalSurface": "engine-native-semantic-memory-v1",
+      "ingestionReceipts": [
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        },
+        {
+          "outcome": "native-operations",
+          "nativeOperationCount": 1
+        }
+      ],
+      "nativeState": [
+        {
+          "nativeId": "ebe4558b-80fe-4368-baa5-339dbc27f812",
+          "content": "User is no longer planning the picnic. | Involving: user"
+        },
+        {
+          "nativeId": "db01bb87-97e0-4050-9c76-7a0f3453b865",
+          "content": "The weather forecast changed."
+        },
+        {
+          "nativeId": "9381adb6-0390-46d0-adc4-99bcae48f0b5",
+          "content": "A picnic is planned for the weekend of August 29-30, 2026. | When: The weekend of August 29-30, 2026 | Involving: user"
+        },
+        {
+          "nativeId": "70925c84-cbbe-41d5-8c75-bc9752c8776f",
+          "content": "User was planning a picnic for August 29-30, 2026."
+        },
+        {
+          "nativeId": "27e998b1-c29e-4fae-b05e-8d29ed304ebc",
+          "content": "User was planning a picnic for August 29-30, 2026. | Involving: user"
+        }
+      ],
+      "retrieved": [
+        {
+          "nativeId": "ebe4558b-80fe-4368-baa5-339dbc27f812",
+          "content": "User is no longer planning the picnic. | Involving: user"
+        },
+        {
+          "nativeId": "70925c84-cbbe-41d5-8c75-bc9752c8776f",
+          "content": "User was planning a picnic for August 29-30, 2026."
+        },
+        {
+          "nativeId": "9381adb6-0390-46d0-adc4-99bcae48f0b5",
+          "content": "A picnic is planned for the weekend of August 29-30, 2026. | When: The weekend of August 29-30, 2026 | Involving: user"
+        },
+        {
+          "nativeId": "db01bb87-97e0-4050-9c76-7a0f3453b865",
+          "content": "The weather forecast changed."
+        }
+      ],
+      "outputSha256": "5e1517670797756c6cbc7d2ce3cd766299677bda9b189ff7121e476c475bd96d"
+    }
+  ]
+}

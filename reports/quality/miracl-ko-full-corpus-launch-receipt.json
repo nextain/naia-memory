@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "pid": 973083,
+  "capturedAt": "2026-08-22T05:14:28.759Z",
+  "procStartTicks": "92310266",
+  "bootId": "d50db931-45ad-40ee-82cb-218c64d83a09",
+  "cmdline": [
+    "/var/home/linuxbrew/.linuxbrew/Cellar/node/26.3.0/bin/node",
+    "--require",
+    "/var/home/luke/alpha-adk/projects/naia-memory/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/preflight.cjs",
+    "--import",
+    "file:///var/home/luke/alpha-adk/projects/naia-memory/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/loader.mjs",
+    "src/benchmark/quality/native-full-corpus-evaluation-cli.ts"
+  ],
+  "cudaVisibleDevices": "",
+  "qdrantUrl": "http://127.0.0.1:6334",
+  "outputPath": "reports/quality/miracl-ko-full-corpus-vector-exact.json",
+  "evaluationSource": "/var/home/luke/alpha-adk/projects/naia-memory/src/benchmark/quality/native-full-corpus-evaluation-cli.ts",
+  "evaluationSourceSha256": "d2bb8406d342aba307d254a8aef57b32353246ce06527a3bd4d13a4f9d2ff15b"
+}

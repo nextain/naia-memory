@@ -33,3 +33,21 @@ Mem0 episode write 경계다. 인증 모드 선택은 호출자가 명시하며,
 
 P04 증거: 핵심 계약 30/30, 전체 393/393, typecheck·build·F13 구조·문서
 그래프·진입점 mirror·용어 검사 통과(2026-07-21).
+
+## 벤치마크 및 구조화 기억 요구사항
+
+| ID | 요구 | 상태 |
+|----|------|------|
+| BENCH-FR-01 | 결과에 벤치마크 시계, Git 상태, 데이터셋 SHA-256, 검색·임베딩 설정, Node·OS 정보를 포함한다. | Done |
+| BENCH-FR-02 | 조사·어미·복합어·의미 재표현·부정 충돌·시간성·개체 구분·무관 질의를 포함한 한국어 검색 계약을 유지한다. | Done |
+| BENCH-FR-03 | 동일 데이터셋·질의·판정·후보 수·하드웨어 조건만 직접 비교하고 나머지는 참고 수치로 구분한다. | Done |
+| BENCH-FR-04 | 공개 데이터셋은 데이터셋 해시에 결박된 저자 서명과 언어별 원어민 검수 서명을 검증한다. | Done |
+| BENCH-NFR-01 | 모든 평가 범주에 하나의 전역 검색 설정을 사용하고 질의별 예외를 금지한다. | Done |
+| MEM-FR-01 | 원문과 `sourceEpisodes`를 정본으로 유지하면서 선택적 구조화 사실과 추출 provenance를 보관한다. | Done |
+| MEM-FR-02 | 확실한 단일값 충돌만 비파괴 supersession 체인으로 연결하고 모호하거나 다중값인 사실은 자동 대체하지 않는다. | Done |
+| MEM-FR-03 | Unicode·공백 정규화만 공통 적용하고 구조화 근거가 없는 다국어 원문은 기존 경로로 안전하게 폴백한다. | Done |
+| MEM-NFR-01 | memory는 현재·이력 후보를 반환하며 자연어 응답·의도·abstention 판단은 상위 계층에 둔다. | Done |
+
+구현 및 검증 추적은 `src/memory/structured-facts.ts`,
+`src/memory/structured-mutation-policy.ts`, `src/memory/structured-duplicate-reconciliation.ts`,
+`src/memory/__tests__/structured-*.test.ts`, `src/benchmark/quality/**`에 연결된다.

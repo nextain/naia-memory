@@ -16,6 +16,33 @@ export interface UsageStats {
 	spikeEmits?: Record<string, number>;
 	/** R4 #26 — replay boost count (Step 4). */
 	replayBoosted?: number;
+	deleteOutcomes?: Record<DeleteOutcome, number>;
+	mutationOutcomes?: Record<MutationOutcome, number>;
+}
+
+export type DeleteOutcome =
+	| "authorized"
+	| "denied"
+	| "verifier_failed"
+	| "oversized";
+
+export type MutationOutcome =
+	| "untrusted_contradiction_denied"
+	| "structured_conflict_denied"
+	| "structured_duplicate_noop"
+	| "structured_duplicate_reconciled"
+	| "structured_supersession_applied"
+	| "structured_fact_created";
+
+function emptyMutationOutcomes(): Record<MutationOutcome, number> {
+	return {
+		untrusted_contradiction_denied: 0,
+		structured_conflict_denied: 0,
+		structured_duplicate_noop: 0,
+		structured_duplicate_reconciled: 0,
+		structured_supersession_applied: 0,
+		structured_fact_created: 0,
+	};
 }
 
 const _stats: UsageStats = {
@@ -26,6 +53,13 @@ const _stats: UsageStats = {
 	embedTokens: 0,
 	spikeEmits: {},
 	replayBoosted: 0,
+	deleteOutcomes: {
+		authorized: 0,
+		denied: 0,
+		verifier_failed: 0,
+		oversized: 0,
+	},
+	mutationOutcomes: emptyMutationOutcomes(),
 };
 
 export function resetUsage(): void {
@@ -36,6 +70,32 @@ export function resetUsage(): void {
 	_stats.embedTokens = 0;
 	_stats.spikeEmits = {};
 	_stats.replayBoosted = 0;
+	_stats.deleteOutcomes = {
+		authorized: 0,
+		denied: 0,
+		verifier_failed: 0,
+		oversized: 0,
+	};
+	_stats.mutationOutcomes = emptyMutationOutcomes();
+}
+
+export function recordMutationOutcome(outcome: MutationOutcome): void {
+	if (!_stats.mutationOutcomes) {
+		_stats.mutationOutcomes = emptyMutationOutcomes();
+	}
+	_stats.mutationOutcomes[outcome]++;
+}
+
+export function recordDeleteOutcome(outcome: DeleteOutcome): void {
+	if (!_stats.deleteOutcomes) {
+		_stats.deleteOutcomes = {
+			authorized: 0,
+			denied: 0,
+			verifier_failed: 0,
+			oversized: 0,
+		};
+	}
+	_stats.deleteOutcomes[outcome]++;
 }
 
 /** R4 #26 — record spike emit for measurement framework. */
@@ -49,7 +109,10 @@ export function recordReplayBoost(count: number): void {
 	_stats.replayBoosted = (_stats.replayBoosted ?? 0) + count;
 }
 
-export function recordLLM(promptTokens: number, completionTokens: number): void {
+export function recordLLM(
+	promptTokens: number,
+	completionTokens: number,
+): void {
 	_stats.llmCalls++;
 	_stats.llmPromptTokens += promptTokens || 0;
 	_stats.llmCompletionTokens += completionTokens || 0;
@@ -86,7 +149,10 @@ export function getPricingFromEnv(): PricingRates {
 	};
 }
 
-export function estimateCostUSD(stats: UsageStats, rates: PricingRates): number {
+export function estimateCostUSD(
+	stats: UsageStats,
+	rates: PricingRates,
+): number {
 	const llmIn = (stats.llmPromptTokens / 1_000_000) * rates.llmInputPerM;
 	const llmOut = (stats.llmCompletionTokens / 1_000_000) * rates.llmOutputPerM;
 	const emb = (stats.embedTokens / 1_000_000) * rates.embedPerM;

@@ -1,0 +1,453 @@
+{
+  "schemaVersion": "naia-memory-semantic-judgments-v2",
+  "packetContentSha256": "1bf87236eb5d18238b81dab0bba7c0cd30901e3078a1d2012540e0121ab4452c",
+  "adjudicators": [
+    {
+      "id": "google-ai-studio/gemini-2.5-flash",
+      "kind": "model",
+      "languageCoverage": [
+        "en",
+        "ja",
+        "ko"
+      ],
+      "completedAt": "2026-08-23T14:22:22.896Z",
+      "independentFromEngineImplementers": true,
+      "provider": "google-ai-studio",
+      "model": "gemini-2.5-flash",
+      "promptSha256": "caa3656fa677ed86454320838639c82dc329c6a80944ae226d48198605bb180f"
+    }
+  ],
+  "samples": [
+    {
+      "sampleId": "sample-0001",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved text accurately reflects the user's current favorite animal and is useful for confirming it."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0002",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "irrelevant",
+          "notes": "This memory states a general fact about SF novels, not the user's preference."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": "This memory accurately states the user's preferred book genre, which is the final state and answers the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0003",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved text accurately reflects the user's updated favorite color."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0004",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "deterministic-no-retrieval"
+    },
+    {
+      "sampleId": "sample-0005",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved text accurately reflects the user's current preferred book genre and answers the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0006",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved text accurately reflects the user's updated music preference."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0007",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved text accurately reflects the user's updated favorite color."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0008",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved text accurately reflects the user's updated music preference."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0009",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately states that the user is no longer planning the picnic, which is the final state after the request to remove it."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "deleted",
+          "notes": "This memory states information that the user explicitly requested to remove from their plans."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0010",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "This memory accurately reflects the user's updated morning routine."
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": "This memory states the old morning routine (reading) which has been superseded by meditation."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0011",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "deterministic-no-retrieval"
+    },
+    {
+      "sampleId": "sample-0012",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0013",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "deleted",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0014",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "stale",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0015",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0016",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0017",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0018",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0019",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        },
+        {
+          "memoryId": "memory-02",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0020",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "deterministic-no-retrieval"
+    },
+    {
+      "sampleId": "sample-0021",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": ""
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0022",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "stale",
+          "notes": "The user explicitly stated they no longer collect stamps, making the retrieved memory an outdated fact."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0023",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved memory accurately reflects the user's updated music preference."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0024",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved memory correctly reflects the user's updated morning routine."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0025",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved memory accurately reflects the user's current preference regarding spicy food."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0026",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved memory confirms the user's favorite animal as requested."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0027",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "deterministic-no-retrieval"
+    },
+    {
+      "sampleId": "sample-0028",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved memory accurately reflects the user's current preference regarding spicy food."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0029",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved memory confirms the user's favorite animal as requested."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0030",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved memory confirms the user's preferred book genre as requested."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0031",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "deterministic-no-retrieval"
+    },
+    {
+      "sampleId": "sample-0032",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved memory confirms the user's preferred book genre as requested."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0033",
+      "judgments": [],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "deterministic-no-retrieval"
+    },
+    {
+      "sampleId": "sample-0034",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved memory accurately reflects that the user has discontinued stamp collecting, which is the final state and directly addresses the query to remove it."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0035",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved memory confirms that Jeju Island is the user's favorite travel destination, which is the final state and directly answers the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    },
+    {
+      "sampleId": "sample-0036",
+      "judgments": [
+        {
+          "memoryId": "memory-01",
+          "label": "current",
+          "notes": "The retrieved memory confirms that a dolphin is the user's favorite animal, which is the final state and directly answers the query."
+        }
+      ],
+      "adjudicatorId": "google-ai-studio/gemini-2.5-flash",
+      "adjudicationMethod": "model"
+    }
+  ]
+}

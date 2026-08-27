@@ -1,0 +1,321 @@
+import { generateKeyPairSync, sign } from "node:crypto";
+import { describe, expect, it } from "vitest";
+import type { MemoryUpdateContract } from "./memory-update-contract.js";
+import {
+	evidenceObjectSha256,
+	evidenceSignaturePayload,
+} from "./public-evidence-crypto.js";
+import {
+	type SemanticAnalysisPlan,
+	isSemanticAnalysisPlan,
+	isSemanticAnalysisPlanTrustPolicy,
+	validateSemanticAnalysisPlan,
+} from "./semantic-analysis-plan.js";
+
+function fixture() {
+	const contract: MemoryUpdateContract = {
+		schemaVersion: "naia-memory-update-contract-v1",
+		tier: "semantic-update-interpretation",
+		construction: "independent-native-reviewed",
+		familySplitFreeze: {
+			frozenAt: "2026-01-01T00:00:00Z",
+			digest: `sha256:${"0".repeat(64)}`,
+		},
+		cases: (["ko", "en", "ja"] as const).map((language) => ({
+			id: `case-${language}`,
+			familyId: `family-${language}`,
+			split: "test",
+			language,
+			turns: [{ content: "x", at: "2026-01-01T00:00:00Z" }],
+			query: "q",
+			expectedCurrentIds: ["current"],
+			forbiddenStaleIds: ["stale"],
+			expectedDeletedIds: [],
+			noUpdateIds: [],
+			expectedDecision: "update",
+			provenance: {
+				authorId: `author-${language}`,
+				constructionClusterId: `construction-${language}`,
+				authorNativeLanguages: [language],
+				authoredAt: "2026-01-01T01:00:00Z",
+				reviewerId: `reviewer-${language}`,
+				reviewerNativeLanguages: [language],
+				reviewedAt: "2026-01-01T02:00:00Z",
+				reviewDecision: "accepted" as const,
+			},
+		})),
+	};
+	const { privateKey, publicKey } = generateKeyPairSync("ed25519");
+	const unsigned = {
+		schemaVersion: "naia-memory-semantic-analysis-plan-v5" as const,
+		administrator: "external-statistician",
+		contractSha256: evidenceObjectSha256(contract),
+		engines: ["hindsight", "mem0", "graphiti-historical", "letta", "naia"],
+		primaryEngine: "naia" as const,
+		primaryMetric: "currentAt1" as const,
+		primaryComparisons: ["hindsight", "mem0"],
+		claimScope: "declared-multi-class-competitive-report-v1" as const,
+		comparisonLanes: {
+			directLifecycle: ["hindsight", "mem0"] as Array<"hindsight" | "mem0">,
+			nativeTemporalCharacterization: ["graphiti-historical"] as [
+				"graphiti-historical",
+			],
+			agentManagedCharacterization: ["letta"] as ["letta"],
+			productIntegrationDiagnostic: [] as [],
+		},
+		crossLaneAggregation: "prohibited" as const,
+		familyWiseAlpha: 0.05,
+		multiplicityAdjustment: "holm" as const,
+		targetPower: 0.8,
+		minimumDetectableDifference: 0.1,
+		minimumPracticallyImportantDifference: 0.1,
+		decisionRule: "holm-all-language-competitor-superiority" as const,
+		requiredIndependentAuthorClustersByLanguage: { ko: 1, en: 1, ja: 1 },
+		requiredIndependentConstructionClustersByLanguage: {
+			ko: 1,
+			en: 1,
+			ja: 1,
+		},
+		independenceUnit: "construction-cluster" as const,
+		sensitivityAnalysis:
+			"author-equal-and-family-equal-directional-agreement" as const,
+		sampleSizeMethod: "paired-family simulation",
+		sampleSizeAssumptionsSha256: "1".repeat(64),
+		stoppingRule:
+			"collect-all-frozen-test-families-no-outcome-peeking" as const,
+		createdAt: "2026-01-02T00:00:00Z",
+		signedAt: "2026-01-02T00:01:00Z",
+		statement: "ANALYSIS_PLAN_PREREGISTERED" as const,
+	};
+	const plan: SemanticAnalysisPlan = {
+		...unsigned,
+		signatureBase64: sign(
+			null,
+			evidenceSignaturePayload(unsigned),
+			privateKey,
+		).toString("base64"),
+	};
+	const trustPolicy = {
+		administratorPublicKeys: {
+			"external-statistician": publicKey
+				.export({ type: "spki", format: "pem" })
+				.toString(),
+		},
+	};
+	const campaign = {
+		schemaVersion: "naia-memory-semantic-campaign-v4",
+		disclosure: {
+			engines: ["hindsight", "mem0", "graphiti-historical", "letta", "naia"],
+			analysisPlanSha256: evidenceObjectSha256(plan),
+			claimScope: unsigned.claimScope,
+			comparisonLanes: unsigned.comparisonLanes,
+			crossLaneAggregation: unsigned.crossLaneAggregation,
+		},
+	};
+	return { contract, plan, trustPolicy, campaign, privateKey };
+}
+
+function resign(current: ReturnType<typeof fixture>): void {
+	current.plan.signatureBase64 = sign(
+		null,
+		evidenceSignaturePayload(current.plan),
+		current.privateKey,
+	).toString("base64");
+	current.campaign.disclosure.analysisPlanSha256 = evidenceObjectSha256(
+		current.plan,
+	);
+}
+
+describe("semantic analysis plan", () => {
+	it("qualifies a signed pre-execution plan with met family targets", () => {
+		const current = fixture();
+		expect(isSemanticAnalysisPlan(current.plan)).toBe(true);
+		expect(isSemanticAnalysisPlanTrustPolicy(current.trustPolicy)).toBe(true);
+		expect(
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toEqual({
+			analysisPlanIntegrityQualified: true,
+			claimScope: "declared-multi-class-competitive-report-v1",
+			comparisonLanes: current.plan.comparisonLanes,
+			crossLaneAggregation: "prohibited",
+			plannedIndependentAuthorClusterCount: 3,
+			plannedIndependentConstructionClusterCount: 3,
+			sampleSizeAdequacyVerified: false,
+			analysisPlanTrustedTimestampVerified: false,
+		});
+	});
+
+	it("rejects post-execution signing, unmet targets, and outcome-plan mutation", () => {
+		const late = fixture();
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...late,
+				firstExecutionStartedAt: late.plan.signedAt,
+			}),
+		).toThrow("semantic analysis plan content is invalid");
+
+		const underpowered = fixture();
+		underpowered.plan.requiredIndependentAuthorClustersByLanguage.ko = 2;
+		resign(underpowered);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...underpowered,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan sample-size target is unmet");
+
+		const mutated = fixture();
+		mutated.plan.primaryMetric = "deletionLeakageRate";
+		mutated.campaign.disclosure.analysisPlanSha256 = evidenceObjectSha256(
+			mutated.plan,
+		);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...mutated,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan content is invalid");
+	});
+
+	it("rejects a missing author cluster instead of counting undefined as one", () => {
+		const current = fixture();
+		const firstCase = current.contract.cases[0];
+		if (!firstCase) throw new Error("fixture requires a case");
+		firstCase.provenance = undefined;
+		current.plan.contractSha256 = evidenceObjectSha256(current.contract);
+		resign(current);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan provenance cluster is invalid");
+	});
+
+	it("rejects an administrator identity or key reused by another role", () => {
+		const current = fixture();
+		const key =
+			current.trustPolicy.administratorPublicKeys["external-statistician"];
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+				forbiddenTrustIdentities: ["external-statistician"],
+			}),
+		).toThrow("semantic analysis administrator overlaps another role");
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+				forbiddenTrustPublicKeys: key ? [key] : [],
+			}),
+		).toThrow("semantic analysis administrator overlaps another role");
+	});
+
+	it("rejects comparator aliases and projected Graphiti mislabeled as native", () => {
+		const alias = fixture();
+		alias.plan.engines[0] = "hindsight-renamed";
+		alias.plan.comparisonLanes.directLifecycle[0] =
+			"hindsight-renamed" as "hindsight";
+		alias.campaign.disclosure.engines[0] = "hindsight-renamed";
+		resign(alias);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...alias,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan content is invalid");
+
+		const projected = fixture();
+		projected.plan.engines[2] = "graphiti";
+		projected.plan.comparisonLanes.nativeTemporalCharacterization = [
+			"graphiti" as "graphiti-historical",
+		];
+		projected.campaign.disclosure.engines[2] = "graphiti";
+		resign(projected);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...projected,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan content is invalid");
+	});
+
+	it("rejects malformed lane contents at the shape guard", () => {
+		const current = fixture();
+		current.plan.comparisonLanes.nativeTemporalCharacterization = [
+			"hindsight-renamed" as "graphiti-historical",
+		];
+		expect(isSemanticAnalysisPlan(current.plan)).toBe(false);
+	});
+
+	it("rejects a campaign that does not disclose its claim scope and lanes", () => {
+		const current = fixture();
+		current.campaign.disclosure.claimScope =
+			"direct-lifecycle-competitive-report-v1";
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan campaign shape is invalid");
+	});
+
+	it("rejects schema downgrade and a mutated preregistered plan hash", () => {
+		const current = fixture();
+		current.campaign.schemaVersion = "naia-memory-semantic-campaign-v3";
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan campaign shape is invalid");
+		current.campaign.schemaVersion = "naia-memory-semantic-campaign-v4";
+		current.campaign.disclosure.analysisPlanSha256 = "0".repeat(64);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan campaign shape is invalid");
+	});
+
+	it("rejects omitted declared classes, direct-lane Letta, and cross-lane pooling", () => {
+		const omitted = fixture();
+		omitted.plan.engines.splice(3, 1);
+		omitted.plan.comparisonLanes.agentManagedCharacterization = [];
+		omitted.campaign.disclosure.engines.splice(3, 1);
+		resign(omitted);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...omitted,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan content is invalid");
+
+		const lettaDirect = fixture();
+		lettaDirect.plan.comparisonLanes.directLifecycle = [
+			"hindsight",
+			"mem0",
+			"letta" as "mem0",
+		];
+		lettaDirect.plan.comparisonLanes.agentManagedCharacterization = [];
+		lettaDirect.plan.primaryComparisons.push("letta");
+		resign(lettaDirect);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...lettaDirect,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan content is invalid");
+
+		const pooled = fixture();
+		pooled.plan.crossLaneAggregation = "prohibited";
+		const pooledObject = pooled.plan as unknown as Record<string, unknown>;
+		pooledObject.crossLaneAggregation = "mean-score";
+		expect(isSemanticAnalysisPlan(pooled.plan)).toBe(false);
+	});
+});

@@ -1,0 +1,165 @@
+{
+  "schemaVersion": "naia-memory-semantic-campaign-v2",
+  "interpretation": "Balanced execution manifest over unscored raw artifacts; not quality evidence by itself.",
+  "receipt": {
+    "schemaVersion": "naia-memory-benchmark-receipt-v1",
+    "generatedAt": "2026-08-20T13:19:05.818Z",
+    "git": {
+      "revision": "65ec9197342d80c279dbb7f835a347cb61fa146a",
+      "dirty": true
+    },
+    "datasets": {
+      "/var/home/luke/alpha-adk/projects/naia-memory/reports/quality/semantic-heldout-model-authored-2026-08-19.json": "c6ea38eba5d97bfab7c519fc1d4087cb461b85f295a0d8eb354cef6575c6ce36"
+    },
+    "implementations": {
+      "src/benchmark/quality/semantic-campaign-cli.ts": "5522729b0b76852746aa6fe70485b5186920d5f39875098804faf4b524a389a8",
+      "src/benchmark/quality/semantic-raw-cli.ts": "664bce17aadea127a5af23d22c64431b4c9cfa6e90f80f4fcb16d57f75bf7b6c",
+      "src/benchmark/quality/memory-semantic-runner.ts": "8f1e1456e4ab1195e9c5b397abd36c9d31d5f02482385ba3cab9bd3453dd5ad1",
+      "src/benchmark/quality/bridge-hindsight-semantic.ts": "b2d6502387e222d7c85267074df6fc2128b30dc3caace5bd427885c21c2a7e98",
+      "src/benchmark/quality/bridge-mem0-semantic.ts": "855f5bb22132844db9fcd14d5452d121976707c23e4112512d5a113248ab79d1",
+      "src/benchmark/quality/bridge-naia-semantic.ts": "cafcee3ac6a93fe885d20c5a4407fcd2a49e72a75f26b3a35277ae0d7566d87b"
+    },
+    "config": {
+      "executionSeed": "heldout-contextual-2026-08-20-v3",
+      "repetitions": 3,
+      "topK": 5,
+      "engineOrderPolicy": "seeded-three-engine-latin-rotation-v1",
+      "caseOrderPolicy": "shared-seeded-per-repetition-v1",
+      "enginePositionCounts": {
+        "hindsight": {
+          "first": 1,
+          "second": 1,
+          "third": 1
+        },
+        "mem0": {
+          "first": 1,
+          "second": 1,
+          "third": 1
+        },
+        "naia": {
+          "first": 1,
+          "second": 1,
+          "third": 1
+        }
+      },
+      "languageCaseCounts": {
+        "ko": 3,
+        "en": 3,
+        "ja": 3
+      },
+      "generalizationBoundary": "Generated diagnostic cases only; repetitions measure execution stability, not held-out generalization.",
+      "configurationPolicy": "Engine-native semantic surfaces are compared with their disclosed native configurations; component-level parity is not claimed."
+    },
+    "runtime": {
+      "node": "v26.3.0",
+      "platform": "linux 7.0.9-ogc3.2.fc44.x86_64 x64",
+      "cpu": "13th Gen Intel(R) Core(TM) i9-13900K",
+      "cpuCount": 32
+    }
+  },
+  "disclosure": {
+    "executionSeed": "heldout-contextual-2026-08-20-v3",
+    "repetitions": 3,
+    "topK": 5,
+    "engineOrderPolicy": "seeded-three-engine-latin-rotation-v1",
+    "caseOrderPolicy": "shared-seeded-per-repetition-v1",
+    "enginePositionCounts": {
+      "hindsight": {
+        "first": 1,
+        "second": 1,
+        "third": 1
+      },
+      "mem0": {
+        "first": 1,
+        "second": 1,
+        "third": 1
+      },
+      "naia": {
+        "first": 1,
+        "second": 1,
+        "third": 1
+      }
+    },
+    "languageCaseCounts": {
+      "ko": 3,
+      "en": 3,
+      "ja": 3
+    },
+    "generalizationBoundary": "Generated diagnostic cases only; repetitions measure execution stability, not held-out generalization.",
+    "configurationPolicy": "Engine-native semantic surfaces are compared with their disclosed native configurations; component-level parity is not claimed."
+  },
+  "runs": [
+    {
+      "repetition": 1,
+      "enginePosition": 1,
+      "engine": "mem0",
+      "caseExecutionSeed": "2206db8d7090fd1d6a188e41597510b00d9c88610988390a1430039f6ac53916",
+      "outputFile": "repetition-01-mem0.json",
+      "artifactSha256": "d0f1b439640adffc8549bcebcd442d7607490eb7f422d563aba41c33986a0c14"
+    },
+    {
+      "repetition": 1,
+      "enginePosition": 2,
+      "engine": "naia",
+      "caseExecutionSeed": "2206db8d7090fd1d6a188e41597510b00d9c88610988390a1430039f6ac53916",
+      "outputFile": "repetition-01-naia.json",
+      "artifactSha256": "b1e028ffc8570053e3f9737d4856010723882070af19dc3da2cadf2617f8b7d3"
+    },
+    {
+      "repetition": 1,
+      "enginePosition": 3,
+      "engine": "hindsight",
+      "caseExecutionSeed": "2206db8d7090fd1d6a188e41597510b00d9c88610988390a1430039f6ac53916",
+      "outputFile": "repetition-01-hindsight.json",
+      "artifactSha256": "fa1f0ede4b6eaf576ba468bf779d285a23495f1cbb30796dc1e14bf5a91cb05d"
+    },
+    {
+      "repetition": 2,
+      "enginePosition": 1,
+      "engine": "naia",
+      "caseExecutionSeed": "262810e2b2f753bc4eb59c94659dd272cb96c568afec3158c3cfb06cca7d5ee1",
+      "outputFile": "repetition-02-naia.json",
+      "artifactSha256": "c0c096647344d9f0c6ea7b38ba785c6d2347b12eaeed381bd32bdbbe402336b1"
+    },
+    {
+      "repetition": 2,
+      "enginePosition": 2,
+      "engine": "hindsight",
+      "caseExecutionSeed": "262810e2b2f753bc4eb59c94659dd272cb96c568afec3158c3cfb06cca7d5ee1",
+      "outputFile": "repetition-02-hindsight.json",
+      "artifactSha256": "cd8ef19910e4057bb7e2ea5b43118583370b6e0ae7a90b3d46249be479aa75d3"
+    },
+    {
+      "repetition": 2,
+      "enginePosition": 3,
+      "engine": "mem0",
+      "caseExecutionSeed": "262810e2b2f753bc4eb59c94659dd272cb96c568afec3158c3cfb06cca7d5ee1",
+      "outputFile": "repetition-02-mem0.json",
+      "artifactSha256": "8753fb7c74ef988ecd8ff147891fe71ae0f3cf54132babc8091aab5f438ce6d8"
+    },
+    {
+      "repetition": 3,
+      "enginePosition": 1,
+      "engine": "hindsight",
+      "caseExecutionSeed": "16df9e182346c0e0c4cf978762e9bdbd565e75c7b928f19feacdb3bc31343cfc",
+      "outputFile": "repetition-03-hindsight.json",
+      "artifactSha256": "2dbe63c9de312b997b44406bc411eed3d5d82dd6b95b51a4b1967edcf6378f1b"
+    },
+    {
+      "repetition": 3,
+      "enginePosition": 2,
+      "engine": "mem0",
+      "caseExecutionSeed": "16df9e182346c0e0c4cf978762e9bdbd565e75c7b928f19feacdb3bc31343cfc",
+      "outputFile": "repetition-03-mem0.json",
+      "artifactSha256": "296ace0690165972d6b22c5df9687dab6433095c6d876bff87509a1962161c3e"
+    },
+    {
+      "repetition": 3,
+      "enginePosition": 3,
+      "engine": "naia",
+      "caseExecutionSeed": "16df9e182346c0e0c4cf978762e9bdbd565e75c7b928f19feacdb3bc31343cfc",
+      "outputFile": "repetition-03-naia.json",
+      "artifactSha256": "03bbc91aebb097f817b337e790d546ef7e51eb24e5a8c12704fae79bba30f4df"
+    }
+  ]
+}
