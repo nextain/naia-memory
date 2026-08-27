@@ -37,13 +37,25 @@ V-model의 사용자 시나리오(UC)에서 검증 테스트까지 추적하는 
   막지 않으며, 서로 다른 episode ID는 불필요하게 하나의 전역 lock으로
   직렬화하지 않는다.
 
+## UC-MEM-RETRIEVAL-01 — 긴 응답 오염 속 정확 기억 회상
+
+- **사용자**: 누적 대화가 많은 환경에서 이전의 짧고 정확한 발화를 다시 찾는 Naia Agent
+- **목표**: 임베딩이 활성화되어도 정확한 lexical 일치 episode를 top-5 안에서 회상한다.
+- **정상 흐름**:
+  1. 긴 `SYSTEM_ECHO` 유사 응답들이 높은 utility와 넓은 의미 벡터를 가진 상태로 누적된다.
+  2. 더 낮은 utility의 짧은 user episode에 고유 문구가 저장된다.
+  3. 해당 고유 문구로 recall하면 user episode가 top-5에 포함된다.
+- **실패 방지 조건**: 긴 문서의 부분 일치나 strength가 정확한 짧은 episode의 관련성을 대체하지 않는다.
+
 ## Test Coverage Map
 
 | UC | 테스트 파일 / 그룹 | 검증 계약 |
 |----|--------------------|-----------|
 | UC-MEM-AUTH-01 | `src/memory/__tests__/llm-auth.test.ts` / `OpenAI-compatible LLM auth` | fact extractor와 summarizer 각각에서 bearer·`X-AnyLLM-Key` 모드를 실행하고, 선택되지 않은 헤더가 없음을 확인한다. |
+| UC-MEM-LLM-ROLE-01 | `src/memory/__tests__/llm-role-profile.test.ts` / `memory LLM role profile` | Defaults memory fact extraction and compaction to `sub`; permits only an explicit valid `memory` override and never exposes credentials or a runner. |
 | UC-MEM-IDEMP-01 | `src/memory/__tests__/mem0-idempotency.test.ts` / `Mem0Adapter episode idempotency` | 재시작 후 같은 episode ID는 `add`하지 않고 `update`하며, 동시 재시도는 한 번 추가 후 마지막 payload로 갱신됨을 확인한다. 실패 뒤 같은 ID 재시도와 서로 다른 ID의 독립 실행도 검증한다. |
 | UC-MEM-IDEMP-01 | `src/memory/__tests__/memory-system.test.ts` / memory write idempotency·flush | 상위 `MemorySystem` 경계에서 결정적 ID 재사용과 flush 가능한 write 계약을 확인한다. |
+| UC-MEM-RETRIEVAL-01 | `src/memory/__tests__/episode-hybrid-ranking.test.ts` / LocalAdapter hybrid ranking | 결정적 embedding에서 높은 utility의 긴 오염 episode 12개가 있어도 정확한 `CONNECTION_OK` user episode가 top-5에 포함됨을 확인한다. |
 
 모든 테스트는 실제 production builder/adapter를 호출한다. 네트워크와 Mem0 client만
 결정론적 fake로 대체하며, 인증 헤더 조립과 episode write 분기는 mock하지 않는다.

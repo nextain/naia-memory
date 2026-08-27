@@ -2101,3 +2101,5 @@ export interface CompactionSummarizerResult {
 // (naia-agent) can inject it. Faithful MemoryProvider impl (anchor #1).
 export { LiteMemoryProvider } from "./lite-provider.js";
 export type { LiteMemoryProviderOptions } from "./lite-provider.js";
+export { resolveMemoryLlmProfile } from "./llm-role-profile.js";
+export type { DevelopmentLlmRole, LlmRoleProfile, LlmTransportAuth, MemoryLlmRole, ResolvedMemoryLlmProfile, ThreeTierLlmProfiles } from "./llm-role-profile.js";
