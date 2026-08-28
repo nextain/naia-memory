@@ -1,0 +1,1 @@
+Role: baseline_preservation. Inspect the exact diff 119ce9c..1164723 and its parent context. Determine whether the checkpoint preserves the existing per-item-v1 behavior, avoids authorizing a failed batching candidate, preserves earlier evidence meanings, and introduces no hidden product/runtime mutation. Check scope and disposition of every changed file.

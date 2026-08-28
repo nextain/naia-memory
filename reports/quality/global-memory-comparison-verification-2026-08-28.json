@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-08-28T10:25:47+09:00",
+  "repository": "nextain/naia-memory",
+  "reviewedCheckpoint": {
+    "base": "119ce9c637f1c2bd3b270d06129849ccfe69c3b5",
+    "head": "1164723bfa06dc7eb5251a0e5d81abd6739b9492",
+    "headTree": "1aad7b5e6c1c715418b6bb889445241995098ee5"
+  },
+  "deterministicPreflight": {
+    "command": "node /var/home/luke/alpha-adk/.agents/skills/review-pass/scripts/review-preflight.mjs --root /var/home/luke/alpha-adk/.worktrees/naia-memory-evidence-fix --base 119ce9c --json",
+    "verdict": "PREFLIGHT_CLEAN",
+    "complexitySha256": "sha256:54407f6f7fe31cf543bb791997b8df87c48bb86cff49ca3eafd62b44aedc918d",
+    "repositoryChangedSetSha256": "sha256:c2c1773bff75aeb5b1d5cbb18c29feb054d1e5498164e063641412f5baffbaaf",
+    "changedFiles": 5,
+    "changedSourceFiles": 0
+  },
+  "freshValidation": [
+    {"command": "pnpm test", "exitCode": 0, "testFilesPassed": 170, "testsPassed": 1419, "testsSkipped": 1},
+    {"command": "pnpm typecheck", "exitCode": 0},
+    {"command": "pnpm build", "exitCode": 0},
+    {"command": "manifest source SHA-256 verification", "exitCode": 0, "matched": 7, "mismatched": 0}
+  ],
+  "claimBoundary": "The preflight identity covers the stated base-to-head checkpoint. Fresh validation ran from that head with documentation-only review inputs untracked; it does not recreate the discarded residual batching implementation or its raw measurements."
+}

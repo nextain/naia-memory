@@ -6,7 +6,7 @@
   "current_phase": "global-comparison-checkpoint-delivered",
   "current_task": "Retry independent structured review when reviewer infrastructure is available; public qualification remains blocked until two consecutive CLEAN rounds.",
   "gates_cleared": [
-    "preregistration",
+    "retrospective-development-rejection",
     "development-window-early-stop",
     "unit-and-regression-tests",
     "typecheck-and-build",
@@ -45,7 +45,7 @@
       "naia-shell settings UI: 48 passed",
       "naia-shell browser memory E2E: 10 passed, 10 environment-gated skipped",
       "naia-shell build: passed",
-      "review preflight: PREFLIGHT_CLEAN; final identity belongs in the immutable release receipt",
+      "review preflight over 119ce9c..1164723: PREFLIGHT_CLEAN, complexity sha256:54407f6f7fe31cf543bb791997b8df87c48bb86cff49ca3eafd62b44aedc918d",
       "global comparison manifest: 7/7 source hashes verified",
       "independent structured review: NOT_RUN after OpenCode failures/timeouts, Codex invalid structured output, and Claude startup timeouts"
     ],

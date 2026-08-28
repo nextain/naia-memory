@@ -6,10 +6,12 @@ Naia Memory has credible evidence for two capabilities: full-corpus multilingual
 base retrieval and selective memory-lifecycle behavior. It does **not** yet have
 enough evidence to claim global memory-engine superiority.
 
-The residual CPU batching candidates are rejected. Neither candidate met the
-recorded vector-agreement threshold, and the warmed hybrid candidate was slower
-than the existing per-item path. No runtime or product API change is authorized
-by those observations.
+The residual CPU batching candidates are conservatively rejected. The retained
+development note says neither candidate met the recorded vector-agreement
+threshold and the warmed hybrid candidate was slower than the existing per-item
+path. No raw measurement receipt or executable candidate remains, so these
+numbers are not independently reproducible and authorize no performance claim,
+runtime change, or product API change.
 
 ## Evidence classes
 
@@ -27,8 +29,8 @@ Only class 1 supports direct statements about observed behavior.
 ## Same-input lifecycle comparison
 
 Naia, Mem0, and Hindsight ran the same nine Korean, English, and Japanese
-diagnostic cases three times with a balanced engine-order rotation. Independent
-model judgments over the 27 engine-cases per engine produced:
+diagnostic cases three times with a balanced engine-order rotation. Engine-blind
+Gemini model judgments over the 27 engine-cases per engine produced:
 
 | Engine | Top-1 current | Top-k current | Stale returned | Deleted returned |
 | --- | ---: | ---: | ---: | ---: |
@@ -38,7 +40,10 @@ model judgments over the 27 engine-cases per engine produced:
 
 These rows expose different lifecycle signatures; they do not rank global
 quality. There are only nine unique generated cases, repetitions are not new
-independent samples, and the judgments are model-based. In particular, Naia is
+independent samples, and the author and judge models came from the same Gemini
+provider family. The Naia-side agent also influenced experiment design and
+execution, so engine blinding does not make the adjudication independent. In
+particular, Naia is
 more selective than Hindsight in this campaign but returned more stale/deleted
 items than Mem0. A single winner cannot be derived from these mixed outcomes.
 
@@ -99,8 +104,12 @@ not show that every lifecycle decision is better.
 
 ## Validation and review status
 
-- Deterministic review preflight: `PREFLIGHT_CLEAN` (the final identity is
-  reported with the immutable commit rather than embedded circularly here).
+- Deterministic review preflight over `119ce9c..1164723`: `PREFLIGHT_CLEAN`,
+  complexity identity
+  `sha256:54407f6f7fe31cf543bb791997b8df87c48bb86cff49ca3eafd62b44aedc918d`.
+  The adjacent verification receipt records the exact base, head, tree, command,
+  and fresh repository validation. It validates that checkpoint range; it is not
+  a circular claim about later documentation commits.
 - Evidence manifest: all seven declared SHA-256 source identities reproduced.
 - Repository: 170 test files passed (1,419 tests passed, one skipped), typecheck
   passed, build passed, and `git diff --check` passed.

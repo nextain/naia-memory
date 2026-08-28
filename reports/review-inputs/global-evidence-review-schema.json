@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "coverage", "findings", "frame_assessment", "runtime_observed"],
+  "properties": {
+    "verdict": {"enum": ["CLEAN", "NOT_CLEAN"]},
+    "coverage": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"type": "object", "additionalProperties": false, "required": ["atom_id", "status"], "properties": {"atom_id": {"enum": ["A1", "A2", "A3", "A4", "A5"]}, "status": {"enum": ["COVERED", "NOT_COVERED"]}}}},
+    "findings": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["atom_id", "scope", "file_location", "impact", "minimal_fix"], "properties": {"atom_id": {"type": ["string", "null"]}, "scope": {"type": ["string", "null"]}, "file_location": {"type": "string", "minLength": 1}, "impact": {"type": "string", "minLength": 1}, "minimal_fix": {"type": "string", "minLength": 1}}}},
+    "frame_assessment": {"type": "object", "additionalProperties": false, "required": ["scope_is_sufficient", "missing_concerns"], "properties": {"scope_is_sufficient": {"type": "boolean"}, "missing_concerns": {"type": "array", "items": {"type": "string", "minLength": 1}}}},
+    "runtime_observed": {"type": "boolean"}
+  }
+}

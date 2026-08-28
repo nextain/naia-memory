@@ -6,16 +6,17 @@
   "publicClaimEligible": false,
   "validation": {
     "deterministicPreflight": "PREFLIGHT_CLEAN",
-    "complexitySha256": null,
-    "complexityIdentityLocation": "release receipt bound to the immutable commit",
+    "complexitySha256": "sha256:54407f6f7fe31cf543bb791997b8df87c48bb86cff49ca3eafd62b44aedc918d",
+    "complexityScope": {"base": "119ce9c637f1c2bd3b270d06129849ccfe69c3b5", "head": "1164723bfa06dc7eb5251a0e5d81abd6739b9492"},
+    "verificationReceipt": "reports/quality/global-memory-comparison-verification-2026-08-28.json",
     "sourceHashesVerified": 7,
     "testFilesPassed": 170,
     "testsPassed": 1419,
     "testsSkipped": 1,
     "typecheck": "PASS",
     "build": "PASS",
-    "independentStructuredReview": "NOT_RUN",
-    "independentReviewReason": "OpenCode provider/process failure or timeout; Codex invalid structured output; Claude startup timeout"
+    "independentStructuredReview": "ROUND_1_NOT_CLEAN",
+    "independentReviewReason": "Four schema-constrained Codex roles found evidence-label and receipt-binding defects; corrections are pending re-review"
   },
   "directLifecycleComparison": {
     "uniqueCases": 9,
