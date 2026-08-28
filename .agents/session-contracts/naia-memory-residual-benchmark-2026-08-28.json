@@ -3,24 +3,30 @@
   "id": "naia-memory-residual-benchmark-2026-08-28",
   "status": "active",
   "project_root": ".",
-  "goal": "naia-memory의 잔여 벤치마크를 완료하고 측정으로 정당화되는 개선을 main에 반영한다.",
+  "goal": "naia-memory의 잔여 벤치마크와 글로벌 장기기억 비교를 완료하고, 측정으로 정당화되는 개선을 main에 반영한 뒤 루크에게 최종 보고서를 DM으로 전달한다.",
   "scope": [
     "이슈 #40의 English primary 잔여 배치 후보를 사전등록하고 CPU 기준선과 비교한다.",
     "처리량과 검색 품질 게이트를 함께 통과한 개선만 제품 또는 실행 경로에 반영한다.",
     "결과와 한계를 재현 가능한 증거 및 보고서로 남긴다.",
-    "전체 회귀 검증 후 관련 변경을 naia-memory main에 반영한다."
+    "전체 회귀 검증 후 관련 변경을 naia-memory main에 반영한다.",
+    "최신 1차 출처로 글로벌 장기기억 시스템의 구조와 공개 평가를 분류하고, 공급자 보고치와 동일 조건 직접 측정치를 분리한다.",
+    "동일 입력·동일 평가 계약으로 실행 가능한 비교 엔진의 잔여 벤치를 수행하고 단계별 적대 검토 증거를 남긴다.",
+    "최종 비교 보고서를 작성해 승인된 Discord owner DM으로 루크에게 전달하고 메시지 영수증을 기록한다."
   ],
   "non_goals": [
     "GPU 1 사용",
     "Naia가 전 세계 최고라는 미검증 주장",
     "naia-agent, naia-shell 또는 alpha-adk 루트 변경",
+    "서로 다른 데이터셋·평가기·모델의 공개 점수를 하나의 순위표로 합치기",
     "기존 사용자 소유 dirty worktree 변경"
   ],
   "success_criteria": [
     "길이 버킷 및 실제 배열 배치 후보가 고정 표본에서 같은 계약으로 측정된다.",
     "후보의 채택 또는 기각이 처리량, 벡터 안정성, 검색 비열등성 증거로 결정된다.",
     "대상 테스트, 전체 테스트, 타입검사와 벤치 증거 검증이 통과한다.",
-    "검증된 변경이 원격 main에 반영되고 이슈 #40에 정직한 상태가 기록된다."
+    "검증된 변경이 원격 main에 반영되고 이슈 #40에 정직한 상태가 기록된다.",
+    "글로벌 비교의 각 단계가 독립 적대 검토를 거치고 직접 측정·공급자 보고·미검증 주장이 명확히 구분된다.",
+    "최종 보고서가 원격 main에 반영되고 Discord 메시지 ID로 루크 DM 전달이 확인된다."
   ],
   "allowed_paths": [
     "src/benchmark/**",
@@ -31,7 +37,8 @@
     "pnpm-lock.yaml",
     ".agents/progress/session-utterance-01a0439f-82d0-7613-bd98-8d2365cc6a06.json",
     ".agents/session-contracts/naia-memory-residual-benchmark-2026-08-28.json",
-    ".agents/session-contracts/.session-map.json"
+    ".agents/session-contracts/.session-map.json",
+    ".agents/work/**"
   ],
   "target_ownership": [
     "src/benchmark/**",
@@ -42,9 +49,10 @@
     "pnpm-lock.yaml",
     ".agents/progress/session-utterance-01a0439f-82d0-7613-bd98-8d2365cc6a06.json",
     ".agents/session-contracts/naia-memory-residual-benchmark-2026-08-28.json",
-    ".agents/session-contracts/.session-map.json"
+    ".agents/session-contracts/.session-map.json",
+    ".agents/work/**"
   ],
-  "audiences": ["operator", "github_issue"],
+  "audiences": ["operator", "github_issue", "discord_owner_dm"],
   "source_refs": ["conversation://01a0439f-82d0-7613-bd98-8d2365cc6a06", "github://nextain/naia-memory/issues/40"],
   "allowed_shell_commands": [
     "pnpm install",
@@ -61,14 +69,18 @@
     "git fetch",
     "git merge",
     "git push origin main",
-    "gh issue comment 40"
+    "gh issue comment 40",
+    "node /var/home/luke/alpha-adk/.agents/skills/review-pass/scripts/review-preflight.mjs",
+    "node /var/home/luke/alpha-adk/.agents/skills/review-pass/scripts/invoke-reviewer.mjs",
+    "opencode run",
+    "node discord-owner-dm-delivery"
   ],
   "session_bindings": [
     {
       "session_id": "01a0439f-82d0-7613-bd98-8d2365cc6a06",
-      "contract_digest": "27df9e812a849c1db452aee9e239264f42726cd3fd42706d0fea66cf29a31393"
+      "contract_digest": "7d1e9b3463b93487cec83fd1b2ef1d6130d7fd26a1551e3475db0a9118eb1e15"
     }
   ],
   "progress_file": ".agents/progress/session-utterance-01a0439f-82d0-7613-bd98-8d2365cc6a06.json",
-  "contract_digest": "27df9e812a849c1db452aee9e239264f42726cd3fd42706d0fea66cf29a31393"
+  "contract_digest": "7d1e9b3463b93487cec83fd1b2ef1d6130d7fd26a1551e3475db0a9118eb1e15"
 }

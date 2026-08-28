@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-08-28",
+  "conclusion": "QUALIFIED_FOUNDATION_NO_GLOBAL_SUPERIORITY",
+  "residualBatchDecision": "REJECT",
+  "publicClaimEligible": false,
+  "validation": {
+    "deterministicPreflight": "PREFLIGHT_CLEAN",
+    "complexitySha256": null,
+    "complexityIdentityLocation": "release receipt bound to the immutable commit",
+    "sourceHashesVerified": 7,
+    "testFilesPassed": 170,
+    "testsPassed": 1419,
+    "testsSkipped": 1,
+    "typecheck": "PASS",
+    "build": "PASS",
+    "independentStructuredReview": "NOT_RUN",
+    "independentReviewReason": "OpenCode provider/process failure or timeout; Codex invalid structured output; Claude startup timeout"
+  },
+  "directLifecycleComparison": {
+    "uniqueCases": 9,
+    "repetitions": 3,
+    "engineCasesPerEngine": 27,
+    "results": {
+      "naia": { "top1Current": 18, "topKCurrent": 21, "staleReturned": 6, "deletedReturned": 5 },
+      "mem0": { "top1Current": 17, "topKCurrent": 17, "staleReturned": 0, "deletedReturned": 0 },
+      "hindsight": { "top1Current": 20, "topKCurrent": 24, "staleReturned": 11, "deletedReturned": 8 }
+    },
+    "globalRankingEligible": false
+  },
+  "fullCorpusRetrieval": {
+    "ko": { "documents": 1486752, "queries": 213, "ndcgAt10": 0.6526, "recallAt100": 0.9233 },
+    "ar": { "documents": 2061414, "queries": 2896, "ndcgAt10": 0.743225, "recallAt100": 0.962765 }
+  },
+  "sources": [
+    { "path": "reports/quality/semantic-three-engine-evidence-2026-08-19.md", "sha256": "9e5a77a8b11ff0046561138495aadf1d74e5f9b1a714631212acd284f4c55f43", "class": "direct_local" },
+    { "path": "reports/quality/semantic-heldout-comparative-evidence-2026-08-19.md", "sha256": "8dd544fc47250d44a10fdd344736b1d95bed5ae39d8eed322d3f2adc049e3dca", "class": "direct_local_model_judged" },
+    { "path": "reports/quality/graphiti-contacted-runtime-evidence-review-2026-08-24.md", "sha256": "c8d278876bc9da5bc2401e67fae07596ed4f34aec06001cb17fc9d92297f1a5f", "class": "direct_local_unscored" },
+    { "path": "reports/quality/semantic-comparator-claim-scope-adversarial-review-2026-08-24.md", "sha256": "a8c5038758eef94c0380aba2fcd8fa6d4445d9c8dd024f0ebc94fd71b15d5174", "class": "adversarial_review" },
+    { "path": "reports/quality/miracl-ko-full-corpus-vector-exact.json", "sha256": "8e6d651aee1efab3c0d60dce0ffcafc0b7104830ce81673fa63d01177078b4ca", "class": "direct_local" },
+    { "path": "reports/quality/miracl-ar-full-corpus-vector-exact.json", "sha256": "4be7f9d583452ee815c8f808172ad6536f4161f356449b46bdf28c052253776d", "class": "direct_local" },
+    { "path": "reports/quality/miracl-en-length-bucket-preregistration-2026-08-28.md", "sha256": "cad5820522a403cb63dcce2412001c75278c47ddea1f86654e7170019ac4fbf8", "class": "retrospective_development" }
+  ],
+  "notEstablished": [
+    "global memory-engine superiority",
+    "current state of the art",
+    "Naia superiority over Graphiti or Letta",
+    "production benefit from residual CPU batching"
+  ]
+}
