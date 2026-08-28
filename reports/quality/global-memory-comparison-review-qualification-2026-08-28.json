@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-08-28",
+  "subject": {
+    "base": "119ce9c637f1c2bd3b270d06129849ccfe69c3b5",
+    "head": "321a5be09daa19e349ea5bd9acee465750e4338d",
+    "scope": "retrospective global-memory comparison evidence checkpoint"
+  },
+  "result": {
+    "status": "TWO_CONSECUTIVE_FOUR_ROLE_CLEAN",
+    "publicClaimEligible": false,
+    "reason": "The evidence checkpoint is review-clean, but the report's explicit same-input, independent-adjudication, multiplicity, language-sensitivity, and release-binding gates for a global superiority claim remain unmet."
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "roles": [
+        {"role": "source_fidelity", "path": "reports/review-inputs/global-evidence-convergence-round1-source-fidelity.json", "sha256": "f355a57919feb7baceed4fae4c54b2d3a19a515b4d0d9ee15c1f38718b3c50f6"},
+        {"role": "baseline_preservation", "path": "reports/review-inputs/global-evidence-convergence-round1-baseline-preservation.json", "sha256": "f355a57919feb7baceed4fae4c54b2d3a19a515b4d0d9ee15c1f38718b3c50f6"},
+        {"role": "implementation_test", "path": "reports/review-inputs/global-evidence-convergence-round1-implementation-test.json", "sha256": "f355a57919feb7baceed4fae4c54b2d3a19a515b4d0d9ee15c1f38718b3c50f6"},
+        {"role": "authority_release", "path": "reports/review-inputs/global-evidence-convergence-round1-authority-release.json", "sha256": "f355a57919feb7baceed4fae4c54b2d3a19a515b4d0d9ee15c1f38718b3c50f6"}
+      ]
+    },
+    {
+      "round": 2,
+      "roles": [
+        {"role": "source_fidelity", "path": "reports/review-inputs/global-evidence-convergence-round2-source-fidelity.json", "sha256": "f355a57919feb7baceed4fae4c54b2d3a19a515b4d0d9ee15c1f38718b3c50f6"},
+        {"role": "baseline_preservation", "path": "reports/review-inputs/global-evidence-convergence-round2-baseline-preservation.json", "sha256": "f355a57919feb7baceed4fae4c54b2d3a19a515b4d0d9ee15c1f38718b3c50f6"},
+        {"role": "implementation_test", "path": "reports/review-inputs/global-evidence-convergence-round2-implementation-test.json", "sha256": "f355a57919feb7baceed4fae4c54b2d3a19a515b4d0d9ee15c1f38718b3c50f6"},
+        {"role": "authority_release", "path": "reports/review-inputs/global-evidence-convergence-round2-authority-release.json", "sha256": "f355a57919feb7baceed4fae4c54b2d3a19a515b4d0d9ee15c1f38718b3c50f6"}
+      ]
+    }
+  ],
+  "validation": {
+    "atomIds": ["A1", "A2", "A3", "A4", "A5"],
+    "eachRoleCoverageCount": 5,
+    "findings": 0,
+    "runtimeObservedByReviewers": false,
+    "validator": ".agents/skills/review-pass/scripts/invoke-reviewer.mjs#validateReviewOutput"
+  }
+}

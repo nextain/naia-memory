@@ -1,0 +1,1 @@
+{"verdict":"CLEAN","coverage":[{"atom_id":"A1","status":"COVERED"},{"atom_id":"A2","status":"COVERED"},{"atom_id":"A3","status":"COVERED"},{"atom_id":"A4","status":"COVERED"},{"atom_id":"A5","status":"COVERED"}],"findings":[],"frame_assessment":{"scope_is_sufficient":true,"missing_concerns":[]},"runtime_observed":false}
