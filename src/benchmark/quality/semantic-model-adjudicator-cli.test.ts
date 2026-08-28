@@ -45,7 +45,7 @@ describe("semantic model adjudicator CLI", () => {
 				{
 					sampleId: "sample-empty",
 					judgments: [],
-					adjudicatorId: "google-ai-studio/gemini-2.5-flash-lite",
+					adjudicatorId: "google-ai-studio/gemini-2.5-flash",
 					adjudicationMethod: "deterministic-no-retrieval",
 				},
 			]);

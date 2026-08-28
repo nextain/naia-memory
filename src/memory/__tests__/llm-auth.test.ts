@@ -376,6 +376,8 @@ describe("OpenAI-compatible LLM auth", () => {
 		expect(prompt).toContain('"durable_cessation"');
 		expect(prompt).toContain('"deleteEvidenceQuote"');
 		expect(prompt).toContain('"preference:music-genre"');
+		expect(prompt).toContain("NEGATION PRESERVATION");
+		expect(prompt).toContain("나는 커피를 마시지 않아");
 	});
 
 	it("fact extractor benchmark policy throws on provider and parse failures", async () => {

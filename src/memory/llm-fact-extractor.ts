@@ -158,6 +158,15 @@ Update statements (where the speaker signals that a previously-true value
 has been replaced — e.g. "switched to X", "changed to Y", "now using Z",
 "moved to W", "X로 바꿨어", "이제 X 쓰기로", "X로 이사해") MUST also be
 extracted as atomic facts. Do NOT skip them as "no extractable fact".
+
+CRITICAL — NEGATION PRESERVATION:
+Never drop a negation when converting an episode into an atomic fact. The
+content text and structured polarity MUST agree. For example, "I do not drink
+coffee", "나는 커피를 마시지 않아", and "私はコーヒーを飲みません" are
+negated beverage-consumption facts: value is the beverage, polarity is
+"negated", and the content must explicitly preserve that negative state. A
+later repetition such as "I still do not drink coffee" is the same negated
+fact, not an affirmative update and not a deletion.
 The new value MUST be paired with the SAME attribute key the prior fact
 would have used (so downstream contradiction detection can pair the old
 and new values on the same entity + attribute).

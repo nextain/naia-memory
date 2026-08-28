@@ -269,14 +269,23 @@ export class OpenAICompatEmbeddingProvider implements EmbeddingProvider {
 		//   - OpenAI / vLLM standard: baseUrl typically does NOT include `/v1/`,
 		//                             and the endpoint is `${base}/v1/embeddings`.
 		const url = openAICompatEmbeddingEndpoint(this.baseUrl);
-		const res = await fetch(url, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${this.apiKey}`,
-			},
-			body: JSON.stringify({ model: this.model, input: texts }),
-		});
+		let res: Response | undefined;
+		const retryDelaysMs = [1_000, 2_000, 4_000];
+		for (let attempt = 0; attempt <= retryDelaysMs.length; attempt++) {
+			res = await fetch(url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${this.apiKey}`,
+				},
+				body: JSON.stringify({ model: this.model, input: texts }),
+			});
+			if (res.ok || (res.status !== 429 && res.status < 500)) break;
+			const delayMs = retryDelaysMs[attempt];
+			if (delayMs === undefined) break;
+			await new Promise((resolve) => setTimeout(resolve, delayMs));
+		}
+		if (!res) throw new Error("Embedding API request did not execute");
 		if (!res.ok)
 			throw new Error(
 				`Embedding API error: ${res.status} ${await res.text().catch(() => "")}`,

@@ -162,7 +162,7 @@ export function createEmbeddingRouteObserver(
 		assertObservedRoute(): string {
 			if (observedRoutes.size !== 1 || !observedRoutes.has(expectedRoute))
 				throw new Error(
-					"benchmark embedding route observation mismatch: expected exactly one configured OpenAI-compatible embedding route",
+					`benchmark embedding route observation mismatch: expected exactly one configured OpenAI-compatible embedding route (observedRouteCount=${observedRoutes.size}, expectedRouteObserved=${observedRoutes.has(expectedRoute)})`,
 				);
 			return expectedRoute;
 		},

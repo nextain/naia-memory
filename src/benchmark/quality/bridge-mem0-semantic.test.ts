@@ -1,10 +1,27 @@
 import { describe, expect, it, vi } from "vitest";
 import {
 	Mem0SemanticBridge,
+	bindMem0EmbeddingFetch,
 	type Mem0SemanticClient,
 } from "./bridge-mem0-semantic.js";
 
 describe("Mem0 semantic bridge", () => {
+	it("binds route evidence to the native OpenAI embedding transport", () => {
+		const originalFetch = vi.fn<typeof fetch>();
+		const evidenceFetch = vi.fn<typeof fetch>();
+		const client = { embedder: { openai: { fetch: originalFetch } } };
+
+		bindMem0EmbeddingFetch(client, evidenceFetch);
+
+		expect(client.embedder.openai.fetch).toBe(evidenceFetch);
+	});
+
+	it("fails closed when the native embedding transport shape drifts", () => {
+		expect(() =>
+			bindMem0EmbeddingFetch({ embedder: {} }, vi.fn<typeof fetch>()),
+		).toThrow("embedding transport is unavailable for route evidence");
+	});
+
 	it("uses native inference without leaking benchmark labels", async () => {
 		const add = vi.fn(async () => ({
 			results: [{ metadata: { event: "ADD" } }],

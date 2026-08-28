@@ -139,7 +139,7 @@ export async function runSemanticModelAdjudicatorCli(
 	if (existsSync(output))
 		throw new Error(`judgment output already exists: ${output}`);
 	const packet = JSON.parse(readFileSync(packetPath, "utf8")) as Packet;
-	const model = values.get("model") ?? "gemini-2.5-flash-lite";
+	const model = values.get("model") ?? "gemini-2.5-flash";
 	const batchSize = Number(values.get("batch-size") ?? "9");
 	if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 25)
 		throw new Error("--batch-size must be an integer from 1 to 25");

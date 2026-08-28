@@ -23,7 +23,27 @@ export type Mem0SemanticClient = {
 export type Mem0SemanticFactoryOptions = {
 	mem0Config: Record<string, unknown>;
 	userIdPrefix: string;
+	embeddingFetch?: typeof fetch;
 };
+
+type Mem0OpenAIEmbeddingTransport = {
+	embedder?: {
+		openai?: { fetch?: typeof fetch };
+	};
+};
+
+/** Bind evidence collection to Mem0's native OpenAI SDK transport. */
+export function bindMem0EmbeddingFetch(
+	client: Mem0OpenAIEmbeddingTransport,
+	embeddingFetch: typeof fetch,
+): void {
+	const openai = client.embedder?.openai;
+	if (!openai || typeof openai.fetch !== "function")
+		throw new Error(
+			"Mem0 OpenAI embedding transport is unavailable for route evidence",
+		);
+	openai.fetch = embeddingFetch;
+}
 
 export async function createMem0SemanticBridge(
 	options: Mem0SemanticFactoryOptions,
@@ -34,6 +54,11 @@ export async function createMem0SemanticBridge(
 	const client = new Memory(
 		options.mem0Config as ConstructorParameters<typeof Memory>[0],
 	);
+	if (options.embeddingFetch)
+		bindMem0EmbeddingFetch(
+			client as unknown as Mem0OpenAIEmbeddingTransport,
+			options.embeddingFetch,
+		);
 	return new Mem0SemanticBridge(
 		client as unknown as Mem0SemanticClient,
 		`${options.userIdPrefix}-${randomUUID()}`,

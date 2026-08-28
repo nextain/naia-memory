@@ -103,6 +103,54 @@ describe("OfflineEmbeddingProvider · explicit true batch", () => {
 });
 
 describe("remote embedding-space identity", () => {
+	it("retries transient 429/5xx responses with deterministic backoff", async () => {
+		vi.useFakeTimers();
+		try {
+			const fetchMock = vi
+				.fn()
+				.mockResolvedValueOnce({ ok: false, status: 503 })
+				.mockResolvedValueOnce({ ok: false, status: 429 })
+				.mockResolvedValueOnce({
+					ok: true,
+					json: async () => ({ data: [{ embedding: [1], index: 0 }] }),
+				});
+			vi.stubGlobal("fetch", fetchMock);
+			const result = new OpenAICompatEmbeddingProvider(
+				"https://embedding.example",
+				"key",
+				"model",
+			).embed("query");
+			await vi.runAllTimersAsync();
+			await expect(result).resolves.toEqual([1]);
+			expect(fetchMock).toHaveBeenCalledTimes(3);
+		} finally {
+			vi.useRealTimers();
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it("does not retry non-transient client errors", async () => {
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: false,
+			status: 400,
+			text: async () => "bad request",
+		});
+		vi.stubGlobal("fetch", fetchMock);
+		try {
+			const provider = new OpenAICompatEmbeddingProvider(
+				"https://embedding.example",
+				"key",
+				"model",
+			);
+			await expect(provider.embed("query")).rejects.toThrow(
+				"Embedding API error: 400 bad request",
+			);
+			expect(fetchMock).toHaveBeenCalledTimes(1);
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
 	it("fails closed on OpenAI-compatible response cardinality and index drift", async () => {
 		const provider = new OpenAICompatEmbeddingProvider(
 			"https://embedding.example",

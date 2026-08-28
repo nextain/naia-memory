@@ -486,6 +486,7 @@ export async function runSemanticRawCli(args: string[]): Promise<void> {
 										},
 										historyDbPath: `${workPrefix}-mem0-history.db`,
 									},
+									embeddingFetch: embeddingRouteObserver?.fetch,
 								});
 							}
 						: parsed.engine === "letta"

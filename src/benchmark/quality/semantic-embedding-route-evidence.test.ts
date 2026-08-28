@@ -69,6 +69,38 @@ describe("semantic embedding route evidence", () => {
 		);
 	});
 
+	it("accepts repeated calls only when every call uses the configured route", async () => {
+		const delegate = vi.fn<typeof fetch>(async () => new Response("{}"));
+		const observer = createEmbeddingRouteObserver(
+			"https://provider.example/v1/",
+			delegate,
+		);
+		for (let index = 0; index < 3; index += 1)
+			await observer.fetch("https://provider.example/v1/embeddings", {
+				method: "POST",
+			});
+
+		expect(observer.assertObservedRoute()).toBe(
+			"https://provider.example/v1/embeddings",
+		);
+		expect(delegate).toHaveBeenCalledTimes(3);
+	});
+
+	it("reports missing route evidence without disclosing endpoint paths", () => {
+		const observer = createEmbeddingRouteObserver(
+			"https://provider.example/private/v1/",
+			vi.fn<typeof fetch>(),
+		);
+		expect(() => observer.assertObservedRoute()).toThrow(
+			"observedRouteCount=0, expectedRouteObserved=false",
+		);
+		try {
+			observer.assertObservedRoute();
+		} catch (error) {
+			expect(String(error)).not.toContain("private");
+		}
+	});
+
 	it("rejects unsafe endpoints before any network call", () => {
 		for (const endpoint of [
 			"ftp://provider.example/v1",
