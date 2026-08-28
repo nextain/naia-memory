@@ -113,15 +113,23 @@ not show that every lifecycle decision is better.
 - Evidence manifest: all seven declared SHA-256 source identities reproduced.
 - Repository: 170 test files passed (1,419 tests passed, one skipped), typecheck
   passed, build passed, and `git diff --check` passed.
-- Independent structured review was attempted in four roles through OpenCode,
-  Codex, and Claude. OpenCode returned provider/process failures or timed out;
-  Codex returned output that failed the required structured schema; Claude timed
-  out before startup output. These attempts are `NOT_RUN`, not approvals.
+- Earlier independent structured-review attempts through OpenCode, Codex, and
+  Claude were unavailable or failed the required output contract. Those attempts
+  are `NOT_RUN`, not approvals. After the Codex structured-output path was
+  recovered, four schema-valid role reviews over the original checkpoint were
+  `NOT_CLEAN` and identified evidence-label, reviewer-independence, reproducible-
+  measurement, and receipt-binding defects. Four fresh role reviews over the
+  corrected head were also `NOT_CLEAN`: they found inconsistent review-state
+  wording and delivery receipts that still identified the superseded artifacts.
+  The accepted findings were corrected; qualification remains false and the
+  corrected frozen artifacts still require two consecutive four-role CLEAN
+  rounds. The subsequent role artifacts, rather than a mutable status assertion
+  in this report, are the qualification record.
 
 Accordingly this document is a verified engineering checkpoint, but it does not
 claim the two consecutive independent CLEAN rounds required for public
-qualification. The unavailable reviewer infrastructure is an explicit open
-gate rather than evidence in Naia's favor.
+qualification. Failed and unavailable reviews are explicit open gates rather
+than evidence in Naia's favor.
 
 ## Claim ledger
 

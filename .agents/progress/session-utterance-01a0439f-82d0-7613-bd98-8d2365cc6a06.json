@@ -3,8 +3,8 @@
   "contract_id": "naia-memory-residual-benchmark-2026-08-28",
   "contract_digest": "7d1e9b3463b93487cec83fd1b2ef1d6130d7fd26a1551e3475db0a9118eb1e15",
   "issue": "https://github.com/nextain/naia-memory/issues/40",
-  "current_phase": "global-comparison-checkpoint-delivered",
-  "current_task": "Retry independent structured review when reviewer infrastructure is available; public qualification remains blocked until two consecutive CLEAN rounds.",
+  "current_phase": "corrected-global-comparison-checkpoint-review",
+  "current_task": "Publish and deliver the corrected frozen checkpoint, then obtain two consecutive four-role CLEAN rounds; public qualification remains blocked until then.",
   "gates_cleared": [
     "retrospective-development-rejection",
     "development-window-early-stop",
@@ -25,7 +25,7 @@
     "Reject length-bucketed-array-batch-v1 because minimum cosine was 0.927233, below 0.95.",
     "Reject length-bucketed-hybrid-v1 because warmed throughput was 0.8371x control and minimum cosine was 0.927233.",
     "Do not retain failed experimental runtime modes in the product API.",
-    "Treat OpenCode, Codex, and Claude structured review failures as NOT_RUN rather than approvals.",
+    "Treat the earlier unavailable OpenCode, Codex, and Claude attempts as NOT_RUN, and the two later schema-valid four-role Codex rounds as NOT_CLEAN rather than approvals.",
     "Publish a verified engineering checkpoint while keeping public qualification and global superiority false."
   ],
   "evidence": {
@@ -47,13 +47,16 @@
       "naia-shell build: passed",
       "review preflight over 119ce9c..1164723: PREFLIGHT_CLEAN, complexity sha256:54407f6f7fe31cf543bb791997b8df87c48bb86cff49ca3eafd62b44aedc918d",
       "global comparison manifest: 7/7 source hashes verified",
-      "independent structured review: NOT_RUN after OpenCode failures/timeouts, Codex invalid structured output, and Claude startup timeouts"
+      "independent structured review: earlier OpenCode/Codex/Claude unavailable or invalid attempts were NOT_RUN",
+      "independent structured review round 1: four schema-valid Codex roles were NOT_CLEAN and their evidence-label, reviewer-independence, reproducible-measurement, and receipt findings were accepted and corrected",
+      "independent structured review round 2: four schema-valid Codex roles were NOT_CLEAN because review-state wording and delivery identity still referred to superseded artifacts; corrections applied pending re-review"
     ],
     "global_comparison_report": "reports/quality/global-memory-comparison-evidence-2026-08-28.md",
     "global_comparison_manifest": "reports/quality/global-memory-comparison-evidence-2026-08-28.json",
-    "publication_commit": "7a9999f904ddf8f3821ec915950d49796ded9a24",
-    "issue_comment": "https://github.com/nextain/naia-memory/issues/40#issuecomment-5447141110",
-    "discord_delivery": {
+    "superseded_publication_commit": "7a9999f904ddf8f3821ec915950d49796ded9a24",
+    "superseded_issue_comment": "https://github.com/nextain/naia-memory/issues/40#issuecomment-5447141110",
+    "superseded_discord_delivery": {
+      "status": "SUPERSEDED_BY_CORRECTED_ARTIFACTS",
       "instance": "alpha",
       "destination": "owner-dm",
       "message_id": "1542703745375146088",

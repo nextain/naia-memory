@@ -15,8 +15,8 @@
     "testsSkipped": 1,
     "typecheck": "PASS",
     "build": "PASS",
-    "independentStructuredReview": "ROUND_1_NOT_CLEAN",
-    "independentReviewReason": "Four schema-constrained Codex roles found evidence-label and receipt-binding defects; corrections are pending re-review"
+    "independentStructuredReview": "TWO_ROUNDS_NOT_CLEAN",
+    "independentReviewReason": "Earlier provider attempts were NOT_RUN; two later four-role schema-valid Codex rounds were NOT_CLEAN, and their accepted findings were corrected before artifact freeze. Public qualification remains false pending two consecutive CLEAN rounds recorded in separate role artifacts"
   },
   "directLifecycleComparison": {
     "uniqueCases": 9,
