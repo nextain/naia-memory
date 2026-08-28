@@ -3,8 +3,8 @@
   "contract_id": "naia-memory-residual-benchmark-2026-08-28",
   "contract_digest": "7d1e9b3463b93487cec83fd1b2ef1d6130d7fd26a1551e3475db0a9118eb1e15",
   "issue": "https://github.com/nextain/naia-memory/issues/40",
-  "current_phase": "global-comparison-reporting",
-  "current_task": "Publish the evidence-bounded comparison checkpoint to main, update issue #40, and deliver it to Luke by Discord DM.",
+  "current_phase": "global-comparison-checkpoint-delivered",
+  "current_task": "Retry independent structured review when reviewer infrastructure is available; public qualification remains blocked until two consecutive CLEAN rounds.",
   "gates_cleared": [
     "preregistration",
     "development-window-early-stop",
@@ -15,7 +15,9 @@
     "naia-agent-memory-integration",
     "naia-shell-memory-wiring",
     "global-comparison-deterministic-preflight",
-    "global-comparison-source-hash-verification"
+    "global-comparison-source-hash-verification",
+    "global-comparison-main-publication",
+    "global-comparison-owner-dm-delivery"
   ],
   "key_decisions": [
     "Preserve the existing dirty benchmark worktree and continue in an isolated clean worktree.",
@@ -48,6 +50,25 @@
       "independent structured review: NOT_RUN after OpenCode failures/timeouts, Codex invalid structured output, and Claude startup timeouts"
     ],
     "global_comparison_report": "reports/quality/global-memory-comparison-evidence-2026-08-28.md",
-    "global_comparison_manifest": "reports/quality/global-memory-comparison-evidence-2026-08-28.json"
+    "global_comparison_manifest": "reports/quality/global-memory-comparison-evidence-2026-08-28.json",
+    "publication_commit": "7a9999f904ddf8f3821ec915950d49796ded9a24",
+    "issue_comment": "https://github.com/nextain/naia-memory/issues/40#issuecomment-5447141110",
+    "discord_delivery": {
+      "instance": "alpha",
+      "destination": "owner-dm",
+      "message_id": "1542703745375146088",
+      "attachments": [
+        {
+          "name": "global-memory-comparison-evidence-2026-08-28.md",
+          "bytes": 8038,
+          "sha256": "b58ec3bca68b2aefd93e907b0d9a57d8cebebbe5f193960f57998506a6e5bfdc"
+        },
+        {
+          "name": "global-memory-comparison-evidence-2026-08-28.json",
+          "bytes": 2974,
+          "sha256": "1fc8c2ba125671f9900d5f04c0e61cf9b0d02ec892d1127b4af8690ef74311de"
+        }
+      ]
+    }
   }
 }
