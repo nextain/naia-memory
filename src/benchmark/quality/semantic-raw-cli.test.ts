@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	discloseServerEndpoint,
 	graphitiRuntimeConfig,
 	hindsightRuntimeConfig,
 	lettaRuntimeConfig,
@@ -8,8 +9,23 @@ import {
 } from "./semantic-raw-cli.js";
 
 afterEach(() => vi.unstubAllEnvs());
-
+beforeEach(() =>
+	vi.stubEnv("BENCHMARK_EVIDENCE_HMAC_KEY", "evidence-key".repeat(4)),
+);
 describe("semantic raw CLI", () => {
+	it("preserves sanitized server-native endpoint path prefixes", () => {
+		const disclosure = discloseServerEndpoint(
+			"https://engine.example/tenant-secret/api-token/",
+		);
+		expect(disclosure.endpoint).toBe("https://engine.example");
+		expect(disclosure.endpointPathHmacSha256).toMatch(/^[0-9a-f]{64}$/);
+		expect(JSON.stringify(disclosure)).not.toContain("tenant-secret");
+		expect(JSON.stringify(disclosure)).not.toContain("api-token");
+		expect(() =>
+			discloseServerEndpoint("https://engine.example/api?token=secret"),
+		).toThrow("must not contain credentials, query, or fragment");
+	});
+
 	it("parses an explicit reproducible execution request", () => {
 		expect(
 			parseSemanticRawCliArgs([

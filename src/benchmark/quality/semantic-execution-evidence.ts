@@ -11,7 +11,10 @@ import {
 	evidenceObjectSha256,
 	hasValidEvidenceSignature,
 } from "./public-evidence-crypto.js";
-import { hasValidSemanticComparisonLanes } from "./semantic-analysis-plan.js";
+import {
+	hasExactPlainVectorLaneBinding,
+	hasValidSemanticComparisonLanes,
+} from "./semantic-analysis-plan.js";
 import {
 	SUPPORTED_SEMANTIC_ENGINES,
 	type SemanticCampaignRun,
@@ -66,6 +69,10 @@ type CampaignManifest = {
 		topK: number;
 		engines: string[];
 		analysisPlanSha256?: string | null;
+		analysisPlanSchemaVersion?:
+			| "naia-memory-semantic-analysis-plan-v5"
+			| "naia-memory-semantic-analysis-plan-v6"
+			| null;
 		claimScope?: string;
 		comparisonLanes?: unknown;
 		crossLaneAggregation?: "prohibited";
@@ -199,6 +206,7 @@ function requiredSafeEndpoint(disclosure: RawArtifactDisclosure): void {
 
 export function validateSemanticConfigurationParity(
 	disclosures: RawArtifactDisclosure[],
+	options: { requireRouteBinding?: boolean } = {},
 ): void {
 	const byEngine = new Map<string, RawArtifactDisclosure[]>();
 	for (const disclosure of disclosures) {
@@ -215,16 +223,39 @@ export function validateSemanticConfigurationParity(
 		const disclosure = values[0];
 		if (!disclosure) continue;
 		requiredSafeEndpoint(disclosure);
-		if (engine === "naia" || engine === "mem0") {
-			for (const field of [
+		if (engine === "naia" || engine === "mem0" || engine === "plain-vector") {
+			const embeddingFields = [
 				"embeddingModel",
 				"embeddingRevision",
-				"llmModel",
 				"authScheme",
 				"endpoint",
-			])
+			];
+			if (engine === "plain-vector" || options.requireRouteBinding)
+				embeddingFields.push(
+					"endpointRouteHmacSha256",
+					"endpointRouteBindingPolicy",
+				);
+			for (const field of embeddingFields)
 				requiredNonemptyString(disclosure, field);
 			requiredPositiveInteger(disclosure, "embeddingDimensions");
+			requiredPositiveInteger(disclosure, "topK");
+			if (engine !== "plain-vector")
+				requiredNonemptyString(disclosure, "llmModel");
+			if (
+				(engine === "plain-vector" || options.requireRouteBinding) &&
+				!SHA256.test(String(disclosure.endpointRouteHmacSha256))
+			)
+				throw new Error(
+					`semantic execution configuration disclosure is incomplete: ${engine}/endpointRouteHmacSha256`,
+				);
+			if (
+				options.requireRouteBinding &&
+				disclosure.endpointRouteBindingPolicy !==
+					"independent-key-hmac-sha256-observed-openai-embedding-route-v3"
+			)
+				throw new Error(
+					`semantic execution configuration disclosure is incomplete: ${engine}/endpointRouteBindingPolicy`,
+				);
 		} else if (engine === "graphiti" || engine === "graphiti-historical") {
 			if (
 				requiredNonemptyString(disclosure, "providerPolicy") !==
@@ -338,21 +369,37 @@ export function validateSemanticConfigurationParity(
 				);
 		}
 	}
-	const naia = byEngine.get("naia")?.[0];
-	const mem0 = byEngine.get("mem0")?.[0];
-	if (naia && mem0) {
-		for (const field of [
+	const embeddingComparators = ["naia", "mem0", "plain-vector"]
+		.map((engine) => byEngine.get(engine)?.[0])
+		.filter((value): value is RawArtifactDisclosure => value !== undefined);
+	if (embeddingComparators.length > 1) {
+		const reference = embeddingComparators[0];
+		if (!reference) throw new Error("semantic embedding comparator is missing");
+		const parityFields = [
+			"topK",
 			"embeddingModel",
 			"embeddingRevision",
 			"embeddingDimensions",
-			"llmModel",
 			"authScheme",
 			"endpoint",
-		])
-			if (naia[field] !== mem0[field])
-				throw new Error(
-					`semantic direct-comparator provider parity mismatch: naia/mem0/${field}`,
-				);
+		];
+		if (options.requireRouteBinding)
+			parityFields.push(
+				"endpointRouteHmacSha256",
+				"endpointRouteBindingPolicy",
+			);
+		for (const field of parityFields)
+			for (const comparator of embeddingComparators.slice(1))
+				if (reference[field] !== comparator[field])
+					throw new Error(
+						`semantic embedding-comparator provider parity mismatch: ${reference.engine}/${comparator.engine}/${field}`,
+					);
+		const naia = byEngine.get("naia")?.[0];
+		const mem0 = byEngine.get("mem0")?.[0];
+		if (naia && mem0 && naia.llmModel !== mem0.llmModel)
+			throw new Error(
+				"semantic direct-comparator provider parity mismatch: naia/mem0/llmModel",
+			);
 	}
 	const graphiti = byEngine.get("graphiti")?.[0];
 	const historical = byEngine.get("graphiti-historical")?.[0];
@@ -454,6 +501,10 @@ function validateCampaign(
 			"naia-memory-semantic-campaign-v5",
 		].includes(campaign.schemaVersion) ||
 		!disclosure?.executionSeed?.trim() ||
+		(disclosure.engines?.includes("plain-vector") &&
+			(campaign.schemaVersion !== "naia-memory-semantic-campaign-v5" ||
+				disclosure.analysisPlanSchemaVersion !==
+					"naia-memory-semantic-analysis-plan-v6")) ||
 		!Array.isArray(disclosure.engines) ||
 		disclosure.engines.length < 2 ||
 		new Set(disclosure.engines).size !== disclosure.engines.length ||
@@ -490,6 +541,8 @@ function validateCampaign(
 			(disclosure.claimScope === "diagnostic-characterization-only-v1"
 				? disclosure.eligibility !== "diagnostic" ||
 					disclosure.analysisPlanSha256 !== null ||
+					(disclosure.analysisPlanSchemaVersion !== null &&
+						disclosure.analysisPlanSchemaVersion !== undefined) ||
 					disclosure.comparisonLanes !== null ||
 					disclosure.confirmatoryAuthorizationSha256 !== null
 				: ![
@@ -498,10 +551,26 @@ function validateCampaign(
 					].includes(disclosure.claimScope ?? "") ||
 					disclosure.eligibility !== "competitive-candidate" ||
 					disclosure.analysisPlanSha256 == null ||
+					(disclosure.analysisPlanSchemaVersion !== undefined &&
+						disclosure.analysisPlanSchemaVersion !==
+							"naia-memory-semantic-analysis-plan-v5" &&
+						disclosure.analysisPlanSchemaVersion !==
+							"naia-memory-semantic-analysis-plan-v6") ||
+					(disclosure.engines.includes("plain-vector") &&
+						disclosure.analysisPlanSchemaVersion !==
+							"naia-memory-semantic-analysis-plan-v6") ||
 					!hasValidSemanticComparisonLanes(
 						disclosure.comparisonLanes,
 						disclosure.claimScope,
+						disclosure.analysisPlanSchemaVersion ===
+							"naia-memory-semantic-analysis-plan-v6",
 					) ||
+					(disclosure.analysisPlanSchemaVersion ===
+						"naia-memory-semantic-analysis-plan-v6" &&
+						!hasExactPlainVectorLaneBinding(
+							disclosure.engines,
+							disclosure.comparisonLanes,
+						)) ||
 					disclosure.crossLaneAggregation !== "prohibited" ||
 					![
 						disclosure.confirmatoryAuthorizationSha256,
@@ -558,7 +627,12 @@ function validateCampaign(
 			disclosures.push(artifact.disclosure as RawArtifactDisclosure);
 		}
 	}
-	if (disclosures.length > 0) validateSemanticConfigurationParity(disclosures);
+	if (disclosures.length > 0)
+		validateSemanticConfigurationParity(disclosures, {
+			requireRouteBinding:
+				disclosure.analysisPlanSchemaVersion ===
+				"naia-memory-semantic-analysis-plan-v6",
+		});
 	return new Map(
 		disclosures.map((disclosure) => [
 			disclosure.engine,

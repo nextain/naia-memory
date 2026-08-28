@@ -197,6 +197,152 @@ describe("semantic blind packet CLI", () => {
 		}
 	});
 
+	it("rejects a v6 campaign whose retrieval baseline lane is missing", () => {
+		const directory = mkdtempSync(
+			resolve(tmpdir(), "semantic-blind-v6-lanes-"),
+		);
+		try {
+			const current = semanticBlindFixture(directory, {
+				engines: ["naia", "mem0", "plain-vector"],
+				schemaVersion: "naia-memory-semantic-campaign-v3",
+			});
+			const disclosure = current.campaign.disclosure as Record<string, unknown>;
+			(current.campaign as { schemaVersion: string }).schemaVersion =
+				"naia-memory-semantic-campaign-v5";
+			Object.assign(disclosure, {
+				eligibility: "competitive-candidate",
+				analysisPlanSha256: "a".repeat(64),
+				analysisPlanSchemaVersion: "naia-memory-semantic-analysis-plan-v6",
+				claimScope: "declared-multi-class-competitive-report-v1",
+				comparisonLanes: {
+					directLifecycle: ["hindsight", "mem0"],
+					nativeTemporalCharacterization: ["graphiti-historical"],
+					agentManagedCharacterization: ["letta"],
+					productIntegrationDiagnostic: [],
+					retrievalBaseline: [],
+				},
+				crossLaneAggregation: "prohibited",
+				confirmatoryAuthorizationSha256: "b".repeat(64),
+				analysisPlanTimestampEvidenceSha256: "c".repeat(64),
+				analysisPlanTimestampTrustPolicyIdentitySha256: "d".repeat(64),
+			});
+			expect(() =>
+				buildSemanticBlindArtifacts({
+					contract: current.contract,
+					campaign: current.campaign,
+					campaignDirectory: directory,
+					blindingSeed: "seed",
+					contractSha256: "contract",
+					campaignSha256: "campaign",
+				}),
+			).toThrow("invalid semantic campaign manifest");
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	});
+
+	it.each([
+		undefined,
+		null,
+		"naia-memory-semantic-analysis-plan-v5",
+		"unknown",
+	])(
+		"rejects plain-vector with a downgraded analysis-plan schema: %s",
+		(analysisPlanSchemaVersion) => {
+			const directory = mkdtempSync(
+				resolve(tmpdir(), "semantic-blind-baseline-schema-"),
+			);
+			try {
+				const current = semanticBlindFixture(directory, {
+					engines: ["naia", "mem0", "plain-vector"],
+					schemaVersion: "naia-memory-semantic-campaign-v3",
+				});
+				const disclosure = current.campaign.disclosure as Record<
+					string,
+					unknown
+				>;
+				(current.campaign as { schemaVersion: string }).schemaVersion =
+					"naia-memory-semantic-campaign-v5";
+				Object.assign(disclosure, {
+					eligibility: "competitive-candidate",
+					analysisPlanSha256: "a".repeat(64),
+					analysisPlanSchemaVersion,
+					claimScope: "declared-multi-class-competitive-report-v1",
+					comparisonLanes: {
+						directLifecycle: ["hindsight", "mem0"],
+						nativeTemporalCharacterization: ["graphiti-historical"],
+						agentManagedCharacterization: ["letta"],
+						productIntegrationDiagnostic: [],
+						retrievalBaseline: ["plain-vector"],
+					},
+					crossLaneAggregation: "prohibited",
+					confirmatoryAuthorizationSha256: "b".repeat(64),
+					analysisPlanTimestampEvidenceSha256: "c".repeat(64),
+					analysisPlanTimestampTrustPolicyIdentitySha256: "d".repeat(64),
+				});
+				expect(() =>
+					buildSemanticBlindArtifacts({
+						contract: current.contract,
+						campaign: current.campaign,
+						campaignDirectory: directory,
+						blindingSeed: "seed",
+						contractSha256: "contract",
+						campaignSha256: "campaign",
+					}),
+				).toThrow("invalid semantic campaign manifest");
+			} finally {
+				rmSync(directory, { recursive: true, force: true });
+			}
+		},
+	);
+
+	it.each([
+		[undefined, false],
+		[null, true],
+		["unknown", true],
+	] as const)(
+		"applies the legacy plan-schema compatibility boundary: %s",
+		(analysisPlanSchemaVersion, rejects) => {
+			const directory = mkdtempSync(resolve(tmpdir(), "semantic-blind-v5-schema-"));
+			try {
+				const current = semanticBlindFixture(directory, {
+					engines: ["graphiti", "graphiti-historical", "hindsight", "letta", "mem0", "naia"],
+					schemaVersion: "naia-memory-semantic-campaign-v3",
+				});
+				(current.campaign as { schemaVersion: string }).schemaVersion =
+					"naia-memory-semantic-campaign-v5";
+				Object.assign(current.campaign.disclosure, {
+					eligibility: "competitive-candidate",
+					analysisPlanSha256: "a".repeat(64),
+					analysisPlanSchemaVersion,
+					claimScope: "declared-multi-class-competitive-report-v1",
+					comparisonLanes: {
+						directLifecycle: ["hindsight", "mem0"],
+						nativeTemporalCharacterization: ["graphiti-historical"],
+						agentManagedCharacterization: ["letta"],
+						productIntegrationDiagnostic: ["graphiti"],
+					},
+					crossLaneAggregation: "prohibited",
+					confirmatoryAuthorizationSha256: "b".repeat(64),
+					analysisPlanTimestampEvidenceSha256: "c".repeat(64),
+					analysisPlanTimestampTrustPolicyIdentitySha256: "d".repeat(64),
+				});
+				const build = () => buildSemanticBlindArtifacts({
+					contract: current.contract,
+					campaign: current.campaign,
+					campaignDirectory: directory,
+					blindingSeed: "seed",
+					contractSha256: "contract",
+					campaignSha256: "campaign",
+				});
+				if (rejects) expect(build).toThrow("invalid semantic campaign manifest");
+				else expect(build).not.toThrow();
+			} finally {
+				rmSync(directory, { recursive: true, force: true });
+			}
+		},
+	);
+
 	it("accepts a legacy v2 manifest that explicitly declares the canonical engines", () => {
 		const directory = mkdtempSync(resolve(tmpdir(), "semantic-blind-v2-"));
 		try {

@@ -13,7 +13,10 @@ import {
 	type MemoryUpdateContract,
 	validateMemoryUpdateContract,
 } from "./memory-update-contract.js";
-import { hasValidSemanticComparisonLanes } from "./semantic-analysis-plan.js";
+import {
+	hasExactPlainVectorLaneBinding,
+	hasValidSemanticComparisonLanes,
+} from "./semantic-analysis-plan.js";
 import {
 	SUPPORTED_SEMANTIC_ENGINES,
 	type SemanticCampaignRun,
@@ -36,6 +39,7 @@ type CampaignManifest = {
 		topK: number;
 		engines?: string[];
 		analysisPlanSha256?: string | null;
+		analysisPlanSchemaVersion?: string | null;
 		claimScope?: string;
 		comparisonLanes?: unknown;
 		crossLaneAggregation?: "prohibited";
@@ -163,12 +167,28 @@ export function buildSemanticBlindArtifacts(input: {
 						"declared-multi-class-competitive-report-v1",
 					].includes(disclosure.claimScope ?? "") ||
 					disclosure.eligibility !== "competitive-candidate" ||
+					(disclosure.analysisPlanSchemaVersion !== undefined &&
+						![
+							"naia-memory-semantic-analysis-plan-v5",
+							"naia-memory-semantic-analysis-plan-v6",
+						].includes(disclosure.analysisPlanSchemaVersion)) ||
 					typeof disclosure.analysisPlanSha256 !== "string" ||
 					!/^[a-f0-9]{64}$/.test(disclosure.analysisPlanSha256) ||
 					!hasValidSemanticComparisonLanes(
 						disclosure.comparisonLanes,
 						disclosure.claimScope,
+						disclosure.analysisPlanSchemaVersion ===
+							"naia-memory-semantic-analysis-plan-v6",
 					) ||
+					(disclosure.analysisPlanSchemaVersion ===
+						"naia-memory-semantic-analysis-plan-v6") !==
+						engines.includes("plain-vector") ||
+					(disclosure.analysisPlanSchemaVersion ===
+						"naia-memory-semantic-analysis-plan-v6" &&
+						!hasExactPlainVectorLaneBinding(
+							engines,
+							disclosure.comparisonLanes,
+						)) ||
 					disclosure.crossLaneAggregation !== "prohibited" ||
 					![
 						disclosure.confirmatoryAuthorizationSha256,

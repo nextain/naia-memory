@@ -8,7 +8,9 @@ import {
 const SHA256 = /^[a-f0-9]{64}$/;
 
 export type SemanticAnalysisPlan = {
-	schemaVersion: "naia-memory-semantic-analysis-plan-v5";
+	schemaVersion:
+		| "naia-memory-semantic-analysis-plan-v5"
+		| "naia-memory-semantic-analysis-plan-v6";
 	administrator: string;
 	contractSha256: string;
 	engines: string[];
@@ -23,6 +25,8 @@ export type SemanticAnalysisPlan = {
 		nativeTemporalCharacterization: [] | ["graphiti-historical"];
 		agentManagedCharacterization: [] | ["letta"];
 		productIntegrationDiagnostic: [] | ["graphiti"];
+		/** Added for immutable retrieval-control campaigns; absent in legacy v5 plans. */
+		retrievalBaseline?: [] | ["plain-vector"];
 	};
 	crossLaneAggregation: "prohibited";
 	familyWiseAlpha: number;
@@ -64,12 +68,28 @@ function validUniqueStrings(value: unknown): value is string[] {
 export function hasValidSemanticComparisonLanes(
 	value: unknown,
 	claimScope: unknown,
+	strictBaselineShape = false,
 ): value is SemanticAnalysisPlan["comparisonLanes"] {
 	if (!isRecord(value)) return false;
+	const allowedKeys = new Set([
+		"directLifecycle",
+		"nativeTemporalCharacterization",
+		"agentManagedCharacterization",
+		"productIntegrationDiagnostic",
+		"retrievalBaseline",
+	]);
+	// v5 historically tolerated extension properties. Preserve that behavior for
+	// legacy plans, while plans opting into the new baseline use an exact shape.
+	if (
+		strictBaselineShape &&
+		Object.keys(value).some((key) => !allowedKeys.has(key))
+	)
+		return false;
 	const direct = value.directLifecycle;
 	const nativeTemporal = value.nativeTemporalCharacterization;
 	const agentManaged = value.agentManagedCharacterization;
 	const productDiagnostic = value.productIntegrationDiagnostic;
+	const retrievalBaseline = strictBaselineShape ? value.retrievalBaseline : [];
 	const validDirect =
 		validUniqueStrings(direct) &&
 		direct.every((engine) => ["hindsight", "mem0"].includes(engine));
@@ -86,15 +106,46 @@ export function hasValidSemanticComparisonLanes(
 		Array.isArray(productDiagnostic) &&
 		(productDiagnostic.length === 0 ||
 			(productDiagnostic.length === 1 && productDiagnostic[0] === "graphiti"));
-	if (!validDirect || !validNative || !validAgent || !validDiagnostic)
+	const validBaseline =
+		Array.isArray(retrievalBaseline) &&
+		(retrievalBaseline.length === 0 ||
+			(retrievalBaseline.length === 1 &&
+				retrievalBaseline[0] === "plain-vector"));
+	if (
+		!validDirect ||
+		!validNative ||
+		!validAgent ||
+		!validDiagnostic ||
+		!validBaseline
+	)
 		return false;
 	return claimScope === "declared-multi-class-competitive-report-v1"
 		? direct.length === 2 &&
 				nativeTemporal.length === 1 &&
-				agentManaged.length === 1
+				agentManaged.length === 1 &&
+				(strictBaselineShape
+					? retrievalBaseline.length === 1 &&
+						retrievalBaseline[0] === "plain-vector"
+					: retrievalBaseline.length === 0)
 		: claimScope === "direct-lifecycle-competitive-report-v1" &&
 				nativeTemporal.length === 0 &&
-				agentManaged.length === 0;
+				agentManaged.length === 0 &&
+				retrievalBaseline.length === 0;
+}
+
+export function hasExactPlainVectorLaneBinding(
+	engines: string[],
+	comparisonLanes: unknown,
+): boolean {
+	if (!isRecord(comparisonLanes)) return false;
+	const lane = comparisonLanes.retrievalBaseline;
+	const laneIncludesPlainVector =
+		Array.isArray(lane) && lane.length === 1 && lane[0] === "plain-vector";
+	const laneIsAbsentOrEmpty =
+		lane === undefined || (Array.isArray(lane) && lane.length === 0);
+	return engines.includes("plain-vector")
+		? laneIncludesPlainVector
+		: laneIsAbsentOrEmpty;
 }
 
 function isEd25519Key(value: unknown): value is string {
@@ -111,12 +162,17 @@ export function isSemanticAnalysisPlan(
 ): value is SemanticAnalysisPlan {
 	return (
 		isRecord(value) &&
-		value.schemaVersion === "naia-memory-semantic-analysis-plan-v5" &&
+		[
+			"naia-memory-semantic-analysis-plan-v5",
+			"naia-memory-semantic-analysis-plan-v6",
+		].includes(value.schemaVersion as string) &&
 		typeof value.administrator === "string" &&
 		value.administrator.trim().length > 0 &&
 		typeof value.contractSha256 === "string" &&
 		SHA256.test(value.contractSha256) &&
 		validUniqueStrings(value.engines) &&
+		(value.schemaVersion !== "naia-memory-semantic-analysis-plan-v6" ||
+			value.engines.includes("plain-vector")) &&
 		value.primaryEngine === "naia" &&
 		["currentAt1", "staleExposureRate", "deletionLeakageRate"].includes(
 			value.primaryMetric as string,
@@ -126,7 +182,11 @@ export function isSemanticAnalysisPlan(
 			"direct-lifecycle-competitive-report-v1",
 			"declared-multi-class-competitive-report-v1",
 		].includes(value.claimScope as string) &&
-		hasValidSemanticComparisonLanes(value.comparisonLanes, value.claimScope) &&
+		hasValidSemanticComparisonLanes(
+			value.comparisonLanes,
+			value.claimScope,
+			value.schemaVersion === "naia-memory-semantic-analysis-plan-v6",
+		) &&
 		value.crossLaneAggregation === "prohibited" &&
 		typeof value.familyWiseAlpha === "number" &&
 		Number.isFinite(value.familyWiseAlpha) &&
@@ -221,6 +281,11 @@ export function validateSemanticAnalysisPlan(input: {
 		throw new Error("semantic analysis plan campaign shape is invalid");
 	const plan = input.plan;
 	const lanes = plan.comparisonLanes;
+	const retrievalBaseline =
+		plan.schemaVersion === "naia-memory-semantic-analysis-plan-v6" &&
+		Object.hasOwn(lanes, "retrievalBaseline")
+			? lanes.retrievalBaseline
+			: [];
 	const isMultiClassClaim =
 		plan.claimScope === "declared-multi-class-competitive-report-v1";
 	const validDirect =
@@ -242,14 +307,23 @@ export function validateSemanticAnalysisPlan(input: {
 			lanes.agentManagedCharacterization[0] === "letta"
 		: lanes.agentManagedCharacterization.length === 0;
 	const validProductIntegration =
-		lanes.productIntegrationDiagnostic.length === 0 ||
-		(lanes.productIntegrationDiagnostic.length === 1 &&
-			lanes.productIntegrationDiagnostic[0] === "graphiti");
+		plan.schemaVersion === "naia-memory-semantic-analysis-plan-v6"
+			? lanes.productIntegrationDiagnostic.length === 0
+			: lanes.productIntegrationDiagnostic.length === 0 ||
+				(lanes.productIntegrationDiagnostic.length === 1 &&
+					lanes.productIntegrationDiagnostic[0] === "graphiti");
+	const validRetrievalBaseline = isMultiClassClaim
+		? plan.schemaVersion === "naia-memory-semantic-analysis-plan-v6"
+			? retrievalBaseline.length === 1 &&
+				retrievalBaseline[0] === "plain-vector"
+			: retrievalBaseline.length === 0
+		: retrievalBaseline.length === 0;
 	const scopedEngines = [
 		...lanes.directLifecycle,
 		...lanes.nativeTemporalCharacterization,
 		...lanes.agentManagedCharacterization,
 		...lanes.productIntegrationDiagnostic,
+		...retrievalBaseline,
 		plan.primaryEngine,
 	];
 	const publicKey =
@@ -267,6 +341,7 @@ export function validateSemanticAnalysisPlan(input: {
 		!validNativeTemporal ||
 		!validAgentManaged ||
 		!validProductIntegration ||
+		!validRetrievalBaseline ||
 		new Set(scopedEngines).size !== scopedEngines.length ||
 		scopedEngines.length !== plan.engines.length ||
 		scopedEngines.some((engine) => !plan.engines.includes(engine)) ||

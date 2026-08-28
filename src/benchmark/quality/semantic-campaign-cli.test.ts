@@ -12,9 +12,12 @@ import { describe, expect, it } from "vitest";
 import type { MemoryUpdateCase } from "./memory-update-contract.js";
 import { buildSemanticBlindArtifacts } from "./semantic-blind-packet-cli.js";
 import {
+	DEFAULT_SEMANTIC_ENGINES,
+	DIAGNOSTIC_SEMANTIC_ENGINES,
 	type SemanticCampaignRun,
 	buildSemanticCampaignPlan,
 	parseSemanticCampaignCliArgs,
+	preflightSemanticCampaignRouteEvidence,
 	runSemanticCampaignCli,
 	validateRawArtifact,
 } from "./semantic-campaign-cli.js";
@@ -25,6 +28,37 @@ function sha256(value: unknown): string {
 }
 
 describe("semantic campaign CLI", () => {
+	it.each([
+		[undefined, "operational-provider-key-that-is-long-enough"],
+		["short", "operational-provider-key-that-is-long-enough"],
+		[
+			"operational-provider-key-that-is-long-enough",
+			"operational-provider-key-that-is-long-enough",
+		],
+	])(
+		"rejects invalid v6 evidence keys before any provider run (%s)",
+		(evidenceKey, operationalKey) => {
+			const previous = process.env.BENCHMARK_EVIDENCE_HMAC_KEY;
+			let rawRuns = 0;
+			if (evidenceKey === undefined)
+				delete process.env.BENCHMARK_EVIDENCE_HMAC_KEY;
+			else process.env.BENCHMARK_EVIDENCE_HMAC_KEY = evidenceKey;
+			try {
+				expect(() =>
+					preflightSemanticCampaignRouteEvidence(
+						{ schemaVersion: "naia-memory-semantic-analysis-plan-v6" },
+						() => ({ apiKey: operationalKey }) as ReturnType<typeof import("./semantic-raw-cli.js").providerConfig>,
+					),
+				).toThrow("BENCHMARK_EVIDENCE_HMAC_KEY");
+				expect(rawRuns).toBe(0);
+			} finally {
+				if (previous === undefined)
+					delete process.env.BENCHMARK_EVIDENCE_HMAC_KEY;
+				else process.env.BENCHMARK_EVIDENCE_HMAC_KEY = previous;
+			}
+		},
+	);
+
 	it("requires an explicit seed and an engine-matrix-balanced repetition count", () => {
 		expect(() =>
 			parseSemanticCampaignCliArgs([
@@ -90,6 +124,7 @@ describe("semantic campaign CLI", () => {
 		}
 	});
 
+
 	it("accepts an explicit preregistered analysis plan path", () => {
 		const parsed = parseSemanticCampaignCliArgs([
 			"--contract=contract.json",
@@ -104,6 +139,7 @@ describe("semantic campaign CLI", () => {
 			"analysis-plan-trust-policy.json",
 		);
 	});
+
 
 	it("rejects a malformed analysis plan before creating campaign output", async () => {
 		const directory = mkdtempSync(resolve(tmpdir(), "semantic-campaign-plan-"));
@@ -207,20 +243,58 @@ describe("semantic campaign CLI", () => {
 						const output = values.get("--output");
 						if (!engine || !seed || !output)
 							throw new Error("invalid injected raw arguments");
-						const result = {
-							ingestionReceipts: [{ outcome: "test-adapter" }],
-							nativeState: [
-								{ nativeId: `${engine}-current`, content: "서울 거주" },
-							],
-							retrieved: [
-								{ nativeId: `${engine}-current`, content: "서울 거주" },
-							],
-						};
+						const result =
+							engine === "plain-vector"
+								? {
+										ingestionReceipts: [
+											{ outcome: "native-operations", nativeOperationCount: 1 },
+										],
+										nativeState: [
+											{
+												nativeId: "turn-000001",
+												content: benchmarkCase.turns[0].content,
+											},
+										],
+										retrieved: [
+											{
+												nativeId: "turn-000001",
+												content: benchmarkCase.turns[0].content,
+											},
+										],
+									}
+								: {
+										ingestionReceipts: [{ outcome: "test-adapter" }],
+										nativeState: [
+											{ nativeId: `${engine}-current`, content: "서울 거주" },
+										],
+										retrieved: [
+											{ nativeId: `${engine}-current`, content: "서울 거주" },
+										],
+									};
 						writeFileSync(
 							output,
 							JSON.stringify({
 								schemaVersion: "naia-memory-semantic-raw-artifact-v2",
-								disclosure: { engine, executionSeed: seed, topK: 5 },
+								disclosure: {
+									engine,
+									executionSeed: seed,
+									topK: 5,
+									...(engine === "plain-vector"
+										? {
+												embeddingModel: "embedding-model",
+												embeddingRevision: "embedding-revision",
+												embeddingDimensions: 768,
+												authScheme: "bearer",
+												endpoint: "https://provider.example",
+												endpointRouteHmacSha256: "a".repeat(64),
+												endpointRouteBindingPolicy:
+													"independent-key-hmac-sha256-observed-openai-embedding-route-v3",
+												inferencePolicy: "embedding-only-no-llm-v1",
+												mutationAuthorizationPolicy:
+													"none-immutable-turn-baseline-v1",
+											}
+										: {}),
+								},
 								cases: [
 									{
 										caseId: benchmarkCase.id,
@@ -265,22 +339,33 @@ describe("semantic campaign CLI", () => {
 			});
 			expect(campaign.runs).toHaveLength(4);
 			expect(artifacts.packet.samples).toHaveLength(4);
+			expect(campaign.disclosure.retrievalBaselinePolicy).toBeNull();
 		} finally {
 			rmSync(directory, { recursive: true, force: true });
 		}
 	});
 
 	it("builds a reproducible six-engine position-balanced schedule", () => {
-		const first = buildSemanticCampaignPlan("frozen-campaign", 12);
-		expect(first).toEqual(buildSemanticCampaignPlan("frozen-campaign", 12));
+		const first = buildSemanticCampaignPlan(
+			"frozen-campaign",
+			12,
+			DEFAULT_SEMANTIC_ENGINES,
+		);
+		expect(first).toEqual(
+			buildSemanticCampaignPlan(
+				"frozen-campaign",
+				12,
+				DEFAULT_SEMANTIC_ENGINES,
+			),
+		);
 		expect(first).toHaveLength(72);
 		for (const engine of [
-			"graphiti",
 			"graphiti-historical",
 			"hindsight",
 			"letta",
 			"mem0",
 			"naia",
+			"plain-vector",
 		] as const) {
 			expect(
 				first.filter(
@@ -531,6 +616,140 @@ describe("semantic campaign CLI", () => {
 						),
 					).toThrow("invalid semantic raw artifact");
 				}
+			}
+
+			const baseline = structuredClone(artifact) as typeof artifact & {
+				disclosure: typeof artifact.disclosure & {
+					inferencePolicy?: string;
+					mutationAuthorizationPolicy?: string;
+					llmModel?: string;
+					embeddingModel?: string;
+					embeddingRevision?: string;
+					embeddingDimensions?: number;
+					authScheme?: string;
+					endpoint?: string;
+					endpointRouteHmacSha256?: string;
+					endpointRouteBindingPolicy?: string;
+				};
+			};
+			baseline.disclosure.engine = "plain-vector";
+			baseline.disclosure.inferencePolicy = "embedding-only-no-llm-v1";
+			baseline.disclosure.mutationAuthorizationPolicy =
+				"none-immutable-turn-baseline-v1";
+			baseline.disclosure.embeddingModel = "embedding-model";
+			baseline.disclosure.embeddingRevision = "embedding-revision";
+			baseline.disclosure.embeddingDimensions = 768;
+			baseline.disclosure.authScheme = "bearer";
+			baseline.disclosure.endpoint = "https://provider.example";
+			baseline.disclosure.endpointRouteHmacSha256 = "a".repeat(64);
+			baseline.disclosure.endpointRouteBindingPolicy =
+				"independent-key-hmac-sha256-observed-openai-embedding-route-v3";
+			baseline.cases[0].retrievalSurface =
+				"baseline-immutable-turn-vector-search-v1";
+			baseline.cases[0].ingestionReceipts = [
+				{ outcome: "native-operations", nativeOperationCount: 1 },
+			];
+			baseline.cases[0].nativeState = [
+				{ nativeId: "turn-000001", content: "기억" },
+			];
+			baseline.cases[0].retrieved = [
+				{ nativeId: "turn-000001", content: "기억" },
+			];
+			baseline.cases[0].outputSha256 = sha256({
+				ingestionReceipts: baseline.cases[0].ingestionReceipts,
+				nativeState: baseline.cases[0].nativeState,
+				retrieved: baseline.cases[0].retrieved,
+			});
+			writeFileSync(path, JSON.stringify(baseline));
+			expect(() =>
+				validateRawArtifact(
+					path,
+					{ ...expected, engine: "plain-vector" },
+					[benchmarkCase],
+					1,
+				),
+			).not.toThrow();
+			for (const mutate of [
+				(current: typeof baseline) => {
+					current.disclosure.inferencePolicy = undefined;
+				},
+				(current: typeof baseline) => {
+					current.disclosure.mutationAuthorizationPolicy = "mutable";
+				},
+				(current: typeof baseline) => {
+					current.disclosure.llmModel = "unexpected";
+				},
+				(current: typeof baseline) => {
+					current.disclosure.embeddingModel = undefined;
+				},
+				(current: typeof baseline) => {
+					current.disclosure.embeddingRevision = "";
+				},
+				(current: typeof baseline) => {
+					current.disclosure.embeddingDimensions = 0;
+				},
+				(current: typeof baseline) => {
+					current.disclosure.authScheme = "x-anyllm";
+				},
+				(current: typeof baseline) => {
+					current.disclosure.endpoint =
+						"https://provider.example/credential-path";
+				},
+				(current: typeof baseline) => {
+					current.disclosure.endpointRouteHmacSha256 = "wrong";
+				},
+				(current: typeof baseline) => {
+					current.disclosure.endpointRouteBindingPolicy = "hmac-sha256-effective-openai-embedding-route-v1";
+				},
+				(current: typeof baseline) => {
+					current.disclosure.endpointRouteBindingPolicy = "independent-key-hmac-sha256-effective-openai-embedding-route-v2";
+				},
+				(current: typeof baseline) => {
+					current.cases[0].ingestionReceipts = [];
+				},
+				(current: typeof baseline) => {
+					Object.assign(current.cases[0].ingestionReceipts[0], {
+						deleteOutcomeDelta: 1,
+					});
+				},
+				(current: typeof baseline) => {
+					Object.assign(current.cases[0].ingestionReceipts[0], {
+						unexpectedEvidence: true,
+					});
+				},
+				(current: typeof baseline) => {
+					current.cases[0].nativeState[0].nativeId = "wrong";
+				},
+				(current: typeof baseline) => {
+					current.cases[0].retrieved[0].content = "changed";
+				},
+				(current: typeof baseline) => {
+					current.cases[0].nativeState.push({
+						...current.cases[0].nativeState[0],
+					});
+				},
+				(current: typeof baseline) => {
+					current.cases[0].retrieved.push({
+						...current.cases[0].retrieved[0],
+					});
+				},
+			]) {
+				const invalid = structuredClone(baseline);
+				mutate(invalid);
+				invalid.cases[0].outputSha256 = sha256({
+					ingestionReceipts: invalid.cases[0].ingestionReceipts,
+					nativeState: invalid.cases[0].nativeState,
+					retrieved: invalid.cases[0].retrieved,
+				});
+				writeFileSync(path, JSON.stringify(invalid));
+				expect(() =>
+					validateRawArtifact(
+						path,
+						{ ...expected, engine: "plain-vector" },
+						[benchmarkCase],
+						1,
+					),
+				).toThrow("invalid semantic raw artifact");
 			}
 		} finally {
 			rmSync(directory, { recursive: true, force: true });

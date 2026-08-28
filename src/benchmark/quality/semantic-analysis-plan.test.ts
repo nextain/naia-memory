@@ -250,6 +250,92 @@ describe("semantic analysis plan", () => {
 			"hindsight-renamed" as "graphiti-historical",
 		];
 		expect(isSemanticAnalysisPlan(current.plan)).toBe(false);
+		const explicitNull = fixture();
+		(
+			explicitNull.plan.comparisonLanes as unknown as Record<string, unknown>
+		).retrievalBaseline = null;
+		expect(isSemanticAnalysisPlan(explicitNull.plan)).toBe(true);
+		const legacyUnknown = fixture();
+		(
+			legacyUnknown.plan.comparisonLanes as unknown as Record<string, unknown>
+		).undeclaredLane = [];
+		expect(isSemanticAnalysisPlan(legacyUnknown.plan)).toBe(true);
+		(
+			legacyUnknown.plan.comparisonLanes as unknown as Record<string, unknown>
+		).retrievalBaseline = ["legacy-extension"];
+		expect(isSemanticAnalysisPlan(legacyUnknown.plan)).toBe(true);
+		const baselineUnknown = fixture();
+		baselineUnknown.plan.schemaVersion =
+			"naia-memory-semantic-analysis-plan-v6";
+		baselineUnknown.plan.comparisonLanes.retrievalBaseline = ["plain-vector"];
+		(
+			baselineUnknown.plan.comparisonLanes as unknown as Record<string, unknown>
+		).undeclaredLane = ["plain-vector"];
+		expect(isSemanticAnalysisPlan(baselineUnknown.plan)).toBe(false);
+	});
+
+	it("binds plain-vector only through the signed retrieval baseline lane", () => {
+		const current = fixture();
+		current.plan.schemaVersion = "naia-memory-semantic-analysis-plan-v6";
+		current.plan.engines.push("plain-vector");
+		current.plan.comparisonLanes.retrievalBaseline = ["plain-vector"];
+		current.campaign.disclosure.engines.push("plain-vector");
+		current.campaign.disclosure.comparisonLanes = current.plan.comparisonLanes;
+		resign(current);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).not.toThrow();
+
+		current.plan.comparisonLanes.retrievalBaseline = ["mem0" as "plain-vector"];
+		resign(current);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan content is invalid");
+
+		current.plan.comparisonLanes.retrievalBaseline = [];
+		resign(current);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan content is invalid");
+
+		const missing = fixture();
+		missing.plan.schemaVersion = "naia-memory-semantic-analysis-plan-v6";
+		missing.plan.engines.push("plain-vector");
+		(
+			missing.plan.comparisonLanes as Record<string, unknown>
+		).retrievalBaseline = undefined;
+		expect(isSemanticAnalysisPlan(missing.plan)).toBe(false);
+
+		const engineMissing = fixture();
+		engineMissing.plan.schemaVersion = "naia-memory-semantic-analysis-plan-v6";
+		engineMissing.plan.comparisonLanes.retrievalBaseline = ["plain-vector"];
+		expect(isSemanticAnalysisPlan(engineMissing.plan)).toBe(false);
+	});
+
+	it("keeps projected Graphiti diagnostic-only in v6 plans", () => {
+		const current = fixture();
+		current.plan.schemaVersion = "naia-memory-semantic-analysis-plan-v6";
+		current.plan.engines.push("plain-vector", "graphiti");
+		current.plan.comparisonLanes.retrievalBaseline = ["plain-vector"];
+		current.plan.comparisonLanes.productIntegrationDiagnostic = ["graphiti"];
+		current.campaign.disclosure.engines = [...current.plan.engines];
+		current.campaign.disclosure.comparisonLanes = current.plan.comparisonLanes;
+		resign(current);
+		expect(() =>
+			validateSemanticAnalysisPlan({
+				...current,
+				firstExecutionStartedAt: "2026-01-03T00:00:00Z",
+			}),
+		).toThrow("semantic analysis plan content is invalid");
 	});
 
 	it("rejects a campaign that does not disclose its claim scope and lanes", () => {

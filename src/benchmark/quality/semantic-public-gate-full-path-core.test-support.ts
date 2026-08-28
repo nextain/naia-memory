@@ -206,6 +206,9 @@ export async function writeExecutionFixture(
 						embeddingDimensions: 768,
 						llmModel: "llm-model",
 						authScheme: "bearer",
+						endpointRouteHmacSha256: "e".repeat(64),
+						endpointRouteBindingPolicy:
+							"independent-key-hmac-sha256-observed-openai-embedding-route-v3",
 					}
 				: {
 						providerPolicy: "engine-server-native-configuration-v1",

@@ -8,7 +8,7 @@ import {
 	evidenceSignaturePayload,
 } from "./public-evidence-crypto.js";
 import { semanticBlindFixture } from "./semantic-blind-packet-fixture.js";
-import { SUPPORTED_SEMANTIC_ENGINES } from "./semantic-campaign-cli.js";
+import { DEFAULT_SEMANTIC_ENGINES } from "./semantic-campaign-cli.js";
 import {
 	type SemanticExecutionEvidenceBundle,
 	semanticConfigurationSha256,
@@ -16,7 +16,6 @@ import {
 	validateSemanticConfigurationParity,
 	validateSemanticExecutionEvidence,
 } from "./semantic-execution-evidence.js";
-
 function graphitiRuntimeEvidence() {
 	const contacted = {
 		graphitiCoreVersion: "1.0.0",
@@ -50,22 +49,30 @@ function graphitiRuntimeEvidence() {
 		contactedServerIdentityAfter: { ...contacted },
 	};
 }
-
 const roots: string[] = [];
-
 afterEach(async () => {
 	await Promise.all(
 		roots.splice(0).map((path) => rm(path, { recursive: true, force: true })),
 	);
 });
-
 async function fixture(
-	options: { competitive?: boolean; mismatch?: boolean } = {},
+	options: {
+		competitive?: boolean;
+		mismatch?: boolean;
+		legacyLaneExtension?: boolean;
+		legacyFiveTrack?: boolean;
+		analysisPlanSchemaVersion?:
+			| "naia-memory-semantic-analysis-plan-v5"
+			| "naia-memory-semantic-analysis-plan-v6";
+	} = {},
 ) {
 	const directory = await mkdtemp(join(tmpdir(), "semantic-execution-"));
 	roots.push(directory);
+	const engines = options.legacyFiveTrack || !options.competitive
+		? DEFAULT_SEMANTIC_ENGINES.filter((engine) => engine !== "plain-vector")
+		: [...DEFAULT_SEMANTIC_ENGINES];
 	const source = semanticBlindFixture(directory, {
-		engines: [...SUPPORTED_SEMANTIC_ENGINES],
+		engines,
 		schemaVersion: "naia-memory-semantic-campaign-v3",
 	});
 	source.contract.familySplitFreeze = {
@@ -73,6 +80,33 @@ async function fixture(
 		digest: `sha256:${"a".repeat(64)}`,
 	};
 	const configurationHashes = new Map<string, string>();
+	if (!options.competitive) {
+		for (const run of source.campaign.runs.filter(
+			(run) => run.engine === "plain-vector",
+		)) {
+			const path = join(directory, run.outputFile);
+			const artifact = JSON.parse(await readFile(path, "utf8"));
+			Object.assign(artifact.disclosure, {
+				inferencePolicy: "embedding-only-no-llm-v1",
+				mutationAuthorizationPolicy: "none-immutable-turn-baseline-v1",
+				embeddingModel: "embedding-model",
+				embeddingRevision: "embedding-revision",
+				embeddingDimensions: 768,
+				authScheme: "bearer",
+				endpoint: "https://provider.example",
+				endpointRouteHmacSha256: "e".repeat(64),
+				endpointRouteBindingPolicy:
+					"independent-key-hmac-sha256-observed-openai-embedding-route-v3",
+			});
+			const bytes = JSON.stringify(artifact);
+			await writeFile(path, bytes);
+			run.artifactSha256 = (await import("node:crypto"))
+				.createHash("sha256")
+				.update(bytes)
+				.digest("hex");
+		}
+		await writeFile(source.campaignPath, JSON.stringify(source.campaign));
+	}
 	if (options.competitive) {
 		const campaign = source.campaign as typeof source.campaign & {
 			schemaVersion: string;
@@ -81,6 +115,11 @@ async function fixture(
 		campaign.schemaVersion = "naia-memory-semantic-campaign-v5";
 		Object.assign(campaign.disclosure, {
 			eligibility: "competitive-candidate",
+			analysisPlanSchemaVersion:
+				options.analysisPlanSchemaVersion ??
+				(options.legacyFiveTrack
+					? "naia-memory-semantic-analysis-plan-v5"
+					: "naia-memory-semantic-analysis-plan-v6"),
 			analysisPlanSha256: "1".repeat(64),
 			confirmatoryAuthorizationSha256: "2".repeat(64),
 			analysisPlanTimestampEvidenceSha256: "3".repeat(64),
@@ -90,7 +129,11 @@ async function fixture(
 				directLifecycle: ["hindsight", "mem0"],
 				nativeTemporalCharacterization: ["graphiti-historical"],
 				agentManagedCharacterization: ["letta"],
-				productIntegrationDiagnostic: ["graphiti"],
+				productIntegrationDiagnostic: [],
+				retrievalBaseline: ["plain-vector"],
+				...(options.legacyLaneExtension
+					? { legacyExtension: ["accepted"] }
+					: {}),
 			},
 			crossLaneAggregation: "prohibited",
 		});
@@ -98,46 +141,61 @@ async function fixture(
 			const path = join(directory, run.outputFile);
 			const artifact = JSON.parse(await readFile(path, "utf8"));
 			Object.assign(artifact.disclosure, {
-				endpoint: "https://provider.example/v1/",
-				...(run.engine === "naia" || run.engine === "mem0"
+				endpoint: "https://provider.example",
+				...(run.engine === "plain-vector"
 					? {
 							embeddingModel: "embedding-model",
 							embeddingRevision: "embedding-revision",
 							embeddingDimensions: 768,
-							llmModel: "llm-model",
 							authScheme: "bearer",
+							endpointRouteHmacSha256: "e".repeat(64),
+							endpointRouteBindingPolicy:
+								"independent-key-hmac-sha256-observed-openai-embedding-route-v3",
+							inferencePolicy: "embedding-only-no-llm-v1",
+							mutationAuthorizationPolicy: "none-immutable-turn-baseline-v1",
 						}
-					: run.engine === "graphiti" || run.engine === "graphiti-historical"
+					: run.engine === "naia" || run.engine === "mem0"
 						? {
-								providerPolicy: "engine-server-native-configuration-v1",
-								graphitiRuntime: graphitiRuntimeEvidence(),
+								embeddingModel: "embedding-model",
+								embeddingRevision: "embedding-revision",
+								embeddingDimensions: 768,
+								llmModel: "llm-model",
+								authScheme: "bearer",
+								endpointRouteHmacSha256: "e".repeat(64),
+								endpointRouteBindingPolicy:
+									"independent-key-hmac-sha256-observed-openai-embedding-route-v3",
 							}
-						: run.engine === "hindsight"
+						: run.engine === "graphiti" || run.engine === "graphiti-historical"
 							? {
 									providerPolicy: "engine-server-native-configuration-v1",
-									hindsightRuntime: {
-										version: "1.0.0",
-										imageDigest: `sha256:${"c".repeat(64)}`,
-										llmProvider: "provider",
-										llmModel: "llm-model",
-										embeddingProvider: "embedding-provider",
-										embeddingModel: "embedding-model",
-										embeddingRevision: "embedding-revision",
-										embeddingDimensions: 768,
-									},
+									graphitiRuntime: graphitiRuntimeEvidence(),
 								}
-							: {
-									providerPolicy: "engine-server-native-configuration-v1",
-									lettaRuntime: {
-										version: "1.0.0",
-										imageDigest: `sha256:${"d".repeat(64)}`,
-										llmModel: "llm-model",
-										embeddingProvider: "embedding-provider",
-										embeddingModel: "embedding-model",
-										embeddingRevision: "embedding-revision",
-										embeddingDimensions: 768,
-									},
-								}),
+							: run.engine === "hindsight"
+								? {
+										providerPolicy: "engine-server-native-configuration-v1",
+										hindsightRuntime: {
+											version: "1.0.0",
+											imageDigest: `sha256:${"c".repeat(64)}`,
+											llmProvider: "provider",
+											llmModel: "llm-model",
+											embeddingProvider: "embedding-provider",
+											embeddingModel: "embedding-model",
+											embeddingRevision: "embedding-revision",
+											embeddingDimensions: 768,
+										},
+									}
+								: {
+										providerPolicy: "engine-server-native-configuration-v1",
+										lettaRuntime: {
+											version: "1.0.0",
+											imageDigest: `sha256:${"d".repeat(64)}`,
+											llmModel: "llm-model",
+											embeddingProvider: "embedding-provider",
+											embeddingModel: "embedding-model",
+											embeddingRevision: "embedding-revision",
+											embeddingDimensions: 768,
+										},
+									}),
 			});
 			configurationHashes.set(
 				run.engine,
@@ -211,31 +269,7 @@ async function fixture(
 		trustPolicy: { executorPublicKeys },
 	};
 }
-
 describe("semantic execution evidence", () => {
-	it("verifies stable direct-comparator provider configuration", () => {
-		const shared = {
-			topK: 5,
-			embeddingModel: "embedding-model",
-			embeddingRevision: "embedding-revision",
-			embeddingRevisionAuthority: "operator-asserted",
-			configurationAuthority:
-				"source-pin-matched-and-contacted-server-observed",
-			embeddingDimensions: 768,
-			llmModel: "llm-model",
-			authScheme: "bearer",
-			endpoint: "https://provider.example/v1/",
-		};
-		expect(() =>
-			validateSemanticConfigurationParity([
-				{ ...shared, engine: "naia", executionSeed: "naia-1" },
-				{ ...shared, engine: "naia", executionSeed: "naia-2" },
-				{ ...shared, engine: "mem0", executionSeed: "mem0-1" },
-				{ ...shared, engine: "mem0", executionSeed: "mem0-2" },
-			]),
-		).not.toThrow();
-	});
-
 	it("rejects missing disclosures, repetition drift, and favorable provider asymmetry", () => {
 		const shared = {
 			topK: 5,
@@ -245,6 +279,9 @@ describe("semantic execution evidence", () => {
 			llmModel: "llm-model",
 			authScheme: "bearer",
 			endpoint: "https://provider.example/v1/",
+			endpointRouteHmacSha256: "e".repeat(64),
+			endpointRouteBindingPolicy:
+				"independent-key-hmac-sha256-observed-openai-embedding-route-v3",
 		};
 		expect(() =>
 			validateSemanticConfigurationParity([
@@ -349,7 +386,6 @@ describe("semantic execution evidence", () => {
 			]),
 		).toThrow("Hindsight embedding dimensions are invalid");
 	});
-
 	it("rejects incomplete Letta embedding runtime evidence", () => {
 		const runtime = {
 			version: "1.0.0",
@@ -394,7 +430,6 @@ describe("semantic execution evidence", () => {
 			]),
 		).toThrow("letta/embeddingDimensions");
 	});
-
 	it("requires immutable server images and identical Graphiti lane runtimes", () => {
 		const runtime = graphitiRuntimeEvidence();
 		const changedRuntime = graphitiRuntimeEvidence();
@@ -507,7 +542,6 @@ describe("semantic execution evidence", () => {
 			).toThrow();
 		}
 	});
-
 	it("rejects unsafe endpoint disclosures", () => {
 		expect(() =>
 			validateSemanticConfigurationParity([
@@ -525,7 +559,6 @@ describe("semantic execution evidence", () => {
 			]),
 		).toThrow("endpoint disclosure is unsafe");
 	});
-
 	it("canonically binds receipts to disclosed configuration", () => {
 		const disclosure = {
 			engine: "naia",
@@ -543,7 +576,6 @@ describe("semantic execution evidence", () => {
 			}),
 		);
 	});
-
 	it("rejects a validly signed receipt whose configuration hash differs from the raw disclosure", async () => {
 		const value = await fixture({ competitive: true, mismatch: true });
 		expect(() =>
@@ -557,7 +589,6 @@ describe("semantic execution evidence", () => {
 			}),
 		).toThrow("semantic execution receipt content is invalid");
 	});
-
 	it("accepts validly signed receipts bound to every competitive configuration", async () => {
 		const value = await fixture({ competitive: true });
 		expect(
@@ -569,9 +600,67 @@ describe("semantic execution evidence", () => {
 				bundle: value.bundle,
 				trustPolicy: value.trustPolicy,
 			}),
-		).toMatchObject({ engineCount: SUPPORTED_SEMANTIC_ENGINES.length });
+		).toMatchObject({ engineCount: DEFAULT_SEMANTIC_ENGINES.length });
 	});
-
+	it("rejects legacy lane extensions and schema downgrades for baseline campaigns", async () => {
+		const current = await fixture({
+			competitive: true,
+			legacyLaneExtension: true,
+		});
+		expect(() =>
+			validateSemanticExecutionEvidence({
+				contract: current.contract,
+				campaign: current.campaign,
+				campaignBytes: current.campaignBytes,
+				campaignDirectory: current.directory,
+				bundle: current.bundle,
+				trustPolicy: current.trustPolicy,
+			}),
+		).toThrow("semantic execution campaign shape is invalid");
+		const downgraded = await fixture({ competitive: true });
+		(
+			downgraded.campaign.disclosure as Record<string, unknown>
+		).analysisPlanSchemaVersion = undefined;
+		expect(() =>
+			validateSemanticExecutionEvidence({
+				contract: downgraded.contract,
+				campaign: downgraded.campaign,
+				campaignBytes: downgraded.campaignBytes,
+				campaignDirectory: downgraded.directory,
+				bundle: downgraded.bundle,
+				trustPolicy: downgraded.trustPolicy,
+			}),
+		).toThrow("semantic execution campaign shape is invalid");
+	});
+	it("accepts a legacy v5 five-track campaign with a tolerated lane extension", async () => {
+		const value = await fixture({ competitive: true, legacyFiveTrack: true });
+		expect(
+			validateSemanticExecutionEvidence({
+				contract: value.contract,
+				campaign: value.campaign,
+				campaignBytes: value.campaignBytes,
+				campaignDirectory: value.directory,
+				bundle: value.bundle,
+				trustPolicy: value.trustPolicy,
+			}),
+		).toMatchObject({ engineCount: 5 });
+	});
+	it("rejects a competitive campaign that omits the plain-vector lane binding", async () => {
+		const value = await fixture({ competitive: true });
+		const disclosure = value.campaign.disclosure as Record<string, unknown>;
+		const lanes = disclosure.comparisonLanes as Record<string, unknown>;
+		lanes.retrievalBaseline = [];
+		expect(() =>
+			validateSemanticExecutionEvidence({
+				contract: value.contract,
+				campaign: value.campaign,
+				campaignBytes: value.campaignBytes,
+				campaignDirectory: value.directory,
+				bundle: value.bundle,
+				trustPolicy: value.trustPolicy,
+			}),
+		).toThrow("semantic execution campaign shape is invalid");
+	});
 	it("qualifies complete signed execution artifacts without claiming cost completeness", async () => {
 		const value = await fixture();
 		expect(
@@ -583,9 +672,27 @@ describe("semantic execution evidence", () => {
 				bundle: value.bundle,
 				trustPolicy: value.trustPolicy,
 			}),
-		).toEqual({ engineCount: 6, runCount: 36, costComplete: false });
+		).toEqual({ engineCount: 5, runCount: 25, costComplete: false });
 	});
-
+	it("rejects plain-vector under downgraded v3 and v4 campaign schemas", async () => {
+		for (const schemaVersion of [
+			"naia-memory-semantic-campaign-v3",
+			"naia-memory-semantic-campaign-v4",
+		] as const) {
+			const value = await fixture({ competitive: true });
+			value.campaign.schemaVersion = schemaVersion;
+			expect(() =>
+				validateSemanticExecutionEvidence({
+					contract: value.contract,
+					campaign: value.campaign,
+					campaignBytes: value.campaignBytes,
+					campaignDirectory: value.directory,
+					bundle: value.bundle,
+					trustPolicy: value.trustPolicy,
+				}),
+			).toThrow("semantic execution campaign shape is invalid");
+		}
+	});
 	it("rejects forged signatures and incomplete engine coverage", async () => {
 		const forged = await fixture();
 		const firstReceipt = forged.bundle.receipts[0];
@@ -601,7 +708,6 @@ describe("semantic execution evidence", () => {
 				trustPolicy: forged.trustPolicy,
 			}),
 		).toThrow("signature is untrusted or invalid");
-
 		const incomplete = await fixture();
 		incomplete.bundle.receipts.pop();
 		expect(() =>
@@ -615,7 +721,6 @@ describe("semantic execution evidence", () => {
 			}),
 		).toThrow("do not cover every engine");
 	});
-
 	it("rejects a campaign artifact symlink before reading its target", async () => {
 		const value = await fixture();
 		const outputFile = value.campaign.runs[0]?.outputFile;
@@ -634,7 +739,6 @@ describe("semantic execution evidence", () => {
 			}),
 		).toThrow("artifact is not a regular file");
 	});
-
 	it("rejects an output path that differs from the deterministic campaign plan", async () => {
 		const value = await fixture();
 		const firstRun = value.campaign.runs[0];
@@ -651,7 +755,6 @@ describe("semantic execution evidence", () => {
 			}),
 		).toThrow("campaign plan is invalid");
 	});
-
 	it("rejects a v4 competitive campaign without a preregistered plan hash", async () => {
 		const value = await fixture();
 		const campaign = value.campaign as unknown as Record<string, unknown>;

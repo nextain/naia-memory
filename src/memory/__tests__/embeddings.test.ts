@@ -103,6 +103,49 @@ describe("OfflineEmbeddingProvider · explicit true batch", () => {
 });
 
 describe("remote embedding-space identity", () => {
+	it("fails closed on OpenAI-compatible response cardinality and index drift", async () => {
+		const provider = new OpenAICompatEmbeddingProvider(
+			"https://embedding.example",
+			"key",
+			"model",
+		);
+		for (const data of [
+			[],
+			[{ embedding: [1] }, { embedding: [2] }],
+			[{ embedding: [1], index: 1 }],
+			[{ embedding: [1], index: 0 }, { embedding: [2], index: 0 }],
+		]) {
+			vi.stubGlobal(
+				"fetch",
+				vi.fn().mockResolvedValue({
+					ok: true,
+					json: async () => ({ data }),
+				}),
+			);
+			await expect(provider.embed("query")).rejects.toThrow(
+				/cardinality|invalid vector|invalid response indices/,
+			);
+			vi.unstubAllGlobals();
+		}
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue({
+				ok: true,
+				json: async () => ({
+					data: [
+						{ embedding: [2], index: 1 },
+						{ embedding: [1], index: 0 },
+					],
+				}),
+			}),
+		);
+		await expect(provider.embedBatch(["first", "second"])).resolves.toEqual([
+			[1],
+			[2],
+		]);
+		vi.unstubAllGlobals();
+	});
+
 	it("requires immutable remote revisions and excludes endpoint credentials and paths", () => {
 		const providers = [
 			new OpenAICompatEmbeddingProvider(

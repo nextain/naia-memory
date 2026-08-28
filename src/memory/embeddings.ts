@@ -52,6 +52,14 @@ export const OFFLINE_MODEL_REVISIONS = {
 		"2c4055b12046f11709e9df2c122e59ffbdc2f900",
 } as const;
 
+/** Resolve the exact HTTP route used by OpenAI-compatible embedding calls. */
+export function openAICompatEmbeddingEndpoint(baseUrl: string): string {
+	const trimmedBase = baseUrl.replace(/\/+$/, "");
+	return /\/(?:openai|v1)$/.test(trimmedBase)
+		? `${trimmedBase}/embeddings`
+		: `${trimmedBase}/v1/embeddings`;
+}
+
 type OfflineModelName = keyof typeof OFFLINE_MODEL_REVISIONS;
 export type OfflineBatchInferenceMode = "per-item-v1" | "padded-array-batch-v1";
 
@@ -260,11 +268,7 @@ export class OpenAICompatEmbeddingProvider implements EmbeddingProvider {
 		//                            and the embeddings endpoint is `${base}/embeddings`.
 		//   - OpenAI / vLLM standard: baseUrl typically does NOT include `/v1/`,
 		//                             and the endpoint is `${base}/v1/embeddings`.
-		const trimmedBase = this.baseUrl.replace(/\/+$/, "");
-		const isGeminiCompat = /\/openai$/.test(trimmedBase);
-		const url = isGeminiCompat
-			? `${trimmedBase}/embeddings`
-			: `${trimmedBase}/v1/embeddings`;
+		const url = openAICompatEmbeddingEndpoint(this.baseUrl);
 		const res = await fetch(url, {
 			method: "POST",
 			headers: {
@@ -278,9 +282,35 @@ export class OpenAICompatEmbeddingProvider implements EmbeddingProvider {
 				`Embedding API error: ${res.status} ${await res.text().catch(() => "")}`,
 			);
 		const data = (await res.json()) as {
-			data: Array<{ embedding: number[] }>;
+			data: Array<{ embedding: number[]; index?: number }>;
 			usage?: { prompt_tokens?: number; total_tokens?: number };
 		};
+		if (!Array.isArray(data.data) || data.data.length !== texts.length)
+			throw new Error(
+				`Embedding API cardinality mismatch: expected ${texts.length}, received ${Array.isArray(data.data) ? data.data.length : "non-array"}`,
+			);
+		for (const [index, item] of data.data.entries()) {
+			if (
+				!item ||
+				!Array.isArray(item.embedding) ||
+				item.embedding.length < 1 ||
+				item.embedding.some((value) => !Number.isFinite(value))
+			)
+				throw new Error(`Embedding API returned an invalid vector at index ${index}`);
+		}
+		const indexed = data.data.some((item) => item.index !== undefined);
+		if (indexed) {
+			const indices = data.data.map((item) => item.index);
+			if (
+				indices.some(
+					(index) =>
+						!Number.isInteger(index) || index == null || index < 0 || index >= texts.length,
+				) ||
+				new Set(indices).size !== texts.length
+			)
+				throw new Error("Embedding API returned invalid response indices");
+			data.data.sort((left, right) => (left.index as number) - (right.index as number));
+		}
 		// Track usage for benchmark cost reporting (no-op if tracker not used).
 		try {
 			const { recordEmbedding } = await import("./usage-tracker.js");

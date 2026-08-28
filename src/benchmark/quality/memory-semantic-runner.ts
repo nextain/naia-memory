@@ -31,6 +31,7 @@ export type SemanticEngineBridge = {
 		| "sequential-turn-settled-bank-v1";
 	readonly temporalInputPolicy: "engine-default-ingest-time-v1";
 	readonly retrievalSurface:
+		| "baseline-immutable-turn-vector-search-v1"
 		| "engine-native-semantic-memory-v1"
 		| "engine-current-state-projected-semantic-memory-v1"
 		| "engine-native-historical-search-v1"
@@ -126,6 +127,8 @@ export async function runSemanticRawContract(
 			if (bridge.temporalInputPolicy !== "engine-default-ingest-time-v1")
 				throw new Error("semantic bridge must not receive fixture timestamps");
 			if (
+				bridge.retrievalSurface !==
+					"baseline-immutable-turn-vector-search-v1" &&
 				bridge.retrievalSurface !== "engine-native-semantic-memory-v1" &&
 				bridge.retrievalSurface !==
 					"engine-current-state-projected-semantic-memory-v1" &&

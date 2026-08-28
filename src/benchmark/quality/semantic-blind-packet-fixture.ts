@@ -56,12 +56,34 @@ export function semanticBlindFixture(
 		repetitions,
 		engines,
 	).map((run) => {
-		const output = {
-			ingestionReceipts: [{ outcome: "opaque" }],
-			nativeState: [{ nativeId: `${run.engine}-native`, content: "서울 거주" }],
-			retrieved: [{ nativeId: `${run.engine}-native`, content: "서울 거주" }],
-		};
 		const benchmarkCase = contract.cases[0];
+		const output =
+			run.engine === "plain-vector"
+				? {
+						ingestionReceipts: [
+							{ outcome: "native-operations", nativeOperationCount: 1 },
+							{ outcome: "native-operations", nativeOperationCount: 1 },
+						],
+						nativeState: benchmarkCase.turns.map((turn, turnIndex) => ({
+							nativeId: `turn-${String(turnIndex + 1).padStart(6, "0")}`,
+							content: turn.content,
+						})),
+						retrieved: [
+							{
+								nativeId: "turn-000002",
+								content: benchmarkCase.turns[1]?.content ?? "",
+							},
+						],
+					}
+				: {
+						ingestionReceipts: [{ outcome: "opaque" }],
+						nativeState: [
+							{ nativeId: `${run.engine}-native`, content: "서울 거주" },
+						],
+						retrieved: [
+							{ nativeId: `${run.engine}-native`, content: "서울 거주" },
+						],
+					};
 		const artifact = {
 			schemaVersion: "naia-memory-semantic-raw-artifact-v2",
 			disclosure: {

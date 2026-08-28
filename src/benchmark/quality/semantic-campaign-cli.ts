@@ -26,18 +26,42 @@ import {
 import type { SemanticConfirmatoryExecutionAuthorization } from "./semantic-confirmatory-execution-authorization.js";
 import {
 	expectedSemanticRetrievalSurface,
+	providerConfig,
 	runSemanticRawCli,
 } from "./semantic-raw-cli.js";
 import type { SemanticEngine } from "./semantic-raw-cli.js";
+import { benchmarkEvidenceHmacKey } from "./semantic-embedding-route-evidence.js";
+import {
+	DEFAULT_SEMANTIC_ENGINES,
+	DIAGNOSTIC_SEMANTIC_ENGINES,
+	SUPPORTED_SEMANTIC_ENGINES,
+	resolveSemanticCampaignMatrix,
+} from "./semantic-campaign-matrix.js";
 
-export const SUPPORTED_SEMANTIC_ENGINES = [
-	"graphiti",
-	"graphiti-historical",
-	"hindsight",
-	"letta",
-	"mem0",
-	"naia",
-] as const;
+export {
+	DEFAULT_SEMANTIC_ENGINES,
+	DIAGNOSTIC_SEMANTIC_ENGINES,
+	SUPPORTED_SEMANTIC_ENGINES,
+	resolveSemanticCampaignMatrix,
+} from "./semantic-campaign-matrix.js";
+
+export function semanticComparisonLaneDisclosure(
+	analysisPlan: SemanticAnalysisPlan | null,
+) {
+	return {
+		comparisonLanes: analysisPlan?.comparisonLanes ?? null,
+		comparisonLaneInterpretationPolicy: analysisPlan
+			? analysisPlan.schemaVersion ===
+				"naia-memory-semantic-analysis-plan-v6"
+				? "schema-bound-known-lanes-v1"
+				: "signed-v5-extensions-preserved-uninterpreted-v1"
+			: null,
+	};
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 export type SemanticCampaignCliArgs = {
 	contractPath: string;
@@ -63,7 +87,19 @@ export type SemanticCampaignRun = {
 
 export type SemanticCampaignDependencies = {
 	runSemanticRawCli: typeof runSemanticRawCli;
+	providerConfig?: typeof providerConfig;
 };
+
+export function preflightSemanticCampaignRouteEvidence(
+	analysisPlan: Pick<SemanticAnalysisPlan, "schemaVersion"> | undefined,
+	getProviderConfig: typeof providerConfig = providerConfig,
+): void {
+	if (
+		analysisPlan?.schemaVersion !== "naia-memory-semantic-analysis-plan-v6"
+	)
+		return;
+	benchmarkEvidenceHmacKey(getProviderConfig().apiKey);
+}
 
 function sha256(value: unknown): string {
 	return createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -91,10 +127,25 @@ export function validateRawArtifact(
 	expected: SemanticCampaignRun,
 	expectedCases: MemoryUpdateCase[],
 	expectedTopK: number,
+	requireIndependentRouteBinding = false,
 ): void {
 	const artifact = JSON.parse(readFileSync(path, "utf8")) as {
 		schemaVersion?: unknown;
-		disclosure?: { engine?: unknown; executionSeed?: unknown; topK?: unknown };
+		disclosure?: {
+			engine?: unknown;
+			executionSeed?: unknown;
+			topK?: unknown;
+			inferencePolicy?: unknown;
+			mutationAuthorizationPolicy?: unknown;
+			llmModel?: unknown;
+			embeddingModel?: unknown;
+			embeddingRevision?: unknown;
+			embeddingDimensions?: unknown;
+			authScheme?: unknown;
+			endpoint?: unknown;
+			endpointRouteHmacSha256?: unknown;
+			endpointRouteBindingPolicy?: unknown;
+		};
 		cases?: Array<{
 			caseId?: unknown;
 			executionPosition?: unknown;
@@ -120,11 +171,37 @@ export function validateRawArtifact(
 	const expectedRetrievalSurface = expectedSemanticRetrievalSurface(
 		expected.engine as SemanticEngine,
 	);
+	const routeBindingInvalid =
+		requireIndependentRouteBinding &&
+		["naia", "mem0", "plain-vector"].includes(expected.engine) &&
+		(typeof artifact.disclosure?.endpointRouteHmacSha256 !== "string" ||
+			!/^[0-9a-f]{64}$/.test(artifact.disclosure.endpointRouteHmacSha256) ||
+			artifact.disclosure.endpointRouteBindingPolicy !==
+				"independent-key-hmac-sha256-observed-openai-embedding-route-v3");
 	if (
 		artifact.schemaVersion !== "naia-memory-semantic-raw-artifact-v2" ||
+		routeBindingInvalid ||
 		artifact.disclosure?.engine !== expected.engine ||
 		artifact.disclosure.executionSeed !== expected.caseExecutionSeed ||
 		artifact.disclosure.topK !== expectedTopK ||
+		(expected.engine === "plain-vector" &&
+			(artifact.disclosure.inferencePolicy !== "embedding-only-no-llm-v1" ||
+				artifact.disclosure.mutationAuthorizationPolicy !==
+					"none-immutable-turn-baseline-v1" ||
+				typeof artifact.disclosure.embeddingModel !== "string" ||
+				artifact.disclosure.embeddingModel.trim().length === 0 ||
+				typeof artifact.disclosure.embeddingRevision !== "string" ||
+				artifact.disclosure.embeddingRevision.trim().length === 0 ||
+				!Number.isInteger(artifact.disclosure.embeddingDimensions) ||
+				Number(artifact.disclosure.embeddingDimensions) < 1 ||
+				artifact.disclosure.authScheme !== "bearer" ||
+				typeof artifact.disclosure.endpoint !== "string" ||
+				!/^https?:\/\/[^/?#]+(?::\d+)?$/.test(artifact.disclosure.endpoint) ||
+				typeof artifact.disclosure.endpointRouteHmacSha256 !== "string" ||
+				!/^[0-9a-f]{64}$/.test(artifact.disclosure.endpointRouteHmacSha256) ||
+				artifact.disclosure.endpointRouteBindingPolicy !==
+					"independent-key-hmac-sha256-observed-openai-embedding-route-v3" ||
+				Object.hasOwn(artifact.disclosure, "llmModel"))) ||
 		!Array.isArray(artifact.cases) ||
 		artifact.cases.length !== expectedCases.length ||
 		new Set(artifact.cases.map((item) => item.caseId)).size !==
@@ -146,9 +223,43 @@ export function validateRawArtifact(
 						content?: unknown;
 					}>)
 				: [];
+			const expectedBaselineState = benchmarkCase?.turns.map(
+				(turn, turnIndex) => ({
+					nativeId: `turn-${String(turnIndex + 1).padStart(6, "0")}`,
+					content: turn.content,
+				}),
+			);
+			const baselineReceipts = Array.isArray(item.ingestionReceipts)
+				? item.ingestionReceipts
+				: [];
+			const baselineStateInvalid =
+				expected.engine === "plain-vector" &&
+				(expectedBaselineState === undefined ||
+					baselineReceipts.length !== expectedBaselineState.length ||
+					baselineReceipts.some(
+						(receipt) =>
+							!isRecord(receipt) ||
+							Object.keys(receipt).length !== 2 ||
+							!Object.hasOwn(receipt, "outcome") ||
+							!Object.hasOwn(receipt, "nativeOperationCount") ||
+							receipt.outcome !== "native-operations" ||
+							receipt.nativeOperationCount !== 1,
+					) ||
+					JSON.stringify(nativeState) !==
+						JSON.stringify(expectedBaselineState) ||
+					new Set(nativeState.map((memory) => memory.nativeId)).size !==
+						nativeState.length ||
+					new Set(retrieved.map((memory) => memory.nativeId)).size !==
+						retrieved.length ||
+					retrieved.some(
+						(memory) =>
+							nativeState.find((native) => native.nativeId === memory.nativeId)
+								?.content !== memory.content,
+					));
 			const nativeIds = new Set(nativeState.map((memory) => memory.nativeId));
 			return (
 				benchmarkCase === undefined ||
+				baselineStateInvalid ||
 				item.executionPosition !== index + 1 ||
 				item.language !== benchmarkCase.language ||
 				item.fixtureSha256 !==
@@ -235,9 +346,10 @@ export function parseSemanticCampaignCliArgs(
 	const topK = Number(values.get("top-k") ?? "5");
 	if (!Number.isInteger(topK) || topK < 1)
 		throw new Error("--top-k must be a positive integer");
-	const requestedEngines = (
-		values.get("engines") ?? SUPPORTED_SEMANTIC_ENGINES.join(",")
-	)
+	const defaultEngines = values.has("analysis-plan")
+		? DEFAULT_SEMANTIC_ENGINES
+		: DIAGNOSTIC_SEMANTIC_ENGINES;
+	const requestedEngines = (values.get("engines") ?? defaultEngines.join(","))
 		.split(",")
 		.map((engine) => engine.trim());
 	if (
@@ -254,13 +366,20 @@ export function parseSemanticCampaignCliArgs(
 			`--engines must select at least two unique engines from ${SUPPORTED_SEMANTIC_ENGINES.join(", ")}`,
 		);
 	const engines = requestedEngines as SemanticEngine[];
+	if (!values.has("analysis-plan") && engines.includes("plain-vector"))
+		throw new Error(
+			"plain-vector campaigns require a signed v6 --analysis-plan",
+		);
 	const repetitions = Number(
 		values.get("repetitions") ?? String(engines.length),
 	);
+	const matrixKnownAtParse =
+		!values.has("analysis-plan") || values.has("engines");
 	if (
 		!Number.isInteger(repetitions) ||
-		repetitions < engines.length ||
-		repetitions % engines.length !== 0
+		repetitions < 1 ||
+		(matrixKnownAtParse &&
+			(repetitions < engines.length || repetitions % engines.length !== 0))
 	)
 		throw new Error(
 			`--repetitions must be a positive multiple of the ${engines.length}-engine matrix of at least ${engines.length}`,
@@ -288,7 +407,7 @@ function loadCampaignAnalysisPlan(
 	path: string | undefined,
 	trustPolicyPath: string | undefined,
 	contract: MemoryUpdateContract,
-	engines: readonly string[],
+	engines: readonly string[] | undefined,
 ):
 	| {
 			plan: SemanticAnalysisPlan;
@@ -309,8 +428,9 @@ function loadCampaignAnalysisPlan(
 		);
 	if (plan.contractSha256 !== evidenceObjectSha256(contract))
 		throw new Error("semantic analysis plan contract binding is invalid");
-	if (JSON.stringify(plan.engines) !== JSON.stringify(engines))
+	if (engines && JSON.stringify(plan.engines) !== JSON.stringify(engines))
 		throw new Error("semantic analysis plan engine order is invalid");
+	const campaignEngines = engines ?? plan.engines;
 	const capturedTrustPolicy = capturedJson(trustPolicyPath);
 	const trustPolicy = capturedTrustPolicy.value;
 	if (!isSemanticAnalysisPlanTrustPolicy(trustPolicy))
@@ -322,7 +442,7 @@ function loadCampaignAnalysisPlan(
 		campaign: {
 			schemaVersion: "naia-memory-semantic-campaign-v4",
 			disclosure: {
-				engines: [...engines],
+				engines: [...campaignEngines],
 				analysisPlanSha256: evidenceObjectSha256(plan),
 				claimScope: plan.claimScope,
 				comparisonLanes: plan.comparisonLanes,
@@ -344,7 +464,7 @@ function loadCampaignAnalysisPlan(
 export function buildSemanticCampaignPlan(
 	executionSeed: string,
 	repetitions: number,
-	engines: readonly string[] = SUPPORTED_SEMANTIC_ENGINES,
+	engines: readonly string[] = DIAGNOSTIC_SEMANTIC_ENGINES,
 ): SemanticCampaignRun[] {
 	if (!executionSeed.trim())
 		throw new Error("campaign execution seed is required");
@@ -395,8 +515,9 @@ export function buildSemanticCampaignPlan(
 
 export async function runSemanticCampaignCli(
 	args: string[],
-	dependencies: SemanticCampaignDependencies = { runSemanticRawCli },
+	dependencies: SemanticCampaignDependencies = { runSemanticRawCli, providerConfig },
 ): Promise<void> {
+	const enginesExplicit = args.some((arg) => arg.startsWith("--engines="));
 	const parsed = parseSemanticCampaignCliArgs(args);
 	const contractPath = resolve(parsed.contractPath);
 	const outputDir = resolve(parsed.outputDir);
@@ -415,9 +536,16 @@ export async function runSemanticCampaignCli(
 		analysisPlanPath,
 		analysisPlanTrustPolicyPath,
 		contract,
-		parsed.engines,
+		enginesExplicit ? parsed.engines : undefined,
 	);
 	const analysisPlan = analysisPlanBundle?.plan;
+	const matrix = resolveSemanticCampaignMatrix(args, parsed, analysisPlan);
+	const campaignEngines = matrix.engines;
+	const campaignRepetitions = matrix.repetitions;
+	preflightSemanticCampaignRouteEvidence(
+		analysisPlan,
+		dependencies.providerConfig ?? providerConfig,
+	);
 	let confirmatoryEvidence:
 		| {
 				authorization: SemanticConfirmatoryExecutionAuthorization;
@@ -475,8 +603,8 @@ export async function runSemanticCampaignCli(
 	});
 	const plan = buildSemanticCampaignPlan(
 		parsed.executionSeed,
-		parsed.repetitions,
-		parsed.engines,
+		campaignRepetitions,
+		campaignEngines,
 	);
 	for (const run of plan) {
 		await dependencies.runSemanticRawCli([
@@ -491,13 +619,14 @@ export async function runSemanticCampaignCli(
 			run,
 			contract.cases,
 			parsed.topK,
+			analysisPlan?.schemaVersion === "naia-memory-semantic-analysis-plan-v6",
 		);
 	}
 	const enginePositionCounts = Object.fromEntries(
-		parsed.engines.map((engine) => [
+		campaignEngines.map((engine) => [
 			engine,
 			Object.fromEntries(
-				Array.from({ length: parsed.engines.length }, (_unused, index) => [
+				Array.from({ length: campaignEngines.length }, (_unused, index) => [
 					String(index + 1),
 					plan.filter(
 						(run) => run.engine === engine && run.enginePosition === index + 1,
@@ -511,12 +640,13 @@ export async function runSemanticCampaignCli(
 			? ("competitive-candidate" as const)
 			: ("diagnostic" as const),
 		executionSeed: parsed.executionSeed,
-		repetitions: parsed.repetitions,
+		repetitions: campaignRepetitions,
 		topK: parsed.topK,
-		engines: parsed.engines,
+		engines: campaignEngines,
 		analysisPlanSha256: analysisPlan
 			? evidenceObjectSha256(analysisPlan)
 			: null,
+		analysisPlanSchemaVersion: analysisPlan?.schemaVersion ?? null,
 		confirmatoryAuthorizationSha256: confirmatoryEvidence
 			? evidenceObjectSha256(confirmatoryEvidence.authorization)
 			: null,
@@ -530,8 +660,16 @@ export async function runSemanticCampaignCli(
 			: null,
 		claimScope:
 			analysisPlan?.claimScope ?? "diagnostic-characterization-only-v1",
-		comparisonLanes: analysisPlan?.comparisonLanes ?? null,
+		...semanticComparisonLaneDisclosure(analysisPlan),
 		crossLaneAggregation: analysisPlan?.crossLaneAggregation ?? "prohibited",
+		retrievalBaselinePolicy: campaignEngines.includes("plain-vector")
+			? {
+					engine: "plain-vector",
+					retrievalSurface: "baseline-immutable-turn-vector-search-v1",
+					inferencePolicy: "embedding-only-no-llm-v1",
+					mutationAuthorizationPolicy: "none-immutable-turn-baseline-v1",
+				}
+			: null,
 		engineOrderPolicy: "seeded-n-engine-latin-rotation-v2",
 		caseOrderPolicy: "shared-seeded-per-repetition-v1",
 		enginePositionCounts,
@@ -544,7 +682,7 @@ export async function runSemanticCampaignCli(
 		generalizationBoundary:
 			"Generated diagnostic cases only; repetitions measure execution stability, not held-out generalization.",
 		configurationPolicy:
-			"Engine-native surfaces are observed with disclosed native configurations. Letta exposes always-active non-persona core blocks first, followed by its query-ranked archival search results, and preserves the complete core-plus-archive state for identity validation. Graphiti is split into projected-current and native-historical comparator IDs; their scores must not be merged. Historical retrieval is validated against complete group history obtained independently from query output. Component-level parity and a single retrieval leaderboard are not claimed.",
+			"Engine-native surfaces are observed with disclosed native configurations. Plain-vector is a separate immutable-turn retrieval baseline using embedding-only inference, no LLM, and no mutation authorization. Letta exposes always-active non-persona core blocks first, followed by its query-ranked archival search results, and preserves the complete core-plus-archive state for identity validation. Graphiti is split into projected-current and native-historical comparator IDs; their scores must not be merged. Historical retrieval is validated against complete group history obtained independently from query output. Component-level parity and a single retrieval leaderboard are not claimed.",
 	};
 	const manifest = {
 		schemaVersion: "naia-memory-semantic-campaign-v5",
@@ -570,6 +708,7 @@ export async function runSemanticCampaignCli(
 				"src/benchmark/quality/bridge-letta-semantic.ts",
 				"src/benchmark/quality/bridge-mem0-semantic.ts",
 				"src/benchmark/quality/bridge-naia-semantic.ts",
+				"src/benchmark/quality/bridge-plain-vector-semantic.ts",
 			],
 		),
 		disclosure,
