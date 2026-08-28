@@ -72,6 +72,28 @@
           "sha256": "1fc8c2ba125671f9900d5f04c0e61cf9b0d02ec892d1127b4af8690ef74311de"
         }
       ]
+    },
+    "corrected_publication": {
+      "status": "CURRENT_FROZEN_ARTIFACTS_DELIVERED",
+      "publication_commit": "a7f7c56fd47e3615698e40904188650a64d0a892",
+      "issue_comment": "https://github.com/nextain/naia-memory/issues/40#issuecomment-5447284355",
+      "discord_delivery": {
+        "instance": "alpha",
+        "destination": "owner-dm",
+        "message_id": "1542708866373124167",
+        "attachments": [
+          {
+            "name": "global-memory-comparison-evidence-2026-08-28.md",
+            "bytes": 9210,
+            "sha256": "c2736d820006fc0cfda300d312b94814a57d03f8264b44d54d6b690c38936e31"
+          },
+          {
+            "name": "global-memory-comparison-evidence-2026-08-28.json",
+            "bytes": 3377,
+            "sha256": "d055703af7e1a6798cf512955d6ab30dcd9f91e088a8805038ae26833cd79c20"
+          }
+        ]
+      }
     }
   }
 }
