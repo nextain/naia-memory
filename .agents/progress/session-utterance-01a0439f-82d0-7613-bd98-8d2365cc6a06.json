@@ -3,8 +3,8 @@
   "contract_id": "naia-memory-residual-benchmark-2026-08-28",
   "contract_digest": "7d1e9b3463b93487cec83fd1b2ef1d6130d7fd26a1551e3475db0a9118eb1e15",
   "issue": "https://github.com/nextain/naia-memory/issues/40",
-  "current_phase": "corrected-global-comparison-checkpoint-review",
-  "current_task": "Publish and deliver the corrected frozen checkpoint, then obtain two consecutive four-role CLEAN rounds; public qualification remains blocked until then.",
+  "current_phase": "residual-benchmark-and-wiring-complete",
+  "current_task": "Residual benchmark review, naia-agent/naia-shell wiring validation, main publication, issue update, and owner delivery are complete; global superiority remains explicitly unqualified.",
   "gates_cleared": [
     "retrospective-development-rejection",
     "development-window-early-stop",
@@ -17,7 +17,12 @@
     "global-comparison-deterministic-preflight",
     "global-comparison-source-hash-verification",
     "global-comparison-main-publication",
-    "global-comparison-owner-dm-delivery"
+    "global-comparison-owner-dm-delivery",
+    "two-consecutive-four-role-clean-review",
+    "naia-agent-final-memory-e2e",
+    "naia-shell-final-memory-e2e",
+    "final-review-receipt-publication",
+    "final-owner-dm-delivery"
   ],
   "key_decisions": [
     "Preserve the existing dirty benchmark worktree and continue in an isolated clean worktree.",
@@ -26,7 +31,8 @@
     "Reject length-bucketed-hybrid-v1 because warmed throughput was 0.8371x control and minimum cosine was 0.927233.",
     "Do not retain failed experimental runtime modes in the product API.",
     "Treat the earlier unavailable OpenCode, Codex, and Claude attempts as NOT_RUN, and the two later schema-valid four-role Codex rounds as NOT_CLEAN rather than approvals.",
-    "Publish a verified engineering checkpoint while keeping public qualification and global superiority false."
+    "Publish a verified engineering checkpoint while keeping public qualification and global superiority false.",
+    "Treat two consecutive four-role CLEAN rounds as review convergence for the frozen evidence checkpoint, not as authorization for a global superiority claim."
   ],
   "evidence": {
     "baseline": "reports/quality/miracl-en-primary-preflight-2026-08-25.md",
@@ -49,7 +55,10 @@
       "global comparison manifest: 7/7 source hashes verified",
       "independent structured review: earlier OpenCode/Codex/Claude unavailable or invalid attempts were NOT_RUN",
       "independent structured review round 1: four schema-valid Codex roles were NOT_CLEAN and their evidence-label, reviewer-independence, reproducible-measurement, and receipt findings were accepted and corrected",
-      "independent structured review round 2: four schema-valid Codex roles were NOT_CLEAN because review-state wording and delivery identity still referred to superseded artifacts; corrections applied pending re-review"
+      "independent structured review round 2: four schema-valid Codex roles were NOT_CLEAN because review-state wording and delivery identity still referred to superseded artifacts; corrections applied pending re-review",
+      "corrected-head review convergence: two consecutive rounds across four distinct reviewer roles, 8/8 schema-valid CLEAN, 0 findings",
+      "naia-agent final memory wiring: build passed; 6 files and 105 tests passed",
+      "naia-shell final memory wiring: build passed; browser memory E2E 10 passed and 10 environment-gated skipped"
     ],
     "global_comparison_report": "reports/quality/global-memory-comparison-evidence-2026-08-28.md",
     "global_comparison_manifest": "reports/quality/global-memory-comparison-evidence-2026-08-28.json",
@@ -93,6 +102,19 @@
             "sha256": "d055703af7e1a6798cf512955d6ab30dcd9f91e088a8805038ae26833cd79c20"
           }
         ]
+      }
+    },
+    "final_qualification": {
+      "status": "TWO_CONSECUTIVE_FOUR_ROLE_CLEAN",
+      "public_claim_eligible": false,
+      "frozen_subject_head": "321a5be09daa19e349ea5bd9acee465750e4338d",
+      "qualification_commit": "1b2ac9819757432281d8ef9bee88844237aa8ae0",
+      "qualification_receipt": "reports/quality/global-memory-comparison-review-qualification-2026-08-28.json",
+      "issue_comment": "https://github.com/nextain/naia-memory/issues/40#issuecomment-5447380060",
+      "discord_delivery": {
+        "instance": "alpha",
+        "destination": "owner-dm",
+        "message_id": "1542712571323490404"
       }
     }
   }
