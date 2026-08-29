@@ -1,0 +1,77 @@
+{
+	"schema_version": "naia.longmemeval.h3.v1",
+	"registered_at": "2026-08-30",
+	"hypothesis_id": "H3",
+	"source": {
+		"dataset_revision": "98d7416c24c778c2fee6e6f3006e7a073259d48f",
+		"dataset_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+		"dataset_cases": 500,
+		"upstream_harness_revision": "9e0b455f4ef0e2ab8f2e582289761153549043fc",
+		"upstream_file_sha256": {
+			"src/generation/run_generation.py": "4f1eb3c69d7ad40f04065b9c0bc86f6582441018fc6ff751d162d66c95baf672",
+			"src/generation/run_generation.sh": "6602147b866eca4a80acdf5e6689389586086216c9198fce7b8380b7495c5422",
+			"src/evaluation/evaluate_qa.py": "ecce9c4c79dc89d99534ac17b383a5cbb5b9f0c69ee98adaf0684742e3d95251",
+			"src/evaluation/print_qa_metrics.py": "e9283933a0cefb7a0ded7365e436ae3d1be5aac41853325e6155d83bf07607f0",
+			"src/evaluation/print_retrieval_metrics.py": "58b70c0b562ea57372a7774a554c347cd908e901b77ac0149fc90b097b6f1b8f"
+		}
+	},
+	"system": {
+		"implementation_commit": "3ae12b1",
+		"storage": "LocalAdapter",
+		"embedding_provider": "OfflineEmbeddingProvider",
+		"embedding_model": "multilingual-e5-large",
+		"embedding_model_revision": "00fc3aeb3dbb95842de2ac1961d33c6319acf57b",
+		"search_mode": "rrf",
+		"project_scope": "one isolated project per question",
+		"consolidation": false
+	},
+	"retrieval": {
+		"granularity": "flat-turn",
+		"top_k": 50,
+		"round_expansion": "selected turn plus its next turn",
+		"reader_order": "ascending timestamp after selection",
+		"labels_hidden_until_freeze": [
+			"answer",
+			"answer_session_ids",
+			"has_answer"
+		],
+		"primary_metrics": [
+			"recall_all_at_5",
+			"ndcg_any_at_5",
+			"recall_all_at_10",
+			"ndcg_any_at_10",
+			"recall_all_at_50",
+			"ndcg_any_at_50"
+		],
+		"abstention_retrieval_excluded": true
+	},
+	"reader": {
+		"model": "gpt-4o-2024-08-06",
+		"temperature": 0,
+		"max_output_tokens": 800,
+		"history_format": "json",
+		"chain_of_note": true,
+		"prompt_source": "official upstream run_generation.py at pinned revision"
+	},
+	"judge": {
+		"model": "gpt-4o-2024-08-06",
+		"temperature": 0,
+		"max_output_tokens": 10,
+		"prompt_source": "official task-specific prompts in evaluate_qa.py at pinned revision",
+		"official_parser": "case-insensitive yes substring",
+		"supplemental_parser": "trimmed exact yes or no",
+		"primary_runs": 1,
+		"stability_audit_runs": 1
+	},
+	"primary_outcomes": [
+		"official_overall_accuracy",
+		"official_task_averaged_accuracy",
+		"official_per_type_accuracy",
+		"official_abstention_accuracy"
+	],
+	"decision_rule": {
+		"support": "The complete 500-case run validates, retrieval is frozen before labels are opened, every provider receipt and cost is present, official and strict judge parses are reported, and Naia exceeds the preregistered keyword-fallback control on overall accuracy without a lower abstention accuracy.",
+		"refute": "Any protocol, custody, completeness, receipt, or label-isolation failure, or failure to beat the keyword-fallback control under the stated accuracy constraint.",
+		"superiority_boundary": "Support establishes a protocol-matched Naia LongMemEval quality result only. It does not establish global SOTA or superiority over vendor-reported results produced with different prompts, models, cutoffs, corpora, or revisions."
+	}
+}
