@@ -65,6 +65,7 @@
 		"benchmark:public-evidence": "tsx src/benchmark/quality/public-evidence-cli.ts",
 		"benchmark:public-evidence-v10": "tsx src/benchmark/quality/public-evidence-v10-cli.ts",
 		"benchmark:longmemeval-protocol": "tsx src/benchmark/quality/longmemeval-protocol-cli.ts",
+		"benchmark:longmemeval-naia-e2e": "tsx src/benchmark/quality/longmemeval-naia-e2e-cli.ts",
 		"benchmark:custody-seal": "tsx src/benchmark/quality/public-dataset-custody-seal-cli.ts",
 		"benchmark:miracl-source": "tsx src/benchmark/quality/public-miracl-source-cli.ts",
 		"benchmark:miracl-multilingual-source-lock": "tsx src/benchmark/quality/miracl-multilingual-source-lock-cli.ts",
