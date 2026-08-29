@@ -76,8 +76,9 @@ cases. It does not establish retrieval
 quality, answer accuracy, superiority over the keyword-fallback control, or a
 global SOTA claim.
 
-The next engineering gate is resumable sharding and bounded campaign
-orchestration before scaling to all 500 cases. The preregistered support
-decision remains: semantic retrieval must beat the keyword-fallback control on
-overall judged accuracy without lowering abstention accuracy, with valid
-receipts throughout.
+The resumable sharding and bounded campaign gate subsequently passed with 100
+deterministic five-case shards and fail-closed merge validation. The next gate
+is full semantic and keyword-fallback execution, answer generation, and judging
+across all 500 cases. The preregistered support decision remains: semantic
+retrieval must beat the keyword-fallback control on overall judged accuracy
+without lowering abstention accuracy, with valid receipts throughout.

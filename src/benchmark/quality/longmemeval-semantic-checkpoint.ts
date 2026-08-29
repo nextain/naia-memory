@@ -116,6 +116,12 @@ export function validateSemanticCaseCheckpoint(
 		throw new Error("semantic checkpoint case ordinal mismatch");
 	if (result.questionId !== expected.questionId)
 		throw new Error("semantic checkpoint question ID mismatch");
+	validateSemanticPilotCaseResult(result);
+}
+
+export function validateSemanticPilotCaseResult(
+	result: SemanticPilotCaseResult,
+): void {
 	if (!SHA256.test(result.retrievalSha256))
 		throw new Error("semantic checkpoint retrieval hash is invalid");
 	for (const key of [

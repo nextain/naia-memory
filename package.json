@@ -68,6 +68,7 @@
 		"benchmark:longmemeval-naia-e2e": "tsx src/benchmark/quality/longmemeval-naia-e2e-cli.ts",
 		"benchmark:longmemeval-blind-corpus": "tsx src/benchmark/quality/longmemeval-blind-corpus-cli.ts",
 		"benchmark:longmemeval-semantic-pilot": "tsx src/benchmark/quality/longmemeval-semantic-pilot-cli.ts",
+		"benchmark:longmemeval-semantic-shards": "tsx src/benchmark/quality/longmemeval-semantic-shards-cli.ts",
 		"benchmark:custody-seal": "tsx src/benchmark/quality/public-dataset-custody-seal-cli.ts",
 		"benchmark:miracl-source": "tsx src/benchmark/quality/public-miracl-source-cli.ts",
 		"benchmark:miracl-multilingual-source-lock": "tsx src/benchmark/quality/miracl-multilingual-source-lock-cli.ts",

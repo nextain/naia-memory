@@ -21,6 +21,7 @@ import {
 	runSemanticCases,
 	selectSemanticCases,
 } from "./longmemeval-semantic-runner.js";
+import type { SemanticPilotReceipt } from "./longmemeval-semantic-shards.js";
 
 function argument(name: string): string {
 	const index = process.argv.indexOf(name);
@@ -204,7 +205,7 @@ const run = await runSemanticCases({
 });
 const cases = run.cases;
 
-const receipt = {
+const receipt: SemanticPilotReceipt = {
 	schemaVersion: "naia-memory-longmemeval-semantic-pilot-v1",
 	labelAccess: "blind-corpus-only",
 	input: {
