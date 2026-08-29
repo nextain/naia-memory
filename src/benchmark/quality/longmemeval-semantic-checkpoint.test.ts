@@ -57,4 +57,23 @@ describe("LongMemEval semantic checkpoints", () => {
 			semanticPolicySha256({ topK: 50 }),
 		);
 	});
+
+	it.each([
+		["fractional ordinal", { caseOrdinal: 7.5 }],
+		["zero turns", { turnCount: 0 }],
+		["too many results", { retrievedCount: 51 }],
+		["fractional store size", { storeBytes: 1.5 }],
+	])("rejects %s", (_label, resultOverride) => {
+		const checkpoint = createSemanticCaseCheckpoint(context, {
+			...result,
+			...resultOverride,
+		});
+		expect(() =>
+			validateSemanticCaseCheckpoint(checkpoint, {
+				...context,
+				caseOrdinal: 7,
+				questionId: "question-7",
+			}),
+		).toThrow(/invalid|mismatch/u);
+	});
 });

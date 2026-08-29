@@ -34,6 +34,28 @@ result. A real repeat validated and reused the checkpoint
 (`reusedCheckpointCount=1`) rather than reindexing; its core checkpoint loop
 completed in 0.44 ms.
 
+## Multi-case interruption recovery
+
+The runner now accepts an absolute case offset, validates a contiguous range,
+reports each reused or completed case, and atomically writes the final aggregate.
+An explicit forced-stop control exists for recovery testing.
+
+A real two-case test reused case 0, completed and checkpointed case 1, and then
+intentionally exited with status 1. No aggregate file existed after that stop.
+Case 1 covered 485 turns, returned 50 episodes with ordered retrieval SHA-256
+`4ca2099abd79ed80b38ea228db618b99df6eafdfefbe2d7b16293cd7a7cf9d96`,
+and produced a 13,299,612-byte store. Its semantic reindex took 121.2 seconds
+and recall took 65.5 ms; the forced-stop process reached 2,699,916 KiB maximum
+RSS under GNU `time`.
+
+The same two-case command then reused both checkpoints, executed zero new
+cases, and atomically emitted the aggregate in 2.69 seconds wall time. The
+aggregate binds 1,035 turns, 28,319,011 store bytes, two case results, the same
+blind corpus identity, and the same semantic policy identity. Unit coverage
+also proves a three-case forced stop after two new checkpoints resumes by
+executing only the remaining case. Invalid checkpoint integer ranges, identity
+drift, input drift, and policy drift fail closed.
+
 ## Evidence custody
 
 - Input: label-free corpus only; `answer`, `answer_session_ids`, and
@@ -49,12 +71,13 @@ completed in 0.44 ms.
 ## Claim boundary and next gate
 
 This supports only that the preregistered blind semantic retrieval path is
-feasible, bounded, and repeatable for one case. It does not establish retrieval
+feasible, bounded, repeatable, and interruption-safe for the two exercised
+cases. It does not establish retrieval
 quality, answer accuracy, superiority over the keyword-fallback control, or a
 global SOTA claim.
 
-The next engineering gate is multi-case checkpoint aggregation and interruption
-testing before scaling to all 500 cases. The preregistered support decision
-remains: semantic retrieval must beat the keyword-fallback control on overall
-judged accuracy without lowering abstention accuracy, with valid receipts
-throughout.
+The next engineering gate is resumable sharding and bounded campaign
+orchestration before scaling to all 500 cases. The preregistered support
+decision remains: semantic retrieval must beat the keyword-fallback control on
+overall judged accuracy without lowering abstention accuracy, with valid
+receipts throughout.

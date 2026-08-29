@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { LocalAdapter } from "../../memory/adapters/local.js";
 import { OfflineEmbeddingProvider } from "../../memory/embeddings.js";
@@ -12,12 +12,15 @@ import {
 	validateLongMemEvalBlindCorpus,
 } from "./longmemeval-blind-corpus.js";
 import {
-	type SemanticCheckpointContext,
 	type SemanticPilotCaseResult,
-	createSemanticCaseCheckpoint,
+	semanticCaseFileName,
 	semanticPolicySha256,
-	validateSemanticCaseCheckpoint,
+	writeJsonAtomic,
 } from "./longmemeval-semantic-checkpoint.js";
+import {
+	runSemanticCases,
+	selectSemanticCases,
+} from "./longmemeval-semantic-runner.js";
 
 function argument(name: string): string {
 	const index = process.argv.indexOf(name);
@@ -33,6 +36,21 @@ function parsePositiveInteger(value: string, name: string): number {
 	return parsed;
 }
 
+function optionalNonNegativeInteger(name: string, fallback: number): number {
+	const index = process.argv.indexOf(name);
+	if (index < 0) return fallback;
+	const parsed = Number(process.argv[index + 1]);
+	if (!Number.isSafeInteger(parsed) || parsed < 0)
+		throw new Error(`${name} must be a non-negative integer`);
+	return parsed;
+}
+
+function optionalPositiveInteger(name: string): number | undefined {
+	const index = process.argv.indexOf(name);
+	if (index < 0) return undefined;
+	return parsePositiveInteger(process.argv[index + 1] ?? "", name);
+}
+
 function parseOfficialDate(value: string): number {
 	const match =
 		/^(\d{4})\/(\d{2})\/(\d{2}) \([A-Za-z]{3}\) (\d{2}):(\d{2})$/u.exec(value);
@@ -45,43 +63,6 @@ function parseOfficialDate(value: string): number {
 		Number(hour),
 		Number(minute),
 	);
-}
-
-function safeCaseName(questionId: string): string {
-	return `${createHash("sha256").update(questionId).digest("hex").slice(0, 16)}.json`;
-}
-
-async function loadCheckpoint(
-	path: string,
-	expected: SemanticCheckpointContext & {
-		caseOrdinal: number;
-		questionId: string;
-	},
-): Promise<SemanticPilotCaseResult | undefined> {
-	let bytes: Buffer;
-	try {
-		bytes = await readFile(path);
-	} catch (error) {
-		if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
-		throw error;
-	}
-	const checkpoint: unknown = JSON.parse(bytes.toString("utf8"));
-	validateSemanticCaseCheckpoint(checkpoint, expected);
-	return checkpoint.result;
-}
-
-async function writeCheckpoint(
-	path: string,
-	context: SemanticCheckpointContext,
-	result: SemanticPilotCaseResult,
-): Promise<void> {
-	const temporaryPath = `${path}.tmp-${process.pid}`;
-	await writeFile(
-		temporaryPath,
-		`${JSON.stringify(createSemanticCaseCheckpoint(context, result), null, 2)}\n`,
-		{ encoding: "utf8", mode: 0o600 },
-	);
-	await rename(temporaryPath, path);
 }
 
 async function ingestBlindCase(item: LongMemEvalBlindCase, storePath: string) {
@@ -124,6 +105,8 @@ const caseCount = parsePositiveInteger(
 	argument("--case-count"),
 	"--case-count",
 );
+const caseOffset = optionalNonNegativeInteger("--case-offset", 0);
+const stopAfterNewCases = optionalPositiveInteger("--stop-after-new-cases");
 const inputBytes = await readFile(inputPath);
 const corpus = JSON.parse(
 	inputBytes.toString("utf8"),
@@ -153,77 +136,73 @@ const checkpointContext = {
 	policySha256: semanticPolicySha256(policy),
 };
 const started = process.hrtime.bigint();
-const cases: SemanticPilotCaseResult[] = [];
-let reusedCheckpointCount = 0;
-for (const [caseOrdinal, item] of corpus.cases.slice(0, caseCount).entries()) {
-	const caseName = safeCaseName(item.question_id);
-	const checkpointPath = join(checkpointsDirectory, caseName);
-	const checkpoint = await loadCheckpoint(checkpointPath, {
-		...checkpointContext,
-		caseOrdinal,
-		questionId: item.question_id,
-	});
-	if (checkpoint) {
-		cases.push(checkpoint);
-		reusedCheckpointCount += 1;
-		continue;
-	}
-	const storePath = join(storesDirectory, caseName);
-	const ingestStarted = process.hrtime.bigint();
-	await ingestBlindCase(item, storePath);
-	const ingestElapsedMs =
-		Number(process.hrtime.bigint() - ingestStarted) / 1_000_000;
-	const adapter = new LocalAdapter({
-		storePath,
-		embeddingProvider: embedder,
-		disableKGSpreading: true,
-	});
-	const memory = new MemorySystem({
-		adapter,
-		disableImportanceGating: true,
-	});
-	let reindexElapsedMs = 0;
-	let recallElapsedMs = 0;
-	let retrieval: string[] = [];
-	try {
-		await memory.init();
-		const reindexStarted = process.hrtime.bigint();
-		await adapter.reindexEmbeddings();
-		reindexElapsedMs =
-			Number(process.hrtime.bigint() - reindexStarted) / 1_000_000;
-		const recallStarted = process.hrtime.bigint();
-		const recalled = await memory.recall(item.question, {
-			project: item.question_id,
-			topK: 50,
-			deepRecall: true,
-			scopeMode: "strict",
-			crossProject: false,
+const selected = selectSemanticCases(corpus.cases, caseOffset, caseCount);
+const run = await runSemanticCases({
+	selected,
+	checkpointsDirectory,
+	context: checkpointContext,
+	stopAfterNewCases,
+	onProgress: (event) => process.stderr.write(`${JSON.stringify(event)}\n`),
+	executeCase: async (item, caseOrdinal): Promise<SemanticPilotCaseResult> => {
+		const storePath = join(
+			storesDirectory,
+			semanticCaseFileName(item.question_id),
+		);
+		const ingestStarted = process.hrtime.bigint();
+		await ingestBlindCase(item, storePath);
+		const ingestElapsedMs =
+			Number(process.hrtime.bigint() - ingestStarted) / 1_000_000;
+		const adapter = new LocalAdapter({
+			storePath,
+			embeddingProvider: embedder,
+			disableKGSpreading: true,
 		});
-		recallElapsedMs =
-			Number(process.hrtime.bigint() - recallStarted) / 1_000_000;
-		retrieval = recalled.episodes.map((episode) => episode.id);
-	} finally {
-		await memory.close();
-	}
-	const result = {
-		caseOrdinal,
-		questionId: item.question_id,
-		turnCount: item.haystack_sessions.reduce(
-			(sum, session) => sum + session.length,
-			0,
-		),
-		ingestElapsedMs,
-		reindexElapsedMs,
-		recallElapsedMs,
-		retrievedCount: retrieval.length,
-		retrievalSha256: createHash("sha256")
-			.update(JSON.stringify(retrieval))
-			.digest("hex"),
-		storeBytes: (await stat(storePath)).size,
-	};
-	await writeCheckpoint(checkpointPath, checkpointContext, result);
-	cases.push(result);
-}
+		const memory = new MemorySystem({
+			adapter,
+			disableImportanceGating: true,
+		});
+		let reindexElapsedMs = 0;
+		let recallElapsedMs = 0;
+		let retrieval: string[] = [];
+		try {
+			await memory.init();
+			const reindexStarted = process.hrtime.bigint();
+			await adapter.reindexEmbeddings();
+			reindexElapsedMs =
+				Number(process.hrtime.bigint() - reindexStarted) / 1_000_000;
+			const recallStarted = process.hrtime.bigint();
+			const recalled = await memory.recall(item.question, {
+				project: item.question_id,
+				topK: 50,
+				deepRecall: true,
+				scopeMode: "strict",
+				crossProject: false,
+			});
+			recallElapsedMs =
+				Number(process.hrtime.bigint() - recallStarted) / 1_000_000;
+			retrieval = recalled.episodes.map((episode) => episode.id);
+		} finally {
+			await memory.close();
+		}
+		return {
+			caseOrdinal,
+			questionId: item.question_id,
+			turnCount: item.haystack_sessions.reduce(
+				(sum, session) => sum + session.length,
+				0,
+			),
+			ingestElapsedMs,
+			reindexElapsedMs,
+			recallElapsedMs,
+			retrievedCount: retrieval.length,
+			retrievalSha256: createHash("sha256")
+				.update(JSON.stringify(retrieval))
+				.digest("hex"),
+			storeBytes: (await stat(storePath)).size,
+		};
+	},
+});
+const cases = run.cases;
 
 const receipt = {
 	schemaVersion: "naia-memory-longmemeval-semantic-pilot-v1",
@@ -235,8 +214,10 @@ const receipt = {
 	policy,
 	policySha256: checkpointContext.policySha256,
 	summary: {
+		caseOffset,
 		caseCount: cases.length,
-		reusedCheckpointCount,
+		reusedCheckpointCount: run.reusedCheckpointCount,
+		newCheckpointCount: run.newCheckpointCount,
 		turnCount: cases.reduce((sum, item) => sum + item.turnCount, 0),
 		ingestElapsedMs: cases.reduce((sum, item) => sum + item.ingestElapsedMs, 0),
 		reindexElapsedMs: cases.reduce(
@@ -251,5 +232,5 @@ const receipt = {
 	},
 	cases,
 };
-await writeFile(outputPath, `${JSON.stringify(receipt, null, 2)}\n`, "utf8");
+await writeJsonAtomic(outputPath, receipt);
 process.stdout.write(`${JSON.stringify(receipt.summary)}\n`);
