@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { LocalAdapter } from "../../memory/adapters/local.js";
 import { OfflineEmbeddingProvider } from "../../memory/embeddings.js";
@@ -11,6 +11,13 @@ import {
 	blindCorpusSha256,
 	validateLongMemEvalBlindCorpus,
 } from "./longmemeval-blind-corpus.js";
+import {
+	type SemanticCheckpointContext,
+	type SemanticPilotCaseResult,
+	createSemanticCaseCheckpoint,
+	semanticPolicySha256,
+	validateSemanticCaseCheckpoint,
+} from "./longmemeval-semantic-checkpoint.js";
 
 function argument(name: string): string {
 	const index = process.argv.indexOf(name);
@@ -42,6 +49,39 @@ function parseOfficialDate(value: string): number {
 
 function safeCaseName(questionId: string): string {
 	return `${createHash("sha256").update(questionId).digest("hex").slice(0, 16)}.json`;
+}
+
+async function loadCheckpoint(
+	path: string,
+	expected: SemanticCheckpointContext & {
+		caseOrdinal: number;
+		questionId: string;
+	},
+): Promise<SemanticPilotCaseResult | undefined> {
+	let bytes: Buffer;
+	try {
+		bytes = await readFile(path);
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+		throw error;
+	}
+	const checkpoint: unknown = JSON.parse(bytes.toString("utf8"));
+	validateSemanticCaseCheckpoint(checkpoint, expected);
+	return checkpoint.result;
+}
+
+async function writeCheckpoint(
+	path: string,
+	context: SemanticCheckpointContext,
+	result: SemanticPilotCaseResult,
+): Promise<void> {
+	const temporaryPath = `${path}.tmp-${process.pid}`;
+	await writeFile(
+		temporaryPath,
+		`${JSON.stringify(createSemanticCaseCheckpoint(context, result), null, 2)}\n`,
+		{ encoding: "utf8", mode: 0o600 },
+	);
+	await rename(temporaryPath, path);
 }
 
 async function ingestBlindCase(item: LongMemEvalBlindCase, storePath: string) {
@@ -79,6 +119,7 @@ async function ingestBlindCase(item: LongMemEvalBlindCase, storePath: string) {
 const inputPath = resolve(argument("--input"));
 const outputPath = resolve(argument("--output"));
 const storesDirectory = resolve(argument("--stores-dir"));
+const checkpointsDirectory = resolve(argument("--checkpoints-dir"));
 const caseCount = parsePositiveInteger(
 	argument("--case-count"),
 	"--case-count",
@@ -89,6 +130,7 @@ const corpus = JSON.parse(
 ) as LongMemEvalBlindCorpus;
 validateLongMemEvalBlindCorpus(corpus);
 await mkdir(storesDirectory, { recursive: true });
+await mkdir(checkpointsDirectory, { recursive: true });
 
 const baseEmbedder = new OfflineEmbeddingProvider(
 	"multilingual-e5-large",
@@ -97,10 +139,36 @@ const baseEmbedder = new OfflineEmbeddingProvider(
 	"padded-array-batch-v1",
 );
 const embedder = new ChunkedEmbeddingProvider(baseEmbedder, 8);
+const policy = {
+	embedding: baseEmbedder.policyReceipt,
+	embeddingSpaceId: embedder.embeddingSpaceId,
+	batchInferenceMode: baseEmbedder.batchInferenceMode,
+	batchSize: embedder.batchSize,
+	searchMode: "rrf",
+	topK: 50,
+};
+const checkpointContext = {
+	inputFileSha256: createHash("sha256").update(inputBytes).digest("hex"),
+	inputContentSha256: blindCorpusSha256(corpus),
+	policySha256: semanticPolicySha256(policy),
+};
 const started = process.hrtime.bigint();
-const cases = [];
-for (const item of corpus.cases.slice(0, caseCount)) {
-	const storePath = join(storesDirectory, safeCaseName(item.question_id));
+const cases: SemanticPilotCaseResult[] = [];
+let reusedCheckpointCount = 0;
+for (const [caseOrdinal, item] of corpus.cases.slice(0, caseCount).entries()) {
+	const caseName = safeCaseName(item.question_id);
+	const checkpointPath = join(checkpointsDirectory, caseName);
+	const checkpoint = await loadCheckpoint(checkpointPath, {
+		...checkpointContext,
+		caseOrdinal,
+		questionId: item.question_id,
+	});
+	if (checkpoint) {
+		cases.push(checkpoint);
+		reusedCheckpointCount += 1;
+		continue;
+	}
+	const storePath = join(storesDirectory, caseName);
 	const ingestStarted = process.hrtime.bigint();
 	await ingestBlindCase(item, storePath);
 	const ingestElapsedMs =
@@ -137,7 +205,8 @@ for (const item of corpus.cases.slice(0, caseCount)) {
 	} finally {
 		await memory.close();
 	}
-	cases.push({
+	const result = {
+		caseOrdinal,
 		questionId: item.question_id,
 		turnCount: item.haystack_sessions.reduce(
 			(sum, session) => sum + session.length,
@@ -151,26 +220,23 @@ for (const item of corpus.cases.slice(0, caseCount)) {
 			.update(JSON.stringify(retrieval))
 			.digest("hex"),
 		storeBytes: (await stat(storePath)).size,
-	});
+	};
+	await writeCheckpoint(checkpointPath, checkpointContext, result);
+	cases.push(result);
 }
 
 const receipt = {
 	schemaVersion: "naia-memory-longmemeval-semantic-pilot-v1",
 	labelAccess: "blind-corpus-only",
 	input: {
-		fileSha256: createHash("sha256").update(inputBytes).digest("hex"),
-		contentSha256: blindCorpusSha256(corpus),
+		fileSha256: checkpointContext.inputFileSha256,
+		contentSha256: checkpointContext.inputContentSha256,
 	},
-	policy: {
-		embedding: baseEmbedder.policyReceipt,
-		embeddingSpaceId: embedder.embeddingSpaceId,
-		batchInferenceMode: baseEmbedder.batchInferenceMode,
-		batchSize: embedder.batchSize,
-		searchMode: "rrf",
-		topK: 50,
-	},
+	policy,
+	policySha256: checkpointContext.policySha256,
 	summary: {
 		caseCount: cases.length,
+		reusedCheckpointCount,
 		turnCount: cases.reduce((sum, item) => sum + item.turnCount, 0),
 		ingestElapsedMs: cases.reduce((sum, item) => sum + item.ingestElapsedMs, 0),
 		reindexElapsedMs: cases.reduce(
@@ -181,7 +247,7 @@ const receipt = {
 		storeBytes: cases.reduce((sum, item) => sum + item.storeBytes, 0),
 		elapsedMs: Number(process.hrtime.bigint() - started) / 1_000_000,
 		residentSetBytesAtReceipt: process.memoryUsage().rss,
-		maxResidentSetBytes: process.resourceUsage().maxRSS * 1024,
+		maxResidentSetBytesThisProcess: process.resourceUsage().maxRSS * 1024,
 	},
 	cases,
 };

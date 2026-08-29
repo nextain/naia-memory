@@ -27,6 +27,13 @@ The benchmark receipt distinguishes receipt-time RSS from process maximum RSS.
 The chunk boundary is covered by unit tests, including ordering, maximum batch
 size, and invalid configuration rejection.
 
+The runner now writes one owner-only checkpoint per completed case through a
+temporary file and atomic rename. Each checkpoint binds the input file hash,
+blind content hash, policy hash, case ordinal, question ID, and retrieval
+result. A real repeat validated and reused the checkpoint
+(`reusedCheckpointCount=1`) rather than reindexing; its core checkpoint loop
+completed in 0.44 ms.
+
 ## Evidence custody
 
 - Input: label-free corpus only; `answer`, `answer_session_ids`, and
@@ -46,7 +53,8 @@ feasible, bounded, and repeatable for one case. It does not establish retrieval
 quality, answer accuracy, superiority over the keyword-fallback control, or a
 global SOTA claim.
 
-Before the 500-case run, the harness still needs resumable per-case checkpoints
-and aggregate custody validation. The preregistered support decision remains:
-semantic retrieval must beat the keyword-fallback control on overall judged
-accuracy without lowering abstention accuracy, with valid receipts throughout.
+The next engineering gate is multi-case checkpoint aggregation and interruption
+testing before scaling to all 500 cases. The preregistered support decision
+remains: semantic retrieval must beat the keyword-fallback control on overall
+judged accuracy without lowering abstention accuracy, with valid receipts
+throughout.
