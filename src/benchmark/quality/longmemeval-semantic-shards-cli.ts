@@ -1,6 +1,8 @@
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, readFile } from "node:fs/promises";
+import { access, mkdir, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
 	type LongMemEvalBlindCorpus,
 	blindCorpusSha256,
@@ -16,7 +18,10 @@ import {
 	type SemanticShardManifest,
 	createSemanticShardManifest,
 	mergeSemanticShardReceipts,
+	semanticShardById,
+	validateSemanticCampaignInput,
 	validateSemanticShardManifest,
+	validateSemanticShardReceipt,
 } from "./longmemeval-semantic-shards.js";
 
 function argument(name: string): string {
@@ -35,6 +40,36 @@ function positiveInteger(name: string): number {
 
 async function readJson(path: string): Promise<unknown> {
 	return JSON.parse(await readFile(path, "utf8"));
+}
+
+async function exists(path: string): Promise<boolean> {
+	try {
+		await access(path);
+		return true;
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+		throw error;
+	}
+}
+
+async function runPilot(arguments_: string[]): Promise<void> {
+	const pilotCli = join(
+		dirname(fileURLToPath(import.meta.url)),
+		"longmemeval-semantic-pilot-cli.ts",
+	);
+	const child = spawn(
+		process.execPath,
+		["--import", "tsx", pilotCli, ...arguments_],
+		{
+			stdio: "inherit",
+		},
+	);
+	const exitCode = await new Promise<number | null>((resolveExit, reject) => {
+		child.once("error", reject);
+		child.once("exit", resolveExit);
+	});
+	if (exitCode !== 0)
+		throw new Error(`semantic shard pilot exited with status ${exitCode}`);
 }
 
 const command = process.argv.slice(2).find((value) => value !== "--");
@@ -75,6 +110,49 @@ if (command === "create") {
 	process.stdout.write(
 		`${JSON.stringify({ shardCount: manifest.shards.length, totalCaseCount: manifest.totalCaseCount, policySha256: manifest.policySha256 })}\n`,
 	);
+} else if (command === "run") {
+	const manifestPath = resolve(argument("--manifest"));
+	const inputPath = resolve(argument("--input"));
+	const storesDirectory = resolve(argument("--stores-dir"));
+	const checkpointsDirectory = resolve(argument("--checkpoints-dir"));
+	const receiptsDirectory = resolve(argument("--receipts-dir"));
+	const manifest = (await readJson(manifestPath)) as SemanticShardManifest;
+	const inputBytes = await readFile(inputPath);
+	const corpus = JSON.parse(
+		inputBytes.toString("utf8"),
+	) as LongMemEvalBlindCorpus;
+	validateLongMemEvalBlindCorpus(corpus);
+	validateSemanticCampaignInput(manifest, corpus, inputBytes);
+	const shard = semanticShardById(manifest, argument("--shard-id"));
+	const receiptPath = join(receiptsDirectory, shard.outputFile);
+	if (await exists(receiptPath)) {
+		const receipt = (await readJson(receiptPath)) as SemanticPilotReceipt;
+		validateSemanticShardReceipt(receipt, manifest, shard);
+		process.stdout.write(
+			`${JSON.stringify({ status: "reused", shardId: shard.shardId, receiptPath })}\n`,
+		);
+	} else {
+		await mkdir(receiptsDirectory, { recursive: true });
+		await runPilot([
+			"--input",
+			inputPath,
+			"--output",
+			receiptPath,
+			"--stores-dir",
+			storesDirectory,
+			"--checkpoints-dir",
+			checkpointsDirectory,
+			"--case-offset",
+			String(shard.caseOffset),
+			"--case-count",
+			String(shard.caseCount),
+		]);
+		const receipt = (await readJson(receiptPath)) as SemanticPilotReceipt;
+		validateSemanticShardReceipt(receipt, manifest, shard);
+		process.stdout.write(
+			`${JSON.stringify({ status: "completed", shardId: shard.shardId, receiptPath })}\n`,
+		);
+	}
 } else if (command === "merge") {
 	const manifestPath = resolve(argument("--manifest"));
 	const receiptsDirectory = resolve(argument("--receipts-dir"));
@@ -93,5 +171,5 @@ if (command === "create") {
 	await writeJsonAtomic(outputPath, merged);
 	process.stdout.write(`${JSON.stringify(merged.summary)}\n`);
 } else {
-	throw new Error("command must be create or merge");
+	throw new Error("command must be create, run, or merge");
 }

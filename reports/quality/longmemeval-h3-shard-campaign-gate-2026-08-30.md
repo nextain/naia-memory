@@ -47,7 +47,7 @@ pnpm arguments and the conventional `--` separator.
 
 ## Verification
 
-- Full suite: 183 test files passed; 1,493 tests passed and 1 skipped.
+- Full suite: 183 test files passed; 1,494 tests passed and 1 skipped.
 - TypeScript production and benchmark typechecks passed.
 - Formatting and diff checks passed.
 - Official 500-case manifest generation passed twice with byte equality.
@@ -71,13 +71,37 @@ reused all five checkpoints, executed zero new cases, and wrote the complete
 receipt in 2.41 seconds wall time. Peak RSS for the original five-case process
 was 2,321,868 KiB, remaining within the single-process scheduling assumption.
 
+## Manifest-driven shard execution
+
+The campaign CLI now runs a shard only after validating the exact input file
+bytes, blind-content identity, global question order, per-shard question IDs,
+and declared shard ID against the sealed manifest. Offsets, counts, and receipt
+filenames come from the manifest rather than operator-supplied values. An
+existing receipt is validated before reuse; a malformed or mismatched receipt
+fails closed instead of being overwritten. A newly produced receipt is also
+validated before the command reports completion.
+
+`shard-001` was the first production execution through this manifest-driven
+path. It completed five new atomic case checkpoints covering 2,487 turns and
+68,186,725 aggregate store bytes. Semantic reindexing took 667,747.0 ms, recall
+took 389.6 ms, and total receipt time was 668,753.4 ms. Peak RSS within the
+process was 2,862,804,992 bytes. The validated receipt SHA-256 is:
+
+`aa25d8a851d0d996a108580ff5f91556a666248cb1ffdb1473285516e21ceeca`
+
+Re-running the same manifest command validated and reused that receipt in 1.76
+seconds without launching another semantic pilot. Together, `shard-000` and
+`shard-001` provide validated semantic receipts for 10 of 500 cases (2%) and
+5,177 turns. This remains execution-integrity evidence, not a quality score.
+
 ## Claim boundary and next gate
 
 This establishes campaign partition integrity, bounded scheduling metadata, and
 deterministic fail-closed aggregation. It does not establish retrieval quality,
 answer accuracy, superiority over the keyword-fallback control, or global SOTA.
 
-The next quality gate is to execute the remaining 99 semantic shards and the matched
-keyword-fallback control, then answer and judge all 500 cases under the sealed
-protocol. A support claim requires higher overall judged accuracy without lower
-abstention accuracy and valid receipts across the complete campaign.
+The next quality gate is to execute the remaining 98 semantic shards and the
+matched keyword-fallback control, then answer and judge all 500 cases under the
+sealed protocol. A support claim requires higher overall judged accuracy
+without lower abstention accuracy and valid receipts across the complete
+campaign.

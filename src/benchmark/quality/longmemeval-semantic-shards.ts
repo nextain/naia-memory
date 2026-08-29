@@ -53,6 +53,28 @@ export interface SemanticPilotReceipt {
 	cases: SemanticPilotCaseResult[];
 }
 
+export function semanticShardById(
+	manifest: SemanticShardManifest,
+	shardId: string,
+): SemanticShardDefinition {
+	const shard = manifest.shards.find(
+		(candidate) => candidate.shardId === shardId,
+	);
+	if (!shard) throw new Error(`semantic shard is not declared: ${shardId}`);
+	return shard;
+}
+
+export function validateSemanticCampaignInput(
+	manifest: SemanticShardManifest,
+	corpus: LongMemEvalBlindCorpus,
+	inputBytes: Uint8Array,
+): void {
+	validateSemanticShardManifest(manifest, corpus);
+	const fileSha256 = createHash("sha256").update(inputBytes).digest("hex");
+	if (fileSha256 !== manifest.input.fileSha256)
+		throw new Error("semantic shard campaign input file mismatch");
+}
+
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u;
 
 function assertSha256(value: string, name: string): void {

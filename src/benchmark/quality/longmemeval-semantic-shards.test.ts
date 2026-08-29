@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import type {
 	LongMemEvalBlindCase,
@@ -9,6 +10,8 @@ import {
 	type SemanticShardDefinition,
 	createSemanticShardManifest,
 	mergeSemanticShardReceipts,
+	semanticShardById,
+	validateSemanticCampaignInput,
 	validateSemanticShardManifest,
 	validateSemanticShardReceipt,
 } from "./longmemeval-semantic-shards.js";
@@ -100,6 +103,36 @@ describe("LongMemEval semantic shards", () => {
 		expect(() =>
 			validateSemanticShardManifest(value, corpus(500)),
 		).not.toThrow();
+	});
+
+	it("selects only declared shards and binds the exact input bytes", () => {
+		const valueCorpus = corpus(500);
+		const inputBytes = Buffer.from(JSON.stringify(valueCorpus));
+		const value = createSemanticShardManifest({
+			corpus: valueCorpus,
+			inputFileSha256: createHash("sha256").update(inputBytes).digest("hex"),
+			inputContentSha256: "b".repeat(64),
+			policySha256,
+			shardSize: 5,
+			maxParallelism: 1,
+		});
+		expect(semanticShardById(value, "shard-042")).toMatchObject({
+			caseOffset: 210,
+			caseCount: 5,
+		});
+		expect(() => semanticShardById(value, "shard-100")).toThrow(
+			/not declared/u,
+		);
+		expect(() =>
+			validateSemanticCampaignInput(value, valueCorpus, inputBytes),
+		).not.toThrow();
+		expect(() =>
+			validateSemanticCampaignInput(
+				value,
+				valueCorpus,
+				Buffer.concat([inputBytes, Buffer.from("\n")]),
+			),
+		).toThrow(/input file/u);
 	});
 
 	it("rejects gaps and changed question order", () => {
