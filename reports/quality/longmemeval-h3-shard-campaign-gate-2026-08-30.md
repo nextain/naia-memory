@@ -428,13 +428,27 @@ reused the receipt in 1.68 seconds without new computation and left its SHA-256
 unchanged. The first twenty-seven shards now cover 135 of 500 cases (27%),
 66,931 turns, and 1,835,057,475 aggregate store bytes.
 
+`shard-027` completed five new checkpoints covering 2,535 turns and 69,458,743
+aggregate store bytes. Semantic reindexing took 539,988.6 ms, recall took 369.6
+ms, and total receipt time was 541,280.7 ms. The receipt-recorded process peak
+RSS was 2,958,938,112 bytes; the independent `/usr/bin/time` maximum was
+2,938,508 KiB, with zero swap activity. Its validated receipt SHA-256 is:
+
+`c19a33532f73c067cd5c6ac668acf189ad9a7068eeb33d5ca0391a1515cc9064`
+
+The independent blind-label, input and policy hash, question-ID, ordinal, turn,
+actual store-file byte, and aggregate checks passed. A repeated manifest command
+reused the receipt in 1.64 seconds without new computation and left its SHA-256
+unchanged. The first twenty-eight shards now cover 140 of 500 cases (28%),
+69,466 turns, and 1,904,516,218 aggregate store bytes.
+
 ## Claim boundary and next gate
 
 This establishes campaign partition integrity, bounded scheduling metadata, and
 deterministic fail-closed aggregation. It does not establish retrieval quality,
 answer accuracy, superiority over the keyword-fallback control, or global SOTA.
 
-The next quality gate is to execute the remaining 73 semantic shards and the
+The next quality gate is to execute the remaining 72 semantic shards and the
 matched keyword-fallback control, then answer and judge all 500 cases under the
 sealed protocol. A support claim requires higher overall judged accuracy
 without lower abstention accuracy and valid receipts across the complete
