@@ -4,6 +4,9 @@
 		"noEmit": true,
 		"rootDir": "."
 	},
-	"include": ["src/benchmark/quality/public-*.ts"],
+	"include": [
+		"src/benchmark/quality/public-*.ts",
+		"src/benchmark/quality/longmemeval-*.ts"
+	],
 	"exclude": ["node_modules", "dist"]
 }
