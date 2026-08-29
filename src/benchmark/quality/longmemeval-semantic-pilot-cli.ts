@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, stat } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { LocalAdapter } from "../../memory/adapters/local.js";
 import { OfflineEmbeddingProvider } from "../../memory/embeddings.js";
 import { MemorySystem } from "../../memory/memory-system.js";
@@ -115,6 +115,7 @@ const corpus = JSON.parse(
 validateLongMemEvalBlindCorpus(corpus);
 await mkdir(storesDirectory, { recursive: true });
 await mkdir(checkpointsDirectory, { recursive: true });
+await mkdir(dirname(outputPath), { recursive: true });
 
 const baseEmbedder = new OfflineEmbeddingProvider(
 	"multilingual-e5-large",

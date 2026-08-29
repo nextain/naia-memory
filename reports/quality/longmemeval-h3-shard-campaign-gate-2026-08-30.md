@@ -55,13 +55,29 @@ pnpm arguments and the conventional `--` separator.
   receipt policy/question drift, complete ordered merge, and incomplete-set
   rejection.
 
+## First production shard
+
+`shard-000` completed all five cases and passed the manifest receipt validator.
+It covers 2,690 turns, 73,544,644 aggregate store bytes, 636,630.2 ms semantic
+reindex time, and 376.3 ms recall time. Its receipt SHA-256 is:
+
+`09d4420bd92f46c58fa101e7e14a2ef81cf3487bf34b0f175bc1905f22a8ae63`
+
+The first run reused the two earlier checkpoints and created three new atomic
+checkpoints. It exposed a CLI defect after computation: a previously absent
+receipt parent directory was not created before atomic output. No completed
+case was lost. After adding parent-directory creation, the retry validated and
+reused all five checkpoints, executed zero new cases, and wrote the complete
+receipt in 2.41 seconds wall time. Peak RSS for the original five-case process
+was 2,321,868 KiB, remaining within the single-process scheduling assumption.
+
 ## Claim boundary and next gate
 
 This establishes campaign partition integrity, bounded scheduling metadata, and
 deterministic fail-closed aggregation. It does not establish retrieval quality,
 answer accuracy, superiority over the keyword-fallback control, or global SOTA.
 
-The next quality gate is to execute the 100 semantic shards and the matched
+The next quality gate is to execute the remaining 99 semantic shards and the matched
 keyword-fallback control, then answer and judge all 500 cases under the sealed
 protocol. A support claim requires higher overall judged accuracy without lower
 abstention accuracy and valid receipts across the complete campaign.
