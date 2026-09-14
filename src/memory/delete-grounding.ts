@@ -60,3 +60,46 @@ export function hasGroundedDeleteEvidence(
 		(target.toLowerCase().includes(value.toLowerCase()) || hasStableIdentity)
 	);
 }
+
+/**
+ * Names every grounding condition the input fails. Empty exactly when
+ * hasGroundedDeleteEvidence(input) is true. Diagnostic only: it does not
+ * change which deletes are accepted.
+ */
+export function explainDeleteGrounding(input: DeleteGroundingInput): string[] {
+	const reasons: string[] = [];
+	if (input.episodeRole !== "user") reasons.push("role-not-user");
+	if (
+		typeof input.evidenceKind !== "string" ||
+		!DELETE_EVIDENCE_KINDS.has(input.evidenceKind)
+	)
+		reasons.push("evidence-kind");
+	if (input.polarity !== "affirmed") reasons.push("polarity-not-affirmed");
+	const strings = [
+		["evidence-quote-missing", input.evidenceQuote],
+		["target-quote-missing", input.targetQuote],
+		["subject-missing", input.subject],
+		["property-missing", input.property],
+		["value-missing", input.value],
+	] as const;
+	for (const [reason, value] of strings) {
+		if (typeof value !== "string" || !value.trim()) reasons.push(reason);
+	}
+	if (reasons.length > 0) return reasons;
+	const episode = input.episodeContent.normalize("NFC").trim();
+	const evidence = (input.evidenceQuote as string).normalize("NFC").trim();
+	const target = (input.targetQuote as string).normalize("NFC").trim();
+	const value = (input.value as string).normalize("NFC").trim();
+	if (evidence !== episode) reasons.push("evidence-not-whole-episode");
+	if (!hasVisibleSubstance(evidence)) reasons.push("evidence-no-substance");
+	if (!hasVisibleSubstance(target)) reasons.push("target-no-substance");
+	if (!episode.includes(target)) reasons.push("target-not-in-episode");
+	const hasStableIdentity =
+		typeof input.subjectId === "string" &&
+		Boolean(input.subjectId.trim()) &&
+		typeof input.propertyId === "string" &&
+		Boolean(input.propertyId.trim());
+	if (!target.toLowerCase().includes(value.toLowerCase()) && !hasStableIdentity)
+		reasons.push("target-lacks-value-and-identity");
+	return reasons;
+}
