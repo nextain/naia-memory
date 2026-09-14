@@ -10,6 +10,9 @@
  *   3. Judge validation failures keep the raw response.
  *   4. score reports ranking diagnostics (superseded fact at rank 1, active
  *      successor absent) so the preregistered prediction can be checked.
+ *   5. Observation only: raw extraction and delete-verification provider
+ *      responses go to capture-raw-provider.jsonl (sealed), and each capture
+ *      row keeps the consolidateNow return value. No behaviour change.
  *
  * Original header of az1 follows.
  *
@@ -30,8 +33,8 @@
  *   score    aggregates metrics and gates from capture + judge + gold.
  *
  * Usage (from projects/naia-memory):
- *   pnpm exec tsx reports/quality/candidate-az1-20260915/run-az1.mjs capture --backend mock --per-language 2 --out <dir>
- *   AZURE_FOUNDRY_KEY=... pnpm exec tsx reports/quality/candidate-az1-20260915/run-az1.mjs capture --backend azure --out <dir>
+ *   pnpm exec tsx reports/quality/candidate-az2-20260915/run-az2.mjs capture --backend mock --per-language 2 --out <dir>
+ *   AZURE_FOUNDRY_KEY=... pnpm exec tsx reports/quality/candidate-az2-20260915/run-az2.mjs capture --backend azure --out <dir>
  *   ... judge --backend azure --out <dir>
  *   ... score --out <dir>
  */
@@ -285,6 +288,9 @@ export class Transport {
       contentChars: typeof choice?.message?.content === "string" ? choice.message.content.length : null,
       error: status >= 400 ? boundedErrorText(parsed?.error?.message ?? error ?? text) : null,
     });
+    if (this.rawProviderFile && ["extraction", "delete-verification"].includes(this.operation)) {
+      fs.appendFileSync(this.rawProviderFile, JSON.stringify({ seq: base.seq, operation: this.operation, ...this.context, attempt, status, requestMessages: body.messages, responseText: text }) + "\n");
+    }
     return new Response(text, { status, headers: { "content-type": "application/json" } });
   }
 
@@ -562,7 +568,7 @@ export async function capture(options) {
   fs.mkdirSync(outDir, { recursive: true });
   const captureFile = path.join(outDir, "capture.jsonl");
   assertCondition(!fs.existsSync(path.join(outDir, "seal.json")), "capture already sealed; refusing to overwrite");
-  for (const file of [captureFile, path.join(outDir, "receipts-capture.jsonl")]) fs.rmSync(file, { force: true });
+  for (const file of [captureFile, path.join(outDir, "receipts-capture.jsonl"), path.join(outDir, "capture-raw-provider.jsonl")]) fs.rmSync(file, { force: true });
   const manifestSha = verifyDesign();
   const provenance = productProvenance();
   assertCondition(options.backend === "mock" || provenance.srcDirty === false, "product src has uncommitted changes; commit before a provider run");
@@ -582,6 +588,7 @@ export async function capture(options) {
   const warmupMs = performance.now() - warmStart;
 
   const transport = new Transport({ backend: options.backend, stage: "capture", apiKey: process.env.AZURE_FOUNDRY_KEY ?? "", receiptsFile: path.join(outDir, "receipts-capture.jsonl"), mock: mockResponder });
+  transport.rawProviderFile = path.join(outDir, "capture-raw-provider.jsonl");
   transport.install();
   const extractionFailures = [];
   const extractorFactory = memoryApi.buildLLMFactExtractor({
@@ -622,7 +629,7 @@ export async function capture(options) {
             rowId: `memory-answer:${item.id}:${arm}:${row.queryId}`,
             caseId: item.id, arm, language: item.language, family: item.construction_family,
             ...row, recentTail: clone(item.recent_tail ?? []),
-            engineFailure: failure, trace: result?.trace ? { reopens: result.trace.reopens, encodes: result.trace.encodes } : null,
+            engineFailure: failure, trace: result?.trace ? { reopens: result.trace.reopens, encodes: result.trace.encodes, consolidation: result.trace.consolidation ?? null } : null,
             activeState: result?.trace?.activeState ?? { status: "unavailable", reason: failure ? `engine failure: ${failure.code}` : "not captured" },
           };
           if (failure) {
@@ -684,7 +691,8 @@ export async function capture(options) {
     physicalExtractionEqualsCases: meta.census.physicalExtraction === cases.length,
   };
   writeJson(path.join(outDir, "capture-meta.json"), meta);
-  const seal = { runId: RUN_ID, captureSha256: sha256(fs.readFileSync(captureFile)), metaSha256: sha256(fs.readFileSync(path.join(outDir, "capture-meta.json"))), rows: rowsWritten, sealedAt: new Date().toISOString() };
+  const rawProviderPath = path.join(outDir, "capture-raw-provider.jsonl");
+  const seal = { runId: RUN_ID, captureSha256: sha256(fs.readFileSync(captureFile)), metaSha256: sha256(fs.readFileSync(path.join(outDir, "capture-meta.json"))), rawProviderSha256: fs.existsSync(rawProviderPath) ? sha256(fs.readFileSync(rawProviderPath)) : null, rows: rowsWritten, sealedAt: new Date().toISOString() };
   writeJson(path.join(outDir, "seal.json"), seal);
   return { meta, seal };
 }

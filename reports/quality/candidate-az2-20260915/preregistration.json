@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "run_id": "candidate-az2-20260915",
-  "frozen": false,
-  "frozen_at": null,
+  "frozen": true,
+  "frozen_at": "2026-09-14T17:55:09.920975+00:00",
   "registered_before_any_provider_result": true,
   "owner_decisions": {
     "2026-09-15": [
@@ -10,7 +10,7 @@
       "Use Azure Foundry credit instead of Google Gemini.",
       "Prefer fast and simple models; gpt-5-4-nano for extraction and answers."
     ],
-    "2026-09-15-az2": "pending: second run requires owner approval (az1 stop rule)"
+    "2026-09-15-az2": "pending: run requires owner approval (az1 stop rule). Frozen before approval so the registration predates any az2 result."
   },
   "scope": "Azure Foundry cloud-extraction path on model-authored synthetic fixtures that are development-exposed. Not product-path evidence: the product rule keeps reasoning over user memory local. Not independent human evaluation. Not public competitive evidence. Formal noninferiority cannot be passed from this suite.",
   "design": {
@@ -159,7 +159,7 @@
   ],
   "runner": {
     "file": "reports/quality/candidate-az2-20260915/run-az2.mjs",
-    "sha256": null,
+    "sha256": "f1d18d84275f3b3482ea094571175ad63a5e5eb4d559ccd8d7cf53433833063b",
     "package_lock_sha256": "646e4fd27bd2839c189a051363db2c13b9b83e129b1d80ae95c9ad1edc8a7e11",
     "dry_run": "mock backend, 2 cases per language, before freezing"
   },
@@ -203,14 +203,18 @@
     "judge_envelope": "row present, 12 booleans, no extra fields; false_overwrite returned null for a row where the metric did not apply, which led to the false_overwrite_applies field",
     "delete_verifier": "product request (max_tokens 2048, json_object) accepted by deepseek-v4-flash, HTTP 200, authorized true on an explicit removal request"
   },
-  "dry_runs": [],
+  "dry_runs": [
+    "dryrun-mock-before-raw: before raw provider preservation",
+    "dryrun-mock: 24 rows, 24 answers, 8 judge batches, 0 unavailable, raw provider file sealed, consolidation trace present"
+  ],
   "relation_to_az1": {
     "reason": "az1 passed atTimestamp for all 57 queries (inherited from candidate-e). local-semantic-search takes the valid-at-time path when atT is defined and skips the active-only filter. naia: 16/57 rows ranked a superseded fact first; 22-23 rows lacked the active successor fact.",
     "changes_only": [
       "recall receives atTimestamp only when query.mode is at-time (naia and simple-vector arms)",
       "raw answer and raw judge text preserved (answer.raw, judge-raw.jsonl)",
       "judge validation failures keep raw response",
-      "score adds rankingDiagnostics"
+      "score adds rankingDiagnostics",
+      "observation only: raw extraction and delete-verification provider responses in capture-raw-provider.jsonl (sealed); consolidateNow return value per capture row"
     ],
     "unchanged": "fixtures, gold, rubric, arms, models, embedder, tokenizer, caps, retries, judge rules, thresholds, product commit 70dc147 src",
     "az1_status": "az1 results are kept; its naia-vs-simple-vector and ablation differences are not interpreted as design differences"
@@ -222,9 +226,26 @@
       "naia_activeSuccessorAbsent": 23,
       "definition": "supersededRank1 = rank-1 item is a fact whose status is superseded; activeSuccessorAbsent = the row's active state has an active fact with supersedes set and none of those facts is in ranked facts (az2 score.rankingDiagnostics code)"
     },
-    "if_harness_only": "naia supersededRank1 0 and activeSuccessorAbsent near 0 → deviation closed as harness-only",
-    "if_residual": "activeSuccessorAbsent remains > 0 → product retrieval or successor persistence/embedding defect becomes the next fix target",
     "deletion_expectation": "explicit deletion requests (ko/en/ja-05, -14) are not expected to change: extraction does not emit delete operations; deletion_leakage for naia is expected to stay > 0",
-    "ja_10_expectation": "the wrong preference supersession is a lifecycle fact and should persist; with active-only retrieval the answer may become incorrect"
+    "ja_10_expectation": "the wrong preference supersession is a lifecycle fact and should persist; with active-only retrieval the answer may become incorrect",
+    "closure_rule": {
+      "harness_only": "naia.supersededRank1 = 0 AND naia.activeSuccessorAbsent = 0",
+      "residual": "1-2 rows: listed per row and classified as retrieval ranking residual (defect decision deferred)",
+      "product_defect": ">= 3 rows: product retrieval or successor persistence/embedding defect, next fix target",
+      "ablation": "same rule applied to naia-no-kg-spreading",
+      "basis": "cases carry at most 3 facts and topK is 5, so an embedded active successor should always be in the top 5"
+    },
+    "direction_only": {
+      "naia_current_at_1": "expected to rise from 27/45 (no threshold)",
+      "naia_deletion_leakage": "expected >= 4 (5/6 explicit deletion targets remain active)",
+      "ja_10_q1": "may become incorrect"
+    },
+    "interpretation_lock": "Differences between az1 and az2 are attributed only to the atTimestamp change; no other cause is read into them."
+  },
+  "judge_prompt_unchanged": "judge input construction is byte-identical to az1 for the same capture content; the judge already receives question.mode and query_context.at_timestamp",
+  "review": {
+    "reviewer": "Fable",
+    "verdict": "az2 고정 가능 (header path fixed, observation additions included, numeric closure rule set)",
+    "date": "2026-09-15"
   }
 }
