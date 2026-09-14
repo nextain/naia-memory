@@ -13,7 +13,10 @@
  * - +accuracy: atomic facts embed cleanly, improving vector search recall
  */
 
-import { hasGroundedDeleteEvidence } from "./delete-grounding.js";
+import {
+  explainDeleteGrounding,
+  hasGroundedDeleteEvidence,
+} from "./delete-grounding.js";
 import type { ExtractedFact } from "./index.js";
 import {
   inferEnglishMemoryPropertyId,
@@ -63,7 +66,13 @@ export type LLMFactExtractionFailureCode =
   | "invalid-json"
   | "invalid-top-level-shape"
   | "invalid-episode-shape"
-  | "semantic-rejection";
+  | "semantic-rejection"
+  /**
+   * A delete operation failed deterministic grounding and was dropped. Other
+   * facts from the same episode are kept. Reported through onFailure but never
+   * thrown and never counted as a failed batch: extraction itself succeeded.
+   */
+  | "delete-ungrounded";
 
 export interface LLMFactExtractionFailure {
   readonly code: LLMFactExtractionFailureCode;
@@ -559,7 +568,7 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
         data?.usage?.completion_tokens ?? 0,
       );
     } catch {}
-    return parseLLMFactResponse(data, episodes);
+    return parseLLMFactResponse(data, episodes, { onDeleteRejected: onFailure });
   } catch (err: unknown) {
     return reportExtractionFailure(err, "invalid-json", {
       failurePolicy,
@@ -680,6 +689,7 @@ function parseFactResponseEnvelope(data: unknown): Record<string, unknown> {
 export function parseLLMFactResponse(
   data: unknown,
   episodes: readonly Episode[],
+  diagnostics: { onDeleteRejected?: (failure: LLMFactExtractionFailure) => void } = {},
 ): ExtractedFact[] {
   const parsed = parseFactResponseEnvelope(data);
   const allowedKeys = new Set(episodes.map((_, index) => String(index + 1)));
@@ -778,6 +788,31 @@ export function parseLLMFactResponse(
         operation === "delete" &&
         (structured?.polarity !== "affirmed" || !hasDeleteEvidence)
       ) {
+        // Previously this drop was silent. Report which grounding conditions
+        // failed so a rejected deletion is visible to callers and benchmarks.
+        const reasons = explainDeleteGrounding({
+          episodeContent: normalizedEpisode,
+          episodeRole: ep.role,
+          evidenceKind: fact.deleteEvidenceKind,
+          evidenceQuote: normalizedEvidence,
+          targetQuote: normalizedTarget,
+          subject: structured?.subject,
+          property: structured?.property,
+          value: structured?.value,
+          subjectId: structured?.subjectId,
+          propertyId: structured?.propertyId,
+          polarity: structured?.polarity,
+        });
+        try {
+          diagnostics.onDeleteRejected?.(
+            new LLMFactExtractionError(
+              "delete-ungrounded",
+              `LLM fact extraction episode ${i + 1} delete rejected: ${reasons.join(",") || "polarity-not-affirmed"}`,
+            ),
+          );
+        } catch {
+          // Observers are diagnostic only.
+        }
         return [];
       }
       return [

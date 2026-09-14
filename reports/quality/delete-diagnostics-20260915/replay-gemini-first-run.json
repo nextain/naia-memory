@@ -1,0 +1,88 @@
+{
+  "source": "2026-09-05 Gemini flash-lite first run receipts (synthetic fixtures)",
+  "replayedAt": "2026-09-14T18:02:03.466Z",
+  "rows": [
+    {
+      "caseId": "memory-ko-05",
+      "category": "delete",
+      "parseError": null,
+      "upserts": 1,
+      "groundedDeletes": 0,
+      "rejectedDeletes": [
+        "LLM fact extraction episode 2 delete rejected: target-lacks-value-and-identity"
+      ]
+    },
+    {
+      "caseId": "memory-ko-06",
+      "category": "delete",
+      "parseError": "truncated: LLM fact extraction response was truncated (length)",
+      "upserts": null,
+      "groundedDeletes": null,
+      "rejectedDeletes": []
+    },
+    {
+      "caseId": "memory-ko-14",
+      "category": "project_isolation",
+      "parseError": null,
+      "upserts": 2,
+      "groundedDeletes": 0,
+      "rejectedDeletes": [
+        "LLM fact extraction episode 3 delete rejected: target-lacks-value-and-identity"
+      ]
+    },
+    {
+      "caseId": "memory-en-05",
+      "category": "delete",
+      "parseError": "invalid-json: LLM fact extraction returned an invalid response: message is not one complete JSON value",
+      "upserts": null,
+      "groundedDeletes": null,
+      "rejectedDeletes": []
+    },
+    {
+      "caseId": "memory-en-06",
+      "category": "delete",
+      "parseError": null,
+      "upserts": 2,
+      "groundedDeletes": 1,
+      "rejectedDeletes": []
+    },
+    {
+      "caseId": "memory-en-14",
+      "category": "project_isolation",
+      "parseError": null,
+      "upserts": 2,
+      "groundedDeletes": 0,
+      "rejectedDeletes": [
+        "LLM fact extraction episode 3 delete rejected: target-lacks-value-and-identity"
+      ]
+    },
+    {
+      "caseId": "memory-ja-05",
+      "category": "delete",
+      "parseError": null,
+      "upserts": 1,
+      "groundedDeletes": 0,
+      "rejectedDeletes": [
+        "LLM fact extraction episode 2 delete rejected: target-lacks-value-and-identity"
+      ]
+    },
+    {
+      "caseId": "memory-ja-06",
+      "category": "delete",
+      "parseError": "truncated: LLM fact extraction response was truncated (length)",
+      "upserts": null,
+      "groundedDeletes": null,
+      "rejectedDeletes": []
+    },
+    {
+      "caseId": "memory-ja-14",
+      "category": "project_isolation",
+      "parseError": null,
+      "upserts": 2,
+      "groundedDeletes": 0,
+      "rejectedDeletes": [
+        "LLM fact extraction episode 3 delete rejected: target-lacks-value-and-identity"
+      ]
+    }
+  ]
+}
