@@ -1,17 +1,23 @@
 import { defineConfig } from "vitest/config";
 
-// SqliteAdapter = in-progress high-performance path (flashbulb/epoch/insight parity
-// not yet at LocalAdapter level → expected-RED until parity). Split out of the
-// default suite so `pnpm test` (stable LocalAdapter) stays green WITHOUT hiding it:
-//   pnpm test         → everything EXCEPT these (green)
-//   pnpm test:sqlite  → ONLY these (SQLITE_WIP=1; honestly red until parity)
+// SqliteAdapter = in-progress high-performance path. The smoke contract is
+// runnable in the default suite; parity probes remain explicit expected-RED
+// until their provider behavior reaches LocalAdapter level:
+//   pnpm test                 → stable suite plus SQLite smoke
+//   pnpm test:sqlite:smoke    → smoke only
+//   pnpm test:sqlite:parity   → parity probes (honestly red until parity)
+//   pnpm test:sqlite          → all SQLite WIP checks (smoke plus parity probes)
 const SQLITE_WIP = process.env.SQLITE_WIP === "1";
-const sqliteWipTests = [
+const sqliteParityTests = [
 	"src/memory/__tests__/daily-ground-benchmark.test.ts",
 	"src/memory/__tests__/epoch-anchoring.test.ts",
 	"src/memory/__tests__/flashbulb-memory.test.ts",
 	"src/memory/__tests__/semantic-consolidation.test.ts",
-	"src/memory/__tests__/sqlite-smoke.test.ts",
+];
+const sqliteSmokeTest = "src/memory/__tests__/sqlite-smoke.test.ts";
+const sqliteWipTests = [
+	...sqliteParityTests,
+	sqliteSmokeTest,
 ];
 
 export default defineConfig({
@@ -23,7 +29,7 @@ export default defineConfig({
 			"**/node_modules/**",
 			"**/dist/**",
 			"src/test/**",
-			...(SQLITE_WIP ? [] : sqliteWipTests),
+			...(SQLITE_WIP ? [] : sqliteParityTests),
 		],
 		...(SQLITE_WIP ? { include: sqliteWipTests } : {}),
 		// Phase A coverage floor enforcement (plan v3 §6, R10 close-gate condition).

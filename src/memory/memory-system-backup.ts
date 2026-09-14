@@ -5,7 +5,16 @@ import { MemorySystemCore } from "./memory-system-core.js";
 export abstract class MemorySystemBackup extends MemorySystemCore {
 	/** Returns true if the current adapter supports encrypted backup. */
 	supportsBackup(): boolean {
-		return "export" in this.adapter && "import" in this.adapter;
+		const adapter = this.adapter as {
+			backupSupported?: boolean;
+			export?: unknown;
+			import?: unknown;
+		};
+		return (
+			adapter.backupSupported !== false &&
+			typeof adapter.export === "function" &&
+			typeof adapter.import === "function"
+		);
 	}
 
 	async exportBackup(password: string): Promise<Uint8Array> {

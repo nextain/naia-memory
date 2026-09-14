@@ -36,12 +36,16 @@ export function buildLLMSummarizer(
 
 	return async (input) => {
 		const seed = (input.seedSummary ?? "").trim();
+		const targetTokens =
+			Number.isFinite(input.targetTokens) && input.targetTokens > 0
+				? Math.floor(input.targetTokens)
+				: 768;
 		const transcript = input.messages
 			.map((m) => `${m.role}: ${m.content}`)
 			.join("\n");
 		if (!transcript.trim()) return seed;
 
-		const prompt = `다음 대화를 이후 맥락 유지에 필요한 핵심만 간결히 요약하라. 사실·결정·미해결 항목은 보존하고, 인사·잡담·메타발화는 제외한다. 한국어 대화는 한국어로 요약한다.${
+		const prompt = `다음 대화의 전체 원문을 검토해 이후 맥락 유지에 필요한 핵심만 간결히 요약하라. 출력 목표는 약 ${targetTokens} 토큰이다. 이 목표는 보존할 내용을 고르는 기준이며, 응답을 임의로 잘라 JSON이나 문장을 훼손하지 말라. 사실·결정·미해결 항목은 보존하고, 인사·잡담·메타발화는 제외한다. 한국어 대화는 한국어로 요약한다. 이 프롬프트에 표시된 대화가 호출자가 제공한 전체 입력(${input.messages.length}개 메시지)이다. 표시된 메시지 중 어느 것도 앞·뒤라는 이유로 생략하지 말고, 특히 입력의 마지막 메시지까지 사용하라. 호출자가 별도로 유지하는 최근 ${input.keepTail}개 메시지는 이 프롬프트에 포함되지 않은 별도 tail이며, 그 내용을 추정하거나 현재 입력의 마지막 메시지를 tail로 취급하지 말라. 이름·수치·부정·현재 상태와 교체된 상태·결정·미해결 항목을 보존하라.${
 			seed ? `\n\n참고(결정론 초안): ${seed}` : ""
 		}\n\n대화:\n${transcript}\n\n요약(평문, 군더더기 없이):`;
 

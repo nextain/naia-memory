@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildLLMDeleteVerifier } from "../llm-delete-verifier.js";
-import { buildLLMFactExtractor } from "../llm-fact-extractor.js";
+import {
+	buildLLMFactExtractor,
+	type LLMFactExtractorOptions,
+} from "../llm-fact-extractor.js";
 import type { Episode } from "../types.js";
 
 const episode: Episode = {
@@ -196,6 +199,7 @@ describe("LLM fact delete evidence", () => {
 	async function extractCandidate(
 		candidate: Record<string, unknown>,
 		overrides: Partial<Episode> = {},
+		extractorOverrides: Pick<LLMFactExtractorOptions, "onFailure"> = {},
 	) {
 		vi.stubGlobal(
 			"fetch",
@@ -211,6 +215,7 @@ describe("LLM fact delete evidence", () => {
 			apiKey: "test-secret",
 			baseURL: "https://provider.test/v1/",
 			model: "test-model",
+			...extractorOverrides,
 		})([{ ...episode, ...overrides }]);
 	}
 
@@ -277,13 +282,18 @@ describe("LLM fact delete evidence", () => {
 		).resolves.toEqual([]);
 	});
 
-	it("treats an unknown operation as a non-destructive upsert", async () => {
-		const facts = await extractCandidate({
-			...validDelete,
-			operation: "Delete",
-		});
-		expect(facts).toHaveLength(1);
-		expect(facts[0]?.operation).toBe("upsert");
+	it("rejects an unknown operation with a typed failure", async () => {
+		const failures: Array<{ code: string }> = [];
+		const facts = await extractCandidate(
+			{
+				...validDelete,
+				operation: "Delete",
+			},
+			{},
+			{ onFailure: (failure) => failures.push({ code: failure.code }) },
+		);
+		expect(facts).toEqual([]);
+		expect(failures).toEqual([{ code: "semantic-rejection" }]);
 	});
 
 	it.each(["assistant", "tool"] as const)(

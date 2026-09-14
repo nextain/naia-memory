@@ -14,7 +14,7 @@ import {
 } from "../adapters/local-backup.js";
 import type { MemoryStore } from "../adapters/local-model.js";
 import { MemorySystem } from "../index.js";
-import type { BackupCapable, Episode, Fact } from "../index.js";
+import type { BackupCapable, Episode, Fact, MemoryAdapter } from "../index.js";
 
 function makeTmpAdapter(): LocalAdapter {
 	const path = join(tmpdir(), `naia-memory-test-${randomUUID()}.json`);
@@ -52,6 +52,43 @@ function makeFact(content: string): Fact {
 		status: "active",
 		sourceEpisodes: [],
 	};
+}
+
+function makeCapabilityProbeAdapter(
+	overrides: Record<string, unknown> = {},
+): MemoryAdapter {
+	return {
+		episode: {
+			store: async () => {},
+			recall: async () => [],
+			getRecent: async () => [],
+			getUnconsolidated: async () => [],
+			markConsolidated: async () => {},
+		},
+		semantic: {
+			upsert: async () => {},
+			search: async () => [],
+			decay: async () => 0,
+			associate: async () => {},
+			getAll: async () => [],
+			delete: async () => false,
+		},
+		procedural: {
+			getSkill: async () => null,
+			recordOutcome: async () => {},
+			learnFromFailure: async () => {},
+			getReflections: async () => [],
+		},
+		consolidate: async () => ({
+			episodesProcessed: 0,
+			factsCreated: 0,
+			factsUpdated: 0,
+			memoriesPruned: 0,
+			associationsUpdated: 0,
+		}),
+		close: async () => {},
+		...overrides,
+	} as MemoryAdapter;
 }
 
 describe("LocalAdapter backup", () => {
@@ -290,6 +327,40 @@ describe("MemorySystem backup delegation", () => {
 			close: async () => {},
 		} as unknown as import("../types.js").MemoryAdapter;
 		const system = new MemorySystem({ adapter: stub });
+		expect(system.supportsBackup()).toBe(false);
+	});
+
+	it("supportsBackup() returns false when export/import are non-functions", () => {
+		const adapter = makeCapabilityProbeAdapter({ export: "unsupported", import: {} });
+		const system = new MemorySystem({ adapter });
+		expect(system.supportsBackup()).toBe(false);
+	});
+
+	it("supportsBackup() keeps the legacy fallback for callable methods", () => {
+		const adapter = makeCapabilityProbeAdapter({
+			export: async () => new Uint8Array(),
+			import: async () => {},
+		});
+		const system = new MemorySystem({ adapter });
+		expect(system.supportsBackup()).toBe(true);
+	});
+
+	it("supportsBackup() requires both methods even when explicitly enabled", () => {
+		const adapter = makeCapabilityProbeAdapter({
+			backupSupported: true,
+			export: async () => new Uint8Array(),
+		});
+		const system = new MemorySystem({ adapter });
+		expect(system.supportsBackup()).toBe(false);
+	});
+
+	it("supportsBackup() honors an explicit adapter disable marker", () => {
+		const adapter = makeCapabilityProbeAdapter({
+			backupSupported: false,
+			export: async () => new Uint8Array(),
+			import: async () => {},
+		});
+		const system = new MemorySystem({ adapter });
 		expect(system.supportsBackup()).toBe(false);
 	});
 

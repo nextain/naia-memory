@@ -53,6 +53,24 @@ function mockAdapter(): MemoryAdapter {
 	} as unknown as MemoryAdapter;
 }
 
+function makeBackupFact(content: string): Fact {
+	const now = Date.now();
+	return {
+		id: randomUUID(),
+		content,
+		entities: ["provider"],
+		topics: ["backup"],
+		createdAt: now,
+		updatedAt: now,
+		importance: 0.8,
+		recallCount: 0,
+		lastAccessed: now,
+		strength: 0.8,
+		status: "active",
+		sourceEpisodes: [],
+	};
+}
+
 describe("NaiaMemoryProvider", () => {
 	it("creates instance with MemoryAdapter", () => {
 		const adapter = mockAdapter();
@@ -97,10 +115,65 @@ describe("NaiaMemoryProvider", () => {
 });
 
 describe("isCapable", () => {
-	it("detects BackupCapableProvider", () => {
+	it("reports BackupCapableProvider false when the adapter lacks backup methods", () => {
 		const adapter = mockAdapter();
 		const provider = new NaiaMemoryProvider({ adapter });
-		expect(isCapable(provider, "BackupCapableProvider")).toBe(true);
+		expect(isCapable(provider, "BackupCapableProvider")).toBe(false);
+	});
+
+	it("keeps structural backup fallback when no optional gate is present", () => {
+		const legacyExternal = {
+			exportBackup: async () => new Uint8Array([1]),
+			importBackup: async () => {},
+		} as unknown as Parameters<typeof isCapable>[0];
+		expect(isCapable(legacyExternal, "BackupCapableProvider")).toBe(true);
+	});
+
+	it("preserves an optional gate receiver and scopes it to backup", () => {
+		const external = {
+			ready: true,
+			encode: async () => {},
+			recall: async () => [],
+			consolidate: async () => ({
+				factsCreated: 0,
+				factsUpdated: 0,
+				episodesProcessed: 0,
+				durationMs: 0,
+			}),
+			close: async () => {},
+			exportBackup: async () => new Uint8Array([1]),
+			importBackup: async () => {},
+			supportsBackup() {
+				return this.ready;
+			},
+			scoreImportance: () => ({
+				importance: 0.5,
+				surprise: 0.5,
+				emotion: 0.5,
+				utility: 0.5,
+			}),
+		};
+		const candidate = external as unknown as Parameters<typeof isCapable>[0];
+
+		expect(isCapable(candidate, "BackupCapableProvider")).toBe(true);
+		external.ready = false;
+		expect(isCapable(candidate, "BackupCapableProvider")).toBe(false);
+		// The backup gate must not affect unrelated capability detection.
+		expect(isCapable(candidate, "ImportanceScoringCapable")).toBe(true);
+	});
+
+	it("requires both provider backup methods even when the gate returns true", () => {
+		const missingMethod = {
+			exportBackup: async () => new Uint8Array([1]),
+			supportsBackup: () => true,
+		} as unknown as Parameters<typeof isCapable>[0];
+		const nonFunction = {
+			exportBackup: "unsupported",
+			importBackup: async () => {},
+		} as unknown as Parameters<typeof isCapable>[0];
+
+		expect(isCapable(missingMethod, "BackupCapableProvider")).toBe(false);
+		expect(isCapable(nonFunction, "BackupCapableProvider")).toBe(false);
 	});
 
 	it("detects ImportanceScoringCapable", () => {
@@ -199,6 +272,61 @@ describe("NaiaMemoryProvider integration", () => {
 		const adapter = mockAdapter();
 		const provider = new NaiaMemoryProvider({ adapter });
 		expect(isCapable(provider, "CompactableCapableProvider")).toBe(true);
+	});
+});
+
+describe("NaiaMemoryProvider backup", () => {
+	let dir: string;
+
+	beforeEach(async () => {
+		dir = await mkdtemp(join(tmpdir(), "provider-backup-"));
+	});
+
+	afterEach(async () => {
+		await rm(dir, { recursive: true, force: true }).catch(() => {});
+	});
+
+	it("round-trips an encrypted LocalAdapter backup through the provider", async () => {
+		const sourceAdapter = new LocalAdapter(join(dir, "source.json"));
+		const targetAdapter = new LocalAdapter(join(dir, "target.json"));
+		const source = new NaiaMemoryProvider({ adapter: sourceAdapter });
+		const target = new NaiaMemoryProvider({ adapter: targetAdapter });
+		try {
+			await sourceAdapter.semantic.upsert(makeBackupFact("provider source fact"));
+			expect(source.supportsBackup()).toBe(true);
+			expect(isCapable(source, "BackupCapableProvider")).toBe(true);
+
+			const blob = await source.exportBackup("provider-password");
+			await target.importBackup(blob, "provider-password");
+
+			expect(
+				(await targetAdapter.semantic.getAll()).map((fact) => fact.content),
+			).toContain("provider source fact");
+		} finally {
+			await source.close();
+			await target.close();
+		}
+	});
+
+	it("preserves target data when provider import receives a wrong password", async () => {
+		const sourceAdapter = new LocalAdapter(join(dir, "source.json"));
+		const targetAdapter = new LocalAdapter(join(dir, "target.json"));
+		const source = new NaiaMemoryProvider({ adapter: sourceAdapter });
+		const target = new NaiaMemoryProvider({ adapter: targetAdapter });
+		try {
+			await sourceAdapter.semantic.upsert(makeBackupFact("provider secret"));
+			const blob = await source.exportBackup("correct-password");
+			await targetAdapter.semantic.upsert(makeBackupFact("target-only data"));
+			const before = await targetAdapter.semantic.getAll();
+
+			await expect(
+				target.importBackup(blob, "wrong-password"),
+			).rejects.toThrow("Decryption failed");
+			expect(await targetAdapter.semantic.getAll()).toEqual(before);
+		} finally {
+			await source.close();
+			await target.close();
+		}
 	});
 });
 

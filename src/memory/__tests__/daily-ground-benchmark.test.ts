@@ -2,17 +2,19 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { MemorySystem } from "../index.js";
 import { SqliteAdapter } from "../adapters/sqlite.js";
 import { randomUUID } from "node:crypto";
-import { existsSync, unlinkSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { homedir } from "node:os";
+import { tmpdir } from "node:os";
 
 describe("Daily Ground Dynamic Benchmark (Gold Standard Verification)", () => {
     let memory: MemorySystem;
     let adapter: SqliteAdapter;
+    let tempDir: string;
     let dbPath: string;
 
     beforeEach(async () => {
-        dbPath = join(homedir(), ".naia", "memory", `test-daily-${randomUUID()}.db`);
+        tempDir = mkdtempSync(join(tmpdir(), "naia-memory-sqlite-daily-"));
+        dbPath = join(tempDir, `test-daily-${randomUUID()}.db`);
         adapter = new SqliteAdapter({ dbPath });
         // Heuristic extractor 대신 엔티티 추출이 가능한 모킹된 extractor 사용
         const mockExtractor = async (episodes: any) => {
@@ -34,12 +36,10 @@ describe("Daily Ground Dynamic Benchmark (Gold Standard Verification)", () => {
 
     afterEach(async () => {
         await memory.close();
-        if (existsSync(dbPath)) {
-            try { unlinkSync(dbPath); } catch {}
-        }
+        rmSync(tempDir, { recursive: true, force: true });
     });
 
-    it("should track Value Evolution (Belief Consistency > 90%)", async () => {
+    it("should recall a manually constructed validity chain in history mode", async () => {
         const dayMs = 24 * 60 * 60 * 1000;
         const now = Date.now();
 
@@ -61,6 +61,10 @@ describe("Daily Ground Dynamic Benchmark (Gold Standard Verification)", () => {
         
         const all = await adapter.semantic.getAll();
         const vegan = all.find(f => f.content.includes("비건"))!;
+		// This test constructs a historical chain directly. Keep the original
+		// createdAt from consolidation, but make the validity interval explicit
+		// so the R-Tree receives min_ts <= max_ts.
+		vegan.validFrom = now - 30 * dayMs;
 
         const pescatarian = {
             id: "fact-pesca",
@@ -89,6 +93,13 @@ describe("Daily Ground Dynamic Benchmark (Gold Standard Verification)", () => {
         
         await adapter.semantic.upsert(vegan);
         await adapter.semantic.upsert(pescatarian);
+
+        // Verify the manually constructed predecessor interval survived the
+        // SQLite write before exercising history retrieval.
+        const storedChain = await adapter.semantic.getAll();
+        const storedVegan = storedChain.find(f => f.id === vegan.id)!;
+        expect(storedVegan.validFrom).toBe(now - 30 * dayMs);
+        expect(storedVegan.validTo).toBe(now - 15 * dayMs);
 
         // 3. 질문 (history 모드)
         const query = "내 식습관의 변화를 알려줘.";

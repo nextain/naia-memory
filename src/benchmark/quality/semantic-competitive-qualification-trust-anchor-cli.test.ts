@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 const CLI = resolve(
 	"src/benchmark/quality/semantic-competitive-qualification-trust-anchor-cli.ts",
 );
+const NODE_TSX_ARGS = ["--import", "tsx/esm"];
 
 function publicKey(): string {
 	return generateKeyPairSync("ed25519")
@@ -44,7 +45,7 @@ function fixture() {
 }
 
 function run(...args: string[]) {
-	return spawnSync("pnpm", ["exec", "tsx", CLI, ...args], {
+	return spawnSync(process.execPath, [...NODE_TSX_ARGS, CLI, ...args], {
 		encoding: "utf8",
 	});
 }
@@ -62,9 +63,8 @@ describe("semantic qualification trust-anchor CLI", () => {
 
 	it("fails closed when the policy or generated module drifts", () => {
 		const { modulePath, policy, policyPath } = fixture();
-		execFileSync("pnpm", [
-			"exec",
-			"tsx",
+		execFileSync(process.execPath, [
+			...NODE_TSX_ARGS,
 			CLI,
 			policyPath,
 			"--output",

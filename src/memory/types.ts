@@ -343,6 +343,13 @@ export interface ConsolidationResult {
  * Future adapters (cloud, distributed) can be added without changing consumers.
  */
 export interface MemoryAdapter {
+	/**
+	 * Optional backup capability override. When false, backup is deliberately
+	 * disabled even if legacy export/import methods are present. Omitted keeps
+	 * the method-based capability fallback for external adapters.
+	 */
+	readonly backupSupported?: boolean;
+
 	/** Episodic memory operations (Hippocampus) */
 	episode: {
 		/** Store a new episode */

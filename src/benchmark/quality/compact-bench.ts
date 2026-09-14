@@ -8,7 +8,8 @@
  * across the paths compact() actually takes:
  *   (A) deterministic recap   — no summarizer, no rolling summary (default)
  *   (B) rolling-summary path  — sessionId primed via encode() (realtime=true)
- *   (C) mock summarizer       — upper bound if a real LLM polishes the recap
+ *   (C) answer-key-aware mock  — synthetic fixture-specific measurement
+ *                              (no LLM call; it extracts anchors from this fixture)
  *
  * Fully local — no external API. Run: npx tsx src/benchmark/quality/compact-bench.ts
  */
@@ -143,13 +144,15 @@ async function main() {
 		msgs,
 	);
 
-	// (C) mock summarizer — models an LLM that extracts every stated fact
+	// (C) deterministic answer-key-aware mock — synthetic fixture measurement,
+	// not an LLM call or an upper bound.
 	const C = await measure(
-		"C: mock LLM summarizer",
+		"C: answer-key-aware mock (synthetic fixture)",
 		async () => {
 			const m = new MemorySystem({
 				adapter: new LocalAdapter(),
-				// A "good" summarizer would preserve stated facts; model that here.
+				// Emit every anchor statement present in the input window. This
+				// isolates the measurement harness from provider/network behavior.
 				summarizer: async ({ messages }: any) => {
 					const facts = (messages as Msg[])
 						.filter((mm) => mm.role === "user")

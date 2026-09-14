@@ -20,10 +20,15 @@
 
 운영자는 한국어를 첫 검증 언어로 사용하되 영어·일본어 등 다른 언어의 원문도 동일한 보존 모델로 저장되기를 원한다. 언어별 정규식이나 순위 상수에 기대지 않고, 구조화 근거가 없는 입력은 기존 텍스트 검색으로 안전하게 폴백해야 한다.
 
+## UC-MEM-03 — 운영자가 지원되는 백업 경로를 사용한다
+
+운영자는 어댑터를 선택한 뒤 백업 지원 여부를 정확히 확인한다. LocalAdapter에서는 패키지 루트에서 import한 provider의 백업을 내보내 다른 인스턴스로 복원하고 사실 원문을 확인한다. SQLite처럼 백업을 지원하지 않는 어댑터에서는 미지원으로 표시되며, 시도하더라도 기존 사실과 저장소 사용 가능성이 유지된다.
+
 ## Test Coverage Map
 
 | 사용자 시나리오 | 검증 대상 | 테스트/실행 |
 | --- | --- | --- |
+| UC-MEM-03 | 실제 지원 여부, provider 암호화 왕복, 미지원 거부와 데이터 보존 | `backup.test.ts`, `provider.test.ts`, `sqlite-backup-unsupported.test.ts` |
 | UC-BENCH-01 | 결과 영수증의 시각·리비전·데이터셋 해시·환경 누락 방지 | `src/benchmark/**` 검증 및 생성 벤치마크 결과 |
 | UC-BENCH-01 | 한국어 실패 유형과 기대/금지 후보 라벨의 구조 | `BENCH_VALIDATE_ONLY=1 pnpm exec tsx src/benchmark/quality/korean-retrieval-contract.ts` |
 | UC-BENCH-02 | 동일 설정으로 전체 범주를 평가하고 retrieval만 채점 | `BENCH_SEARCH_MODE=rrf|vector-only pnpm exec tsx src/benchmark/quality/korean-retrieval-contract.ts` |

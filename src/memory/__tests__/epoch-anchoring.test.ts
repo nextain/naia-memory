@@ -2,26 +2,27 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { MemorySystem } from "../index.js";
 import { SqliteAdapter } from "../adapters/sqlite.js";
 import { randomUUID } from "node:crypto";
-import { existsSync, unlinkSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { homedir } from "node:os";
+import { tmpdir } from "node:os";
 
 describe("Epoch-based Anchoring", () => {
     let memory: MemorySystem;
     let adapter: SqliteAdapter;
+    let tempDir: string;
     let tempDbPath: string;
 
     beforeEach(async () => {
-        tempDbPath = join(homedir(), ".naia", "memory", `test-epoch-${randomUUID()}.json`);
+        tempDir = mkdtempSync(join(tmpdir(), "naia-memory-sqlite-epoch-"));
+        tempDbPath = join(tempDir, `test-epoch-${randomUUID()}.db`);
         adapter = new SqliteAdapter({ dbPath: tempDbPath });
         memory = new MemorySystem({ adapter });
         await memory.init();
     });
 
     afterEach(async () => {
-        if (existsSync(tempDbPath)) {
-            try { unlinkSync(tempDbPath); } catch {}
-        }
+        await memory.close();
+        rmSync(tempDir, { recursive: true, force: true });
     });
 
     it("should resolve epoch anchor to temporal pivot for retrieval", async () => {

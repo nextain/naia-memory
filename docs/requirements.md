@@ -1,5 +1,11 @@
 # 요구사항
 
+## MEM-FR-04 — 백업 지원 여부와 실제 호출의 일치
+
+상태: Done — 2026-09-05 단계 3 회귀·빌드 패키지 검증. SQLite 백업 자체는 미지원이며 이를 정확히 판별한다.
+
+MemorySystem과 provider의 백업 capability 조회는 현재 어댑터의 실제 지원 여부를 반영해야 한다. 지원하지 않는 SQLite 어댑터는 false로 식별되고 백업·복원 시 기존 데이터 변경 없이 거부해야 한다. 지원하는 LocalAdapter는 패키지 루트에서 import한 provider를 통한 암호화 백업·복원 왕복을 보장해야 한다. 기존 외부 provider의 메서드 기반 capability 판별과 기존 백업 형식은 호환성을 유지한다.
+
 ## BENCH-FR-01 — 재현성 영수증
 
 상태: Done — 2026-08-13 CPU 기준선 결과에서 검증.

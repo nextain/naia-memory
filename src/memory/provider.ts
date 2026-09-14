@@ -146,28 +146,22 @@ export class NaiaMemoryProvider
 
 	// ─── Capability: BackupCapable ────────────────────────────────────────────
 
+	supportsBackup(): boolean {
+		return this.system.supportsBackup();
+	}
+
 	exportBackup(password: string): Promise<Uint8Array> {
-		// biome-ignore lint/complexity/useLiteralKeys: bracket access intentionally reaches a protected integration seam.
-		const adapter = this.system["adapter"];
-		if (
-			"exportBackup" in adapter &&
-			typeof adapter.exportBackup === "function"
-		) {
-			return adapter.exportBackup(password);
+		if (!this.supportsBackup()) {
+			throw new Error("BackupCapable not supported by current adapter");
 		}
-		throw new Error("BackupCapable not supported by current adapter");
+		return this.system.exportBackup(password);
 	}
 
 	importBackup(blob: Uint8Array, password: string): Promise<void> {
-		// biome-ignore lint/complexity/useLiteralKeys: bracket access intentionally reaches a protected integration seam.
-		const adapter = this.system["adapter"];
-		if (
-			"importBackup" in adapter &&
-			typeof adapter.importBackup === "function"
-		) {
-			return adapter.importBackup(blob, password);
+		if (!this.supportsBackup()) {
+			throw new Error("BackupCapable not supported by current adapter");
 		}
-		throw new Error("BackupCapable not supported by current adapter");
+		return this.system.importBackup(blob, password);
 	}
 
 	// ─── Capability: ImportanceScoring ────────────────────────────────────────

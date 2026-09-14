@@ -2,18 +2,34 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { MemorySystem } from "../index.js";
 import { SqliteAdapter } from "../adapters/sqlite.js";
 import { randomUUID } from "node:crypto";
-import { existsSync, unlinkSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { homedir } from "node:os";
+import { tmpdir } from "node:os";
 import type { EmbeddingProvider } from "../embeddings.js";
+
+async function readWorkerMmapSize(adapter: SqliteAdapter): Promise<number> {
+	// mmap_size is per connection. Probe the adapter's worker connection rather
+	// than opening a second connection whose PRAGMA would be unrelated.
+	await adapter.semantic.getAll();
+	const workerCall = (adapter as unknown as {
+		rawCallWorker(type: string, payload: { sql: string; params: unknown[] }): Promise<unknown>;
+	}).rawCallWorker;
+	const row = await workerCall.call(adapter, "prepare-get", {
+		sql: "PRAGMA mmap_size",
+		params: [],
+	}) as { mmap_size?: number } | undefined;
+	return Number(row?.mmap_size ?? 0);
+}
 
 describe("SqliteAdapter Smoke Test", () => {
     let memory: MemorySystem;
     let adapter: SqliteAdapter;
+    let tempDir: string;
     let dbPath: string;
 
     beforeEach(async () => {
-        dbPath = join(homedir(), ".naia", "memory", `test-smoke-${randomUUID()}.db`);
+        tempDir = mkdtempSync(join(tmpdir(), "naia-memory-sqlite-smoke-"));
+        dbPath = join(tempDir, `test-smoke-${randomUUID()}.db`);
         adapter = new SqliteAdapter({ dbPath });
         memory = new MemorySystem({ adapter });
         await memory.init();
@@ -21,9 +37,7 @@ describe("SqliteAdapter Smoke Test", () => {
 
     afterEach(async () => {
         await memory.close();
-        if (existsSync(dbPath)) {
-            try { unlinkSync(dbPath); } catch {}
-        }
+        rmSync(tempDir, { recursive: true, force: true });
     });
 
     it("should store and recall a fact from SQLite", async () => {
@@ -48,6 +62,72 @@ describe("SqliteAdapter Smoke Test", () => {
         expect(result.facts.length).toBeGreaterThan(0);
         expect(result.facts[0].content).toContain("SQLite");
     });
+
+	it.each([
+		["NaN", Number.NaN],
+		["positive infinity", Number.POSITIVE_INFINITY],
+		["negative infinity", Number.NEGATIVE_INFINITY],
+		["negative", -1],
+		["fractional", 1.5],
+		["unsafe integer", Number.MAX_SAFE_INTEGER + 1],
+		["string", "268435456"],
+		["null", null],
+	] as const)("rejects invalid mmapSizeBytes (%s) before filesystem side effects", (_label, value) => {
+		const invalidParent = join(tempDir, "invalid-mmap-option");
+		const invalidPath = join(invalidParent, "memory.db");
+		expect(() => new SqliteAdapter({
+			dbPath: invalidPath,
+			mmapSizeBytes: value as unknown as number,
+		})).toThrow(/mmapSizeBytes must be a finite, non-negative safe integer/);
+		expect(existsSync(invalidParent)).toBe(false);
+	});
+
+	it("keeps the worker mmap setting disabled by default and at zero", async () => {
+		expect(await readWorkerMmapSize(adapter)).toBe(0);
+
+		await memory.close();
+		adapter = new SqliteAdapter({ dbPath, mmapSizeBytes: 0 });
+		memory = new MemorySystem({ adapter });
+		expect(await readWorkerMmapSize(adapter)).toBe(0);
+	});
+
+	it("applies an opt-in mmap setting to the worker and preserves data after reopen", async () => {
+		const requestedMmapSize = 256 * 1024 * 1024;
+		await memory.close();
+		adapter = new SqliteAdapter({ dbPath, mmapSizeBytes: requestedMmapSize });
+		memory = new MemorySystem({ adapter });
+		const now = Date.now();
+		await adapter.semantic.upsert({
+			id: "mmap-persisted-fact",
+			content: "mmap setting must preserve SQLite data",
+			entities: [],
+			topics: [],
+			createdAt: now,
+			updatedAt: now,
+			importance: 1,
+			recallCount: 0,
+			lastAccessed: now,
+			strength: 1,
+			status: "active",
+			sourceEpisodes: [],
+		});
+
+		const effectiveBeforeClose = await readWorkerMmapSize(adapter);
+		expect(Number.isSafeInteger(effectiveBeforeClose)).toBe(true);
+		expect(effectiveBeforeClose).toBeGreaterThanOrEqual(0);
+		expect(effectiveBeforeClose).toBeLessThanOrEqual(requestedMmapSize);
+
+		await memory.close();
+		adapter = new SqliteAdapter({ dbPath, mmapSizeBytes: requestedMmapSize });
+		memory = new MemorySystem({ adapter });
+		expect((await adapter.semantic.getAll()).map((fact) => fact.id)).toEqual([
+			"mmap-persisted-fact",
+		]);
+		const effectiveAfterReopen = await readWorkerMmapSize(adapter);
+		expect(Number.isSafeInteger(effectiveAfterReopen)).toBe(true);
+		expect(effectiveAfterReopen).toBeGreaterThanOrEqual(0);
+		expect(effectiveAfterReopen).toBeLessThanOrEqual(requestedMmapSize);
+	});
 
     it("persists every concurrently submitted fact before each upsert resolves", async () => {
         const now = Date.now();
@@ -102,7 +182,7 @@ describe("SqliteAdapter Smoke Test", () => {
         expect(await adapter.semantic.getAll()).toEqual([]);
     });
 
-    it("should support epoch-based filtering in SQLite", async () => {
+    it("should recall a dated fact within a configured time range", async () => {
         const now = Date.now();
         await adapter.upsertEpoch({
             id: "epoch-1",
@@ -136,6 +216,285 @@ describe("SqliteAdapter Smoke Test", () => {
 
         expect(result.facts.length).toBeGreaterThan(0);
         expect(result.facts[0].content).toContain("Test Era");
+    });
+
+    it("persists epoch upserts by id and name across a worker restart", async () => {
+        await adapter.upsertEpoch({
+            id: "epoch-persistent",
+            name: "Persistent Era",
+            description: "initial",
+            start: 100,
+            end: 200,
+        });
+        await adapter.upsertEpoch({
+            id: "epoch-persistent",
+            name: "Persistent Era",
+            description: "updated by id",
+            start: 110,
+            end: 210,
+        });
+        expect(await adapter.getEpochs()).toEqual([expect.objectContaining({
+            id: "epoch-persistent",
+            description: "updated by id",
+            start: 110,
+            end: 210,
+        })]);
+
+        await adapter.upsertEpoch({
+            id: "epoch-renamed-record",
+            name: "Persistent Era",
+            description: "updated by name",
+            start: 120,
+            end: null,
+        });
+        expect(await adapter.getEpochs()).toEqual([expect.objectContaining({
+            id: "epoch-renamed-record",
+            name: "Persistent Era",
+            description: "updated by name",
+            start: 120,
+            end: null,
+        })]);
+
+        await memory.close();
+        adapter = new SqliteAdapter({ dbPath });
+        memory = new MemorySystem({ adapter });
+        await memory.init();
+        await expect(adapter.getEpochs()).resolves.toEqual([expect.objectContaining({
+            id: "epoch-renamed-record",
+            name: "Persistent Era",
+            start: 120,
+            end: null,
+        })]);
+    });
+
+    it("resolves inclusive temporal bounds and picks the newest overlapping version", async () => {
+        await adapter.upsertEpoch({
+            id: "epoch-boundary",
+            name: "Boundary Era",
+            start: 1000,
+            end: 2000,
+        });
+        const makeFact = (id: string, createdAt: number, validFrom: number, validTo: number, content: string) => ({
+            id,
+            content,
+            entities: [],
+            topics: [],
+            createdAt,
+            updatedAt: createdAt,
+            importance: 1,
+            recallCount: 0,
+            lastAccessed: createdAt,
+            strength: 1,
+            status: "active" as const,
+            sourceEpisodes: [],
+            validFrom,
+            validTo,
+        });
+        await adapter.semantic.upsert(makeFact("versioned-v1", 10, 1000, 1500, "old version"));
+        await adapter.semantic.upsert(makeFact("versioned-v2", 20, 1500, 2500, "new version"));
+        await adapter.semantic.upsert(makeFact("at-end", 30, 2000, 2100, "inclusive end"));
+        await adapter.semantic.upsert(makeFact("after-end", 40, 2001, 2100, "outside end"));
+
+        const epochFacts = await adapter.semantic.search("", 20, false, {
+            mode: "at-time",
+            epochAnchor: "Boundary Era",
+        });
+        expect(epochFacts.map((fact) => fact.id).sort()).toEqual(["at-end", "versioned-v2"]);
+
+        // atTimestamp takes precedence over a simultaneously supplied anchor.
+        const pointFacts = await adapter.semantic.search("", 20, false, {
+            mode: "at-time",
+            atTimestamp: 1100,
+            epochAnchor: "Boundary Era",
+        });
+        expect(pointFacts.map((fact) => fact.id)).toEqual(["versioned-v1"]);
+
+        await memory.close();
+        adapter = new SqliteAdapter({ dbPath });
+        memory = new MemorySystem({ adapter });
+        await memory.init();
+        await expect(adapter.semantic.search("", 20, false, {
+            mode: "at-time",
+            epochAnchor: "Boundary Era",
+        })).resolves.toEqual(expect.arrayContaining([
+            expect.objectContaining({ id: "versioned-v2" }),
+            expect.objectContaining({ id: "at-end" }),
+        ]));
+    });
+
+    it("uses one current endpoint for open epochs and rechecks modern integer bounds after reopen", async () => {
+        const observed = Date.now();
+        const makeFact = (
+            id: string,
+            validFrom: number,
+            validTo: number | null,
+            project: string,
+        ) => ({
+            id,
+            content: `modern temporal fact ${id}`,
+            entities: [],
+            topics: [],
+            createdAt: validFrom,
+            updatedAt: validFrom,
+            importance: 1,
+            recallCount: 0,
+            lastAccessed: validFrom,
+            strength: 1,
+            status: "active" as const,
+            sourceEpisodes: [],
+            validFrom,
+            validTo,
+            encodingContext: { project },
+        });
+
+        await adapter.upsertEpoch({
+            id: "epoch-open-modern",
+            name: "Modern Open Era",
+            start: observed - 1000,
+            end: null,
+        });
+        await adapter.semantic.upsert(makeFact(
+            "modern-ongoing",
+            observed - 100,
+            null,
+            "allowed",
+        ));
+        await adapter.semantic.upsert(makeFact(
+            "modern-future",
+            observed + 60_000,
+            null,
+            "allowed",
+        ));
+        await adapter.semantic.upsert(makeFact(
+            "modern-before-open",
+            observed - 2000,
+            observed - 1001,
+            "allowed",
+        ));
+        await adapter.semantic.upsert(makeFact(
+            "modern-foreign-ongoing",
+            observed - 100,
+            null,
+            "foreign",
+        ));
+
+        const openContext = {
+            mode: "at-time" as const,
+            epochAnchor: "Modern Open Era",
+            project: "allowed",
+            scopeMode: "strict" as const,
+        };
+        const openIds = (await adapter.semantic.search("", 20, false, openContext))
+            .map((fact) => fact.id);
+        expect(openIds).toContain("modern-ongoing");
+        expect(openIds).not.toContain("modern-future");
+        expect(openIds).not.toContain("modern-before-open");
+        expect(openIds).not.toContain("modern-foreign-ongoing");
+
+        const closedStart = observed - 10_000;
+        const closedEnd = observed - 9_000;
+        await adapter.upsertEpoch({
+            id: "epoch-closed-modern",
+            name: "Modern Closed Era",
+            start: closedStart,
+            end: closedEnd,
+        });
+        await adapter.semantic.upsert(makeFact(
+            "modern-left-inclusive",
+            closedStart,
+            closedStart,
+            "allowed",
+        ));
+        await adapter.semantic.upsert(makeFact(
+            "modern-right-inclusive",
+            closedEnd,
+            closedEnd,
+            "allowed",
+        ));
+        await adapter.semantic.upsert(makeFact(
+            "modern-before-closed",
+            closedStart - 1,
+            closedStart - 1,
+            "allowed",
+        ));
+        await adapter.semantic.upsert(makeFact(
+            "modern-after-closed",
+            closedEnd + 1,
+            closedEnd + 1,
+            "allowed",
+        ));
+        await adapter.semantic.upsert(makeFact(
+            "modern-foreign-left",
+            closedStart,
+            closedStart,
+            "foreign",
+        ));
+
+        const closedContext = {
+            mode: "at-time" as const,
+            epochAnchor: "Modern Closed Era",
+            project: "allowed",
+            scopeMode: "strict" as const,
+        };
+        const expectedClosedIds = [
+            "modern-left-inclusive",
+            "modern-right-inclusive",
+        ];
+        await expect(adapter.semantic.search("", 20, false, closedContext))
+            .resolves.toEqual(expect.arrayContaining(
+                expectedClosedIds.map((id) => expect.objectContaining({ id })),
+            ));
+        const closedIdsBeforeReopen = (await adapter.semantic.search("", 20, false, closedContext))
+            .map((fact) => fact.id)
+            .sort();
+        expect(closedIdsBeforeReopen).toEqual(expectedClosedIds.sort());
+
+        await memory.close();
+        adapter = new SqliteAdapter({ dbPath });
+        memory = new MemorySystem({ adapter });
+        await memory.init();
+        const closedIdsAfterReopen = (await adapter.semantic.search("", 20, false, closedContext))
+            .map((fact) => fact.id)
+            .sort();
+        expect(closedIdsAfterReopen).toEqual(expectedClosedIds.sort());
+    });
+
+    it("recalls high and low valence flashbulbs without FTS while preserving scope and lifecycle", async () => {
+        const now = Date.now();
+        const makeFact = (id: string, maxEmotion: number, project: string, status: "active" | "archived" = "active") => ({
+            id,
+            content: `opaque flashbulb ${id}`,
+            entities: [],
+            topics: [],
+            createdAt: now,
+            updatedAt: now,
+            importance: 1,
+            maxEmotion,
+            recallCount: 0,
+            lastAccessed: now,
+            strength: 1,
+            status,
+            sourceEpisodes: [],
+            encodingContext: { project },
+        });
+        await adapter.semantic.upsert(makeFact("flash-high", 0.95, "allowed"));
+        await adapter.semantic.upsert(makeFact("flash-low", 0.05, "allowed"));
+        await adapter.semantic.upsert(makeFact("ordinary", 0.5, "allowed"));
+        await adapter.semantic.upsert(makeFact("foreign-flash", 0.95, "foreign"));
+        await adapter.semantic.upsert(makeFact("archived-flash", 0.95, "allowed", "archived"));
+
+        const result = await adapter.semantic.search("term-with-no-matching-fact", 20, false, {
+            project: "allowed",
+            scopeMode: "strict",
+        });
+        expect(new Set(result.map((fact) => fact.id))).toEqual(new Set(["flash-high", "flash-low"]));
+    });
+
+    it("rejects an at-time search without a timestamp or resolvable epoch", async () => {
+        await expect(adapter.semantic.search("anything", 5, false, {
+            mode: "at-time",
+            epochAnchor: "missing epoch",
+        })).rejects.toThrow("requires `atTimestamp` or a valid `epochAnchor`");
     });
 
     it("preserves optional structured-fact metadata on SQLite round-trip", async () => {
@@ -214,6 +573,76 @@ describe("SqliteAdapter Smoke Test", () => {
 			project: "a", scopeMode: "strict",
 		});
 		expect(scoped.map((fact) => fact.id)).toEqual(["allowed"]);
+	});
+
+	it("keeps strict vector candidates scoped across surface, deep, and history modes", async () => {
+		await memory.close();
+		const embedder: EmbeddingProvider = {
+			name: "sqlite-strict-vector-lifecycle", dims: 2,
+			embeddingSpaceId: "sqlite-strict-vector-lifecycle-v1",
+			async embed() { return [1, 0]; },
+			async embedBatch(texts) {
+				return texts.map((text) => {
+					if (text.includes("same-cold")) return [0.99, 0];
+					if (text.includes("same-superseded")) return [0.98, 0];
+					if (text.includes("same-archived")) return [0.97, 0];
+					return [1, 0];
+				});
+			},
+		};
+		adapter = new SqliteAdapter({ dbPath, embeddingProvider: embedder });
+		memory = new MemorySystem({ adapter });
+		await memory.init();
+		const now = Date.now();
+		const makeFact = (
+			id: string,
+			status: "active" | "superseded" | "archived",
+			strength: number,
+			project: string,
+		) => ({
+			id,
+			content: `strict-vector-fixture-${id}`,
+			entities: [],
+			topics: [],
+			createdAt: now,
+			updatedAt: now,
+			importance: 1,
+			recallCount: 0,
+			lastAccessed: now,
+			strength,
+			status,
+			sourceEpisodes: [],
+			encodingContext: { project },
+		});
+
+		await adapter.semantic.upsert(makeFact("same-active", "active", 1, "same-project"));
+		await adapter.semantic.upsert(makeFact("same-cold", "active", 0.2, "same-project"));
+		await adapter.semantic.upsert(makeFact("same-superseded", "superseded", 1, "same-project"));
+		await adapter.semantic.upsert(makeFact("same-archived", "archived", 1, "same-project"));
+		await adapter.semantic.upsert(makeFact("foreign-close", "active", 1, "foreign-project"));
+
+		const context = { project: "same-project", scopeMode: "strict" as const };
+		const query = "zzqpnxquery";
+		const surface = await adapter.semantic.search(query, 4, false, context);
+		const deep = await adapter.semantic.search(query, 4, true, context);
+		const history = await adapter.semantic.search(query, 4, false, { ...context, mode: "history" });
+
+		// Surface uses the hot table and therefore returns only the scoped active
+		// fact. Deep/history scan the full scoped vector table and include every
+		// lifecycle state, while the equally close foreign row remains excluded.
+		expect(surface.map((fact) => fact.id)).toEqual(["same-active"]);
+		expect(deep.map((fact) => fact.id)).toEqual([
+			"same-active",
+			"same-cold",
+			"same-superseded",
+			"same-archived",
+		]);
+		expect(history.map((fact) => fact.id)).toEqual([
+			"same-active",
+			"same-cold",
+			"same-superseded",
+			"same-archived",
+		]);
 	});
 
 	it("searches beyond one thousand vectors inside a strict project", async () => {

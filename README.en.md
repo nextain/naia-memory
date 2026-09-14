@@ -135,7 +135,7 @@ src/
 
 ### What to import
 
-The package entry (`@nextain/naia-memory`) exports `MemorySystem` (the engine); `LocalAdapter`, `SqliteAdapter`, `QdrantAdapter` (storage backends); `LiteMemoryProvider` (the lightweight impl); the embedding providers; `buildLLMFactExtractor`; and the `MemoryProvider` contract types. For solo experimentation, using `MemorySystem` directly as in the example above is the simplest path.
+The package entry (`@nextain/naia-memory`) exports `MemorySystem` (the engine); `LocalAdapter`, `SqliteAdapter`, `QdrantAdapter` (storage backends); `NaiaMemoryProvider` and the `NaiaMemoryProviderOptions` type (the consumer wrapper and its options); `LiteMemoryProvider` (the lightweight impl); the embedding providers; `buildLLMFactExtractor`; and the `MemoryProvider` contract types. For solo experimentation, using `MemorySystem` directly as in the example above is the simplest path.
 
 ### The contract seam
 

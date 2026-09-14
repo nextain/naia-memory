@@ -127,6 +127,8 @@ export type {
 	TemporalCapableProvider,
 	CompactableCapableProvider,
 } from "./provider-types.js";
+export { NaiaMemoryProvider } from "./provider.js";
+export type { NaiaMemoryProviderOptions } from "./provider.js";
 export { LocalAdapter, LocalStoreLoadError } from "./adapters/local.js";
 export { QdrantAdapter } from "./adapters/qdrant.js";
 export { SqliteAdapter } from "./adapters/sqlite.js";

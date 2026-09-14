@@ -40,6 +40,8 @@
 		"typecheck": "tsc --noEmit -p tsconfig.typecheck.json && tsc --noEmit -p tsconfig.benchmark.json",
 		"test": "vitest run",
 		"test:sqlite": "node scripts/test-sqlite.mjs",
+		"test:sqlite:smoke": "node scripts/test-sqlite.mjs smoke",
+		"test:sqlite:parity": "node scripts/test-sqlite.mjs parity",
 		"benchmark": "tsx src/benchmark/comparison/run-comparison.ts",
 		"benchmark:semantic-raw": "tsx src/benchmark/quality/semantic-raw-cli.ts",
 		"benchmark:semantic-campaign": "tsx src/benchmark/quality/semantic-campaign-cli.ts",

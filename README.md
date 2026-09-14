@@ -226,7 +226,7 @@ src/
 
 ### 무엇을 import 할지
 
-패키지 진입점(`@nextain/naia-memory`)이 내보내는 것은 `MemorySystem`(엔진), `LocalAdapter`·`SqliteAdapter`·`QdrantAdapter`(저장 백엔드), `LiteMemoryProvider`(경량 구현), 임베딩 provider 들, `buildLLMFactExtractor`, 그리고 `MemoryProvider` 계약 타입입니다. 혼자 붙여 쓰고 실험할 때는 위 예제처럼 `MemorySystem` 을 직접 쓰는 것이 가장 간단합니다.
+패키지 진입점(`@nextain/naia-memory`)이 내보내는 것은 `MemorySystem`(엔진), `LocalAdapter`·`SqliteAdapter`·`QdrantAdapter`(저장 백엔드), `NaiaMemoryProvider`와 `NaiaMemoryProviderOptions`(소비자용 래퍼와 설정 타입), `LiteMemoryProvider`(경량 구현), 임베딩 provider 들, `buildLLMFactExtractor`, 그리고 `MemoryProvider` 계약 타입입니다. 혼자 붙여 쓰고 실험할 때는 위 예제처럼 `MemorySystem` 을 직접 쓰는 것이 가장 간단합니다.
 
 ### 계약 뒤에 숨는 구조
 

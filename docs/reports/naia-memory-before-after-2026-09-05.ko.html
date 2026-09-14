@@ -1,0 +1,1049 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Naia Memory 초기 조사 및 단계별 작업 전후, 현재 지원 범위와 남은 개선 과제">
+  <title>Naia Memory 조사 전후와 남은 개선</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #59657a;
+      --line: #dfe5ee;
+      --paper: #ffffff;
+      --soft: #f5f7fb;
+      --blue: #2457d6;
+      --blue-soft: #edf3ff;
+      --green: #15734a;
+      --green-soft: #eaf8f0;
+      --amber: #9b5b08;
+      --amber-soft: #fff5df;
+      --red: #a43737;
+      --red-soft: #fff0f0;
+      --shadow: 0 12px 32px rgba(26, 44, 76, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: #eef2f7; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 92% 0%, #dce8ff 0, rgba(220, 232, 255, 0) 30rem),
+        #eef2f7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR",
+        "Apple SD Gothic Neo", Arial, sans-serif;
+      line-height: 1.65;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .report {
+      width: min(1120px, calc(100% - 32px));
+      margin: 32px auto 56px;
+    }
+
+    .hero {
+      padding: 48px clamp(24px, 5vw, 64px);
+      color: #fff;
+      background: linear-gradient(135deg, #172a5d 0%, #2457d6 58%, #3d7bdf 100%);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .kicker {
+      margin: 0 0 14px;
+      color: #d6e2ff;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 760px;
+      margin-bottom: 18px;
+      font-size: clamp(2rem, 5vw, 3.7rem);
+      line-height: 1.12;
+      letter-spacing: -0.045em;
+    }
+
+    .hero .lead {
+      max-width: 800px;
+      margin-bottom: 26px;
+      color: #edf3ff;
+      font-size: clamp(1rem, 2vw, 1.18rem);
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 4px 11px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+      font-size: 0.86rem;
+      font-weight: 650;
+    }
+
+    section, footer {
+      margin-top: 24px;
+      padding: clamp(24px, 4vw, 40px);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 4px 18px rgba(26, 44, 76, 0.04);
+    }
+
+    h2 {
+      margin-bottom: 18px;
+      font-size: clamp(1.35rem, 3vw, 1.9rem);
+      line-height: 1.25;
+      letter-spacing: -0.025em;
+    }
+
+    h3 {
+      margin: 28px 0 10px;
+      font-size: 1.1rem;
+      line-height: 1.35;
+    }
+
+    .answer {
+      border-top: 5px solid var(--blue);
+    }
+
+    .answer > p {
+      max-width: 880px;
+      margin-bottom: 20px;
+      font-size: 1.08rem;
+    }
+
+    .priority-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding-left: 1.45rem;
+    }
+
+    .priority-list li {
+      padding-left: 5px;
+    }
+
+    .priority-list strong { color: var(--blue); }
+
+    .callout {
+      margin: 18px 0 0;
+      padding: 16px 18px;
+      border-left: 4px solid var(--amber);
+      color: #5d430f;
+      background: var(--amber-soft);
+      border-radius: 8px;
+    }
+
+    .callout p:last-child { margin-bottom: 0; }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      margin: 14px 0 0;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    table {
+      width: 100%;
+      min-width: 680px;
+      border-collapse: collapse;
+      font-size: 0.93rem;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      color: #34445f;
+      background: var(--soft);
+      font-weight: 750;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    td strong { font-weight: 750; }
+
+    .good {
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .warn {
+      color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .bad {
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .status.good { color: var(--green); }
+    .status.warn { color: var(--amber); }
+    .status.bad { color: var(--red); }
+
+    .muted, .note {
+      color: var(--muted);
+      font-size: 0.91rem;
+    }
+
+    .note {
+      margin: 14px 0 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      padding: 21px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfcfe;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      color: #263d74;
+    }
+
+    .card p:last-child,
+    .card ul:last-child { margin-bottom: 0; }
+
+    .card ul {
+      margin: 10px 0 0;
+      padding-left: 1.15rem;
+    }
+
+    .stage {
+      position: relative;
+      padding-left: 28px;
+      border-left: 3px solid #c9d7f8;
+    }
+
+    .stage::before {
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: -9px;
+      width: 14px;
+      height: 14px;
+      background: var(--blue);
+      border: 3px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px #c9d7f8;
+    }
+
+    .stage + .stage { margin-top: 24px; }
+
+    .stage-label {
+      margin-bottom: 5px;
+      color: var(--blue);
+      font-size: 0.83rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .stage h3 { margin-top: 0; }
+
+    .metric {
+      display: grid;
+      grid-template-columns: minmax(145px, 0.8fr) minmax(0, 1.4fr);
+      gap: 6px 18px;
+      align-items: baseline;
+      margin: 12px 0;
+      padding: 13px 15px;
+      background: var(--soft);
+      border-radius: 10px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 650;
+    }
+
+    .metric-value {
+      font-size: 1.12rem;
+      font-weight: 780;
+    }
+
+    .criteria {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .criteria li {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfcfe;
+    }
+
+    .priority {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      height: 27px;
+      padding: 0 8px;
+      color: #fff;
+      background: var(--blue);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .priority.p1 { background: #5974b5; }
+    .priority.p2 { background: #7d889c; }
+
+    .criteria strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .criteria p { margin: 0; }
+
+    code {
+      padding: 0.12em 0.35em;
+      color: #263d74;
+      background: #edf1f8;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.88em;
+      overflow-wrap: anywhere;
+    }
+
+    footer {
+      color: var(--muted);
+      background: #f9fbfe;
+    }
+
+    footer h2 { color: var(--ink); }
+
+    .sources {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px 24px;
+      margin: 0;
+      padding-left: 1.2rem;
+    }
+
+    .sources li { overflow-wrap: anywhere; }
+
+    .footer-note {
+      margin: 20px 0 0;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 760px) {
+      .report { width: min(100% - 20px, 1120px); margin-top: 10px; }
+      .hero { padding: 34px 24px; border-radius: 16px; }
+      section, footer { padding: 24px 18px; border-radius: 14px; }
+      .grid, .grid.three, .sources { grid-template-columns: 1fr; }
+      .metric { grid-template-columns: 1fr; gap: 2px; }
+      .criteria li { grid-template-columns: 1fr; gap: 7px; }
+      .priority { width: max-content; }
+    }
+
+    @media print {
+      @page { margin: 14mm; }
+      html, body { background: #fff; }
+      body { color: #000; font-size: 10.5pt; }
+      .report { width: 100%; margin: 0; }
+      .hero, section, footer {
+        box-shadow: none;
+        border: 1px solid #b9c1ce;
+      }
+      .hero {
+        color: #000;
+        background: #fff;
+        border-top: 8px solid #2457d6;
+      }
+      .kicker, .hero .lead { color: #263d74; }
+      .badge {
+        color: #000;
+        background: #fff;
+        border-color: #9aa7bb;
+      }
+      section, footer { break-inside: avoid; }
+      .stage { break-inside: avoid; }
+      h2, h3 { break-after: avoid; }
+      .table-wrap { overflow: visible; }
+      table { min-width: 0; font-size: 9pt; }
+      th { background: #f1f3f6; }
+      .callout { color: #4a350c; background: #fffaf0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="report">
+    <header class="hero">
+      <p class="kicker">NAIA MEMORY · 2026년 9월 5일</p>
+      <h1>조사와 Astra 작업 전후,<br>그리고 남은 개선</h1>
+      <p class="lead">
+        초기 조사에서 확인한 기능·성능·평가의 빈틈을 기준으로 단계별 변경을 정리한
+        첨부용 보고서입니다. 현재의 녹색 테스트 결과와 아직 남은 제품 과제를 같은
+        의미로 읽지 않도록 기준과 실험군을 분리했습니다.
+      </p>
+      <div class="badges" aria-label="현재 상태">
+        <span class="badge">최신 기본 테스트 1,473개 통과</span>
+        <span class="badge">SQLite 33/38 통과 · 5개 parity 미해결</span>
+        <span class="badge">mmap 기본값 0 · opt-in 유지</span>
+      </div>
+    </header>
+
+    <section class="answer">
+      <h2>남은 개선은 무엇인가?</h2>
+      <p>
+        다음 순서는 strict deep 검색의 재현 가능한 병목과 unscoped deep의 꼬리 지연을
+        먼저 확인하고, SQLite parity 다섯 실패를 정리한 뒤, 독립적인 기억 품질·실제
+        LLM 압축·현재 앱 통합으로 넘어가는 것입니다. 영어 전체 코퍼스와 ANN 확대는
+        품질 및 자원 통과 조건을 먼저 충족한 뒤 진행할 과제입니다.
+      </p>
+      <ol class="priority-list">
+        <li><strong>P0 · 검색 병목:</strong> strict deep의 worker iterator·후보 로딩·거리 계산 비용과 unscoped deep p95를 새 프로세스에서 분리해 재현합니다.</li>
+        <li><strong>P1 · SQLite parity:</strong> epoch 2, flashbulb 1, semantic consolidation 1, cross-domain analogy 1의 다섯 실패를 동일 의미로 구현해 원래 assertion을 통과시키고 조용한 오판을 없앱니다.</li>
+        <li><strong>P2 · 기억 품질:</strong> 독립 holdout과 원어민 검토로 최신·오래된·삭제·선호·감정·무관 기억 침입을 평가합니다.</li>
+        <li><strong>P2 · 실제 압축:</strong> anchor/mock 수치가 아닌 실제 tokenizer·LLM으로 보존율, 환각, 부정·취소·모순, 비용과 지연을 검증합니다.</li>
+        <li><strong>P2 · 현재 앱 통합:</strong> 이미 완료된 package·Local·mmap 재시작 검증을 반복하지 않고 <code>naia-agent</code>와 <code>naia-shell</code>의 실제 호출·오류 경로를 확인합니다.</li>
+        <li><strong>P2 · 제품·확장:</strong> 위 품질과 자원 조건을 통과한 뒤 영어 전체 코퍼스와 ANN을 확장합니다.</li>
+      </ol>
+      <p class="note">
+        SQLite 다섯 실패 외에도 semantic decay, associate, procedural, hubs, KG 관련
+        기능의 부족한 구현·검증과 SQLite backup 미지원이 남은 범위입니다.
+      </p>
+      <div class="callout">
+        초기 실패 11개가 최신 기본 테스트에서 사라진 사실을 전부 코드 개선의 결과로 해석할 수는 없습니다.
+        테스트 수·수집 범위·실행 조건이 달라졌고, 초기에는 subprocess 권한 같은 환경 관측도 있었습니다.
+      </div>
+    </section>
+
+    <section>
+      <h2>한눈에 보는 변화</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>영역</th>
+              <th>초기 조사/P0 기준</th>
+              <th>현재까지의 변화</th>
+              <th>현재 판단</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>기본 검증</strong></td>
+              <td>168 files · 1,410 tests · 1,399 pass / 11 fail</td>
+              <td>최신 172 files · 1,473 tests · 모두 통과</td>
+              <td><span class="status good">검증 범위 확대</span></td>
+            </tr>
+            <tr>
+              <td><strong>P0 실행·근거 정리</strong></td>
+              <td>임시 DB 경로·CLI 실행기·빈 backup·시간 fixture·mock 압축 주장 정리가 필요</td>
+              <td>테스트 DB 격리, CLI 실행 지점 변경, 빈 backup의 명시적 거부, 시간 fixture 보정, mock 압축 주장 정정 완료</td>
+              <td><span class="status good">완료·범위 한정</span></td>
+            </tr>
+            <tr>
+              <td><strong>SQLite</strong></td>
+              <td>초기 별도 실행은 1/27 통과였고, 환경 조건이 정리된 P0 후속 실행은 22/27 통과·5 실패</td>
+              <td>최신 33/38 통과·5 실패. 실패 유형은 epoch 2, flashbulb 1, consolidation 1, analogy 1</td>
+              <td><span class="status bad">parity 미완료</span></td>
+            </tr>
+            <tr>
+              <td><strong>strict vector 검색</strong></td>
+              <td>전체 후보를 메인 스레드로 전달한 뒤 정렬하는 경로</td>
+              <td>프로젝트 범위에서 surface p50 36.7%, deep p50 53.8% 감소한 별도 A/B</td>
+              <td><span class="status good">결과 보존과 함께 개선</span></td>
+            </tr>
+            <tr>
+              <td><strong>mmap</strong></td>
+              <td>설정 경로 부재</td>
+              <td>256 MiB 요청값을 worker 연결에 전달하는 opt-in 추가. p50·p95가 모드별 혼합</td>
+              <td><span class="status warn">기본값 0 유지</span></td>
+            </tr>
+            <tr>
+              <td><strong>backup</strong></td>
+              <td>SQLite 빈 bytes/noop 호출이 성공처럼 보임 → P0에서 명시적 unsupported 거부</td>
+              <td>stage 3에서 SQLite capability false로 고정, Local public provider roundtrip 경로 정렬</td>
+              <td><span class="status good">Local 경로 수정</span></td>
+            </tr>
+            <tr>
+              <td><strong>기억 품질·압축</strong></td>
+              <td>대화 품질, 독립 평가, 실제 LLM 압축 근거가 부족함</td>
+              <td>기본 경로와 실험 계측은 정리했지만 독립 holdout·실제 LLM 검증은 남음</td>
+              <td><span class="status warn">연구 과제</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        숫자는 각 보고서의 실행 단위입니다. 초기 P0, stage 1, stage 2, stage 3은
+        테스트 수와 실행 조건이 서로 다르므로 전체 통과율을 하나의 시계열로 합산하지 않았습니다.
+      </p>
+    </section>
+
+    <section>
+      <h2>비교 기준을 분리해서 읽기</h2>
+      <p>
+        “처음”은 첫 조사/P0 실행 시점이며, “현재”는 stage 3 변경까지 반영한 최신
+        실행입니다. stage 3 직전 수치는 stage 1·2를 거친 뒤의 동일한 최신 계열
+        기준입니다. 이 구분이 있어야 초기 환경 실패가 해결된 것처럼 과장하거나,
+        서로 다른 성능 실험을 연결해 읽는 오류를 피할 수 있습니다.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>기준</th>
+              <th>수집 단위</th>
+              <th>결과</th>
+              <th>해석</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>첫 P0 기본 실행</td>
+              <td>168 files · 1,410 tests</td>
+              <td><strong>1,399 pass / 11 fail</strong></td>
+              <td>초기 실패에는 코드와 환경 원인이 함께 관측됨. 원인별 재검증 없이는 일괄적인 개선 판정 불가</td>
+            </tr>
+            <tr>
+              <td>첫 SQLite 별도 실행</td>
+              <td>27 tests</td>
+              <td><strong>1 pass / 26 fail</strong></td>
+              <td>초기 실행 조건이 안정화되기 전의 관측. 21개 기능이 구현됐다는 의미로 읽지 않음</td>
+            </tr>
+            <tr>
+              <td>P0 후속 SQLite 기준</td>
+              <td>27 tests</td>
+              <td><strong>22 pass / 5 fail</strong></td>
+              <td>환경 조건을 정리한 뒤 확인한 안정적인 비교 기준</td>
+            </tr>
+            <tr>
+              <td>stage 3 직전</td>
+              <td>172 files · 1,463 tests</td>
+              <td><strong>전부 통과</strong></td>
+              <td>stage 1·2 변경과 추가 테스트를 포함한 기준</td>
+            </tr>
+            <tr>
+              <td>stage 3 이후</td>
+              <td>172 files · 1,473 tests</td>
+              <td><strong>전부 통과</strong></td>
+              <td>backup capability/provider 경로 테스트를 포함한 최신 기본 기준</td>
+            </tr>
+            <tr>
+              <td>최신 SQLite</td>
+              <td>38 tests</td>
+              <td><strong>33 pass / 5 fail</strong></td>
+              <td>SQLite parity 다섯 실패는 아직 남아 있으며 backup unsupported는 의도된 지원 범위</td>
+            </tr>
+            <tr>
+              <td>backup 판정 흐름</td>
+              <td>SQLite 빈 bytes/noop 호출이 성공처럼 보임</td>
+              <td>P0에서 명시적 unsupported 거부 → stage 3에서 <code>supportsBackup()</code> false</td>
+              <td>Local 지원과 SQLite 미지원을 분리</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        stage 1 보고서의 자체 기준은 170 files·1,431 tests에서 171 files·1,440 tests로 수집되었습니다.
+        stage 2 원로그는 172 files·1,454 pass/9 fail이었고, stage 3 시작 기준의 172 files·1,463 pass는
+        별도 재실행입니다. 모두 서로 다른 suite snapshot이므로
+        초기·최신 숫자에 산술적으로 더하지 않았습니다.
+      </p>
+    </section>
+
+    <section>
+      <h2>단계별 변화</h2>
+      <div class="stage">
+        <p class="stage-label">초기 조사 · P0</p>
+        <h3>기능은 연결되어 있었지만, 제품 판단에 필요한 증거가 부족했습니다</h3>
+        <p>
+          LocalAdapter 기본 경로와 한국어·아랍어 검색은 연결되어 있었지만 실제 대화 기억의
+          정확도·유용성에 대한 독립 평가가 부족했습니다. SQLite는 기능 parity가 완결되지
+          않았고, update/delete 근거는 작은 사례에 머물렀습니다. 압축 수치는 mock/anchor
+          기반이어서 실제 LLM 품질이나 상한으로 사용할 수 없었습니다.
+        </p>
+        <div class="grid three">
+          <div class="card">
+            <h3>평가 공백</h3>
+            <p>최신·오래된·삭제된 기억, 선호 변경, 감정 기억, 무관 기억 침입을 독립 holdout으로 검증할 필요가 있었습니다.</p>
+          </div>
+          <div class="card">
+            <h3>운영 공백</h3>
+            <p>패키지·재시작·update/delete·격리와 실제 앱 사용 경로를 같은 조건으로 확인해야 했습니다.</p>
+          </div>
+          <div class="card">
+            <h3>성능 공백</h3>
+            <p>영어 전체 코퍼스와 ANN 확대 전, 자원 예산과 품질 게이트가 필요했습니다.</p>
+          </div>
+        </div>
+        <div class="callout">
+          <p><strong>P0에서 완료한 실제 개선:</strong> 테스트별 임시 DB 격리, CLI 실행기 변경, 빈 backup 성공의 명시적 거부, 시간 fixture의 <code>validFrom</code> 보정, mock 압축 수치 주장의 정정을 적용했습니다.</p>
+        </div>
+      </div>
+
+      <div class="stage">
+        <p class="stage-label">Stage 1 · strict vector</p>
+        <h3>프로젝트 범위의 후보 처리를 줄이고 결과를 보존했습니다</h3>
+        <p>
+          이전에는 프로젝트 범위의 전체 후보를 메인 스레드로 전달한 뒤 정렬했고, 이후에는
+          후보를 worker 내부에서 top-N으로 처리했습니다. 동일한 100k synthetic DB와
+          결정적 384차원 embedding에서 735회 대응 호출의 ID·순서·relevanceScore가
+          일치했고 DB hash도 안정적이었습니다. 이는 결과 보존 증거이지 의미 품질이
+          좋아졌다는 증거는 아닙니다. 735회는 반복 대응 호출이며 독립 질의 수가 아닙니다.
+        </p>
+        <div class="metric">
+          <div class="metric-label">project-scope surface · p50</div>
+          <div class="metric-value">357.24 ms → 226.18 ms <span class="status good">36.7% 감소</span></div>
+          <div class="metric-label">project-scope deep · p50</div>
+          <div class="metric-value">2,176.23 ms → 1,006.25 ms <span class="status good">53.8% 감소</span></div>
+        </div>
+        <p class="note">unscoped surface/deep은 각각 p50 0.8% 감소, 2.6% 증가로 영향이 작거나 혼합이었습니다.</p>
+      </div>
+
+      <div class="stage">
+        <p class="stage-label">Stage 2 · mmap opt-in</p>
+        <h3>설정 경로는 만들었지만, 안정적인 기본 개선으로 채택하지 않았습니다</h3>
+        <p>
+          <code>mmapSizeBytes=268435456</code> 요청값을 worker 연결에 전달하고 유효성 검사를
+          추가했습니다. 같은 100k·384차원 조건의 별도 paired 실험에서 strict p50은
+          surface와 deep 모두 악화했습니다. unscoped deep p50 감소와 일부 p95 개선은
+          관찰됐지만 안정적인 제품 개선으로 판정하지 않았습니다. 세 번째 pair에서는
+          네 모드 p50이 모두 악화했고 control p95도 해결되지 않아 mmap은 기본값 0인
+          opt-in으로 남겼습니다.
+        </p>
+        <div class="metric">
+          <div class="metric-label">strict p50</div>
+          <div class="metric-value">surface +12.14% · deep +5.71% <span class="status bad">악화</span></div>
+          <div class="metric-label">반복 관찰</div>
+          <div class="metric-value">세 번째 pair에서 네 모드 p50 모두 악화 · control p95 미해결</div>
+        </div>
+        <p class="note">stage 2 원로그는 172 files·1,454 pass/9 fail이었습니다. stage 3 시작 기준의 172 files·1,463 pass는 별도 재실행이며 같은 실행의 결과가 아닙니다. stage 2의 기본군은 stage 1 표의 숫자와 다른 실험 baseline이므로 두 표의 지연시간을 합산하거나 누적 개선률로 계산하지 않았습니다.</p>
+      </div>
+
+      <div class="stage">
+        <p class="stage-label">Stage 3 · backup capability</p>
+        <h3>실제로 지원하지 않는 SQLite backup을 true로 보고하던 경로를 차단했습니다</h3>
+        <p>
+          SQLite adapter는 export/import 메서드를 가지고 있지만 호출하면 unsupported 오류를
+          내므로, 메서드 존재만 검사하는 capability 판정은 false positive였습니다. 또한
+          provider가 찾던 <code>exportBackup/importBackup</code> 이름이 LocalAdapter의 public
+          <code>export/import</code> 경로와 달랐습니다.
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>시점</th>
+                <th>SQLite backup 동작</th>
+                <th>판정</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>초기</td>
+                <td>빈 bytes/noop backup 호출이 성공처럼 보임</td>
+                <td>false positive</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>backup 호출을 명시적 unsupported 오류로 거부</td>
+                <td>빈 성공 차단</td>
+              </tr>
+              <tr>
+                <td>stage 3</td>
+                <td>호출 거부와 <code>supportsBackup()</code> false를 함께 노출</td>
+                <td>SQLite 미지원 명시</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grid">
+          <div class="card">
+            <h3>변경된 동작</h3>
+            <ul>
+              <li>MemorySystem은 <code>backupSupported !== false</code>이고 export/import 두 함수가 실제 callable일 때만 backup을 지원합니다.</li>
+              <li>SQLite는 capability를 명시적으로 false로 보고하며 직접 backup 호출도 기존의 명시적 unsupported 오류를 유지합니다.</li>
+              <li>provider는 Local public backup을 system에 위임하고, 백업에 한해서만 optional gate를 반영합니다.</li>
+              <li>public API에는 <code>NaiaMemoryProvider</code>와 options 타입을 노출했습니다.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>확인된 결과</h3>
+            <ul>
+              <li>Local provider encrypted roundtrip과 restart 통과</li>
+              <li>wrong password는 reject하고 target 데이터는 보존</li>
+              <li>SQLite capability false, backup 거부 후 기존 데이터 사용 가능</li>
+              <li>legacy 외부 provider는 optional gate가 없어도 <code>exportBackup</code>/<code>importBackup</code> 두 함수가 있으면 true</li>
+              <li><code>exportBackup</code>/<code>importBackup</code> 중 하나라도 누락·비함수면 false</li>
+              <li>explicit false gate와 gate true인데 메서드가 누락된 경우도 false</li>
+              <li>백업 gate가 다른 capability 판정에 영향을 주지 않음</li>
+              <li>compiled package root import과 public provider/options type export 통과</li>
+              <li>mmap strict reopen(worker built JS) 통과</li>
+            </ul>
+          </div>
+        </div>
+        <p class="note">stage 3 집중 검증은 3개 파일·50개 테스트 모두 통과했습니다. 집중 로그 파일명은 <code>luna-focused.log</code>입니다. 패키지 공개·Local backup·재시작·mmap reopen 검증은 완료되었고, 실제로 남은 제품 통합은 <code>naia-agent</code>와 <code>naia-shell</code>입니다.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>성능 결과의 의미와 한계</h2>
+      <p>
+        stage 1과 stage 2는 같은 제품 경로를 다룬 별도 실험이지만 baseline·실행 수집이
+        다릅니다. 따라서 아래 수치는 각 단계 안에서만 before/after로 읽어야 합니다.
+      </p>
+      <p class="note">
+        각 단계는 3쌍·6회 실행이며, 각 실행의 p50/p95를 산출한 뒤 3개 실행값의 중앙값을
+        표시했습니다. 호출을 모두 합친 백분위가 아닙니다. 두 실험은 100k synthetic DB,
+        warm cache, shared host 조건이므로 production workload와 cold-cache 결과를 보장하지 않습니다.
+        각 단계의 735회는 반복 대응 호출이며 독립 질의 수가 아닙니다.
+      </p>
+      <div class="grid three">
+        <div class="card">
+          <h3>strict / unscoped</h3>
+          <p><strong>strict</strong>는 프로젝트 범위 제한을 적용한 검색이고, <strong>unscoped</strong>는 프로젝트 제한 없이 검색하는 경로입니다.</p>
+        </div>
+        <div class="card">
+          <h3>surface / deep</h3>
+          <p><strong>surface</strong>는 빠른 회상 모드, <strong>deep</strong>은 심층 회상 모드이며, 표는 같은 모드의 변경 전후 지연을 비교합니다.</p>
+        </div>
+        <div class="card">
+          <h3>p50 / p95</h3>
+          <p><strong>p50</strong>은 가운데 지연이고, <strong>p95</strong>는 느린 쪽 5%가 시작되는 꼬리 지연입니다.</p>
+        </div>
+      </div>
+
+      <h3>Stage 1 strict vector · top-N 후보 처리</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>모드</th>
+              <th>p50 · 전 → 후</th>
+              <th>p95 · 전 → 후</th>
+              <th>관찰</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>project-scope surface</td>
+              <td>357.24 → 226.18 ms<br><strong class="good">−36.7%</strong></td>
+              <td>459.13 → 270.20 ms<br><strong class="good">−41.1%</strong></td>
+              <td>프로젝트 범위 surface에서 개선</td>
+            </tr>
+            <tr>
+              <td>project-scope deep</td>
+              <td>2,176.23 → 1,006.25 ms<br><strong class="good">−53.8%</strong></td>
+              <td>2,363.07 → 1,221.44 ms<br><strong class="good">−48.3%</strong></td>
+              <td>deep 후보 처리 비용이 크게 감소</td>
+            </tr>
+            <tr>
+              <td>unscoped surface</td>
+              <td>6.86 → 6.81 ms<br><strong>−0.8%</strong></td>
+              <td>25.66 → 25.35 ms<br><strong>−1.2%</strong></td>
+              <td>영향 작음</td>
+            </tr>
+            <tr>
+              <td>unscoped deep</td>
+              <td>88.78 → 91.06 ms<br><strong class="bad">+2.6%</strong></td>
+              <td>139.84 → 141.55 ms<br><strong class="bad">+1.2%</strong></td>
+              <td>소폭 악화</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Stage 2 mmap · 256 MiB 요청값, 기본값 0</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>모드</th>
+              <th>p50 · 기본 → mmap</th>
+              <th>p95 · 기본 → mmap</th>
+              <th>현재 결정</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>strict surface</td>
+              <td>186.286 → 208.902 ms<br><strong class="bad">+12.14%</strong></td>
+              <td>278.096 → 254.047 ms<br><strong class="good">−8.65%</strong></td>
+              <td>기본 승격 보류</td>
+            </tr>
+            <tr>
+              <td>strict deep</td>
+              <td>685.983 → 725.161 ms<br><strong class="bad">+5.71%</strong></td>
+              <td>1,172.906 → 918.223 ms<br><strong class="good">−21.71%</strong></td>
+              <td>기본 승격 보류</td>
+            </tr>
+            <tr>
+              <td>unscoped surface</td>
+              <td>5.696 → 5.538 ms<br><strong class="good">−2.76%</strong></td>
+              <td>25.490 → 23.311 ms<br><strong class="good">−8.55%</strong></td>
+              <td>반복 확인 필요</td>
+            </tr>
+            <tr>
+              <td>unscoped deep</td>
+              <td>80.882 → 59.234 ms<br><strong class="good">−26.77%</strong></td>
+              <td>144.003 → 139.375 ms<br><strong class="good">−3.21%</strong></td>
+              <td>중앙값 감소 관찰·반복 필요</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        두 단계 모두 대응 호출의 ID·순서·점수 보존을 확인했지만, synthetic 데이터 결과가
+        실제 기억 품질을 보장하지는 않습니다. stage 2는 중앙값 감소를 무조건적인 개선으로
+        판정할 수 없고, 세 번째 pair에서 네 모드 p50이 모두 악화했으며 control p95도
+        미해결입니다. 반복 확인 전까지 mmap 기본값은 계속 0입니다.
+      </p>
+    </section>
+
+    <section>
+      <h2>현재 지원 범위</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>기능</th>
+              <th>LocalAdapter</th>
+              <th>SQLiteAdapter</th>
+              <th>제품 의미</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>backup capability</td>
+              <td><span class="status good">지원</span></td>
+              <td><span class="status bad">미지원·false</span></td>
+              <td>지원하지 않는 adapter를 true로 보고하지 않음</td>
+            </tr>
+            <tr>
+              <td>Local public export/import</td>
+              <td><span class="status good">provider 위임</span></td>
+              <td>해당 없음</td>
+              <td>암호화 roundtrip과 wrong password 보존 조건 확인</td>
+            </tr>
+            <tr>
+              <td>SQLite core memory path</td>
+              <td>해당 없음</td>
+              <td><span class="status warn">부분 parity</span></td>
+              <td>33/38 통과, 5개 실패(4개 유형)의 parity 구현과 원래 assertion 통과 필요</td>
+            </tr>
+            <tr>
+              <td>mmap</td>
+              <td>해당 없음</td>
+              <td><span class="status warn">opt-in</span></td>
+              <td>요청값 검증 후 worker 연결에 전달, 기본값 0</td>
+            </tr>
+            <tr>
+              <td>package public provider type</td>
+              <td><span class="status good">API export 추가</span></td>
+              <td><span class="status good">동일 API</span></td>
+              <td>compiled package root import·public provider/options type·Local backup/wrong-password preservation/restart·mmap strict reopen 검증 완료</td>
+            </tr>
+            <tr>
+              <td>현재 앱 통합</td>
+              <td colspan="2"><span class="status warn">naia-agent·naia-shell 미확인</span></td>
+              <td>실제 소비자 호출·오류 경로 확인만 남음</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>남은 개선과 통과 조건</h2>
+      <p class="muted">
+        일정 추정은 하지 않습니다. 우선순위는 제품 위험과 검증 의존 순서로 정했고,
+        각 항목은 결과를 판정할 수 있는 조건으로 적었습니다.
+      </p>
+      <ol class="criteria">
+        <li>
+          <span class="priority">P0</span>
+          <div>
+            <strong>strict deep 병목과 unscoped deep p95 해소</strong>
+            <p>
+              새 프로세스에서 strict deep의 worker iterator, 후보 BLOB 로딩, 거리 계산,
+              IPC/final facts 비용과 unscoped deep p95를 분리 측정합니다. mmap은 실제 적용값과
+              RSS/매핑 자원을 확인하고, paired p50·p95가 안정적으로 개선되며 ID·순서·점수·DB
+              hash와 unscoped 동작을 보존할 때만 기본 경로 승격을 검토합니다.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="priority p1">P1</span>
+          <div>
+            <strong>SQLite parity 남은 5개 실패 해소</strong>
+            <p>
+              5개 실패는 epoch 2, flashbulb 1, semantic consolidation 1, cross-domain analogy
+              1의 네 유형입니다. 각 기능을 Local과 동일한 의미로 구현하고 원래 assertion을
+              통과시킵니다. 동일 입력의 save·restart·recall, update/archive, project isolation이
+              SQLite에서도 재현되고 전체 parity suite가 통과해야 합니다.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="priority p2">P2</span>
+          <div>
+            <strong>독립적인 기억 품질 평가</strong>
+            <p>
+              중복되지 않은 holdout과 원어민 검토로 최신 사실, 오래된 사실, 삭제·취소,
+              선호 변경, 감정 기억, 무관 기억 침입을 평가합니다. no-memory·simple search·
+              Naia와 ablation을 같은 입력·예산에서 비교하고 정확도, stale/deleted 사용,
+              token·cost·latency와 신뢰구간·실패 원인을 함께 보고합니다.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="priority p2">P2</span>
+          <div>
+            <strong>실제 LLM 기반 압축</strong>
+            <p>
+              입력에 답을 심은 anchor/mock 조건을 제거하고 실제 tokenizer·LLM으로
+              uncompressed/basic/rolling/LLM을 비교합니다. 이름·사실·시간·부정·취소·
+              모순 보존, 환각, token 절감, 비용과 지연을 함께 통과시켜야 합니다.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="priority p2">P2</span>
+          <div>
+            <strong>현재 앱 통합</strong>
+            <p>
+              이미 완료한 compiled package root import, public provider/options type, Local
+              backup roundtrip·wrong-password 보존·restart, mmap strict reopen을 반복하지 않고
+              <code>naia-agent</code>와 <code>naia-shell</code>의 실제 호출·오류 경로를 확인합니다.
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="priority p2">P2</span>
+          <div>
+            <strong>영어 전체 코퍼스와 ANN 확장</strong>
+            <p>
+              영어 전체 코퍼스 실행과 ANN 승격은 독립 품질 평가와 자원 예산, 검색 결과
+              보존, 재현 가능한 실패 분류가 통과된 뒤에 진행합니다. 작은 preflight나
+              synthetic throughput을 전체 완료의 대리 지표로 사용하지 않습니다.
+            </p>
+          </div>
+        </li>
+      </ol>
+      <p class="note">
+        각 후속 검증에서도 subprocess 권한·IPC·openssl 같은 환경 관측과 코드 실패를
+        별도 분류합니다. 최신 기본 suite의 통과만으로 초기 실패 전체가 코드로 해결됐다고
+        결론내리지 않습니다.
+      </p>
+    </section>
+
+    <section>
+      <h2>현재 결론</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>확인된 성과</h3>
+          <p>
+            strict project-scope vector 후보 처리는 같은 결과를 보존하면서 빨라졌고,
+            mmap은 기본값 0인 opt-in 설정으로 정리되었습니다. backup capability는 실제
+            callable 여부와 명시적 false를 반영하며, Local public provider backup 경로가
+            동작하도록 맞춰졌습니다. compiled package root import, public provider/options
+            type, Local encrypted roundtrip·wrong-password target 보존·restart, mmap strict
+            reopen도 검증했습니다. 최신 기본 테스트 1,473개는 통과했습니다.
+          </p>
+        </div>
+        <div class="card">
+          <h3>아직 입증하지 못한 범위</h3>
+          <p>
+            SQLite는 아직 full parity가 아니며 epoch, flashbulb, semantic consolidation,
+            cross-domain analogy의 5개 실패가 남아 있습니다. semantic decay, associate,
+            procedural, hubs, KG도 부족한 구현·검증이 남은 범위입니다. mmap은 기본 성능
+            개선으로 확정되지 않았고, 실제 대화 기억 품질·실제 LLM 압축·현재 앱 통합은
+            별도 증거가 필요합니다. 실제 앱 통합에서 남은 표면은 <code>naia-agent</code>와
+            <code>naia-shell</code>입니다.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <h2>근거 파일</h2>
+      <p>
+        이 보고서는 아래 문서와 구현 파일의 수치·범위를 요약했습니다. 파일 링크 없이도
+        첨부본만으로 읽을 수 있도록 핵심 근거를 본문에 함께 적었습니다.
+      </p>
+      <ul class="sources">
+        <li><code>naia-memory-research-status-and-plan-2026-09-05.ko.md</code></li>
+        <li><code>naia-memory-p0-execution-2026-09-05.ko.md</code></li>
+        <li><code>naia-memory-performance-stage-2026-09-05.ko.md</code></li>
+        <li><code>naia-memory-performance-stage2-2026-09-05.ko.md</code></li>
+        <li><code>naia-memory-sqlite-support-matrix-2026-09-05.ko.md</code></li>
+        <li><code>naia-memory-stage3-2026-09-05.ko.md</code></li>
+        <li><code>luna-focused.log</code> · stage 3 집중 검증 50/50</li>
+        <li><code>src/memory/memory-system-backup.ts</code></li>
+        <li><code>src/memory/adapters/sqlite.ts</code></li>
+        <li><code>src/memory/provider-types.ts</code></li>
+        <li><code>src/memory/provider.ts</code></li>
+        <li><code>src/memory/memory-system-api.ts</code></li>
+      </ul>
+      <div class="callout">
+        <p><strong>검토 범위:</strong> Luna max가 현재 worktree에서 구현·작성했고 Astra는 source와 log를 읽어 검토했습니다. Astra의 독립 runtime 재실행은 아닙니다. 따라서 이 보고서는 현재 worktree 상태를 기록하며 깨끗한 release certification이 아닙니다.</p>
+      </div>
+      <p class="footer-note">
+        작성일: 2026-09-05 · 본문 수치는 각 원문에 기록된 실행 조건을 따릅니다.
+        성능 결과는 synthetic 데이터와 paired 측정에 대한 것이며, 기억 품질이나
+        출시 준비 완료를 의미하지 않습니다.
+      </p>
+    </footer>
+  </main>
+</body>
+</html>

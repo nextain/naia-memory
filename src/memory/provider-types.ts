@@ -52,6 +52,8 @@ export interface MemoryProvider {
 // ─── Capability interfaces (optional, detected via isCapable<>) ────────────
 
 export interface BackupCapableProvider {
+	/** Optional adapter-backed capability gate; omitted means legacy fallback. */
+	supportsBackup?(): boolean;
 	exportBackup(password: string): Promise<Uint8Array>;
 	importBackup(blob: Uint8Array, password: string): Promise<void>;
 }
@@ -106,5 +108,17 @@ export function isCapable(
 ): boolean {
 	const methods = CAPABILITY_METHODS[capName];
 	if (!methods) return false;
-	return methods.every((m) => typeof (provider as any)[m] === "function");
+	const hasMethods = methods.every(
+		(m) => typeof (provider as any)[m] === "function",
+	);
+	if (!hasMethods) return false;
+	if (capName === "BackupCapableProvider") {
+		const supportsBackup = (
+			provider as { supportsBackup?: () => boolean }
+		).supportsBackup;
+		if (typeof supportsBackup === "function" && supportsBackup.call(provider) !== true) {
+			return false;
+		}
+	}
+	return true;
 }
