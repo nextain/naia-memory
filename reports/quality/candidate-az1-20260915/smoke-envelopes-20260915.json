@@ -1,0 +1,88 @@
+{
+  "at": "2026-09-14T17:21:30.841Z",
+  "note": "synthetic content; outside run id; not evaluation data",
+  "answer": {
+    "status": 200,
+    "ms": 2258,
+    "content": "{\"answers\":{\"sq1\":\"Bring jasmine tea to the book meeting.\"}}",
+    "finish": "stop",
+    "usage": {
+      "completion_tokens": 21,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": 0,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "latency_checkpoint": {
+        "engine_tbt_ms": 13,
+        "engine_ttft_ms": 61,
+        "engine_ttlt_ms": 349,
+        "pre_inference_ms": 1337,
+        "service_tbt_ms": 13,
+        "service_ttft_ms": 1424,
+        "service_ttlt_ms": 1706,
+        "user_visible_ttft_ms": 86
+      },
+      "prompt_tokens": 129,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0
+      },
+      "total_tokens": 150
+    },
+    "model": "gpt-5.4-nano-2026-03-17",
+    "error": null,
+    "shape": "ok"
+  },
+  "judge": {
+    "status": 200,
+    "ms": 1811,
+    "content": "{\n  \"bsmoke0001\": {\n    \"correct\": true,\n    \"abstained\": false,\n    \"unsupported\": false,\n    \"forbidden_asserted\": false,\n    \"critical_reversal\": false,\n    \"retrieval_critical_reversal\": false,\n    \"answer_critical_reversal\": false,\n    \"stale_exposure\": false,\n    \"deletion_leakage\": false,\n    \"project_leakage\": false,\n    \"current_at_1\": true,\n    \"current_at_5\": true,\n    \"false_overwrite\": null,\n    \"reason\": \"The candidate answer 'Jasmine tea.' matches the gold proposition and the retrieved context.\",\n    \"evidence_quotes\": [\"Jasmine tea.\", \"The user brings jasmine tea to book meetin",
+    "finish": "stop",
+    "usage": {
+      "prompt_tokens": 397,
+      "completion_tokens": 183,
+      "total_tokens": 580,
+      "audio_prompt_tokens": 0
+    },
+    "model": "deepseek-v4-flash",
+    "error": null,
+    "shape": {
+      "rowPresent": true,
+      "missingBooleans": [],
+      "extraFields": [],
+      "falseOverwriteType": "object",
+      "quotes": [
+        "Jasmine tea.",
+        "The user brings jasmine tea to book meetings.",
+        "Book meeting tea is jasmine."
+      ]
+    }
+  },
+  "deleteVerifier": {
+    "verdict": {
+      "authorized": true,
+      "targetFactId": "f1"
+    },
+    "receipts": [
+      {
+        "status": 200,
+        "finish": "stop",
+        "usage": {
+          "prompt_tokens": 308,
+          "completion_tokens": 23,
+          "total_tokens": 331,
+          "audio_prompt_tokens": 0
+        },
+        "request": [
+          "model",
+          "messages",
+          "max_tokens",
+          "temperature",
+          "response_format"
+        ]
+      }
+    ]
+  }
+}
