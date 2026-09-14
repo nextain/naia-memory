@@ -15,6 +15,12 @@ export interface LLMSummarizerOptions {
 	baseURL?: string;
 	/** 요약 모델. 미지정 = gemini-2.5-flash-lite(빠르고 저렴). */
 	model?: string;
+	/**
+	 * 출력 상한 필드 이름. 기본 `max_tokens`. OpenAI gpt-5 계열(Azure Foundry 포함)은
+	 * `max_tokens` 를 HTTP 400 으로 거부하고 `max_completion_tokens` 만 받는다. 거부되면
+	 * 이 요약기는 조용히 seed 로 폴백하므로 호출자가 모델에 맞게 지정해야 한다.
+	 */
+	maxTokensParam?: "max_tokens" | "max_completion_tokens";
 }
 
 const DEFAULT_BASE_URL =
@@ -33,6 +39,7 @@ export function buildLLMSummarizer(
 	const baseURL = options.baseURL ?? DEFAULT_BASE_URL;
 	const model = options.model ?? DEFAULT_MODEL;
 	const auth = options.auth ?? "bearer";
+	const maxTokensParam = options.maxTokensParam ?? "max_tokens";
 
 	return async (input) => {
 		const seed = (input.seedSummary ?? "").trim();
@@ -63,7 +70,7 @@ export function buildLLMSummarizer(
 				body: JSON.stringify({
 					model,
 					messages: [{ role: "user", content: prompt }],
-					max_tokens: 1024,
+					[maxTokensParam]: 1024,
 					temperature: 0.2,
 				}),
 				...(input.signal ? { signal: input.signal } : {}),

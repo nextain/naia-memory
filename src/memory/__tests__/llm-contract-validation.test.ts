@@ -716,6 +716,97 @@ describe("LLM memory contract validation", () => {
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 	});
 
+	it("sends non-strict schema to OpenAI-compatible hosts with the chosen token field", async () => {
+		let requestBody: Record<string, unknown> | undefined;
+		const fetchMock = vi.fn(
+			async (_input: RequestInfo | URL, init?: RequestInit) => {
+				requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+				return new Response(
+					JSON.stringify(responseEnvelope('{"1":[]}')),
+					{ status: 200, headers: { "content-type": "application/json" } },
+				);
+			},
+		);
+		vi.stubGlobal("fetch", fetchMock);
+
+		const failures: string[] = [];
+		await buildLLMFactExtractor({
+			apiKey: "test-key",
+			baseURL: "https://foundry.test/openai/v1/",
+			structuredOutput: { provider: "openai-compatible" },
+			maxTokensParam: "max_completion_tokens",
+			failurePolicy: "skip",
+			onFailure: (failure) => failures.push(failure.code),
+		})([episode]);
+
+		expect(failures).toEqual([]);
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		const responseFormat = requestBody?.response_format as Record<string, unknown>;
+		expect(responseFormat.type).toBe("json_schema");
+		expect(responseFormat.json_schema).toMatchObject({
+			name: "naia_memory_facts",
+			strict: false,
+		});
+		expect(
+			(responseFormat.json_schema as Record<string, unknown>).schema,
+		).toMatchObject({ required: ["1"] });
+		expect(requestBody).toHaveProperty("max_completion_tokens", 8192);
+		expect(requestBody).not.toHaveProperty("max_tokens");
+	});
+
+	it("keeps max_tokens as the default token field", async () => {
+		let requestBody: Record<string, unknown> | undefined;
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+				requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+				return new Response(
+					JSON.stringify(responseEnvelope('{"1":[]}')),
+					{ status: 200, headers: { "content-type": "application/json" } },
+				);
+			}),
+		);
+		await buildLLMFactExtractor({
+			apiKey: "test-key",
+			baseURL: "https://provider.test/v1/",
+		})([episode]);
+		expect(requestBody).toHaveProperty("max_tokens", 8192);
+		expect(requestBody).not.toHaveProperty("max_completion_tokens");
+	});
+
+	it("sends the summarizer token ceiling under the chosen field", async () => {
+		const bodies: Record<string, unknown>[] = [];
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+				bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+				return new Response(
+					JSON.stringify({ choices: [{ message: { content: "polished" } }] }),
+					{ status: 200, headers: { "content-type": "application/json" } },
+				);
+			}),
+		);
+		const input = {
+			messages: [{ role: "user" as const, content: "durable decision" }],
+			keepTail: 8,
+			targetTokens: 256,
+			seedSummary: "seed",
+		};
+		await buildLLMSummarizer({
+			apiKey: "test-key",
+			baseURL: "https://foundry.test/openai/v1/",
+			maxTokensParam: "max_completion_tokens",
+		})(input);
+		await buildLLMSummarizer({
+			apiKey: "test-key",
+			baseURL: "https://provider.test/v1/",
+		})(input);
+		expect(bodies[0]).toHaveProperty("max_completion_tokens", 1024);
+		expect(bodies[0]).not.toHaveProperty("max_tokens");
+		expect(bodies[1]).toHaveProperty("max_tokens", 1024);
+		expect(bodies[1]).not.toHaveProperty("max_completion_tokens");
+	});
+
 	it("makes the requested target explicit while retaining full transcript input", async () => {
 		let requestBody: Record<string, unknown> | undefined;
 		vi.stubGlobal(

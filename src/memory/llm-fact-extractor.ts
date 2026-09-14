@@ -43,6 +43,12 @@ export interface LLMFactExtractorOptions {
    * strict combination must be verified separately.
    */
   structuredOutput?: LLMFactStructuredOutputOptions;
+  /**
+   * Name of the output-token ceiling field. Default `max_tokens`. OpenAI
+   * gpt-5 family deployments (including Azure Foundry) reject `max_tokens`
+   * with HTTP 400 and require `max_completion_tokens`.
+   */
+  maxTokensParam?: "max_tokens" | "max_completion_tokens";
   /** Receives a typed, fail-closed reason for every skipped/failed batch. */
   onFailure?: (failure: LLMFactExtractionFailure) => void;
 }
@@ -88,9 +94,16 @@ export class LLMFactExtractionError
 }
 
 export interface LLMFactStructuredOutputOptions {
-  /** The provider-specific request dialect used by this boundary. */
-  provider: "gemini";
-  /** JSON-schema name sent to the official Gemini compatibility endpoint. */
+  /**
+   * The provider-specific request dialect used by this boundary.
+   * - `gemini`: strict JSON schema, official generativelanguage host only.
+   * - `openai-compatible`: the same schema sent with `strict: false`. OpenAI
+   *   strict mode rejects this schema because optional properties and the
+   *   legacy string/object `anyOf` are not all-required. Non-strict schema is
+   *   guidance only; the production parser remains the contract.
+   */
+  provider: "gemini" | "openai-compatible";
+  /** JSON-schema name sent with the response format. */
   schemaName?: string;
 }
 
@@ -178,6 +191,16 @@ function responseFormatFor(
   episodeCount: number,
 ): Record<string, unknown> {
   if (!structuredOutput) return { type: "json_object" };
+  if (structuredOutput.provider === "openai-compatible") {
+    return {
+      type: "json_schema",
+      json_schema: {
+        name: structuredOutput.schemaName ?? "naia_memory_facts",
+        strict: false,
+        schema: buildFactResponseSchema(episodeCount),
+      },
+    };
+  }
   if (
     structuredOutput.provider !== "gemini" ||
     !isOfficialGeminiHost(baseURL)
@@ -261,6 +284,7 @@ export function buildLLMFactExtractor(
     auth = "bearer",
     failurePolicy = "skip",
     structuredOutput,
+    maxTokensParam = "max_tokens",
     onFailure,
   } = options;
 
@@ -276,6 +300,7 @@ export function buildLLMFactExtractor(
         auth,
         failurePolicy,
         structuredOutput,
+        maxTokensParam,
         onFailure,
       });
       results.push(...extracted);
@@ -298,6 +323,7 @@ async function extractBatch(
     auth: "bearer" | "x-anyllm";
     failurePolicy: "skip" | "throw";
     structuredOutput?: LLMFactStructuredOutputOptions;
+    maxTokensParam?: "max_tokens" | "max_completion_tokens";
     onFailure?: (failure: LLMFactExtractionFailure) => void;
   },
   retries = 3,
@@ -309,6 +335,7 @@ async function extractBatch(
     auth,
     failurePolicy,
     structuredOutput,
+    maxTokensParam = "max_tokens",
     onFailure,
   } = opts;
 
@@ -476,7 +503,7 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
         messages: [{ role: "user", content: prompt }],
         // Gemini 2.5 may spend part of this budget on internal reasoning. A
         // 2K ceiling can therefore truncate even a short JSON payload.
-        max_tokens: Math.max(8192, episodes.length * 400),
+        [maxTokensParam]: Math.max(8192, episodes.length * 400),
         // Extraction is a contract parse, not creative generation. Zero reduces
         // multilingual key/cardinality drift across repeated benchmark runs.
         temperature: 0,
