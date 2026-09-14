@@ -1,0 +1,32 @@
+{
+  "run_id": "candidate-az1-20260915",
+  "recorded_at": "2026-09-15",
+  "policy": "score.json is not edited and no row is rejudged. Disputed rows are listed with the reviewer's claimed value; reports show results as judged and a sensitivity view excluding these rows. Human review in stage 3 settles them.",
+  "harness_deviation": {
+    "finding": "run-az1.mjs passed atTimestamp: queryTime to recall for all 57 queries (inherited from candidate-e). Only 3 inputs carry at_timestamp. local-semantic-search.ts takes the factsValidAtTime path whenever atT is defined and skips the active-only filter (includeSuperseded check is gated on atT === undefined).",
+    "evidence": "naia arm: 16 of 57 rows have a superseded fact at rank 1; 22-23 rows lack the active successor fact in ranked results (22 by reviewer, 23 by orchestrator heuristic). Active state itself shows correct supersession chains.",
+    "consequence": "naia vs simple-vector (-7.7 pp) and naia vs no-kg-spreading (+7.7 pp) are not interpreted as design differences until a corrected run (az2) removes the deviation.",
+    "discovered_by": "Fable post-run review; verified by orchestrator against source and capture"
+  },
+  "rows": [
+    {
+      "rowId": "memory-answer:memory-ja-10:naia:q1",
+      "field": "correct",
+      "judged": false,
+      "reviewer_claim": true,
+      "reason": "The answer '紙の地図で考えるのが好きです' matches gold p1; the judge's own reason says the required proposition is the same. false_overwrite=true is considered correct (preference fact was wrongly superseded by '地図アプリを試した')."
+    },
+    {
+      "rowId": "memory-answer:memory-ko-14:naia:q2",
+      "field": "false_overwrite",
+      "judged": true,
+      "reviewer_claim": false,
+      "reason": "No preserved fact was superseded for this query; the judge appears to have conflated an unreflected deletion with an overwrite."
+    }
+  ],
+  "judge_unavailable_correction": {
+    "batch": "j054 (naia-no-kg-spreading, en-12/en-13)",
+    "actual_reason": "judge id coverage failed: one of four returned keys had a wrong blind id",
+    "note": "The two HTTP 504 receipts (j008, j030) recovered on the single retry. The raw judge text of j054 was not preserved (receipts keep contentChars only); az2 must keep raw answer and judge text."
+  }
+}

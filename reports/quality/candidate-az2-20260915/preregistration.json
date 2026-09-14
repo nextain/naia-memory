@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "run_id": "candidate-az2-20260915",
+  "frozen": false,
+  "frozen_at": null,
+  "registered_before_any_provider_result": true,
+  "owner_decisions": {
+    "2026-09-15": [
+      "Run the frozen memory design once on real models.",
+      "Use Azure Foundry credit instead of Google Gemini.",
+      "Prefer fast and simple models; gpt-5-4-nano for extraction and answers."
+    ],
+    "2026-09-15-az2": "pending: second run requires owner approval (az1 stop rule)"
+  },
+  "scope": "Azure Foundry cloud-extraction path on model-authored synthetic fixtures that are development-exposed. Not product-path evidence: the product rule keeps reasoning over user memory local. Not independent human evaluation. Not public competitive evidence. Formal noninferiority cannot be passed from this suite.",
+  "design": {
+    "directory": "reports/quality/remaining-plan-20260905/design",
+    "manifest_sha256": "d0cb8bfce95c797ee6c8b00b7949f503e2d8cb6ef439530d641ad1eb12478f66",
+    "unchanged": [
+      "memory-inputs.json",
+      "memory-gold.json",
+      "rubric.json",
+      "arms",
+      "top_k 5",
+      "memory_token_max 1024",
+      "strict scope",
+      "same answer prompt and recent tail for all arms",
+      "answer_output_token_max 512",
+      "temperature 0",
+      "acceptance thresholds"
+    ],
+    "development_exposure": "candidate-e-20260906 read these fixtures; this run does not change them and declares them development-exposed."
+  },
+  "product": {
+    "repository": "nextain/naia-memory",
+    "commit": "70dc1476b6308999d459946f5a36b2829f992f5c",
+    "src_must_be_clean": true,
+    "configuration": {
+      "adapter": "LocalAdapter per case and arm, fresh store, real close and reopen at every reopen event",
+      "fact_extractor": "buildLLMFactExtractor(model gpt-5-4-nano, batchSize 10, failurePolicy throw, structuredOutput openai-compatible (strict:false), maxTokensParam max_completion_tokens)",
+      "delete_verifier": "buildLLMDeleteVerifier(model deepseek-v4-flash, batchSize 1, failurePolicy throw) — different model family from extraction as the product comment requires",
+      "contradiction_filter": "HeuristicContradictionFilter",
+      "consolidation_interval_ms": 86400000,
+      "ablation": "naia-no-kg-spreading differs only by LocalAdapter disableKGSpreading=true",
+      "shared_extraction": "the two naia arms consume one physical extraction and deletion response per identical input; errors are shared",
+      "post_consolidation_reopen": "after consolidateNow and flush, close and reopen once before queries so recall also exercises fact persistence (no provider cost)"
+    }
+  },
+  "models": {
+    "provider": "Azure Foundry (naia-azure-foundry, koreacentral, GlobalStandard), OpenAI-compatible v1 chat/completions, bearer auth",
+    "extraction": "gpt-5-4-nano",
+    "answer": "gpt-5-4-nano",
+    "delete_verification": "deepseek-v4-flash",
+    "judge": "deepseek-v4-flash",
+    "embedding": {
+      "provider": "OfflineEmbeddingProvider (product path provider:'offline'), device cpu",
+      "model": "Xenova/multilingual-e5-base",
+      "embedding_space_id": "offline:Xenova/multilingual-e5-base@1ec9243030a27d1a115d5c340572074c125b58b2:dims=768:dtype=q8:mean-normalized:query-passage-v2",
+      "prefixes": "passages via embedBatch ('passage: '), queries via embed ('query: ') for both simple-vector and naia arms",
+      "reopen_in_simple_vector": "declared no-op (append-only index), as in candidate-e",
+      "warmup": "outside measurement",
+      "provider_request_caps": "embedding is local and not counted toward provider caps; it is inside wall time"
+    },
+    "returned_model_ids": "recorded per receipt"
+  },
+  "tokenizer": {
+    "budget_tokenizer": "o200k_base via js-tiktoken 1.0.21",
+    "claim": "not claimed identical to the model tokenizers",
+    "memory_context_budget": "1024 o200k tokens, local only (cannot be verified from usage)",
+    "answer_prompt_ceiling_rule": "an answer row whose usage.prompt_tokens > 8192 is budget-failure and stays in the denominator",
+    "reported": "median and max of |local - usage.prompt_tokens| / usage.prompt_tokens over answer rows; above 10% is marked a measurement limit, not a failure",
+    "judge_preflight": "o200k x 1.3 <= 16000 per batch or the batch is split to 2 then 1 rows, decided before dispatch",
+    "no_pairing_with_first_run": "token counts are not compared with the Gemini native counts of candidate-e"
+  },
+  "budget_caps": {
+    "usd": "not estimated: Azure credit with no bound list price source; token caps are the binding limits",
+    "on_cap": "requests past a cap are refused locally and recorded; affected rows are failures in the denominator; report INCOMPLETE if any cap is reached; caps are not raised",
+    "per_stage": {
+      "capture": {
+        "provider_requests": 1500,
+        "input_tokens": 3000000,
+        "output_tokens": 600000,
+        "wall_minutes": 45
+      },
+      "judge": {
+        "provider_requests": 300,
+        "input_tokens": 3000000,
+        "output_tokens": 600000,
+        "wall_minutes": 45
+      }
+    },
+    "request_timeout_ms": 60000
+  },
+  "retries": {
+    "quality_retries": 0,
+    "transport_retry": "one retry for 5xx or deadline only, both receipts kept; the product extractor's internal 5xx loop is capped to two physical attempts by the transport",
+    "rejudging": "none; the judge stage refuses to run twice",
+    "refusal_codes": "498 = local cap refusal, 499 = transport retry cap refusal; the product extractor classifies both as http failures, which this registration maps to the transport class"
+  },
+  "extraction_failure_gate": {
+    "primary_metric": "failed physical extraction calls / physical extraction calls (expected 42)",
+    "max_failed": 2,
+    "classes": [
+      "invalid-json",
+      "invalid-top-level-shape",
+      "invalid-episode-shape",
+      "truncated (finish_reason length)",
+      "http",
+      "transport",
+      "missing-content",
+      "semantic-rejection",
+      "configuration"
+    ],
+    "expected_truncation": 0,
+    "empty_facts": "a schema-valid response with no facts is not an extraction failure; it flows into answer metrics",
+    "meaning": "necessary condition for accepting the extractor path only; the answer correctness gates must also pass"
+  },
+  "judge_rules": {
+    "blinding": "opaque blind ids (sha256 of run id and row id); arm identity and row ids are never sent",
+    "batching": "4 rows of one hidden arm per batch, split before dispatch by the size preflight",
+    "request": "temperature 0, max_tokens 2048, response_format json_object",
+    "gold_access": "judge opens gold only after verifying the capture seal (capture.jsonl and capture-meta.json sha256)",
+    "batch_unavailable": "transport failure, finish_reason length, invalid JSON, id coverage mismatch, or a declared field with the wrong type make the whole batch unavailable-judge. Undeclared fields are recorded and ignored.",
+    "row_unavailable": "an evidence quote that is not a whitespace-normalized substring of the row's supplied texts makes that row unavailable-judge",
+    "unavailable_effect": "Execution failures (engine, transport, parse, budget) are definite incorrect answers. Judge-unavailable rows with a successful execution are uncertain: correctness is reported as a lower bound (uncertain counted incorrect) and an upper bound (uncertain counted correct). Gate: lower bound >= threshold is PASS for that check, upper bound < threshold is FAIL, otherwise INCONCLUSIVE. Leak/overwrite/reversal checks: any observed > 0 is FAIL; otherwise any unavailable is INCONCLUSIVE.",
+    "false_overwrite": "each row carries false_overwrite_applies = native state available AND gold denominators.false_overwrite. The judge returns a boolean only when it applies, otherwise null. A null where it applies is unavailable for that metric on that row only; a boolean where it does not apply is discarded.",
+    "projection": "question, query context, retrieved items as {rank, content, project} without engine kind labels, recovered context with [fact]/[episode] prefixes removed, recent tail, candidate answer text, native active state as fact lifecycle list {id, content, status, project, validFrom, validTo, supersedes} (full store is not sent), source events, gold propositions and query gold. Evidence quote texts include active-state fact contents.",
+    "fields_derivation": "The twelve booleans plus false_overwrite, reason and evidence_quotes are candidate-e's fixed row contract (RUBRIC_CONTRACT.memory). forbidden_asserted, retrieval_critical_reversal and answer_critical_reversal split rubric answer_fields.correct and critical_reversal into the surfaces rubric memory_denominators.critical_reversal asks to report separately.",
+    "request_caps": "judge stage has its own cap of 300 requests"
+  },
+  "memory_acceptance": {
+    "current_answer_correctness_overall_min": 0.85,
+    "current_answer_correctness_each_language_min": 0.8,
+    "deletion_leakage_observed_max": 0,
+    "project_leakage_observed_max": 0,
+    "false_overwrite_observed_max": 0,
+    "critical_reversal_observed_max": 0,
+    "all_query_correctness": "published beside the current-query gate"
+  },
+  "analysis": {
+    "paired": [
+      "naia vs simple-vector",
+      "naia vs no-memory",
+      "naia vs naia-no-kg-spreading"
+    ],
+    "unit": "case-level current-query correctness difference",
+    "uncertainty": "construction-family cluster bootstrap, seed 20260905, 10000 resamples, descriptive only",
+    "latency": "retrieval and answer latency p50/p95 reported separately"
+  },
+  "deviations_from_candidate_e_preregistration": [
+    "Provider Google Gemini -> Azure Foundry; models gemini-2.5-flash-lite/gemini-2.5-flash -> gpt-5-4-nano/deepseek-v4-flash (owner decision)",
+    "Embedding gemini-embedding-001 -> local CPU multilingual-e5-base (GPU0 is reserved for another study; GPU1 is serving)",
+    "Native countTokens -> o200k_base budget tokenizer with usage reconciliation",
+    "USD 2 / 1,000 request budget -> token and request caps above",
+    "Eight-bucket reservation ledger, cache receipts and common-budget trim removed; hard caps retained",
+    "Compression suite deferred to a separate registration; this run covers memory only",
+    "Answer prompt: rubric.answer_prompt plus a fixed JSON shape sentence, identical for all arms",
+    "az2: atTimestamp only for at-time queries (candidate-e and az1 passed it for all queries)"
+  ],
+  "runner": {
+    "file": "reports/quality/candidate-az2-20260915/run-az2.mjs",
+    "sha256": null,
+    "package_lock_sha256": "646e4fd27bd2839c189a051363db2c13b9b83e129b1d80ae95c9ad1edc8a7e11",
+    "dry_run": "mock backend, 2 cases per language, before freezing"
+  },
+  "stop_rules": [
+    "One frozen capture and one judge pass. Fixtures are not edited after results.",
+    "If the extraction gate fails, analyse causes before any second run; a second run needs a new run id and owner approval.",
+    "A cap hit reports INCOMPLETE; caps are not raised within this run id."
+  ],
+  "answer_prompt": {
+    "system_exact": "Answer only from the supplied recent conversation and retrieved memory or recap. Preserve project and time distinctions. If the value is unknown, deleted, cancelled or undecided, say so; do not invent it. Return JSON mapping question IDs to concise answers in the question language. Return a JSON object {\"answers\": {\"<question id>\": \"<answer>\"}}.",
+    "system_sha256": "dbf88d97d26ad08a6cf4073ebe9bc2227d8db14235e5c7f7910afbc3f38a5829",
+    "user_template": "QUESTION_ID <id>\\nQUESTION: <text>\\nRETRIEVED MEMORY:\\n<one line per supplied item: '- <content>', or (none)>\\nRECENT CONVERSATION:\\n<role: content lines>",
+    "request": "gpt-5-4-nano, temperature 0, max_completion_tokens 512, response_format json_object",
+    "parse_rule": "answers[<question id>] must be a string; otherwise status parse-failure (execution failure, denominator kept, incorrect)",
+    "item_prefix": "neutral '- ' for all arms (candidate-e used [fact]/[episode], an arm-dependent label; changed on Fable recommendation before freezing). The 1024-token context budget is counted on this text."
+  },
+  "gold_access_note": "verifyDesign hashes every design file including gold bytes but does not parse gold in capture",
+  "census_expected_full_run": {
+    "cases": 42,
+    "rows": 228,
+    "current_at_k_rows_per_arm": 45,
+    "current_at_k_rows_per_language_per_arm": 15,
+    "reopen_events": 21,
+    "post_consolidation_reopen_per_naia_arm_case": 1,
+    "physical_extraction": "equals cases (42); recorded as censusChecks.physicalExtractionEqualsCases",
+    "physical_delete_verification": "recorded only"
+  },
+  "known_unsupported_paths": {
+    "at_time_queries": "memory-ko-12, memory-en-12, memory-ja-12 ask at the first event time. Consolidation stamps validFrom with the logical time of consolidation (memory-system-consolidation.ts, validFrom: now), and this run consolidates once at the last event time, so facts are not valid at the first event time. These three rows are reported separately as an unsupported path and are not reinterpreted after results. Candidate follow-up: consolidate per event; not done here to keep 42 physical extractions comparable. These rows stay in the gold answer_correctness denominator and count as they are judged (an unsupported-path miss scores incorrect). In score.atTimeUnsupported only rows with mode at-time are the unsupported path; the other query of each case-12 is an ordinary row and is labelled so.",
+    "simple_vector_reopen": "no-op append-only index"
+  },
+  "embedding_artifacts": {
+    "transformers_version": "3.8.1",
+    "onnx_file": "Xenova/multilingual-e5-base/onnx/model_quantized.onnx",
+    "warmup_measured_from_local_cache": "yes; first dry-run warmup 146 s included ONNX load from disk"
+  },
+  "smoke_before_freeze": {
+    "file": "reports/quality/candidate-az1-20260915/smoke-envelopes-20260915.json",
+    "content": "synthetic, outside run id, 3 paid calls",
+    "answer_envelope": "ok ({answers:{id:string}})",
+    "judge_envelope": "row present, 12 booleans, no extra fields; false_overwrite returned null for a row where the metric did not apply, which led to the false_overwrite_applies field",
+    "delete_verifier": "product request (max_tokens 2048, json_object) accepted by deepseek-v4-flash, HTTP 200, authorized true on an explicit removal request"
+  },
+  "dry_runs": [],
+  "relation_to_az1": {
+    "reason": "az1 passed atTimestamp for all 57 queries (inherited from candidate-e). local-semantic-search takes the valid-at-time path when atT is defined and skips the active-only filter. naia: 16/57 rows ranked a superseded fact first; 22-23 rows lacked the active successor fact.",
+    "changes_only": [
+      "recall receives atTimestamp only when query.mode is at-time (naia and simple-vector arms)",
+      "raw answer and raw judge text preserved (answer.raw, judge-raw.jsonl)",
+      "judge validation failures keep raw response",
+      "score adds rankingDiagnostics"
+    ],
+    "unchanged": "fixtures, gold, rubric, arms, models, embedder, tokenizer, caps, retries, judge rules, thresholds, product commit 70dc147 src",
+    "az1_status": "az1 results are kept; its naia-vs-simple-vector and ablation differences are not interpreted as design differences"
+  },
+  "predictions": {
+    "registered_before_az2_results": true,
+    "az1_baseline": {
+      "naia_supersededRank1": 16,
+      "naia_activeSuccessorAbsent": 23,
+      "definition": "supersededRank1 = rank-1 item is a fact whose status is superseded; activeSuccessorAbsent = the row's active state has an active fact with supersedes set and none of those facts is in ranked facts (az2 score.rankingDiagnostics code)"
+    },
+    "if_harness_only": "naia supersededRank1 0 and activeSuccessorAbsent near 0 → deviation closed as harness-only",
+    "if_residual": "activeSuccessorAbsent remains > 0 → product retrieval or successor persistence/embedding defect becomes the next fix target",
+    "deletion_expectation": "explicit deletion requests (ko/en/ja-05, -14) are not expected to change: extraction does not emit delete operations; deletion_leakage for naia is expected to stay > 0",
+    "ja_10_expectation": "the wrong preference supersession is a lifecycle fact and should persist; with active-only retrieval the answer may become incorrect"
+  }
+}
