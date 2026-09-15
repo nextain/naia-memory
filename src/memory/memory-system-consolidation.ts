@@ -284,12 +284,18 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						if (structured) recordMutationOutcome("structured_conflict_denied");
 						continue;
 					}
+					// One utterance cannot revise itself: two values extracted from the
+					// same episode ("Tuesday calligraphy and Thursday cooking") are
+					// siblings, never predecessor and successor. Duplicate merging above
+					// is unaffected.
+					const fromOtherEpisodes = (fact: Fact) =>
+						!fact.sourceEpisodes.some((id) => ef.sourceEpisodeIds.includes(id));
 					const contradictions = await resolveFactContradictions({
 						extracted: ef,
-						existingFacts,
+						existingFacts: existingFacts.filter(fromOtherEpisodes),
 						trustedUserMutation: mutationPolicy.trustedUserMutation,
-						supersessions: mutationPolicy.supersessions,
-						fallbackFacts: mutationPolicy.fallbackFacts,
+						supersessions: mutationPolicy.supersessions.filter(fromOtherEpisodes),
+						fallbackFacts: mutationPolicy.fallbackFacts.filter(fromOtherEpisodes),
 						contradictionFilter: this.contradictionFilter,
 						contextualEvidence: sourceEpisodes
 							.filter(
