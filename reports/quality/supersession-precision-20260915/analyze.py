@@ -5,16 +5,21 @@ that replaced it, and both facts' structured fields from the same run's sealed
 extraction response (matched by content string). Correctness is judged by a
 person from this listing; gold source_event_ids include distractor turns, so
 they cannot label retirements mechanically. Run from this directory.
+
+Usage: python3 analyze.py [label=run_dir ...]  (default: az2 and az3 runs)
 """
 import json
+import sys
 
 DESIGN = "../remaining-plan-20260905/design"
 gold = {c["case_id"]: c for c in json.load(open(f"{DESIGN}/memory-gold.json"))["cases"]}
 inputs = {c["id"]: c for c in json.load(open(f"{DESIGN}/memory-inputs.json"))["cases"]}
 
-for run in ("az2", "az3"):
+RUNS = dict(arg.split("=", 1) for arg in sys.argv[1:]) or {run: f"../candidate-{run}-20260915/run" for run in ("az2", "az3")}
+
+for run, run_dir in RUNS.items():
     ext = {}
-    for line in open(f"../candidate-{run}-20260915/run/capture-raw-provider.jsonl"):
+    for line in open(f"{run_dir}/capture-raw-provider.jsonl"):
         r = json.loads(line)
         if r["operation"] != "extraction" or r["status"] != 200:
             continue
@@ -25,7 +30,7 @@ for run in ("az2", "az3"):
                     ext[(r["caseId"], f["content"])] = (episode, f.get("operation"), f.get("structured") or {})
     print(f"===== {run}")
     seen = set()
-    for line in open(f"../candidate-{run}-20260915/run/capture.jsonl"):
+    for line in open(f"{run_dir}/capture.jsonl"):
         r = json.loads(line)
         if r["arm"] != "naia" or r["caseId"] in seen:
             continue

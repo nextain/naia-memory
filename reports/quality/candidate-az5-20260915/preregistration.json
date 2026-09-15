@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "frozen": false,
+  "frozen_at": null,
+  "registered_before_any_provider_result": true,
+  "owner_decisions": {
+    "2026-09-15": [
+      "Run the frozen memory design once on real models.",
+      "Use Azure Foundry credit instead of Google Gemini.",
+      "Prefer fast and simple models; gpt-5-4-nano for extraction and answers."
+    ],
+    "2026-09-15-az2": "pending: run requires owner approval (az1 stop rule). Frozen before approval so the registration predates any az2 result.",
+    "2026-09-15-az3": "Luke: 'naia-memory 연구 진행해줘' after the recommended order (episode rule, then deletion rule) was reported; az3 DM stated the plan and invited a different direction.",
+    "2026-09-15-az5": "No new owner input. az3 result DM (2026-09-15) stated the reordered plan: supersession precision first, measured by replay. Proceeding under 'naia-memory 연구 진행해줘' and the standing autonomous instruction."
+  },
+  "scope": "Azure Foundry cloud-extraction path on model-authored synthetic fixtures that are development-exposed. Not product-path evidence: the product rule keeps reasoning over user memory local. Not independent human evaluation. Not public competitive evidence. Formal noninferiority cannot be passed from this suite.",
+  "design": {
+    "directory": "reports/quality/remaining-plan-20260905/design",
+    "manifest_sha256": "d0cb8bfce95c797ee6c8b00b7949f503e2d8cb6ef439530d641ad1eb12478f66",
+    "unchanged": [
+      "memory-inputs.json",
+      "memory-gold.json",
+      "rubric.json",
+      "arms",
+      "top_k 5",
+      "memory_token_max 1024",
+      "strict scope",
+      "same answer prompt and recent tail for all arms",
+      "answer_output_token_max 512",
+      "temperature 0",
+      "acceptance thresholds"
+    ],
+    "development_exposure": "candidate-e-20260906 read these fixtures; this run does not change them and declares them development-exposed."
+  },
+  "models": {
+    "provider": "Azure Foundry (naia-azure-foundry, koreacentral, GlobalStandard), OpenAI-compatible v1 chat/completions, bearer auth",
+    "extraction": "gpt-5-4-nano",
+    "answer": "gpt-5-4-nano",
+    "delete_verification": "deepseek-v4-flash",
+    "judge": "deepseek-v4-flash",
+    "embedding": {
+      "provider": "OfflineEmbeddingProvider (product path provider:'offline'), device cpu",
+      "model": "Xenova/multilingual-e5-base",
+      "embedding_space_id": "offline:Xenova/multilingual-e5-base@1ec9243030a27d1a115d5c340572074c125b58b2:dims=768:dtype=q8:mean-normalized:query-passage-v2",
+      "prefixes": "passages via embedBatch ('passage: '), queries via embed ('query: ') for both simple-vector and naia arms",
+      "reopen_in_simple_vector": "declared no-op (append-only index), as in candidate-e",
+      "warmup": "outside measurement",
+      "provider_request_caps": "embedding is local and not counted toward provider caps; it is inside wall time"
+    },
+    "returned_model_ids": "recorded per receipt"
+  },
+  "tokenizer": {
+    "budget_tokenizer": "o200k_base via js-tiktoken 1.0.21",
+    "claim": "not claimed identical to the model tokenizers",
+    "memory_context_budget": "1024 o200k tokens, local only (cannot be verified from usage)",
+    "answer_prompt_ceiling_rule": "an answer row whose usage.prompt_tokens > 8192 is budget-failure and stays in the denominator",
+    "reported": "median and max of |local - usage.prompt_tokens| / usage.prompt_tokens over answer rows; above 10% is marked a measurement limit, not a failure",
+    "judge_preflight": "o200k x 1.3 <= 16000 per batch or the batch is split to 2 then 1 rows, decided before dispatch",
+    "no_pairing_with_first_run": "token counts are not compared with the Gemini native counts of candidate-e"
+  },
+  "budget_caps": {
+    "usd": "not estimated: Azure credit with no bound list price source; token caps are the binding limits",
+    "on_cap": "requests past a cap are refused locally and recorded; affected rows are failures in the denominator; report INCOMPLETE if any cap is reached; caps are not raised",
+    "per_stage": {
+      "capture": {
+        "provider_requests": 1500,
+        "input_tokens": 3000000,
+        "output_tokens": 600000,
+        "wall_minutes": 45
+      },
+      "judge": {
+        "provider_requests": 300,
+        "input_tokens": 3000000,
+        "output_tokens": 600000,
+        "wall_minutes": 45
+      }
+    },
+    "request_timeout_ms": 60000
+  },
+  "retries": {
+    "quality_retries": 0,
+    "transport_retry": "one retry for 5xx or deadline only, both receipts kept; the product extractor's internal 5xx loop is capped to two physical attempts by the transport",
+    "rejudging": "none; the judge stage refuses to run twice",
+    "refusal_codes": "498 = local cap refusal, 499 = transport retry cap refusal; the product extractor classifies both as http failures, which this registration maps to the transport class"
+  },
+  "extraction_failure_gate": {
+    "primary_metric": "failed physical extraction calls / physical extraction calls (expected 42)",
+    "max_failed": 2,
+    "classes": [
+      "invalid-json",
+      "invalid-top-level-shape",
+      "invalid-episode-shape",
+      "truncated (finish_reason length)",
+      "http",
+      "transport",
+      "missing-content",
+      "semantic-rejection",
+      "configuration"
+    ],
+    "expected_truncation": 0,
+    "empty_facts": "a schema-valid response with no facts is not an extraction failure; it flows into answer metrics",
+    "meaning": "necessary condition for accepting the extractor path only; the answer correctness gates must also pass"
+  },
+  "judge_rules": {
+    "blinding": "opaque blind ids (sha256 of run id and row id); arm identity and row ids are never sent",
+    "batching": "4 rows of one hidden arm per batch, split before dispatch by the size preflight",
+    "request": "temperature 0, max_tokens 2048, response_format json_object",
+    "gold_access": "judge opens gold only after verifying the capture seal (capture.jsonl and capture-meta.json sha256)",
+    "batch_unavailable": "transport failure, finish_reason length, invalid JSON, id coverage mismatch, or a declared field with the wrong type make the whole batch unavailable-judge. Undeclared fields are recorded and ignored.",
+    "row_unavailable": "an evidence quote that is not a whitespace-normalized substring of the row's supplied texts makes that row unavailable-judge",
+    "unavailable_effect": "Execution failures (engine, transport, parse, budget) are definite incorrect answers. Judge-unavailable rows with a successful execution are uncertain: correctness is reported as a lower bound (uncertain counted incorrect) and an upper bound (uncertain counted correct). Gate: lower bound >= threshold is PASS for that check, upper bound < threshold is FAIL, otherwise INCONCLUSIVE. Leak/overwrite/reversal checks: any observed > 0 is FAIL; otherwise any unavailable is INCONCLUSIVE.",
+    "false_overwrite": "each row carries false_overwrite_applies = native state available AND gold denominators.false_overwrite. The judge returns a boolean only when it applies, otherwise null. A null where it applies is unavailable for that metric on that row only; a boolean where it does not apply is discarded.",
+    "projection": "question, query context, retrieved items as {rank, content, project} without engine kind labels, recovered context with [fact]/[episode] prefixes removed, recent tail, candidate answer text, native active state as fact lifecycle list {id, content, status, project, validFrom, validTo, supersedes} (full store is not sent), source events, gold propositions and query gold. Evidence quote texts include active-state fact contents.",
+    "fields_derivation": "The twelve booleans plus false_overwrite, reason and evidence_quotes are candidate-e's fixed row contract (RUBRIC_CONTRACT.memory). forbidden_asserted, retrieval_critical_reversal and answer_critical_reversal split rubric answer_fields.correct and critical_reversal into the surfaces rubric memory_denominators.critical_reversal asks to report separately.",
+    "request_caps": "judge stage has its own cap of 300 requests"
+  },
+  "memory_acceptance": {
+    "current_answer_correctness_overall_min": 0.85,
+    "current_answer_correctness_each_language_min": 0.8,
+    "deletion_leakage_observed_max": 0,
+    "project_leakage_observed_max": 0,
+    "false_overwrite_observed_max": 0,
+    "critical_reversal_observed_max": 0,
+    "all_query_correctness": "published beside the current-query gate"
+  },
+  "analysis": {
+    "paired": [
+      "naia vs simple-vector",
+      "naia vs no-memory",
+      "naia vs naia-no-kg-spreading"
+    ],
+    "unit": "case-level current-query correctness difference",
+    "uncertainty": "construction-family cluster bootstrap, seed 20260905, 10000 resamples, descriptive only",
+    "latency": "retrieval and answer latency p50/p95 reported separately"
+  },
+  "deviations_from_candidate_e_preregistration": [
+    "Provider Google Gemini -> Azure Foundry; models gemini-2.5-flash-lite/gemini-2.5-flash -> gpt-5-4-nano/deepseek-v4-flash (owner decision)",
+    "Embedding gemini-embedding-001 -> local CPU multilingual-e5-base (GPU0 is reserved for another study; GPU1 is serving)",
+    "Native countTokens -> o200k_base budget tokenizer with usage reconciliation",
+    "USD 2 / 1,000 request budget -> token and request caps above",
+    "Eight-bucket reservation ledger, cache receipts and common-budget trim removed; hard caps retained",
+    "Compression suite deferred to a separate registration; this run covers memory only",
+    "Answer prompt: rubric.answer_prompt plus a fixed JSON shape sentence, identical for all arms",
+    "az2: atTimestamp only for at-time queries (candidate-e and az1 passed it for all queries)",
+    "az3: product latest-mode retired-episode filter on a branch commit; runner observation additions"
+  ],
+  "runner": {
+    "file": "reports/quality/candidate-az5-20260915/run-az5.mjs",
+    "sha256": null
+  },
+  "stop_rules": [
+    "One frozen capture and one judge pass. Fixtures are not edited after results.",
+    "If the extraction gate fails, analyse causes before any second run; a second run needs a new run id and owner approval.",
+    "A cap hit reports INCOMPLETE; caps are not raised within this run id."
+  ],
+  "answer_prompt": {
+    "system_exact": "Answer only from the supplied recent conversation and retrieved memory or recap. Preserve project and time distinctions. If the value is unknown, deleted, cancelled or undecided, say so; do not invent it. Return JSON mapping question IDs to concise answers in the question language. Return a JSON object {\"answers\": {\"<question id>\": \"<answer>\"}}.",
+    "system_sha256": "dbf88d97d26ad08a6cf4073ebe9bc2227d8db14235e5c7f7910afbc3f38a5829",
+    "user_template": "QUESTION_ID <id>\\nQUESTION: <text>\\nRETRIEVED MEMORY:\\n<one line per supplied item: '- <content>', or (none)>\\nRECENT CONVERSATION:\\n<role: content lines>",
+    "request": "gpt-5-4-nano, temperature 0, max_completion_tokens 512, response_format json_object",
+    "parse_rule": "answers[<question id>] must be a string; otherwise status parse-failure (execution failure, denominator kept, incorrect)",
+    "item_prefix": "neutral '- ' for all arms (candidate-e used [fact]/[episode], an arm-dependent label; changed on Fable recommendation before freezing). The 1024-token context budget is counted on this text."
+  },
+  "gold_access_note": "verifyDesign hashes every design file including gold bytes but does not parse gold in capture",
+  "known_unsupported_paths": {
+    "at_time_queries": "memory-ko-12, memory-en-12, memory-ja-12 ask at the first event time. Consolidation stamps validFrom with the logical time of consolidation (memory-system-consolidation.ts, validFrom: now), and this run consolidates once at the last event time, so facts are not valid at the first event time. These three rows are reported separately as an unsupported path and are not reinterpreted after results. Candidate follow-up: consolidate per event; not done here to keep 42 physical extractions comparable. These rows stay in the gold answer_correctness denominator and count as they are judged (an unsupported-path miss scores incorrect). In score.atTimeUnsupported only rows with mode at-time are the unsupported path; the other query of each case-12 is an ordinary row and is labelled so.",
+    "simple_vector_reopen": "no-op append-only index"
+  },
+  "embedding_artifacts": {
+    "transformers_version": "3.8.1",
+    "onnx_file": "Xenova/multilingual-e5-base/onnx/model_quantized.onnx",
+    "warmup_measured_from_local_cache": "yes; first dry-run warmup 146 s included ONNX load from disk"
+  },
+  "judge_prompt_unchanged": "judge input construction is byte-identical to az1 for the same capture content; the judge already receives question.mode and query_context.at_timestamp",
+  "product": {
+    "repository": "nextain/naia-memory",
+    "src_must_be_clean": true,
+    "configuration": {
+      "adapter": "LocalAdapter per case and arm, fresh store, real close and reopen at every reopen event",
+      "fact_extractor": "buildLLMFactExtractor(model gpt-5-4-nano, batchSize 10, failurePolicy throw, structuredOutput openai-compatible (strict:false), maxTokensParam max_completion_tokens)",
+      "delete_verifier": "buildLLMDeleteVerifier(model deepseek-v4-flash, batchSize 1, failurePolicy throw) — different model family from extraction as the product comment requires",
+      "contradiction_filter": "HeuristicContradictionFilter",
+      "consolidation_interval_ms": 86400000,
+      "ablation": "naia-no-kg-spreading differs only by LocalAdapter disableKGSpreading=true",
+      "shared_extraction": "the two naia arms consume one physical extraction and deletion response per identical input; errors are shared",
+      "post_consolidation_reopen": "after consolidateNow and flush, close and reopen once before queries so recall also exercises fact persistence (no provider cost)"
+    }
+  },
+  "runs": {
+    "candidate-az5a-20260915": {
+      "product_commit_sha": "ed738dffd5fd383ea51cb4b61214d6308134f71f",
+      "change": "same-episode rule only: consolidation never supersedes a fact that shares a source episode with the extracted fact (duplicate merging unchanged)",
+      "worktree": "detached at ed738df with the committed az5 runner copied in; src must equal product_commit_sha"
+    },
+    "candidate-az5b-20260915": {
+      "product_commit_sha": "6486fd69f6771fd8ab1ee3ccdda11faba8350b6d",
+      "change": "same-episode rule plus category identity: category property IDs (memory-identity-ontology MEMORY_PROPERTY_IDENTITY) replace only when the property label is also the same; attribute IDs replace by ID alone",
+      "worktree": "feat/supersession-precision; src must equal product_commit_sha"
+    }
+  },
+  "relation_to_az3": {
+    "episode_filter": "reverted in both runs (b92ecbd, 81a058a); src of both runs differs from 70dc147 only by the listed rule commits",
+    "extraction": "replayed, not live",
+    "live_calls": "delete verification (candidate sets change), answers, judge",
+    "judge_input": "unchanged construction from az3/az2",
+    "runner_changes_only": [
+      "--run-id selects a registered run",
+      "--replay-extraction answers every extraction request from the sealed az3 responses keyed by case and exact request messages; a miss aborts capture",
+      "episode-filter diagnostics removed; lineage stays in the trace"
+    ]
+  },
+  "replay": {
+    "file": "reports/quality/candidate-az3-20260915/run/capture-raw-provider.jsonl",
+    "sha256": "ef074cb079f8fd322dd47e6a854be79c20d6cf4841014b959dc523250702d542",
+    "recorded_extractions": 42,
+    "preconditions": "replay hits == 42 and physical extraction requests == 0 per run (censusChecks.replayHitsEqualCases, physicalExtractionIsZero); otherwise the run is invalid",
+    "determinism_check": "mock dry-runs of both products with the replayed extraction reproduced the az3 fact states in every case except the predicted rows and the delete-verifier-dependent rows (mock verifier denies)"
+  },
+  "primary_metric": {
+    "name": "wrong retirements (fact state, all categories)",
+    "procedure": "supersession-precision-20260915/analyze.py listing of the naia arm; each superseded or archived fact judged against gold by the same author (Claude) with the same rules as the az2/az3 investigation; no judge model",
+    "az3_baseline": {
+      "retired": 16,
+      "wrong": 6,
+      "wrong_rows": [
+        "ko-01 tea by coffee beans",
+        "ko-02 proof deadline by postcard arrival",
+        "ko-09 jazz by electronic",
+        "ja-06 Thursday cooking archived",
+        "ja-09 workday tea by holiday cocoa",
+        "ja-10 paper map by tried map app"
+      ],
+      "right_outcome_wrong_path": [
+        "ja-06 Tuesday calligraphy superseded by Thursday cooking (same episode)"
+      ]
+    }
+  },
+  "predictions": {
+    "registered_before_az5_results": true,
+    "az5a_vs_az3_fact_state": {
+      "changes": [
+        "ja-06: Tuesday calligraphy is not superseded by Thursday cooking",
+        "ja-10: 'tried map app' is not superseded by 'same as before' (both from episode 2); 'tried map app' stays active"
+      ],
+      "delete_verifier_dependent": "ja-06, ko-06, en-06 archive outcomes depend on the live verifier. Expected: ja-06 archives the calligraphy fact and keeps cooking; ko-06 and en-06 archive as in az3. If ko-06 delete is denied, 'Saturday pottery' is superseded by 'Sunday photo class' (same label), a right outcome on a wrong path",
+      "unchanged": "every other case's retirement list equals az3",
+      "wrong_retirements_expected": "5 (ko-01, ko-02, ko-09, ja-09, ja-10 paper map), plus ja-06 cooking only if the verifier again picks the wrong candidate"
+    },
+    "az5b_vs_az5a_fact_state": {
+      "changes": [
+        "ko-01, ko-02, ja-09: no supersession; both facts stay active"
+      ],
+      "unchanged_same_label": "ko-09 and ja-10 wrong supersessions remain (labels identical); az2-type ko-08 negation error is outside this rule",
+      "correct_replacements_kept": [
+        "ko-03 36->63",
+        "ko-11 수진->민호",
+        "en-11 Priya->Mateo",
+        "ja-11 葵->蓮",
+        "ja-12 3->5",
+        "en-04 north->east (unstructured path)"
+      ],
+      "wrong_retirements_expected": "2 (ko-09, ja-10 paper map), plus ja-06 cooking only if the verifier errs"
+    },
+    "risk_registered": "ja-10: the active 'tried map app' fact may push answers toward the false_or_foreign 'prefers map app' proposition",
+    "answer_level": "direction only, descriptive: ko-01 q1, ko-02 q1, ja-09 q1 expected correct in az5b. Answers and judge are live, so row flips outside the predicted rows are read against simple-vector row flips between az5a and az5b as the noise reference",
+    "observational": "all-category wrong retirement count is published next to the unchanged rubric gates; the rubric is not changed",
+    "interpretation_lock": "Fact-state differences az3->az5a are attributed to the same-episode rule and the reverted filter has no fact-state effect (recall only); az5a->az5b differences to the category identity rule. Answer-level aggregates are not attributed. Known limit of the category rule: a category update restated with a different label (e.g. another language) is not replaced."
+  },
+  "review": "pending Fable fixed-and-executable verdict"
+}

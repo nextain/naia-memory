@@ -1,0 +1,51 @@
+# mock dry-run fact-state diff vs az3 (extraction replayed, delete verifier mocked = always deny)
+## az5a (ed738df)
+12,13c12,13
+<    archived   사용자 계획 활동: 토요일 도예 수업 신청 [ep1 upsert plan:activity|계획 활동|토요일 도예 수업|single|affirmed]
+<      replaced by -
+---
+>    superseded 사용자 계획 활동: 토요일 도예 수업 신청 [ep1 upsert plan:activity|계획 활동|토요일 도예 수업|single|affirmed]
+>      replaced by 사용자 계획 활동: 일요일 사진 수업 유지 [ep2 upsert plan:activity|계획 활동|일요일 사진 수업|single|affirmed]
+23,25d22
+< # memory-en-06 (delete) gold: [('current', 'Only the Wednesday swimming lesson remains active.'), ('deleted', 'The Monday language lesson remains booked.'), ('current', 'No. The Monday language lesson was cancelled.')]
+<    archived   User booked a Monday language lesson. [ep1 upsert plan:activity|plan:activity|Monday language lesson|single|affirmed]
+<      replaced by -
+29,33d25
+< # memory-ja-06 (delete) gold: [('current', '木曜の料理教室だけが有効。'), ('deleted', '火曜の書道教室の予約が有効。'), ('current', 'いいえ。火曜の書道教室は取り消された。')]
+<    superseded User reserved a calligraphy class on Tuesday. [ep1 upsert plan:activity|plan:activity|火曜の書道教室|single|affirmed]
+<      replaced by User reserved a cooking class on Thursday. [ep1 upsert plan:activity|plan:activity|木曜の料理教室|single|affirmed]
+<    archived   User reserved a cooking class on Thursday. [ep1 upsert plan:activity|plan:activity|木曜の料理教室|single|affirmed]
+<      replaced by -
+40,41d31
+<    superseded ユーザーは地図アプリを試した [ep2 upsert preference:travel-destination|旅行計画の好み|地図アプリを試した|single|affirmed]
+<      replaced by ユーザーの旅行計画の好みは以前のまま [ep2 upsert preference:travel-destination|旅行計画の好み|以前のまま|single|affirmed]
+## az5b (6486fd6)
+2,7d1
+< # memory-ko-01 (new) gold: [('current', '회의 음료는 보리차다.')]
+<    superseded 회의할 때 마실 차는 보리차 [ep1 upsert profile:beverage-consumption|차 종류|보리차|single|affirmed]
+<      replaced by 커피 원두는 동료가 주문한 것 [ep2 upsert profile:beverage-consumption|커피 원두 출처|동료가 주문|single|affirmed]
+< # memory-ko-02 (new) gold: [('current', '등대 교정본 마감은 7월 18일이다.')]
+<    superseded 사용자 등대 프로젝트 교정본 마감: 2026-07-18 [ep1 upsert plan:activity|등대 프로젝트 교정본 마감|2026-07-18|single|affirmed]
+<      replaced by 사용자 엽서 견본 도착: 2026-07-12 [ep2 upsert plan:activity|엽서 견본 도착|2026-07-12|single|affirmed]
+12,13c6,7
+<    archived   사용자 계획 활동: 토요일 도예 수업 신청 [ep1 upsert plan:activity|계획 활동|토요일 도예 수업|single|affirmed]
+<      replaced by -
+---
+>    superseded 사용자 계획 활동: 토요일 도예 수업 신청 [ep1 upsert plan:activity|계획 활동|토요일 도예 수업|single|affirmed]
+>      replaced by 사용자 계획 활동: 일요일 사진 수업 유지 [ep2 upsert plan:activity|계획 활동|일요일 사진 수업|single|affirmed]
+23,25d16
+< # memory-en-06 (delete) gold: [('current', 'Only the Wednesday swimming lesson remains active.'), ('deleted', 'The Monday language lesson remains booked.'), ('current', 'No. The Monday language lesson was cancelled.')]
+<    archived   User booked a Monday language lesson. [ep1 upsert plan:activity|plan:activity|Monday language lesson|single|affirmed]
+<      replaced by -
+29,36d19
+< # memory-ja-06 (delete) gold: [('current', '木曜の料理教室だけが有効。'), ('deleted', '火曜の書道教室の予約が有効。'), ('current', 'いいえ。火曜の書道教室は取り消された。')]
+<    superseded User reserved a calligraphy class on Tuesday. [ep1 upsert plan:activity|plan:activity|火曜の書道教室|single|affirmed]
+<      replaced by User reserved a cooking class on Thursday. [ep1 upsert plan:activity|plan:activity|木曜の料理教室|single|affirmed]
+<    archived   User reserved a cooking class on Thursday. [ep1 upsert plan:activity|plan:activity|木曜の料理教室|single|affirmed]
+<      replaced by -
+< # memory-ja-09 (preferences) gold: [('current', '仕事中は無糖の紅茶、休日の朝はココアを好む。')]
+<    superseded 仕事中の飲み物は無糖の紅茶が好きです。 [ep1 upsert profile:beverage-consumption|仕事中の飲み物の嗜好|無糖の紅茶|single|affirmed]
+<      replaced by 休日の朝にはココアが好きです。 [ep2 upsert profile:beverage-consumption|休日の朝の飲み物の嗜好|ココア|single|affirmed]
+40,41d22
+<    superseded ユーザーは地図アプリを試した [ep2 upsert preference:travel-destination|旅行計画の好み|地図アプリを試した|single|affirmed]
+<      replaced by ユーザーの旅行計画の好みは以前のまま [ep2 upsert preference:travel-destination|旅行計画の好み|以前のまま|single|affirmed]
