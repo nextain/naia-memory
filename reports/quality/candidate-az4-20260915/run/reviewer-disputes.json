@@ -1,0 +1,30 @@
+{
+  "run_id": "candidate-az4-20260915",
+  "recorded_at": "2026-09-15",
+  "policy": "score.json is not edited and no row is rejudged. Disputed rows are listed with the reviewer's claimed value; reports show results as judged and a sensitivity view excluding these rows. Human review in stage 3 settles them.",
+  "extraction_gate": {
+    "finding": "replay run: physical extraction calls = 0, so the extraction failure gate does not apply (N/A). score counted 2 'delete-ungrounded' diagnostics (en-05, en-14) as failures and printed PASS at exactly the maximum of 2.",
+    "reported_as": "N/A",
+    "next_runner": "count delete-ungrounded separately and compute the extraction gate as N/A for replay runs; register this before the next freeze"
+  },
+  "rows": [
+    {
+      "rowId": "memory-answer:memory-ko-14:naia:q1",
+      "field": "false_overwrite",
+      "judged": true,
+      "reviewer_claim": false,
+      "reason": "The Sol fact is archived (deletion applied), not overwritten by another value. The answer leaks the deleted value from the original episode, which deletion_leakage already counts. Same judge confusion pattern (deletion read as overwrite) as az1/az2."
+    }
+  ],
+  "sensitivity": {
+    "naia_false_overwrite": {
+      "as_judged": 3,
+      "excluding_disputed": 2,
+      "remaining_rows": [
+        "en-14 (deletion not applied, extraction side)",
+        "ja-10 (real wrong supersession, extraction semantic error)"
+      ]
+    }
+  },
+  "discovered_by": "Fable post-run review; verified by orchestrator against activeState"
+}
