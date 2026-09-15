@@ -1,0 +1,46 @@
+===== az4
+# memory-ko-03 (update) gold: [('current', '답례품은 63세트다.'), ('stale', '답례품은 36세트다.')]
+   superseded 답례품 수량: 36세트 [ep1 upsert plan:activity|답례품 수량|36세트|single|affirmed]
+     replaced by 답례품 수량: 63세트 [ep2 upsert plan:activity|답례품 수량|63세트|single|affirmed]
+# memory-ko-05 (delete) gold: [('deleted_unknown', '창고 출입 암호는 삭제되어 알 수 없다.'), ('deleted', '창고 출입 암호는 달빛상자다.')]
+   archived   사용자 창고 출입 암호: 달빛상자 [ep2 delete preference:tool|창고 출입 암호|달빛상자|single|affirmed]
+     replaced by -
+# memory-ko-06 (delete) gold: [('current', '일요일 사진 수업만 유지된다.'), ('deleted', '토요일 도예 수업 신청이 유지된다.'), ('current', '아니요. 토요일 도예 수업은 취소되었다.')]
+   archived   사용자 계획 활동: 토요일 도예 수업 신청 [ep1 upsert plan:activity|계획 활동|토요일 도예 수업|single|affirmed]
+     replaced by -
+# memory-ko-09 (preferences) gold: [('current', '집에서는 재즈, 달리기할 때는 전자음악을 선호한다.')]
+   superseded 집에서 듣는 음악 장르는 재즈를 선호함 [ep1 upsert preference:music-genre|음악 장르 선호|재즈|single|affirmed]
+     replaced by 달리기할 때는 전자음악을 선호함 [ep2 upsert preference:music-genre|음악 장르 선호|전자음악|single|affirmed]
+# memory-ko-11 (history) gold: [('current', '현재 아카이브 담당자는 민호다.'), ('stale', '현재 아카이브 담당자는 수진이다.'), ('historical', '이전 아카이브 담당자는 수진이었다.')]
+   superseded 사용자 아카이브 담당자: 수진 [ep1 upsert profile:organization|아카이브 담당자|수진|single|affirmed]
+     replaced by 사용자 아카이브 담당자: 민호 [ep2 upsert profile:organization|아카이브 담당자|민호|single|affirmed]
+# memory-ko-14 (project_isolation) gold: [('deleted_unknown', '솔 프로젝트의 배포 채널은 삭제되어 알 수 없다.'), ('deleted', '솔 프로젝트의 배포 채널은 사내 게시판이다.'), ('current', '숲 프로젝트의 배포 채널은 소식지다.')]
+   archived   솔 프로젝트의 배포 채널: 사내 게시판 [ep3 delete preference:communication|배포 채널|사내 게시판|single|affirmed]
+     replaced by -
+# memory-en-04 (update) gold: [('current', 'The prototype should be shipped to the west office.'), ('stale', 'The prototype should be shipped to the north or east office.')]
+   superseded User shipping destination: north office [structure unavailable]
+     replaced by User changed shipping destination to east office [structure unavailable]
+# memory-en-06 (delete) gold: [('current', 'Only the Wednesday swimming lesson remains active.'), ('deleted', 'The Monday language lesson remains booked.'), ('current', 'No. The Monday language lesson was cancelled.')]
+   archived   User booked a Monday language lesson. [ep1 upsert plan:activity|plan:activity|Monday language lesson|single|affirmed]
+     replaced by -
+# memory-en-11 (history) gold: [('current', 'Mateo is the current equipment custodian.'), ('stale', 'Priya is the current equipment custodian.'), ('historical', 'Priya was the former equipment custodian.')]
+   superseded User equipment custodian: Priya [ep1 upsert profile:organization|equipment custodian|Priya|single|affirmed]
+     replaced by User equipment custodian: Mateo [ep2 upsert profile:organization|equipment custodian|Mateo|single|affirmed]
+# memory-ja-05 (delete) gold: [('deleted_unknown', '貸金庫の合言葉は削除されており不明。'), ('deleted', '貸金庫の合言葉は青い風車。')]
+   archived   架空の貸金庫の合言葉: 『青い風車』 [ep2 delete preference:tool|貸金庫の合言葉|『青い風車』|single|affirmed]
+     replaced by -
+# memory-ja-06 (delete) gold: [('current', '木曜の料理教室だけが有効。'), ('deleted', '火曜の書道教室の予約が有効。'), ('current', 'いいえ。火曜の書道教室は取り消された。')]
+   archived   User reserved a calligraphy class on Tuesday. [ep1 upsert plan:activity|plan:activity|火曜の書道教室|single|affirmed]
+     replaced by -
+# memory-ja-10 (preferences) gold: [('current', '旅行計画には紙の地図を好む。'), ('false_or_foreign', '旅行計画には地図アプリを好む。')]
+   superseded ユーザーの旅行計画の好み: 紙の地図で考える [ep1 upsert preference:travel-destination|旅行計画の好み|紙の地図で考える|single|affirmed]
+     replaced by ユーザーは地図アプリを試した [ep2 upsert preference:travel-destination|旅行計画の好み|地図アプリを試した|single|affirmed]
+# memory-ja-11 (history) gold: [('current', '現在の貸出窓口の担当は蓮さん。'), ('stale', '現在の貸出窓口の担当は葵さん。'), ('historical', '以前の貸出窓口の担当は葵さん。')]
+   superseded 貸出窓口の担当は葵さん [ep1 upsert profile:organization|担当|葵さん|single|affirmed]
+     replaced by 貸出窓口の担当は蓮さん [ep2 upsert profile:organization|担当|蓮さん|single|affirmed]
+# memory-ja-12 (history) gold: [('historical', '変更前の利用上限は一人3冊。'), ('current', '現在の利用上限は一人5冊。')]
+   superseded 資料室の利用上限は一人3冊です。 [ep1 upsert plan:activity|資料室の利用上限|3冊|single|affirmed]
+     replaced by 今日から資料室の利用上限は一人5冊までに変更しました。 [ep2 upsert plan:activity|資料室の利用上限|5冊|single|affirmed]
+# memory-ja-14 (project_isolation) gold: [('deleted_unknown', '波企画の配信形式は削除されており不明。'), ('deleted', '波企画の配信形式は音声。'), ('current', '山企画の配信形式は文章。')]
+   archived   波企画の配信形式は音声 [ep3 delete |配信形式|音声|single|affirmed]
+     replaced by -
