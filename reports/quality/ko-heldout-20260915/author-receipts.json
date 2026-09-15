@@ -1,0 +1,209 @@
+{
+ "model": "deepseek-v4-flash",
+ "authoredAt": "2026-09-15T05:33:00.722Z",
+ "receipts": [
+  {
+   "category": "new",
+   "variant": "stable",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 1901,
+    "completion_tokens": 697,
+    "total_tokens": 2598,
+    "audio_prompt_tokens": 0
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"new\",\n      \"variant\": \"stable\",\n      \"turns\": [\"내 생일은 3월 14일이야.\", \"내 여권 갱신일은 6월 초인데 생일이랑은 달라.\"],\n      \"question\": \"내 생일이 언제야?\",\n      \"expected\": \"사용자의 생일은 3월 14일이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"new\",\n      \"variant\": \"stable\",\n      \"turns\": [\"우리 집 반려견 이름은 초코야.\", \"초코는 매일 아침 산책을 좋아해.\"],\n      \"question\": \"반려견 이름이 뭐였지?\",\n      \"expected\": \"사용자의 반려견 이름은 초코이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"new\",\n      \"variant\": \"stable\",\n      \"turns\": [\"내가 좋아하는 영화 장르는 코미디야.\", \"코미디 영화는 주말에 자주 봐.\"],\n      \"question\": \"내가 좋아하는 영화 장르가 뭐야?\",\n      \"expected\": \"사용자가 좋아하는 영화 장르는 코미디이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"new\",\n      \"variant\": \"stable\",\n      \"turns\": [\"이번 주 금요일에 치과 예약했어.\", \"금요일 점심은 치과 끝나고 먹을 거야.\"],\n      \"question\": \"치과 예약이 언제야?\",\n      \"expected\": \"치과 예약은 이번 주 금요일이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"new\",\n      \"variant\": \"stable\",\n      \"turns\": [\"내 차종은 흰색 아반떼야.\", \"아반떼는 연비가 꽤 괜찮더라.\"],\n      \"question\": \"내 차종이 뭐였지?\",\n      \"expected\": \"사용자의 차종은 흰색 아반떼이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"new\",\n      \"variant\": \"stable\",\n      \"turns\": [\"동네 헬스장 1년 회원권이 50만 원이야.\", \"헬스장은 집에서 걸어서 10분 거리야.\"],\n      \"question\": \"헬스장 1년 회원권 가격이 얼마야?\",\n      \"expected\": \"동네 헬스장 1년 회원권은 50만 원이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "new",
+   "variant": "deadline",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 1966,
+    "completion_tokens": 854,
+    "total_tokens": 2820,
+    "audio_prompt_tokens": 0
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"new\",\n      \"variant\": \"deadline\",\n      \"turns\": [\n        \"도서관 책 반납 마감일이 3월 15일이야.\",\n        \"친구랑 만나기로 한 날짜는 3월 20일이고, 반납 마감일과는 다른 날짜야.\"\n      ],\n      \"question\": \"도서관 책 반납 마감일이 언제야?\",\n      \"expected\": \"도서관 책 반납 마감일은 3월 15일이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"new\",\n      \"variant\": \"deadline\",\n      \"turns\": [\n        \"세금 신고 마감일은 5월 31일까지야.\",\n        \"여름 휴가 출발일은 6월 10일이고, 세금 신고 마감일과는 달라.\"\n      ],\n      \"question\": \"세금 신고 마감일이 언제야?\",\n      \"expected\": \"세금 신고 마감일은 5월 31일이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"new\",\n      \"variant\": \"deadline\",\n      \"turns\": [\n        \"제출할 보고서 마감일은 4월 7일까지야.\",\n        \"팀 회의 날짜는 4월 10일이고, 보고서 마감일과는 별개야.\"\n      ],\n      \"question\": \"보고서 마감일이 언제야?\",\n      \"expected\": \"보고서 마감일은 4월 7일이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"new\",\n      \"variant\": \"deadline\",\n      \"turns\": [\n        \"수영장 등록 마감일은 2월 28일이야.\",\n        \"수영장 첫 수업 날짜는 3월 5일이고, 등록 마감일과는 다른 날짜야.\"\n      ],\n      \"question\": \"수영장 등록 마감일이 언제야?\",\n      \"expected\": \"수영장 등록 마감일은 2월 28일이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"new\",\n      \"variant\": \"deadline\",\n      \"turns\": [\n        \"홈페이지 리뉴얼 마감일은 6월 1일이야.\",\n        \"내부 테스트 시작일은 5월 20일이고, 리뉴얼 마감일과는 달라.\"\n      ],\n      \"question\": \"홈페이지 리뉴얼 마감일이 언제야?\",\n      \"expected\": \"홈페이지 리뉴얼 마감일은 6월 1일이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"new\",\n      \"variant\": \"deadline\",\n      \"turns\": [\n        \"자격증 시험 접수 마감일은 7월 15일까지야.\",\n        \"시험 날짜는 8월 10일이고, 접수 마감일과는 다른 날짜야.\"\n      ],\n      \"question\": \"자격증 시험 접수 마감일이 언제야?\",\n      \"expected\": \"자격증 시험 접수 마감일은 7월 15일이다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "update",
+   "variant": "correction",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2047,
+    "completion_tokens": 820,
+    "total_tokens": 2867,
+    "audio_prompt_tokens": 0
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"update\",\n      \"variant\": \"correction\",\n      \"turns\": [\n        \"내 동생 이름이 지후야.\",\n        \"아니야, 잘못 말했어. 동생 이름은 지민이야.\"\n      ],\n      \"question\": \"내 동생 이름이 뭐였지?\",\n      \"expected\": \"동생 이름은 지민이다.\",\n      \"obsolete\": \"동생 이름은 지후이다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"update\",\n      \"variant\": \"correction\",\n      \"turns\": [\n        \"우리 집 우편번호는 04567이야.\",\n        \"잘못 말했어, 우편번호는 04568이 맞아.\"\n      ],\n      \"question\": \"우리 집 우편번호가 뭐였지?\",\n      \"expected\": \"우편번호는 04568이다.\",\n      \"obsolete\": \"우편번호는 04567이다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"update\",\n      \"variant\": \"correction\",\n      \"turns\": [\n        \"새로 산 식탁 가격이 25만 원이야.\",\n        \"아니, 잘못 말했어. 35만 원이 맞아.\"\n      ],\n      \"question\": \"새로 산 식탁 가격이 얼마였지?\",\n      \"expected\": \"식탁 가격은 35만 원이다.\",\n      \"obsolete\": \"식탁 가격은 25만 원이다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"update\",\n      \"variant\": \"correction\",\n      \"turns\": [\n        \"다음 주 월요일 약속은 오후 2시야.\",\n        \"잘못 말했어, 오후 3시로 잡았어.\"\n      ],\n      \"question\": \"다음 주 월요일 약속이 몇 시였지?\",\n      \"expected\": \"다음 주 월요일 약속은 오후 3시이다.\",\n      \"obsolete\": \"다음 주 월요일 약속은 오후 2시이다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"update\",\n      \"variant\": \"correction\",\n      \"turns\": [\n        \"내가 가장 좋아하는 색깔은 파란색이야.\",\n        \"아니, 잘못 말했어. 초록색이 제일 좋아.\"\n      ],\n      \"question\": \"내가 가장 좋아하는 색깔이 뭐였지?\",\n      \"expected\": \"가장 좋아하는 색깔은 초록색이다.\",\n      \"obsolete\": \"가장 좋아하는 색깔은 파란색이다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"update\",\n      \"variant\": \"correction\",\n      \"turns\": [\n        \"언니 결혼식 날짜가 10월 15일이야.\",\n        \"잘못 말했어, 10월 22일이 맞아.\"\n      ],\n      \"question\": \"언니 결혼식 날짜가 언제였지?\",\n      \"expected\": \"언니 결혼식 날짜는 10월 22일이다.\",\n      \"obsolete\": \"언니 결혼식 날짜는 10월 15일이다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "update",
+   "variant": "chain",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2124,
+    "completion_tokens": 1051,
+    "total_tokens": 3175,
+    "audio_prompt_tokens": 0,
+    "prompt_tokens_details": {
+     "cached_tokens": 1536
+    }
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"update\",\n      \"variant\": \"chain\",\n      \"turns\": [\n        \"내가 신청한 요가 강좌는 오전 10시 수업이야.\",\n        \"아니야, 오후 2시로 변경했어.\",\n        \"앞서 말한 오전 10시와 오후 2시는 취소, 최종적으로 오후 4시로 바꿨어.\"\n      ],\n      \"question\": \"내 요가 강좌는 몇 시 수업이야?\",\n      \"expected\": \"요가 강좌는 오후 4시 수업이다.\",\n      \"obsolete\": \"요가 강좌는 오전 10시 수업이다 또는 요가 강좌는 오후 2시 수업이다\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"update\",\n      \"variant\": \"chain\",\n      \"turns\": [\n        \"내가 예약한 호텔 방은 301호야.\",\n        \"아니, 502호로 바꿨어.\",\n        \"앞서 말한 301호와 502호는 취소, 최종적으로 708호로 다시 변경했어.\"\n      ],\n      \"question\": \"내 호텔 방은 몇 호야?\",\n      \"expected\": \"호텔 방은 708호이다.\",\n      \"obsolete\": \"호텔 방은 301호이다 또는 호텔 방은 502호이다\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"update\",\n      \"variant\": \"chain\",\n      \"turns\": [\n        \"내가 주문한 커피는 카페라테야.\",\n        \"아니, 아메리카노로 바꿨어.\",\n        \"앞서 말한 카페라테와 아메리카노는 취소, 최종적으로 바닐라 라테로 다시 주문했어.\"\n      ],\n      \"question\": \"내가 주문한 커피는 뭐야?\",\n      \"expected\": \"주문한 커피는 바닐라 라테이다.\",\n      \"obsolete\": \"주문한 커피는 카페라테이다 또는 주문한 커피는 아메리카노이다\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"update\",\n      \"variant\": \"chain\",\n      \"turns\": [\n        \"내가 신청한 피아노 학원은 월요일이야.\",\n        \"아니, 수요일로 변경했어.\",\n        \"앞서 말한 월요일과 수요일은 취소, 최종적으로 금요일로 다시 바꿨어.\"\n      ],\n      \"question\": \"내 피아노 학원은 무슨 요일이야?\",\n      \"expected\": \"피아노 학원은 금요일이다.\",\n      \"obsolete\": \"피아노 학원은 월요일이다 또는 피아노 학원은 수요일이다\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"update\",\n      \"variant\": \"chain\",\n      \"turns\": [\n        \"내가 등록한 도서관 회원 등급은 실버야.\",\n        \"아니, 골드로 올렸어.\",\n        \"앞서 말한 실버와 골드는 취소, 최종적으로 VIP로 다시 변경했어.\"\n      ],\n      \"question\": \"내 도서관 회원 등급은 뭐야?\",\n      \"expected\": \"도서관 회원 등급은 VIP이다.\",\n      \"obsolete\": \"도서관 회원 등급은 실버이다 또는 도서관 회원 등급은 골드이다\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"update\",\n      \"variant\": \"chain\",\n      \"turns\": [\n        \"내가 예약한 미용실 시간은 오전 11시야.\",\n        \"아니, 오후 1시로 변경했어.\",\n        \"앞서 말한 오전 11시와 오후 1시는 취소, 최종적으로 오후 3시로 다시 바꿨어.\"\n      ],\n      \"question\": \"내 미용실 예약 시간은 몇 시야?\",\n      \"expected\": \"미용실 예약 시간은 오후 3시이다.\",\n      \"obsolete\": \"미용실 예약 시간은 오전 11시이다 또는 미용실 예약 시간은 오후 1시이다\",\n      \"second\": null,\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "delete",
+   "variant": "forget",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2201,
+    "completion_tokens": 995,
+    "total_tokens": 3196,
+    "audio_prompt_tokens": 0
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"delete\",\n      \"variant\": \"forget\",\n      \"turns\": [\n        \"내 테스트용 가상 비밀번호는 '호박고구마123'이야. 기억해 줘.\",\n        \"아까 말한 비밀번호는 기억에서 지워 줘. 다시 말하지 마.\"\n      ],\n      \"question\": \"내 테스트용 가상 비밀번호를 기억해?\",\n      \"expected\": \"테스트용 가상 비밀번호는 삭제되어 알 수 없다.\",\n      \"obsolete\": \"테스트용 가상 비밀번호는 '호박고구마123'이다.\",\n      \"second\": null,\n      \"forbidden_value\": \"호박고구마123\"\n    },\n    {\n      \"category\": \"delete\",\n      \"variant\": \"forget\",\n      \"turns\": [\n        \"내 가상 계좌 비밀번호는 '7283'이야. 테스트용이니까 기억해 둬.\",\n        \"그 가상 계좌 비밀번호는 잊어버려. 다시 언급하지 마.\"\n      ],\n      \"question\": \"내 가상 계좌 비밀번호가 뭐였지?\",\n      \"expected\": \"가상 계좌 비밀번호는 삭제되어 알 수 없다.\",\n      \"obsolete\": \"가상 계좌 비밀번호는 '7283'이다.\",\n      \"second\": null,\n      \"forbidden_value\": \"7283\"\n    },\n    {\n      \"category\": \"delete\",\n      \"variant\": \"forget\",\n      \"turns\": [\n        \"테스트용 가상 와이파이 비밀번호는 '열쇠고리2024'야. 기억해 줘.\",\n        \"그 가상 와이파이 비밀번호는 지워 줘. 절대 말하지 마.\"\n      ],\n      \"question\": \"내 가상 와이파이 비밀번호 기억나?\",\n      \"expected\": \"가상 와이파이 비밀번호는 삭제되어 알 수 없다.\",\n      \"obsolete\": \"가상 와이파이 비밀번호는 '열쇠고리2024'이다.\",\n      \"second\": null,\n      \"forbidden_value\": \"열쇠고리2024\"\n    },\n    {\n      \"category\": \"delete\",\n      \"variant\": \"forget\",\n      \"turns\": [\n        \"내 테스트용 가상 핀번호는 '5842'야. 기억해 둬.\",\n        \"아까 말한 가상 핀번호는 삭제해 줘. 다시 꺼내지 마.\"\n      ],\n      \"question\": \"내 가상 핀번호가 뭐였지?\",\n      \"expected\": \"가상 핀번호는 삭제되어 알 수 없다.\",\n      \"obsolete\": \"가상 핀번호는 '5842'이다.\",\n      \"second\": null,\n      \"forbidden_value\": \"5842\"\n    },\n    {\n      \"category\": \"delete\",\n      \"variant\": \"forget\",\n      \"turns\": [\n        \"테스트용 가상 금고 비밀번호는 '별빛사탕'이야. 기억해 줘.\",\n        \"그 가상 금고 비밀번호는 지워 버려. 다시 말하지 마.\"\n      ],\n      \"question\": \"내 가상 금고 비밀번호 기억해?\",\n      \"expected\": \"가상 금고 비밀번호는 삭제되어 알 수 없다.\",\n      \"obsolete\": \"가상 금고 비밀번호는 '별빛사탕'이다.\",\n      \"second\": null,\n      \"forbidden_value\": \"별빛사탕\"\n    },\n    {\n      \"category\": \"delete\",\n      \"variant\": \"forget\",\n      \"turns\": [\n        \"내 테스트용 가상 로그인 비밀번호는 '달빛공원77'이야. 기억해 줘.\",\n        \"그 가상 로그인 비밀번호는 잊어줘. 다시 언급하지 마.\"\n      ],\n      \"question\": \"내 가상 로그인 비밀번호가 뭐였지?\",\n      \"expected\": \"가상 로그인 비밀번호는 삭제되어 알 수 없다.\",\n      \"obsolete\": \"가상 로그인 비밀번호는 '달빛공원77'이다.\",\n      \"second\": null,\n      \"forbidden_value\": \"달빛공원77\"\n    }\n  ]\n}"
+  },
+  {
+   "category": "delete",
+   "variant": "cancel_one",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2283,
+    "completion_tokens": 1033,
+    "total_tokens": 3316,
+    "audio_prompt_tokens": 0,
+    "prompt_tokens_details": {
+     "cached_tokens": 1536
+    }
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"delete\",\n      \"variant\": \"cancel_one\",\n      \"turns\": [\n        \"영화 '더 문'과 '더 씨' 두 편 예약했어.\",\n        \"'더 문'은 취소하고 '더 씨'만 남겨 줘.\"\n      ],\n      \"question\": \"내가 예약한 영화는 뭐야?\",\n      \"expected\": \"예약한 영화는 '더 씨'입니다.\",\n      \"obsolete\": \"예약한 영화는 '더 문'과 '더 씨'입니다.\",\n      \"second\": [\"'더 문'이 아직 예약되어 있어?\", \"아니요, '더 문'은 취소되었습니다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"delete\",\n      \"variant\": \"cancel_one\",\n      \"turns\": [\n        \"주말 캠핑장 A구역과 B구역 두 군데 신청했어.\",\n        \"A구역은 취소하고 B구역만 유지해 줘.\"\n      ],\n      \"question\": \"내가 신청한 캠핑장은 어디야?\",\n      \"expected\": \"신청한 캠핑장은 B구역입니다.\",\n      \"obsolete\": \"신청한 캠핑장은 A구역과 B구역입니다.\",\n      \"second\": [\"A구역이 아직 신청되어 있어?\", \"아니요, A구역은 취소되었습니다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"delete\",\n      \"variant\": \"cancel_one\",\n      \"turns\": [\n        \"다음 달에 요가 클래스와 필라테스 클래스 두 개 등록했어.\",\n        \"요가 클래스는 취소하고 필라테스만 남겨 줘.\"\n      ],\n      \"question\": \"내가 등록한 클래스는 뭐야?\",\n      \"expected\": \"등록한 클래스는 필라테스입니다.\",\n      \"obsolete\": \"등록한 클래스는 요가와 필라테스입니다.\",\n      \"second\": [\"요가 클래스가 아직 등록되어 있어?\", \"아니요, 요가 클래스는 취소되었습니다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"delete\",\n      \"variant\": \"cancel_one\",\n      \"turns\": [\n        \"내일 오전 10시와 오후 2시에 미팅 두 개 잡았어.\",\n        \"오전 10시 미팅은 취소하고 오후 2시 미팅만 남겨 둬.\"\n      ],\n      \"question\": \"내일 내 미팅은 몇 시야?\",\n      \"expected\": \"내일 미팅은 오후 2시입니다.\",\n      \"obsolete\": \"내일 미팅은 오전 10시와 오후 2시입니다.\",\n      \"second\": [\"오전 10시 미팅이 아직 있어?\", \"아니요, 오전 10시 미팅은 취소되었습니다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"delete\",\n      \"variant\": \"cancel_one\",\n      \"turns\": [\n        \"이번 주에 치과와 안과 예약 두 개 했어.\",\n        \"치과 예약은 취소하고 안과만 남겨 줘.\"\n      ],\n      \"question\": \"이번 주 내 병원 예약은 어디야?\",\n      \"expected\": \"이번 주 병원 예약은 안과입니다.\",\n      \"obsolete\": \"이번 주 병원 예약은 치과와 안과입니다.\",\n      \"second\": [\"치과 예약이 아직 남아 있어?\", \"아니요, 치과 예약은 취소되었습니다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"delete\",\n      \"variant\": \"cancel_one\",\n      \"turns\": [\n        \"다음 주 수요일과 금요일에 헬스 PT 두 번 예약했어.\",\n        \"수요일 PT는 취소하고 금요일만 남겨 줘.\"\n      ],\n      \"question\": \"다음 주 내 헬스 PT는 언제야?\",\n      \"expected\": \"다음 주 헬스 PT는 금요일입니다.\",\n      \"obsolete\": \"다음 주 헬스 PT는 수요일과 금요일입니다.\",\n      \"second\": [\"수요일 PT가 아직 예약되어 있어?\", \"아니요, 수요일 PT는 취소되었습니다.\"],\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "contradiction",
+   "variant": "quotation",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2359,
+    "completion_tokens": 868,
+    "total_tokens": 3227,
+    "audio_prompt_tokens": 0
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"quotation\",\n      \"turns\": [\n        \"나는 매운 음식을 정말 좋아해.\",\n        \"친구가 '너 요즘 매운 거 못 먹지?' 하던데, 근데 내 취향은 안 바뀌었어.\"\n      ],\n      \"question\": \"내가 매운 음식을 좋아해?\",\n      \"expected\": \"네, 저는 매운 음식을 좋아합니다.\",\n      \"obsolete\": \"저는 매운 음식을 못 먹습니다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"quotation\",\n      \"turns\": [\n        \"나는 아침형 인간이야.\",\n        \"엄마가 '너 새벽까지 안 자더라'고 하시던데, 내 생활 패턴은 그대로야.\"\n      ],\n      \"question\": \"내가 아침형 인간이 맞아?\",\n      \"expected\": \"네, 당신은 아침형 인간입니다.\",\n      \"obsolete\": \"당신은 새벽까지 깨어 있습니다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"quotation\",\n      \"turns\": [\n        \"나는 소설보다 에세이를 더 좋아해.\",\n        \"동생이 '너 요즘 소설만 읽더라'고 했는데, 내 취향은 변한 게 없어.\"\n      ],\n      \"question\": \"내가 에세이를 더 좋아해?\",\n      \"expected\": \"네, 당신은 에세이를 더 좋아합니다.\",\n      \"obsolete\": \"당신은 소설을 더 좋아합니다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"quotation\",\n      \"turns\": [\n        \"나는 주말마다 등산을 가.\",\n        \"옆집 아주머니가 '요즘 산에 안 가는 것 같다'고 하시던데, 내 루틴은 같아.\"\n      ],\n      \"question\": \"내가 주말마다 등산을 가?\",\n      \"expected\": \"네, 당신은 주말마다 등산을 갑니다.\",\n      \"obsolete\": \"당신은 요즘 등산을 가지 않습니다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"quotation\",\n      \"turns\": [\n        \"나는 고양이를 키워.\",\n        \"남편이 '너 개 키우지 않냐'고 묻더라, 하지만 내 애완동물은 안 바뀌었어.\"\n      ],\n      \"question\": \"내가 키우는 애완동물은 고양이야?\",\n      \"expected\": \"네, 당신은 고양이를 키웁니다.\",\n      \"obsolete\": \"당신은 개를 키웁니다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"quotation\",\n      \"turns\": [\n        \"나는 여름보다 겨울을 더 좋아해.\",\n        \"회사 동료가 '넌 더위를 엄청 타더라'고 말하던데, 내 선호는 달라진 게 없어.\"\n      ],\n      \"question\": \"내가 겨울을 더 좋아해?\",\n      \"expected\": \"네, 당신은 겨울을 더 좋아합니다.\",\n      \"obsolete\": \"당신은 여름을 더 좋아합니다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "contradiction",
+   "variant": "hypothetical",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2429,
+    "completion_tokens": 910,
+    "total_tokens": 3339,
+    "audio_prompt_tokens": 0
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"hypothetical\",\n      \"turns\": [\n        \"나는 지금 회사에서 재택 근무 중이야.\",\n        \"만약 출근하라고 하면 사무실로 갈 수도 있겠지. 아직 그런 얘기는 없어.\"\n      ],\n      \"question\": \"지금 나는 어디서 근무 중이야?\",\n      \"expected\": \"나는 회사에서 재택 근무 중이다.\",\n      \"obsolete\": \"나는 사무실로 출근했다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"hypothetical\",\n      \"turns\": [\n        \"우리 동네 카페는 아직 영업 중이야.\",\n        \"만약 주인이 바뀌면 문을 닫을 수도 있겠지. 아직 안 바뀌었어.\"\n      ],\n      \"question\": \"우리 동네 카페는 지금 영업 중이야?\",\n      \"expected\": \"우리 동네 카페는 아직 영업 중이다.\",\n      \"obsolete\": \"우리 동네 카페는 문을 닫았다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"hypothetical\",\n      \"turns\": [\n        \"내 여행 가방은 지금 집에 있어.\",\n        \"만약 비행기를 타면 공항에 맡길 수도 있겠지. 아직 안 떠났어.\"\n      ],\n      \"question\": \"내 여행 가방은 지금 어디 있어?\",\n      \"expected\": \"내 여행 가방은 지금 집에 있다.\",\n      \"obsolete\": \"내 여행 가방은 공항에 있다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"hypothetical\",\n      \"turns\": [\n        \"우리 아들은 현재 초등학교 3학년이야.\",\n        \"만약 조기 진급하면 4학년으로 갈 수도 있겠지. 아직 그런 일은 없어.\"\n      ],\n      \"question\": \"우리 아들은 현재 몇 학년이야?\",\n      \"expected\": \"우리 아들은 현재 초등학교 3학년이다.\",\n      \"obsolete\": \"우리 아들은 초등학교 4학년이다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"hypothetical\",\n      \"turns\": [\n        \"내 핸드폰 요금제는 월 5만 원짜리야.\",\n        \"만약 데이터를 더 쓰면 7만 원으로 바꿀 수도 있겠지. 아직 안 바꿨어.\"\n      ],\n      \"question\": \"내 핸드폰 요금제는 얼마야?\",\n      \"expected\": \"내 핸드폰 요금제는 월 5만 원이다.\",\n      \"obsolete\": \"내 핸드폰 요금제는 월 7만 원이다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"contradiction\",\n      \"variant\": \"hypothetical\",\n      \"turns\": [\n        \"우리 가족은 올여름 제주도로 여행 가기로 했어.\",\n        \"만약 태풍이 오면 취소할 수도 있겠지. 아직 예보는 없어.\"\n      ],\n      \"question\": \"우리 가족은 올여름 어디로 여행 가기로 했어?\",\n      \"expected\": \"우리 가족은 올여름 제주도로 여행 가기로 했다.\",\n      \"obsolete\": \"우리 가족의 올여름 여행은 취소되었다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "preferences",
+   "variant": "coexist",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2508,
+    "completion_tokens": 944,
+    "total_tokens": 3452,
+    "audio_prompt_tokens": 0,
+    "prompt_tokens_details": {
+     "cached_tokens": 1536
+    }
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"coexist\",\n      \"turns\": [\n        \"휴일에는 카페에서 책 읽는 걸 좋아해.\",\n        \"평일 저녁에는 집에서 넷플릭스 보는 게 좋아. 휴일 취미랑은 별개야.\"\n      ],\n      \"question\": \"휴일에는 뭐 하는 걸 좋아하고, 평일 저녁에는 뭐 하는 걸 좋아해?\",\n      \"expected\": \"휴일에는 카페에서 책 읽는 것을 좋아하고, 평일 저녁에는 집에서 넷플릭스 보는 것을 좋아한다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"coexist\",\n      \"turns\": [\n        \"점심으로는 김치찌개를 주로 먹어.\",\n        \"아침에는 간단히 토스트만 먹어. 점심이랑은 상관없어.\"\n      ],\n      \"question\": \"점심으로는 뭘 주로 먹고, 아침에는 뭘 먹어?\",\n      \"expected\": \"점심으로는 김치찌개를 주로 먹고, 아침에는 간단히 토스트를 먹는다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"coexist\",\n      \"turns\": [\n        \"운동할 때는 달리기를 선호해.\",\n        \"스트레칭할 때는 요가 동작이 좋아. 달리기랑은 다른 취향이야.\"\n      ],\n      \"question\": \"운동할 때는 뭘 선호하고, 스트레칭할 때는 뭘 좋아해?\",\n      \"expected\": \"운동할 때는 달리기를 선호하고, 스트레칭할 때는 요가 동작을 좋아한다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"coexist\",\n      \"turns\": [\n        \"주말 아침에는 늦잠 자는 게 좋아.\",\n        \"주말 오후에는 공원 산책이 좋아. 아침과는 별개로.\"\n      ],\n      \"question\": \"주말 아침에는 뭐 하는 게 좋고, 주말 오후에는 뭐가 좋아?\",\n      \"expected\": \"주말 아침에는 늦잠 자는 것이 좋고, 주말 오후에는 공원 산책이 좋다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"coexist\",\n      \"turns\": [\n        \"더울 때는 아이스커피가 최고야.\",\n        \"추울 때는 따뜻한 코코아가 좋아. 더울 때 취향이랑 달라.\"\n      ],\n      \"question\": \"더울 때는 뭐가 최고고, 추울 때는 뭐가 좋아?\",\n      \"expected\": \"더울 때는 아이스커피가 최고이고, 추울 때는 따뜻한 코코아가 좋다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"coexist\",\n      \"turns\": [\n        \"출근할 때는 지하철을 타는 게 편해.\",\n        \"퇴근할 때는 버스가 좋아. 출근 때랑은 다르게.\"\n      ],\n      \"question\": \"출근할 때는 뭘 타는 게 편하고, 퇴근할 때는 뭐가 좋아?\",\n      \"expected\": \"출근할 때는 지하철을 타는 것이 편하고, 퇴근할 때는 버스가 좋다.\",\n      \"obsolete\": \"\",\n      \"second\": null,\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "preferences",
+   "variant": "unchanged",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2646,
+    "completion_tokens": 859,
+    "total_tokens": 3505,
+    "audio_prompt_tokens": 0,
+    "prompt_tokens_details": {
+     "cached_tokens": 1536
+    }
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"unchanged\",\n      \"turns\": [\n        \"나는 커피보다 차를 더 좋아해.\",\n        \"새로 커피머신을 샀는데, 그래도 내 선호는 그대로야.\"\n      ],\n      \"question\": \"내가 좋아하는 음료는 뭐야?\",\n      \"expected\": \"나는 차를 더 좋아한다.\",\n      \"obsolete\": \"새 커피머신을 샀으므로 커피를 좋아한다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"unchanged\",\n      \"turns\": [\n        \"나는 소설보다 에세이를 더 좋아해.\",\n        \"최근에 재미있는 소설을 한 권 샀지만, 내 취향은 그대로야.\"\n      ],\n      \"question\": \"내가 더 좋아하는 책 장르는?\",\n      \"expected\": \"나는 에세이를 더 좋아한다.\",\n      \"obsolete\": \"소설을 샀으므로 소설을 더 좋아한다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"unchanged\",\n      \"turns\": [\n        \"나는 주말에 집에서 쉬는 걸 더 좋아해.\",\n        \"친구가 놀러 가자고 했지만, 내 생각은 그대로야.\"\n      ],\n      \"question\": \"주말에 나는 뭘 더 좋아해?\",\n      \"expected\": \"나는 주말에 집에서 쉬는 것을 더 좋아한다.\",\n      \"obsolete\": \"친구와 놀러 가는 것을 더 좋아한다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"unchanged\",\n      \"turns\": [\n        \"나는 여행 갈 때 호텔보다 게스트하우스가 더 좋아.\",\n        \"이번에 호텔을 예약했지만, 내 취향은 바뀌지 않았어.\"\n      ],\n      \"question\": \"여행 갈 때 나는 어디 묵는 걸 더 좋아해?\",\n      \"expected\": \"나는 여행 갈 때 게스트하우스를 더 좋아한다.\",\n      \"obsolete\": \"호텔을 예약했으므로 호텔을 더 좋아한다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"unchanged\",\n      \"turns\": [\n        \"나는 운동할 때 달리기보다 수영이 더 좋아.\",\n        \"새 운동화를 샀지만, 내 선호는 여전히 수영이야.\"\n      ],\n      \"question\": \"내가 더 좋아하는 운동은?\",\n      \"expected\": \"나는 수영을 더 좋아한다.\",\n      \"obsolete\": \"새 운동화를 샀으므로 달리기를 더 좋아한다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"preferences\",\n      \"variant\": \"unchanged\",\n      \"turns\": [\n        \"나는 아침에는 빵보다 밥이 더 좋아.\",\n        \"동네에 맛있는 빵집이 생겼지만, 내 아침 취향은 그대로야.\"\n      ],\n      \"question\": \"아침에 나는 뭘 더 좋아해?\",\n      \"expected\": \"나는 아침에 밥을 더 좋아한다.\",\n      \"obsolete\": \"맛있는 빵집이 생겼으므로 빵을 더 좋아한다.\",\n      \"second\": null,\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "history",
+   "variant": "former",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2720,
+    "completion_tokens": 1151,
+    "total_tokens": 3871,
+    "audio_prompt_tokens": 0
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"history\",\n      \"variant\": \"former\",\n      \"turns\": [\n        \"우리 동네 반찬가게 사장님이 누구였지?\",\n        \"아, 알겠어. 이제 사장님이 김수미 씨로 바뀌었어.\"\n      ],\n      \"question\": \"지금 우리 동네 반찬가게 사장님은 누구야?\",\n      \"expected\": \"지금 반찬가게 사장님은 김수미 씨이다.\",\n      \"obsolete\": \"반찬가게 사장님이 이전 사장님이라는 명제\",\n      \"second\": [\n        \"이전 반찬가게 사장님은 누구였어?\",\n        \"이전 반찬가게 사장님은 박철수 씨였다.\"\n      ],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"history\",\n      \"variant\": \"former\",\n      \"turns\": [\n        \"내가 다니는 요가 학원 원장님은 이지영 선생님이야.\",\n        \"이제 원장님이 최민호 선생님으로 바뀌었어.\"\n      ],\n      \"question\": \"지금 요가 학원 원장님은 누구야?\",\n      \"expected\": \"지금 요가 학원 원장님은 최민호 선생님이다.\",\n      \"obsolete\": \"요가 학원 원장님이 이지영 선생님이라는 명제\",\n      \"second\": [\n        \"이전 요가 학원 원장님은 누구였어?\",\n        \"이전 요가 학원 원장님은 이지영 선생님이었다.\"\n      ],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"history\",\n      \"variant\": \"former\",\n      \"turns\": [\n        \"내가 쓰는 세탁기 모델이 엘지 트롬이야.\",\n        \"세탁기를 바꿨어. 이제 모델은 삼성 비스포크야.\"\n      ],\n      \"question\": \"지금 내 세탁기 모델은 뭐야?\",\n      \"expected\": \"지금 세탁기 모델은 삼성 비스포크이다.\",\n      \"obsolete\": \"세탁기 모델이 엘지 트롬이라는 명제\",\n      \"second\": [\n        \"이전 세탁기 모델은 뭐였어?\",\n        \"이전 세탁기 모델은 엘지 트롬이었다.\"\n      ],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"history\",\n      \"variant\": \"former\",\n      \"turns\": [\n        \"내가 구독하는 넷플릭스 요금제는 스탠다드야.\",\n        \"오늘부터 요금제를 프리미엄으로 변경했어.\"\n      ],\n      \"question\": \"지금 내 넷플릭스 요금제는 뭐야?\",\n      \"expected\": \"지금 넷플릭스 요금제는 프리미엄이다.\",\n      \"obsolete\": \"넷플릭스 요금제가 스탠다드라는 명제\",\n      \"second\": [\n        \"이전 넷플릭스 요금제는 뭐였어?\",\n        \"이전 넷플릭스 요금제는 스탠다드였다.\"\n      ],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"history\",\n      \"variant\": \"former\",\n      \"turns\": [\n        \"내가 일하는 회사 대표가 김영호 씨야.\",\n        \"어제부터 대표가 박지은 씨로 바뀌었어.\"\n      ],\n      \"question\": \"지금 회사 대표는 누구야?\",\n      \"expected\": \"지금 회사 대표는 박지은 씨이다.\",\n      \"obsolete\": \"회사 대표가 김영호 씨라는 명제\",\n      \"second\": [\n        \"이전 회사 대표는 누구였어?\",\n        \"이전 회사 대표는 김영호 씨였다.\"\n      ],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"history\",\n      \"variant\": \"former\",\n      \"turns\": [\n        \"내가 쓰는 핸드폰 통신사는 케이티야.\",\n        \"이번 달부터 통신사를 엘지 유플러스로 바꿨어.\"\n      ],\n      \"question\": \"지금 내 핸드폰 통신사는 뭐야?\",\n      \"expected\": \"지금 핸드폰 통신사는 엘지 유플러스이다.\",\n      \"obsolete\": \"핸드폰 통신사가 케이티라는 명제\",\n      \"second\": [\n        \"이전 핸드폰 통신사는 뭐였어?\",\n        \"이전 핸드폰 통신사는 케이티였다.\"\n      ],\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "history",
+   "variant": "at_time",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2810,
+    "completion_tokens": 940,
+    "total_tokens": 3750,
+    "audio_prompt_tokens": 0,
+    "prompt_tokens_details": {
+     "cached_tokens": 1536
+    }
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"history\",\n      \"variant\": \"at_time\",\n      \"turns\": [\n        \"내 동아리 회장은 지수야.\",\n        \"오늘부터 동아리 회장이 민수로 바뀌었어.\"\n      ],\n      \"question\": \"변경 전에 동아리 회장은 누구였어?\",\n      \"expected\": \"변경 전 동아리 회장은 지수였다.\",\n      \"obsolete\": \"\",\n      \"second\": [\"지금 동아리 회장은 누구야?\", \"지금 동아리 회장은 민수다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"history\",\n      \"variant\": \"at_time\",\n      \"turns\": [\n        \"우리 집 인터넷 요금은 월 3만 5천 원이야.\",\n        \"오늘부터 인터넷 요금이 월 4만 원으로 인상됐어.\"\n      ],\n      \"question\": \"변경 전 인터넷 요금은 얼마였어?\",\n      \"expected\": \"변경 전 인터넷 요금은 월 3만 5천 원이었다.\",\n      \"obsolete\": \"\",\n      \"second\": [\"지금 인터넷 요금은 얼마야?\", \"지금 인터넷 요금은 월 4만 원이다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"history\",\n      \"variant\": \"at_time\",\n      \"turns\": [\n        \"내가 다니는 헬스장 이름은 피트니스존이야.\",\n        \"오늘부터 헬스장 이름이 파워짐으로 바뀌었어.\"\n      ],\n      \"question\": \"변경 전 헬스장 이름은 뭐였어?\",\n      \"expected\": \"변경 전 헬스장 이름은 피트니스존이었다.\",\n      \"obsolete\": \"\",\n      \"second\": [\"지금 헬스장 이름은 뭐야?\", \"지금 헬스장 이름은 파워짐이다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"history\",\n      \"variant\": \"at_time\",\n      \"turns\": [\n        \"내 차량 번호판은 12가 3456이야.\",\n        \"오늘부터 차량 번호판이 78나 9012로 변경됐어.\"\n      ],\n      \"question\": \"변경 전 차량 번호판은 뭐였어?\",\n      \"expected\": \"변경 전 차량 번호판은 12가 3456이었다.\",\n      \"obsolete\": \"\",\n      \"second\": [\"지금 차량 번호판은 뭐야?\", \"지금 차량 번호판은 78나 9012다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"history\",\n      \"variant\": \"at_time\",\n      \"turns\": [\n        \"내 사무실 자리는 3층 A구역이야.\",\n        \"오늘부터 사무실 자리가 2층 B구역으로 옮겨졌어.\"\n      ],\n      \"question\": \"변경 전 사무실 자리는 어디였어?\",\n      \"expected\": \"변경 전 사무실 자리는 3층 A구역이었다.\",\n      \"obsolete\": \"\",\n      \"second\": [\"지금 사무실 자리는 어디야?\", \"지금 사무실 자리는 2층 B구역이다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"history\",\n      \"variant\": \"at_time\",\n      \"turns\": [\n        \"내가 쓰는 편집 프로그램은 포토샵이야.\",\n        \"오늘부터 편집 프로그램이 라이트룸으로 바뀌었어.\"\n      ],\n      \"question\": \"변경 전 편집 프로그램은 뭐였어?\",\n      \"expected\": \"변경 전 편집 프로그램은 포토샵이었다.\",\n      \"obsolete\": \"\",\n      \"second\": [\"지금 편집 프로그램은 뭐야?\", \"지금 편집 프로그램은 라이트룸이다.\"],\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "project_isolation",
+   "variant": "different",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2887,
+    "completion_tokens": 1101,
+    "total_tokens": 3988,
+    "audio_prompt_tokens": 0,
+    "prompt_tokens_details": {
+     "cached_tokens": 1536
+    }
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"different\",\n      \"turns\": [\n        \"바람 프로젝트의 예산은 500만 원이야.\",\n        \"노을 프로젝트의 예산은 800만 원이야.\"\n      ],\n      \"question\": \"바람 프로젝트의 예산이 얼마야?\",\n      \"expected\": \"바람 프로젝트의 예산은 500만 원이다.\",\n      \"obsolete\": \"바람 프로젝트의 예산은 800만 원이다.\",\n      \"second\": [\n        \"노을 프로젝트의 예산은 얼마야?\",\n        \"노을 프로젝트의 예산은 800만 원이다.\"\n      ],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"different\",\n      \"turns\": [\n        \"달빛 프로젝트의 팀장은 민수야.\",\n        \"햇살 프로젝트의 팀장은 지영이야.\"\n      ],\n      \"question\": \"달빛 프로젝트의 팀장이 누구야?\",\n      \"expected\": \"달빛 프로젝트의 팀장은 민수이다.\",\n      \"obsolete\": \"달빛 프로젝트의 팀장은 지영이다.\",\n      \"second\": [\n        \"햇살 프로젝트의 팀장은 누구야?\",\n        \"햇살 프로젝트의 팀장은 지영이다.\"\n      ],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"different\",\n      \"turns\": [\n        \"구름 프로젝트의 마감일은 12월 15일이야.\",\n        \"별빛 프로젝트의 마감일은 1월 20일이야.\"\n      ],\n      \"question\": \"구름 프로젝트의 마감일이 언제야?\",\n      \"expected\": \"구름 프로젝트의 마감일은 12월 15일이다.\",\n      \"obsolete\": \"구름 프로젝트의 마감일은 1월 20일이다.\",\n      \"second\": [\n        \"별빛 프로젝트의 마감일은 언제야?\",\n        \"별빛 프로젝트의 마감일은 1월 20일이다.\"\n      ],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"different\",\n      \"turns\": [\n        \"바다 프로젝트의 장소는 강남역 회의실이야.\",\n        \"하늘 프로젝트의 장소는 서초동 스튜디오야.\"\n      ],\n      \"question\": \"바다 프로젝트의 장소가 어디야?\",\n      \"expected\": \"바다 프로젝트의 장소는 강남역 회의실이다.\",\n      \"obsolete\": \"바다 프로젝트의 장소는 서초동 스튜디오이다.\",\n      \"second\": [\n        \"하늘 프로젝트의 장소는 어디야?\",\n        \"하늘 프로젝트의 장소는 서초동 스튜디오이다.\"\n      ],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"different\",\n      \"turns\": [\n        \"숲길 프로젝트의 담당자는 수진이야.\",\n        \"강가 프로젝트의 담당자는 철수야.\"\n      ],\n      \"question\": \"숲길 프로젝트의 담당자가 누구야?\",\n      \"expected\": \"숲길 프로젝트의 담당자는 수진이다.\",\n      \"obsolete\": \"숲길 프로젝트의 담당자는 철수이다.\",\n      \"second\": [\n        \"강가 프로젝트의 담당자는 누구야?\",\n        \"강가 프로젝트의 담당자는 철수이다.\"\n      ],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"different\",\n      \"turns\": [\n        \"꽃잎 프로젝트의 색상 코드는 #FF5733이야.\",\n        \"잎새 프로젝트의 색상 코드는 #33FF57이야.\"\n      ],\n      \"question\": \"꽃잎 프로젝트의 색상 코드가 뭐야?\",\n      \"expected\": \"꽃잎 프로젝트의 색상 코드는 #FF5733이다.\",\n      \"obsolete\": \"꽃잎 프로젝트의 색상 코드는 #33FF57이다.\",\n      \"second\": [\n        \"잎새 프로젝트의 색상 코드는 뭐야?\",\n        \"잎새 프로젝트의 색상 코드는 #33FF57이다.\"\n      ],\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  },
+  {
+   "category": "project_isolation",
+   "variant": "delete_one",
+   "status": 200,
+   "usage": {
+    "prompt_tokens": 2974,
+    "completion_tokens": 1320,
+    "total_tokens": 4294,
+    "audio_prompt_tokens": 0,
+    "prompt_tokens_details": {
+     "cached_tokens": 1536
+    }
+   },
+   "model": "deepseek-v4-flash",
+   "text": "{\n  \"rows\": [\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"delete_one\",\n      \"turns\": [\n        \"새벽 프로젝트의 서버 주소는 192.168.1.10이야.\",\n        \"노을 프로젝트의 서버 주소는 192.168.1.20이야.\",\n        \"새벽 프로젝트의 서버 주소 기억만 삭제해 줘. 노을은 그대로 둬.\"\n      ],\n      \"question\": \"새벽 프로젝트의 서버 주소를 기억해?\",\n      \"expected\": \"새벽 프로젝트의 서버 주소는 삭제되어 알 수 없다.\",\n      \"obsolete\": \"새벽 프로젝트의 서버 주소는 192.168.1.10이다.\",\n      \"second\": [\"노을 프로젝트의 서버 주소는?\", \"노을 프로젝트의 서버 주소는 192.168.1.20이다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"delete_one\",\n      \"turns\": [\n        \"라온 프로젝트의 담당자 전화번호는 010-1234-5678이야.\",\n        \"나래 프로젝트의 담당자 전화번호는 010-8765-4321이야.\",\n        \"라온 프로젝트의 전화번호 기억만 지워 줘. 나래는 그대로 둬.\"\n      ],\n      \"question\": \"라온 프로젝트의 담당자 전화번호를 기억해?\",\n      \"expected\": \"라온 프로젝트의 담당자 전화번호는 삭제되어 알 수 없다.\",\n      \"obsolete\": \"라온 프로젝트의 담당자 전화번호는 010-1234-5678이다.\",\n      \"second\": [\"나래 프로젝트의 담당자 전화번호는?\", \"나래 프로젝트의 담당자 전화번호는 010-8765-4321이다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"delete_one\",\n      \"turns\": [\n        \"별빛 프로젝트의 완료율은 75%야.\",\n        \"햇살 프로젝트의 완료율은 40%야.\",\n        \"별빛 프로젝트의 완료율 기억만 삭제해 줘. 햇살은 그대로 둬.\"\n      ],\n      \"question\": \"별빛 프로젝트의 완료율을 기억해?\",\n      \"expected\": \"별빛 프로젝트의 완료율은 삭제되어 알 수 없다.\",\n      \"obsolete\": \"별빛 프로젝트의 완료율은 75%이다.\",\n      \"second\": [\"햇살 프로젝트의 완료율은?\", \"햇살 프로젝트의 완료율은 40%이다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"delete_one\",\n      \"turns\": [\n        \"은하 프로젝트의 문서 양식은 한글(hwp)이야.\",\n        \"구슬 프로젝트의 문서 양식은 워드(docx)야.\",\n        \"은하 프로젝트의 문서 양식 기억만 지워 줘. 구슬은 그대로 둬.\"\n      ],\n      \"question\": \"은하 프로젝트의 문서 양식을 기억해?\",\n      \"expected\": \"은하 프로젝트의 문서 양식은 삭제되어 알 수 없다.\",\n      \"obsolete\": \"은하 프로젝트의 문서 양식은 한글(hwp)이다.\",\n      \"second\": [\"구슬 프로젝트의 문서 양식은?\", \"구슬 프로젝트의 문서 양식은 워드(docx)이다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"delete_one\",\n      \"turns\": [\n        \"산들 프로젝트의 회의 시간은 오전 10시야.\",\n        \"물결 프로젝트의 회의 시간은 오후 2시야.\",\n        \"산들 프로젝트의 회의 시간 기억만 삭제해 줘. 물결은 그대로 둬.\"\n      ],\n      \"question\": \"산들 프로젝트의 회의 시간을 기억해?\",\n      \"expected\": \"산들 프로젝트의 회의 시간은 삭제되어 알 수 없다.\",\n      \"obsolete\": \"산들 프로젝트의 회의 시간은 오전 10시이다.\",\n      \"second\": [\"물결 프로젝트의 회의 시간은?\", \"물결 프로젝트의 회의 시간은 오후 2시이다.\"],\n      \"forbidden_value\": null\n    },\n    {\n      \"category\": \"project_isolation\",\n      \"variant\": \"delete_one\",\n      \"turns\": [\n        \"초원 프로젝트의 색상 테마는 파랑이야.\",\n        \"숲속 프로젝트의 색상 테마는 초록이야.\",\n        \"초원 프로젝트의 색상 테마 기억만 지워 줘. 숲속은 그대로 둬.\"\n      ],\n      \"question\": \"초원 프로젝트의 색상 테마를 기억해?\",\n      \"expected\": \"초원 프로젝트의 색상 테마는 삭제되어 알 수 없다.\",\n      \"obsolete\": \"초원 프로젝트의 색상 테마는 파랑이다.\",\n      \"second\": [\"숲속 프로젝트의 색상 테마는?\", \"숲속 프로젝트의 색상 테마는 초록이다.\"],\n      \"forbidden_value\": null\n    }\n  ]\n}"
+  }
+ ]
+}

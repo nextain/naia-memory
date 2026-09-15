@@ -1,0 +1,4637 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "case_id": "memory-ko-01",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "사용자의 생일은 3월 14일이다.",
+          "status": "current",
+          "project": "memory-ko-01-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "사용자의 생일은 3월 14일이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-02",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "사용자의 반려견 이름은 초코이다.",
+          "status": "current",
+          "project": "memory-ko-02-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "사용자의 반려견 이름은 초코이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-03",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "사용자가 좋아하는 영화 장르는 코미디이다.",
+          "status": "current",
+          "project": "memory-ko-03-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "사용자가 좋아하는 영화 장르는 코미디이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-04",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "치과 예약은 이번 주 금요일이다.",
+          "status": "current",
+          "project": "memory-ko-04-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "치과 예약은 이번 주 금요일이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-05",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "사용자의 차종은 흰색 아반떼이다.",
+          "status": "current",
+          "project": "memory-ko-05-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "사용자의 차종은 흰색 아반떼이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-06",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "동네 헬스장 1년 회원권은 50만 원이다.",
+          "status": "current",
+          "project": "memory-ko-06-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "동네 헬스장 1년 회원권은 50만 원이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-07",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "도서관 책 반납 마감일은 3월 15일이다.",
+          "status": "current",
+          "project": "memory-ko-07-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "도서관 책 반납 마감일은 3월 15일이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-08",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "세금 신고 마감일은 5월 31일이다.",
+          "status": "current",
+          "project": "memory-ko-08-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "세금 신고 마감일은 5월 31일이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-09",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "보고서 마감일은 4월 7일이다.",
+          "status": "current",
+          "project": "memory-ko-09-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "보고서 마감일은 4월 7일이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-10",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "수영장 등록 마감일은 2월 28일이다.",
+          "status": "current",
+          "project": "memory-ko-10-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "수영장 등록 마감일은 2월 28일이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-11",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "홈페이지 리뉴얼 마감일은 6월 1일이다.",
+          "status": "current",
+          "project": "memory-ko-11-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "홈페이지 리뉴얼 마감일은 6월 1일이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-12",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "자격증 시험 접수 마감일은 7월 15일이다.",
+          "status": "current",
+          "project": "memory-ko-12-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "자격증 시험 접수 마감일은 7월 15일이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-13",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "동생 이름은 지민이다.",
+          "status": "current",
+          "project": "memory-ko-13-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "동생 이름은 지후이다.",
+          "status": "stale",
+          "project": "memory-ko-13-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "동생 이름은 지민이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-14",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "우편번호는 04568이다.",
+          "status": "current",
+          "project": "memory-ko-14-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "우편번호는 04567이다.",
+          "status": "stale",
+          "project": "memory-ko-14-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "우편번호는 04568이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-15",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "식탁 가격은 35만 원이다.",
+          "status": "current",
+          "project": "memory-ko-15-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "식탁 가격은 25만 원이다.",
+          "status": "stale",
+          "project": "memory-ko-15-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "식탁 가격은 35만 원이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-16",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "다음 주 월요일 약속은 오후 3시이다.",
+          "status": "current",
+          "project": "memory-ko-16-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "다음 주 월요일 약속은 오후 2시이다.",
+          "status": "stale",
+          "project": "memory-ko-16-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "다음 주 월요일 약속은 오후 3시이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-17",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "가장 좋아하는 색깔은 초록색이다.",
+          "status": "current",
+          "project": "memory-ko-17-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "가장 좋아하는 색깔은 파란색이다.",
+          "status": "stale",
+          "project": "memory-ko-17-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "가장 좋아하는 색깔은 초록색이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-18",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "언니 결혼식 날짜는 10월 22일이다.",
+          "status": "current",
+          "project": "memory-ko-18-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "언니 결혼식 날짜는 10월 15일이다.",
+          "status": "stale",
+          "project": "memory-ko-18-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "언니 결혼식 날짜는 10월 22일이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-19",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "요가 강좌는 오후 4시 수업이다.",
+          "status": "current",
+          "project": "memory-ko-19-a",
+          "source_event_ids": [
+            "e1",
+            "e2",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "요가 강좌는 오전 10시 수업이다 또는 요가 강좌는 오후 2시 수업이다",
+          "status": "stale",
+          "project": "memory-ko-19-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "요가 강좌는 오후 4시 수업이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-20",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "호텔 방은 708호이다.",
+          "status": "current",
+          "project": "memory-ko-20-a",
+          "source_event_ids": [
+            "e1",
+            "e2",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "호텔 방은 301호이다 또는 호텔 방은 502호이다",
+          "status": "stale",
+          "project": "memory-ko-20-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "호텔 방은 708호이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-21",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "주문한 커피는 바닐라 라테이다.",
+          "status": "current",
+          "project": "memory-ko-21-a",
+          "source_event_ids": [
+            "e1",
+            "e2",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "주문한 커피는 카페라테이다 또는 주문한 커피는 아메리카노이다",
+          "status": "stale",
+          "project": "memory-ko-21-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "주문한 커피는 바닐라 라테이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-22",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "피아노 학원은 금요일이다.",
+          "status": "current",
+          "project": "memory-ko-22-a",
+          "source_event_ids": [
+            "e1",
+            "e2",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "피아노 학원은 월요일이다 또는 피아노 학원은 수요일이다",
+          "status": "stale",
+          "project": "memory-ko-22-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "피아노 학원은 금요일이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-23",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "도서관 회원 등급은 VIP이다.",
+          "status": "current",
+          "project": "memory-ko-23-a",
+          "source_event_ids": [
+            "e1",
+            "e2",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "도서관 회원 등급은 실버이다 또는 도서관 회원 등급은 골드이다",
+          "status": "stale",
+          "project": "memory-ko-23-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "도서관 회원 등급은 VIP이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-24",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "미용실 예약 시간은 오후 3시이다.",
+          "status": "current",
+          "project": "memory-ko-24-a",
+          "source_event_ids": [
+            "e1",
+            "e2",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "미용실 예약 시간은 오전 11시이다 또는 미용실 예약 시간은 오후 1시이다",
+          "status": "stale",
+          "project": "memory-ko-24-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "미용실 예약 시간은 오후 3시이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-25",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "테스트용 가상 비밀번호는 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-25-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "테스트용 가상 비밀번호는 '호박고구마123'이다.",
+          "status": "deleted",
+          "project": "memory-ko-25-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "테스트용 가상 비밀번호는 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          },
+          "forbidden_value_spans": [
+            "호박고구마123"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-26",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "가상 계좌 비밀번호는 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-26-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "가상 계좌 비밀번호는 '7283'이다.",
+          "status": "deleted",
+          "project": "memory-ko-26-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "가상 계좌 비밀번호는 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          },
+          "forbidden_value_spans": [
+            "7283"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-27",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "가상 와이파이 비밀번호는 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-27-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "가상 와이파이 비밀번호는 '열쇠고리2024'이다.",
+          "status": "deleted",
+          "project": "memory-ko-27-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "가상 와이파이 비밀번호는 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          },
+          "forbidden_value_spans": [
+            "열쇠고리2024"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-28",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "가상 핀번호는 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-28-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "가상 핀번호는 '5842'이다.",
+          "status": "deleted",
+          "project": "memory-ko-28-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "가상 핀번호는 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          },
+          "forbidden_value_spans": [
+            "5842"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-29",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "가상 금고 비밀번호는 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-29-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "가상 금고 비밀번호는 '별빛사탕'이다.",
+          "status": "deleted",
+          "project": "memory-ko-29-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "가상 금고 비밀번호는 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          },
+          "forbidden_value_spans": [
+            "별빛사탕"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-30",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "가상 로그인 비밀번호는 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-30-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "가상 로그인 비밀번호는 '달빛공원77'이다.",
+          "status": "deleted",
+          "project": "memory-ko-30-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "가상 로그인 비밀번호는 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          },
+          "forbidden_value_spans": [
+            "달빛공원77"
+          ]
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-31",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "예약한 영화는 '더 씨'입니다.",
+          "status": "current",
+          "project": "memory-ko-31-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "예약한 영화는 '더 문'과 '더 씨'입니다.",
+          "status": "deleted",
+          "project": "memory-ko-31-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "아니요, '더 문'은 취소되었습니다.",
+          "status": "current",
+          "project": "memory-ko-31-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "예약한 영화는 '더 씨'입니다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "아니요, '더 문'은 취소되었습니다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-32",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "신청한 캠핑장은 B구역입니다.",
+          "status": "current",
+          "project": "memory-ko-32-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "신청한 캠핑장은 A구역과 B구역입니다.",
+          "status": "deleted",
+          "project": "memory-ko-32-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "아니요, A구역은 취소되었습니다.",
+          "status": "current",
+          "project": "memory-ko-32-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "신청한 캠핑장은 B구역입니다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "아니요, A구역은 취소되었습니다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-33",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "등록한 클래스는 필라테스입니다.",
+          "status": "current",
+          "project": "memory-ko-33-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "등록한 클래스는 요가와 필라테스입니다.",
+          "status": "deleted",
+          "project": "memory-ko-33-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "아니요, 요가 클래스는 취소되었습니다.",
+          "status": "current",
+          "project": "memory-ko-33-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "등록한 클래스는 필라테스입니다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "아니요, 요가 클래스는 취소되었습니다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-34",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "내일 미팅은 오후 2시입니다.",
+          "status": "current",
+          "project": "memory-ko-34-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "내일 미팅은 오전 10시와 오후 2시입니다.",
+          "status": "deleted",
+          "project": "memory-ko-34-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "아니요, 오전 10시 미팅은 취소되었습니다.",
+          "status": "current",
+          "project": "memory-ko-34-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "내일 미팅은 오후 2시입니다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "아니요, 오전 10시 미팅은 취소되었습니다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-35",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "이번 주 병원 예약은 안과입니다.",
+          "status": "current",
+          "project": "memory-ko-35-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "이번 주 병원 예약은 치과와 안과입니다.",
+          "status": "deleted",
+          "project": "memory-ko-35-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "아니요, 치과 예약은 취소되었습니다.",
+          "status": "current",
+          "project": "memory-ko-35-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "이번 주 병원 예약은 안과입니다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "아니요, 치과 예약은 취소되었습니다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-36",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "다음 주 헬스 PT는 금요일입니다.",
+          "status": "current",
+          "project": "memory-ko-36-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "다음 주 헬스 PT는 수요일과 금요일입니다.",
+          "status": "deleted",
+          "project": "memory-ko-36-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "아니요, 수요일 PT는 취소되었습니다.",
+          "status": "current",
+          "project": "memory-ko-36-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "다음 주 헬스 PT는 금요일입니다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "아니요, 수요일 PT는 취소되었습니다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-37",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "사용자는 한식을 더 좋아한다.",
+          "status": "current",
+          "project": "memory-ko-37-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "사용자는 일식을 더 좋아한다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-37-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "사용자는 한식을 더 좋아한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-38",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "네, 당신은 아침형 인간입니다.",
+          "status": "current",
+          "project": "memory-ko-38-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "당신은 새벽까지 깨어 있습니다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-38-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "네, 당신은 아침형 인간입니다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-39",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "네, 당신은 에세이를 더 좋아합니다.",
+          "status": "current",
+          "project": "memory-ko-39-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "당신은 소설을 더 좋아합니다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-39-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "네, 당신은 에세이를 더 좋아합니다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-40",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "네, 당신은 주말마다 등산을 갑니다.",
+          "status": "current",
+          "project": "memory-ko-40-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "당신은 요즘 등산을 가지 않습니다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-40-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "네, 당신은 주말마다 등산을 갑니다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-41",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "네, 당신은 고양이를 키웁니다.",
+          "status": "current",
+          "project": "memory-ko-41-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "당신은 개를 키웁니다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-41-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "네, 당신은 고양이를 키웁니다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-42",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "사용자는 매운 음식을 좋아한다.",
+          "status": "current",
+          "project": "memory-ko-42-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "사용자는 매운 음식을 못 먹는다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-42-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "사용자는 매운 음식을 좋아한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-43",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "나는 회사에서 재택 근무 중이다.",
+          "status": "current",
+          "project": "memory-ko-43-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "나는 사무실로 출근했다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-43-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "나는 회사에서 재택 근무 중이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-44",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "우리 동네 카페는 아직 영업 중이다.",
+          "status": "current",
+          "project": "memory-ko-44-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "우리 동네 카페는 문을 닫았다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-44-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "우리 동네 카페는 아직 영업 중이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-45",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "내 여행 가방은 지금 집에 있다.",
+          "status": "current",
+          "project": "memory-ko-45-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "내 여행 가방은 공항에 있다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-45-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "내 여행 가방은 지금 집에 있다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-46",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "우리 아들은 현재 초등학교 3학년이다.",
+          "status": "current",
+          "project": "memory-ko-46-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "우리 아들은 초등학교 4학년이다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-46-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "우리 아들은 현재 초등학교 3학년이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-47",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "내 핸드폰 요금제는 월 5만 원이다.",
+          "status": "current",
+          "project": "memory-ko-47-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "내 핸드폰 요금제는 월 7만 원이다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-47-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "내 핸드폰 요금제는 월 5만 원이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-48",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "우리 가족은 올여름 제주도로 여행 가기로 했다.",
+          "status": "current",
+          "project": "memory-ko-48-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "우리 가족의 올여름 여행은 취소되었다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-48-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "우리 가족은 올여름 제주도로 여행 가기로 했다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-49",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "휴일에는 카페에서 책 읽는 것을 좋아하고, 평일 저녁에는 집에서 넷플릭스 보는 것을 좋아한다.",
+          "status": "current",
+          "project": "memory-ko-49-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "휴일에는 카페에서 책 읽는 것을 좋아하고, 평일 저녁에는 집에서 넷플릭스 보는 것을 좋아한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-50",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "점심으로는 김치찌개를 주로 먹고, 아침에는 간단히 토스트를 먹는다.",
+          "status": "current",
+          "project": "memory-ko-50-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "점심으로는 김치찌개를 주로 먹고, 아침에는 간단히 토스트를 먹는다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-51",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "운동할 때는 달리기를 선호하고, 스트레칭할 때는 요가 동작을 좋아한다.",
+          "status": "current",
+          "project": "memory-ko-51-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "운동할 때는 달리기를 선호하고, 스트레칭할 때는 요가 동작을 좋아한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-52",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "주말 아침에는 늦잠 자는 것이 좋고, 주말 오후에는 공원 산책이 좋다.",
+          "status": "current",
+          "project": "memory-ko-52-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "주말 아침에는 늦잠 자는 것이 좋고, 주말 오후에는 공원 산책이 좋다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-53",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "더울 때는 아이스커피가 최고이고, 추울 때는 따뜻한 코코아가 좋다.",
+          "status": "current",
+          "project": "memory-ko-53-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "더울 때는 아이스커피가 최고이고, 추울 때는 따뜻한 코코아가 좋다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-54",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "출근할 때는 지하철을 타는 것이 편하고, 퇴근할 때는 버스가 좋다.",
+          "status": "current",
+          "project": "memory-ko-54-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "출근할 때는 지하철을 타는 것이 편하고, 퇴근할 때는 버스가 좋다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-55",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "나는 차를 더 좋아한다.",
+          "status": "current",
+          "project": "memory-ko-55-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "새 커피머신을 샀으므로 커피를 좋아한다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-55-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "나는 차를 더 좋아한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-56",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "나는 운동할 때 헤드폰보다 이어폰을 더 선호한다.",
+          "status": "current",
+          "project": "memory-ko-56-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "나는 운동할 때 헤드폰을 더 선호한다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-56-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "나는 운동할 때 헤드폰보다 이어폰을 더 선호한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-57",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "나는 주말에 집에서 쉬는 것을 더 좋아한다.",
+          "status": "current",
+          "project": "memory-ko-57-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "친구와 놀러 가는 것을 더 좋아한다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-57-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "나는 주말에 집에서 쉬는 것을 더 좋아한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-58",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "나는 여행 갈 때 게스트하우스를 더 좋아한다.",
+          "status": "current",
+          "project": "memory-ko-58-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "호텔을 예약했으므로 호텔을 더 좋아한다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-58-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "나는 여행 갈 때 게스트하우스를 더 좋아한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-59",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "나는 수영을 더 좋아한다.",
+          "status": "current",
+          "project": "memory-ko-59-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "새 운동화를 샀으므로 달리기를 더 좋아한다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-59-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "나는 수영을 더 좋아한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-60",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "나는 아침에 밥을 더 좋아한다.",
+          "status": "current",
+          "project": "memory-ko-60-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "맛있는 빵집이 생겼으므로 빵을 더 좋아한다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-60-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "나는 아침에 밥을 더 좋아한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-61",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "현재 반찬가게 사장님은 박민호 씨이다.",
+          "status": "current",
+          "project": "memory-ko-61-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "현재 반찬가게 사장님은 김수지 씨이다.",
+          "status": "stale",
+          "project": "memory-ko-61-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "이전 반찬가게 사장님은 김수지 씨였다.",
+          "status": "historical",
+          "project": "memory-ko-61-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "현재 반찬가게 사장님은 박민호 씨이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "이전 반찬가게 사장님은 김수지 씨였다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-62",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "현재 요가 학원 원장님은 최윤호 선생님이다.",
+          "status": "current",
+          "project": "memory-ko-62-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "현재 요가 학원 원장님은 이지영 선생님이다.",
+          "status": "stale",
+          "project": "memory-ko-62-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "이전 요가 학원 원장님은 이지영 선생님이었다.",
+          "status": "historical",
+          "project": "memory-ko-62-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "현재 요가 학원 원장님은 최윤호 선생님이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "이전 요가 학원 원장님은 이지영 선생님이었다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-63",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "현재 세탁기 모델은 삼성 그랑데 12kg이다.",
+          "status": "current",
+          "project": "memory-ko-63-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "현재 세탁기 모델은 LG 트롬 9kg이다.",
+          "status": "stale",
+          "project": "memory-ko-63-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "이전 세탁기 모델은 LG 트롬 9kg이었다.",
+          "status": "historical",
+          "project": "memory-ko-63-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "현재 세탁기 모델은 삼성 그랑데 12kg이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "이전 세탁기 모델은 LG 트롬 9kg이었다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-64",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "현재 넷플릭스 요금제는 프리미엄이다.",
+          "status": "current",
+          "project": "memory-ko-64-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "현재 넷플릭스 요금제는 스탠다드이다.",
+          "status": "stale",
+          "project": "memory-ko-64-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "이전 넷플릭스 요금제는 스탠다드였다.",
+          "status": "historical",
+          "project": "memory-ko-64-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "현재 넷플릭스 요금제는 프리미엄이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "이전 넷플릭스 요금제는 스탠다드였다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-65",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "현재 회사 대표는 박지은 대표님이다.",
+          "status": "current",
+          "project": "memory-ko-65-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "현재 회사 대표는 김영수 대표님이다.",
+          "status": "stale",
+          "project": "memory-ko-65-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "이전 회사 대표는 김영수 대표님이었다.",
+          "status": "historical",
+          "project": "memory-ko-65-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "현재 회사 대표는 박지은 대표님이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "이전 회사 대표는 김영수 대표님이었다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-66",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "현재 핸드폰 통신사는 KT이다.",
+          "status": "current",
+          "project": "memory-ko-66-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "현재 핸드폰 통신사는 SK텔레콤이다.",
+          "status": "stale",
+          "project": "memory-ko-66-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "이전 핸드폰 통신사는 SK텔레콤이었다.",
+          "status": "historical",
+          "project": "memory-ko-66-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "현재 핸드폰 통신사는 KT이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "이전 핸드폰 통신사는 SK텔레콤이었다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-67",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "변경 전 동아리 회장은 지수였다.",
+          "status": "historical",
+          "project": "memory-ko-67-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "지금 동아리 회장은 민수다.",
+          "status": "current",
+          "project": "memory-ko-67-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "변경 전 동아리 회장은 지수였다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "지금 동아리 회장은 민수다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-68",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "변경 전 인터넷 요금은 월 3만 5천 원이었다.",
+          "status": "historical",
+          "project": "memory-ko-68-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "지금 인터넷 요금은 월 4만 원이다.",
+          "status": "current",
+          "project": "memory-ko-68-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "변경 전 인터넷 요금은 월 3만 5천 원이었다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "지금 인터넷 요금은 월 4만 원이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-69",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "변경 전 헬스장 이름은 피트니스존이었다.",
+          "status": "historical",
+          "project": "memory-ko-69-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "지금 헬스장 이름은 파워짐이다.",
+          "status": "current",
+          "project": "memory-ko-69-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "변경 전 헬스장 이름은 피트니스존이었다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "지금 헬스장 이름은 파워짐이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-70",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "변경 전 차량 번호판은 12가 3456이었다.",
+          "status": "historical",
+          "project": "memory-ko-70-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "지금 차량 번호판은 78나 9012다.",
+          "status": "current",
+          "project": "memory-ko-70-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "변경 전 차량 번호판은 12가 3456이었다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "지금 차량 번호판은 78나 9012다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-71",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "변경 전 사무실 자리는 3층 A구역이었다.",
+          "status": "historical",
+          "project": "memory-ko-71-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "지금 사무실 자리는 2층 B구역이다.",
+          "status": "current",
+          "project": "memory-ko-71-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "변경 전 사무실 자리는 3층 A구역이었다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "지금 사무실 자리는 2층 B구역이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-72",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "변경 전 편집 프로그램은 포토샵이었다.",
+          "status": "historical",
+          "project": "memory-ko-72-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "지금 편집 프로그램은 라이트룸이다.",
+          "status": "current",
+          "project": "memory-ko-72-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "변경 전 편집 프로그램은 포토샵이었다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "지금 편집 프로그램은 라이트룸이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-73",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "바람 프로젝트의 예산은 500만 원이다.",
+          "status": "current",
+          "project": "memory-ko-73-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "바람 프로젝트의 예산은 800만 원이다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-73-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "노을 프로젝트의 예산은 800만 원이다.",
+          "status": "current",
+          "project": "memory-ko-73-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "바람 프로젝트의 예산은 500만 원이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "노을 프로젝트의 예산은 800만 원이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-74",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "달빛 프로젝트의 팀장은 민수이다.",
+          "status": "current",
+          "project": "memory-ko-74-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "달빛 프로젝트의 팀장은 지영이다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-74-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "햇살 프로젝트의 팀장은 지영이다.",
+          "status": "current",
+          "project": "memory-ko-74-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "달빛 프로젝트의 팀장은 민수이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "햇살 프로젝트의 팀장은 지영이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-75",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "구름 프로젝트의 마감일은 12월 15일이다.",
+          "status": "current",
+          "project": "memory-ko-75-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "구름 프로젝트의 마감일은 1월 20일이다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-75-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "별빛 프로젝트의 마감일은 1월 20일이다.",
+          "status": "current",
+          "project": "memory-ko-75-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "구름 프로젝트의 마감일은 12월 15일이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "별빛 프로젝트의 마감일은 1월 20일이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-76",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "바다 프로젝트의 장소는 강남역 회의실이다.",
+          "status": "current",
+          "project": "memory-ko-76-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "바다 프로젝트의 장소는 서초동 스튜디오이다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-76-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "하늘 프로젝트의 장소는 서초동 스튜디오이다.",
+          "status": "current",
+          "project": "memory-ko-76-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "바다 프로젝트의 장소는 강남역 회의실이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "하늘 프로젝트의 장소는 서초동 스튜디오이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-77",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "숲길 프로젝트의 담당자는 수진이다.",
+          "status": "current",
+          "project": "memory-ko-77-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "숲길 프로젝트의 담당자는 철수이다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-77-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "강가 프로젝트의 담당자는 철수이다.",
+          "status": "current",
+          "project": "memory-ko-77-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "숲길 프로젝트의 담당자는 수진이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "강가 프로젝트의 담당자는 철수이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-78",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "꽃잎 프로젝트의 색상 코드는 #FF5733이다.",
+          "status": "current",
+          "project": "memory-ko-78-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "꽃잎 프로젝트의 색상 코드는 #33FF57이다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-78-a",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "잎새 프로젝트의 색상 코드는 #33FF57이다.",
+          "status": "current",
+          "project": "memory-ko-78-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "꽃잎 프로젝트의 색상 코드는 #FF5733이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "잎새 프로젝트의 색상 코드는 #33FF57이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": false,
+            "project_leakage": true,
+            "false_overwrite": false,
+            "critical_reversal": false
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-79",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "새벽 프로젝트의 서버 주소는 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-79-a",
+          "source_event_ids": [
+            "e1",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "새벽 프로젝트의 서버 주소는 192.168.1.10이다.",
+          "status": "deleted",
+          "project": "memory-ko-79-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "노을 프로젝트의 서버 주소는 192.168.1.20이다.",
+          "status": "current",
+          "project": "memory-ko-79-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "새벽 프로젝트의 서버 주소는 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "노을 프로젝트의 서버 주소는 192.168.1.20이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-80",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "라온 프로젝트의 담당자 전화번호는 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-80-a",
+          "source_event_ids": [
+            "e1",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "라온 프로젝트의 담당자 전화번호는 010-1234-5678이다.",
+          "status": "deleted",
+          "project": "memory-ko-80-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "나래 프로젝트의 담당자 전화번호는 010-8765-4321이다.",
+          "status": "current",
+          "project": "memory-ko-80-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "라온 프로젝트의 담당자 전화번호는 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "나래 프로젝트의 담당자 전화번호는 010-8765-4321이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-81",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "별빛 프로젝트의 완료율은 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-81-a",
+          "source_event_ids": [
+            "e1",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "별빛 프로젝트의 완료율은 75%이다.",
+          "status": "deleted",
+          "project": "memory-ko-81-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "햇살 프로젝트의 완료율은 40%이다.",
+          "status": "current",
+          "project": "memory-ko-81-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "별빛 프로젝트의 완료율은 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "햇살 프로젝트의 완료율은 40%이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-82",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "은하 프로젝트의 문서 양식은 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-82-a",
+          "source_event_ids": [
+            "e1",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "은하 프로젝트의 문서 양식은 한글(hwp)이다.",
+          "status": "deleted",
+          "project": "memory-ko-82-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "구슬 프로젝트의 문서 양식은 워드(docx)이다.",
+          "status": "current",
+          "project": "memory-ko-82-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "은하 프로젝트의 문서 양식은 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "구슬 프로젝트의 문서 양식은 워드(docx)이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-83",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "산들 프로젝트의 회의 시간은 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-83-a",
+          "source_event_ids": [
+            "e1",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "산들 프로젝트의 회의 시간은 오전 10시이다.",
+          "status": "deleted",
+          "project": "memory-ko-83-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "물결 프로젝트의 회의 시간은 오후 2시이다.",
+          "status": "current",
+          "project": "memory-ko-83-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "산들 프로젝트의 회의 시간은 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "물결 프로젝트의 회의 시간은 오후 2시이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "memory-ko-84",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "초원 프로젝트의 색상 테마는 삭제되어 알 수 없다.",
+          "status": "deleted_unknown",
+          "project": "memory-ko-84-a",
+          "source_event_ids": [
+            "e1",
+            "e3"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "초원 프로젝트의 색상 테마는 파랑이다.",
+          "status": "deleted",
+          "project": "memory-ko-84-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p2",
+          "text": "숲속 프로젝트의 색상 테마는 초록이다.",
+          "status": "current",
+          "project": "memory-ko-84-b",
+          "source_event_ids": [
+            "e2"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "초원 프로젝트의 색상 테마는 삭제되어 알 수 없다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": true,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": false,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        },
+        {
+          "query_id": "q2",
+          "expected_answer": "숲속 프로젝트의 색상 테마는 초록이다.",
+          "required_proposition_ids": [
+            "p2"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": false,
+            "deletion_leakage": true,
+            "project_leakage": true,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ]
+    }
+  ]
+}
