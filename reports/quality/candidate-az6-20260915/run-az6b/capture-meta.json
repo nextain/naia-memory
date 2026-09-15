@@ -1,0 +1,79 @@
+{
+  "runId": "candidate-az6b-20260915",
+  "stage": "capture",
+  "backend": "azure",
+  "startedAt": "2026-09-15T02:58:54.149Z",
+  "finishedAt": "2026-09-15T03:02:59.987Z",
+  "manifestSha": "d0cb8bfce95c797ee6c8b00b7949f503e2d8cb6ef439530d641ad1eb12478f66",
+  "provenance": {
+    "commit": "618dfde15c1259ccf3ddc3bd6620ae78e8443456",
+    "srcDirty": false,
+    "node": "v26.7.0",
+    "host": "bazzite"
+  },
+  "models": {
+    "lite": "gpt-5-4-nano",
+    "judge": "deepseek-v4-flash",
+    "embedding": "multilingual-e5-base"
+  },
+  "embeddingSpaceId": "offline:Xenova/multilingual-e5-base@1ec9243030a27d1a115d5c340572074c125b58b2:dims=768:dtype=q8:mean-normalized:query-passage-v2",
+  "embeddingPolicy": {
+    "model": "Xenova/multilingual-e5-base",
+    "revision": "1ec9243030a27d1a115d5c340572074c125b58b2",
+    "dtype": "q8",
+    "dimensions": 768,
+    "queryPrefix": "query: ",
+    "passagePrefix": "passage: ",
+    "pooling": "mean",
+    "normalize": true,
+    "tokenizerMaxLength": 512,
+    "truncation": true,
+    "titleConcatenation": "provider-receives-precomposed-text"
+  },
+  "embeddingWarmupMs": 829,
+  "embeddingProbe": {
+    "firstCaseQueryVectorSha": "3a781ca63e819236a8ddf11f0ccefed5d6a0499ac1e6d8bcfcb6fda1bd1fe050"
+  },
+  "onnxThreads": "default",
+  "cases": 42,
+  "perLanguage": null,
+  "rows": 228,
+  "replay": {
+    "file": "reports/quality/candidate-az4-20260915/run/capture-raw-provider.jsonl",
+    "sha256": "3ca093cc79d8ed92240f761d3cd51f132a6ea5d51c3da18a05c5cf7607b26653",
+    "recorded": 49,
+    "hits": 49
+  },
+  "census": {
+    "expectedRows": 228,
+    "reopensPerNaiaArm": 21,
+    "physicalExtraction": 0,
+    "physicalDeleteVerification": 0,
+    "physicalAnswers": 228
+  },
+  "extractionFailures": [
+    {
+      "caseId": "memory-en-05",
+      "code": "delete-ungrounded",
+      "message": "LLM fact extraction episode 2 delete rejected: target-not-in-episode"
+    },
+    {
+      "caseId": "memory-en-14",
+      "code": "delete-ungrounded",
+      "message": "LLM fact extraction episode 3 delete rejected: target-lacks-value-and-identity"
+    }
+  ],
+  "totals": {
+    "requests": 228,
+    "inputTokens": 37373,
+    "outputTokens": 6050,
+    "reasoningTokens": 0
+  },
+  "censusChecks": {
+    "rows": true,
+    "physicalExtractionIsZero": true,
+    "physicalDeleteVerificationIsZero": true,
+    "replayedExtractionEqualsCases": true,
+    "replayedDeleteVerification": 7
+  }
+}
