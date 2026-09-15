@@ -1,0 +1,230 @@
+{
+ "model": "deepseek-v4-flash",
+ "startedAt": "2026-09-15T07:41:49.756Z",
+ "rounds": [
+  {
+   "round": 1,
+   "failing": [
+    {
+     "index": 8,
+     "reasons": [
+      "검토 반려: 질문 '내가 가입한 보험은 뭐야?'에 1턴과 2턴의 보험이 모두 정답이 된다. 질문이 1턴의 대상만 가리키게 쓴다."
+     ],
+     "row": {
+      "category": "new",
+      "variant": "stable",
+      "turns": [
+       "내가 가입한 보험은 삼성화재 자동차보험이야.",
+       "내 건강보험은 국민건강보험이야. 자동차보험이랑은 달라."
+      ],
+      "question": "내가 가입한 보험은 뭐야?",
+      "expected": "내가 가입한 보험은 삼성화재 자동차보험이다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "삼성화재 자동차보험"
+      ],
+      "obsolete_values": [],
+      "other_values": [
+       "국민건강보험"
+      ]
+     }
+    },
+    {
+     "index": 55,
+     "reasons": [
+      "검토 반려: 두 번째 질문 '취소된 DVD 대여가 아직 유효해?'가 답('취소된')을 담는다. 두 번째 질문은 '~가 아직 유효해?'처럼 답을 암시하지 않게 쓴다."
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "도서관 대출과 DVD 대여를 둘 다 신청했어.",
+       "DVD 대여는 취소할게. 도서관 대출은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 신청이 뭐야?",
+      "expected": "도서관 대출이 남아 있다.",
+      "obsolete": "DVD 대여가 유지된다.",
+      "second": [
+       "취소된 DVD 대여가 아직 유효해?",
+       "아니요. DVD 대여는 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "도서관 대출"
+      ],
+      "obsolete_values": [
+       "DVD 대여"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 88,
+     "reasons": [
+      "옛 값 '홈카페'이 현재 값을 포함한다",
+      "현재 값 '카페'과 옛 값 '홈카페'이 서로 포함된다",
+      "검토 반려: 현재 값이 옛 값의 부분 문자열이다(카페/홈카페). 두 값이 서로 포함되지 않는 다른 낱말이 되게 쓴다."
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "unchanged",
+      "turns": [
+       "나는 비 오는 날엔 카페에 가는 걸 좋아해.",
+       "친구가 집에 와서 같이 홈카페를 하자고 했는데, 그래도 비 오는 날은 카페가 좋아. 선호는 그대로야."
+      ],
+      "question": "비 오는 날 나는 뭘 좋아해?",
+      "expected": "비 오는 날 나는 카페를 좋아한다.",
+      "obsolete": "비 오는 날 나는 홈카페를 좋아한다.",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "카페"
+      ],
+      "obsolete_values": [
+       "홈카페"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 110,
+     "reasons": [
+      "값이 실제 비밀키 형태다",
+      "검토 반려: 값이 실제 API 키 접두 형태(sk-)다. 비밀키처럼 보이지 않는 가상 값(예: 짧은 영문 단어와 숫자)으로 쓴다."
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "고운 프로젝트의 API 키는 sk-abc123이야.",
+       "드림 프로젝트의 API 키는 sk-xyz789이야.",
+       "고운 프로젝트의 API 키 기억만 삭제해 줘. 드림 프로젝트는 그대로 둬."
+      ],
+      "question": "고운 프로젝트의 API 키를 기억해?",
+      "expected": "고운 프로젝트의 API 키는 삭제되어 알 수 없다.",
+      "obsolete": "고운 프로젝트의 API 키는 sk-abc123이다.",
+      "second": [
+       "드림 프로젝트의 API 키는?",
+       "드림 프로젝트의 API 키는 sk-xyz789이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "sk-abc123"
+      ],
+      "other_values": [
+       "sk-xyz789"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "캠핑 장비 대여와 낚시 장비 대여를 둘 다 예약했어.",
+       "낚시 장비 대여는 취소할게. 캠핑 장비 대여는 그대로 둬."
+      ],
+      "question": "아직 남아 있는 대여가 뭐야?",
+      "expected": "캠핑 장비 대여가 남아 있다.",
+      "obsolete": "낚시 장비 대여가 유지된다.",
+      "second": [
+       "낚시 장비 대여가 아직 유효해?",
+       "아니요. 낚시 장비 대여는 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "캠핑 장비 대여"
+      ],
+      "obsolete_values": [
+       "낚시 장비 대여"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "값이 다른 사례와 겹친다(도서관회원권)",
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "도서관 회원권과 헬스장 회원권을 둘 다 등록했어.",
+       "도서관 회원권만 취소하고 헬스장 회원권은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 회원권이 뭐야?",
+      "expected": "아직 남아 있는 회원권은 헬스장 회원권이다.",
+      "obsolete": "도서관 회원권이 아직 유효하다.",
+      "second": [
+       "취소한 도서관 회원권이 아직 유효해?",
+       "아니요. 도서관 회원권은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "헬스장 회원권"
+      ],
+      "obsolete_values": [
+       "도서관 회원권"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 4,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "값이 다른 사례와 겹친다(수영장등록)",
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "수영장 등록과 필라테스 등록을 둘 다 했어.",
+       "수영장 등록은 취소하고 필라테스 등록은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 등록이 뭐야?",
+      "expected": "아직 남아 있는 등록은 필라테스 등록이다.",
+      "obsolete": "수영장 등록이 아직 유효하다.",
+      "second": [
+       "취소된 수영장 등록이 아직 유효해?",
+       "아니요. 수영장 등록은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "필라테스 등록"
+      ],
+      "obsolete_values": [
+       "수영장 등록"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-09-15T07:44:10.366Z"
+}

@@ -1,0 +1,145 @@
+{
+ "model": "deepseek-v4-flash",
+ "startedAt": "2026-09-15T07:50:22.213Z",
+ "rounds": [
+  {
+   "round": 1,
+   "failing": [
+    {
+     "index": 59,
+     "reasons": [
+      "cancel_one의 두 번째 질문은 취소한 항목이 아직 유효한지 물어야 한다(정답은 '아니요')",
+      "두 번째 질문에 현재 값이 들어 있다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "치과 예약과 안과 예약을 둘 다 잡았어.",
+       "치과 예약은 취소하고 안과 예약은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 예약이 뭐야?",
+      "expected": "안과 예약이 남아 있다.",
+      "obsolete": "치과 예약도 유효하다.",
+      "second": [
+       "안과 예약이 아직 유효해?",
+       "네, 안과 예약은 유효하다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "안과 예약"
+      ],
+      "obsolete_values": [
+       "치과 예약"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "failing": [
+    {
+     "index": 59,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "소설 대여와 영화 대여를 둘 다 신청했어.",
+       "소설 대여는 취소하고 영화 대여는 그대로 둬."
+      ],
+      "question": "아직 남아 있는 대여가 뭐야?",
+      "expected": "영화 대여가 남아 있다.",
+      "obsolete": "소설 대여가 유지된다.",
+      "second": [
+       "취소한 소설 대여가 아직 유효해?",
+       "아니요. 소설 대여는 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "영화 대여"
+      ],
+      "obsolete_values": [
+       "소설 대여"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "failing": [
+    {
+     "index": 59,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다",
+      "cancel_one의 두 번째 질문은 취소한 항목이 아직 유효한지 물어야 한다(정답은 '아니요')"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "수영장 이용권과 헬스장 이용권을 둘 다 등록했어.",
+       "수영장 이용권은 취소할게. 헬스장 이용권은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 이용권이 뭐야?",
+      "expected": "헬스장 이용권이 남아 있다.",
+      "obsolete": "수영장 이용권이 유지된다.",
+      "second": [
+       "취소한 이용권도 아직 유효해?",
+       "아니요. 수영장 이용권은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "헬스장 이용권"
+      ],
+      "obsolete_values": [
+       "수영장 이용권"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 4,
+   "failing": [
+    {
+     "index": 59,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "피아노 학원과 요가 학원을 둘 다 등록했어.",
+       "피아노 학원은 취소하고 요가 학원은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 학원이 뭐야?",
+      "expected": "아직 남아 있는 학원은 요가 학원이다.",
+      "obsolete": "피아노 학원이 아직 유효하다",
+      "second": [
+       "취소한 피아노 학원이 아직 유효해?",
+       "아니요. 피아노 학원은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "요가 학원"
+      ],
+      "obsolete_values": [
+       "피아노 학원"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-09-15T07:50:33.857Z"
+}

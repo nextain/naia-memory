@@ -1,0 +1,11 @@
+{
+ "model": "deepseek-v4-flash",
+ "startedAt": "2026-09-15T07:46:55.075Z",
+ "rounds": [
+  {
+   "round": 1,
+   "failing": []
+  }
+ ],
+ "finishedAt": "2026-09-15T07:46:55.099Z"
+}

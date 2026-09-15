@@ -111,10 +111,11 @@
   "fallback_detection": "The LLM filter class has two catch branches (callLLMOrFallback and the vLLM batch path), both of which console.warn a '[...ContradictionFilter]' message before falling back; the runner counts these and aborts, and separately counts non-200 filter receipts. A response with missing per-pair entries is treated by the product as 'no contradiction' without a warning; that is product behaviour, not a fallback.",
   "recorded_not_invalidating": [
     "delete verification physical call counts per run and arm",
-    "contradiction-filter call and non-200 counts"
+    "contradiction-filter call and non-200 counts",
+    "delete verification refusals by reason from the product result (value-mismatch count reported separately: surface-form drift such as '치과 예약'/'치과' can appear as deletion_not_applied under R3)"
   ],
-  "frozen": false,
-  "frozen_at": null,
+  "frozen": true,
+  "frozen_at": "2026-09-15",
   "registered_before_any_provider_result": true,
   "owner_decisions": {
     "2026-09-15": "Luke: prove on Korean first; plan and follow it with checkpoints. First Korean run (candidate-ko) did not pass its registered criteria; plan revised (PLAN.md progress log)."
@@ -122,23 +123,32 @@
   "scope": "Korean confirmation set: 120 sealed cases (14 construction families; 6 mechanism-targeted families at 12 cases, 8 others at 6), authored by a model with no repository access from a brief, curated by mechanical checks and reviewer rejections without hand edits. Topics disjoint from the first Korean held-out set. Cloud path, synthetic.",
   "design": {
     "directory": "reports/quality/ko-confirm-20260915/design",
-    "manifest_sha256": "91f2791d9a22bbb3085b904cb826c498b5da7e8c48b83fd0cadc4105218e6d8c",
+    "manifest_sha256": "507307b191de2c3fc2d656c43c09febf4515c888e804e40d225603f1867b21a1",
     "seal": {
       "AUTHOR-BRIEF.md": "5f359e15aa4834312894a6d4ba3c3bd38517bc18c01a4c473daebd2cfd67fd39",
       "author-receipts.json": "4a27ea8230abf9d3a748c003b10b3af5ce8e502aac5f7d276959c4e614f14f9a",
       "first-set-questions.json": "b293bd4121a2b4b3bffbd7abf0305a4c5270a4b4935fe457f6a05ef92b1c5634",
+      "curate.mjs": "f78d96b443094120440b3008175fcdc6ecb25bf9f93f3c3fefb4813047347775",
       "curation-log-round1.json": "5dded3256597a572547b8715c3d98253ee5d3abb65dc0e07970da2060668ee1c",
       "curation-log-2.json": "822808c60e1c4f4d331a7b988df64b2870d18becc8ce61f4608974a5df34e0ac",
       "curation-log-3.json": "1529b3c078ccda87ac3fb81f1c10b2cee8e3d18bc7ff5a0c40dc08ff3d1cc8d7",
       "curation-log-4-review.json": "72f992cf45cc872bac63175a0a267dd64a32fd65492582fcb9ea1279c8d5b8e4",
       "curation-log-5.json": "6809936436a5f0e93c7425802528d3d24ead1dc2328b8ae46ffe5367289abf0a",
       "curation-log-6.json": "f4da98b10f0d4c874caf02cf72c2c5493633f2cd4c18202700f42c7e3d5531cc",
-      "rows.json": "73a65365c0c62eaa3a50a095ac09b0e9d01f03ece0a145579f714318c1e4577d",
-      "materialize.py": "23a26b5cc0a2c3564272e9a43be4c064e79e2400af61a701d1e6b144f8778885",
+      "curation-log-7-review.json": "8211f3aff96c492f665e9ae96bd241a7c346cf58ec683a0a53f8b02d09c519fa",
+      "curation-log-8.json": "688c593a9bce226f267ffd131041b5dfb9a1d09f6a42b2ca13c069a04ace1d5e",
+      "curation-log-9-review.json": "130f91cc9867db22dca0f151b8135fb39076a5efd9fb5d083bc142d85443097b",
+      "curation-log-10.json": "41024f9adcad63659b0bc4f9c5b91edc1dc71508b5d6b5692895a2c97140cb02",
+      "curation-log-11.json": "29bf69e9f4c76d5a6d20938bfda8f5e7a2e143662bbe79b896c71d1c101a8621",
+      "curation-log-12.json": "5115aa5308cf573cfcf094366af3ae1191e840e597cc6bff5e0f19eb5e87d5d9",
+      "curation-log-13-review.json": "dc568e9084a6e3de4c6c7cb419f5e9ad418c844fdf0ad70c4b33f8e01453bb05",
+      "curation-log-14.json": "5c6b4b4d90f6071720a97d81ccacb35bd702b01b30f8a940ebdce94b9854b828",
+      "rows.json": "4263979500d8e209f37da9b8e216fd6b5a77a359c9cce5c6fa093ec9d4421b8c",
+      "materialize.py": "8d80642dcf915fd680674526451b91c385971763e2e90dd2f79f0ec39738e0e9",
       "factstate.py": "e29ed06b5d012a486e3fbdeb56c0ffe2c8d1566f841cd5ef64be528fc863d80e",
       "compare.py": "599aac5866d33dd98aff5e09e6396dea24c445aebcd3da665c07967f048c18e4",
-      "design/memory-inputs.json": "16cda8bdb1cc5fad07f450b6705a4638a9460dd1308f85961d62cc9f5cf7aedb",
-      "design/memory-gold.json": "58efa9872027c063b8cc2a1319c799f3de6e0d9b8b080675479ed0cc05fdb2ba",
+      "design/memory-inputs.json": "615f3e6d887cc2d486116365cad06d2439a7f400ca124fee6c1a79b24fea2be0",
+      "design/memory-gold.json": "e4281b4e79ca2557b9a9abb0fa4d06b88bb5fb1084ce7b2bb4143c8956c830d8",
       "design/rubric.json": "ed074585c57ced9dbd1dc6bf5c727348c125e5385bb3fbdc2c2117bcfad13ad2"
     }
   },
@@ -158,7 +168,7 @@
   },
   "runner": {
     "file": "reports/quality/candidate-kc-20260915/run-kc.mjs",
-    "sha256": null
+    "sha256": "8d2b0e4e383ab35a39e8ec8b54ee0692ce16cf7ed09e11a9d775e5b20b089fd5"
   },
   "invalidity": [
     "before run: physical extraction calls != 84, or extraction call failures beyond the extraction gate",
@@ -189,8 +199,7 @@
       "factstate_sha256": "e29ed06b5d012a486e3fbdeb56c0ffe2c8d1566f841cd5ef64be528fc863d80e"
     },
     "factstate_v2_changes": "structured value from trace lineage is matched before sentence text; deletion_applied counts archived only; supersession of a value to delete is reported as deletion_by_supersession (not applied). Motivated by ko-33 and ko-34 misclassification on the first set, fixed before confirmation results.",
-    "judgement_order": "compare.py output committed before judge and score",
-    "design_rationale_from_first_run": "On the first Korean set the 14-family cluster bootstrap put the upper bound at 0 because the effect sits in a few families; a mechanism-targeted subset with a paired permutation test is registered instead. The first set is development-exposed; an exploratory run of this analysis on it is committed as ko-confirm-20260915/calibration-firstset-r3check.json and is not evidence."
+    "judgement_order": "compare.py output committed before judge and score"
   },
   "secondary_metric": {
     "all_cases": "same case-error difference over all 120 cases with the 14-family cluster bootstrap (as in the first run)",
@@ -204,7 +213,7 @@
       "preferences/coexist": "small decrease or none (labels often identical)",
       "delete/forget": "deletion_applied increases (turn 2 names the item, so label grounding and string-exact candidates can reach the verifier)",
       "project_isolation/delete_one": "deletion_applied increases; wrong_archive of the other project stays 0",
-      "delete/cancel_one": "case error does not increase; wrong_archive stays 0 (R3); deletion_applied roughly unchanged",
+      "delete/cancel_one": "case error does not increase and wrong_archive stays 0 (R3). Where the extractor stored only one of the two items, R3 refuses the delete, so deletion_applied may fall; any such fall must be paired with the disappearance of a wrong archive, not with a new error.",
       "non-target families": "no systematic change"
     },
     "paths": "improvement on naia-llm-filter in the same direction, possibly smaller",
@@ -219,10 +228,11 @@
     "bundle_effect": "The after product is the a0dd0b5 bundle plus R3; results are the bundle's effect.",
     "at_time": "history/at_time 6 cases use the registered unsupported at-time path.",
     "factstate_limits": "Rule-based matching misses values stored in another surface form or language (reported as unmatched); Korean date and 천/만 amount forms are converted.",
-    "curation": "Rows replaced by mechanical checks across six curation logs and by reviewer rejections (forget turn 2 lacking the item name, coexist verb-phrase values, unchanged rows without an alternative, one swapped value annotation); project names were assigned for rows rejected for name reuse. Known residuals: several coexist cases share the rain/snow day frame; unchanged case 88 has values '카페' and '홈카페' where one contains the other.",
+    "curation": "Rows replaced by mechanical checks across six curation logs and by reviewer rejections (forget turn 2 lacking the item name, coexist verb-phrase values, unchanged rows without an alternative, one swapped value annotation); project names were assigned for rows rejected for name reuse. Known residuals: several coexist cases share the rain/snow day frame; unchanged case 88 has values '카페' and '홈카페' where one contains the other. Seal review rejected rows 8 (ambiguous insurance question), 55 (second question contained '취소된'), 88 (current value was a substring of the obsolete value) and 110 (API-key-like value); they were regenerated. Duplicate question text is allowed when values differ (cases have separate stores). Residual: index 59 second question contains '취소한' (affects the q2 answer only, not fact state).",
     "cancel_one_second_question": "cancel_one second questions name the cancelled item with the answer 'no', as in the development design (not a leak).",
     "real_names": "A few real brand or title names appear as user-owned values.",
     "case_ids": "three-digit case ids (memory-ko-001..120) outside the development schema's two-digit pattern; the runner does not validate that pattern."
   },
-  "review": "pending Fable fixed-and-executable verdict"
+  "review": "Fable 2026-09-15: fixed and executable after regenerating rows 8/55/88/110 with reseal, security test pass, runner sha, design_change_basis heading, cancel_one prediction clause, value-mismatch recording",
+  "design_change_basis": "On the first Korean set the 14-family cluster bootstrap put the upper bound at 0 because the effect sits in a few families; a mechanism-targeted subset with a paired permutation test is registered instead. The first set is development-exposed; an exploratory run of this analysis on it is committed as ko-confirm-20260915/calibration-firstset-r3check.json and is not evidence."
 }

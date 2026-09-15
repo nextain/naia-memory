@@ -139,7 +139,7 @@ import { getEncoding } from "js-tiktoken";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "../../..");
 const DESIGN_DIR = path.join(REPO, "reports/quality/ko-confirm-20260915/design");
-const MANIFEST_SHA256 = "91f2791d9a22bbb3085b904cb826c498b5da7e8c48b83fd0cadc4105218e6d8c";
+const MANIFEST_SHA256 = "507307b191de2c3fc2d656c43c09febf4515c888e804e40d225603f1867b21a1";
 const PREREG_PATH = path.join(HERE, "preregistration.json");
 
 export const RUN_IDS = Object.freeze(["candidate-kc-before-20260915", "candidate-kc-after-20260915"]);

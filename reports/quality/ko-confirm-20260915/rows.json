@@ -147,21 +147,19 @@
   "category": "new",
   "variant": "stable",
   "turns": [
-   "내가 가입한 보험은 삼성화재 자동차보험이야.",
-   "내 건강보험은 국민건강보험이야. 자동차보험이랑은 달라."
+   "내가 가입한 건강검진 보험은 국민건강보험이야.",
+   "요즘 치아보험도 하나 더 들었는데, 그건 별개야."
   ],
-  "question": "내가 가입한 보험은 뭐야?",
-  "expected": "내가 가입한 보험은 삼성화재 자동차보험이다.",
+  "question": "내가 가입한 건강검진 보험은 뭐야?",
+  "expected": "건강검진 보험은 국민건강보험이다.",
   "obsolete": "",
   "second": null,
   "forbidden_value": null,
   "current_values": [
-   "삼성화재 자동차보험"
+   "국민건강보험"
   ],
   "obsolete_values": [],
-  "other_values": [
-   "국민건강보험"
-  ]
+  "other_values": []
  },
  {
   "category": "new",
@@ -1080,22 +1078,22 @@
   "category": "delete",
   "variant": "cancel_one",
   "turns": [
-   "도서관 대출과 DVD 대여를 둘 다 신청했어.",
-   "DVD 대여는 취소할게. 도서관 대출은 그대로 둬."
+   "스키 대여와 보드 대여를 둘 다 예약했어.",
+   "스키 대여는 취소하고 보드 대여는 그대로 둬."
   ],
-  "question": "아직 남아 있는 신청이 뭐야?",
-  "expected": "도서관 대출이 남아 있다.",
-  "obsolete": "DVD 대여가 유지된다.",
+  "question": "아직 남아 있는 대여가 뭐야?",
+  "expected": "아직 남아 있는 대여는 보드 대여이다.",
+  "obsolete": "스키 대여가 아직 유효하다.",
   "second": [
-   "취소된 DVD 대여가 아직 유효해?",
-   "아니요. DVD 대여는 취소되었다."
+   "스키 대여가 아직 유효해?",
+   "아니요. 스키 대여는 취소되었다."
   ],
   "forbidden_value": null,
   "current_values": [
-   "도서관 대출"
+   "보드 대여"
   ],
   "obsolete_values": [
-   "DVD 대여"
+   "스키 대여"
   ],
   "other_values": []
  },
@@ -1149,22 +1147,22 @@
   "category": "delete",
   "variant": "cancel_one",
   "turns": [
-   "캠핑 장비 대여와 낚시 장비 대여를 둘 다 예약했어.",
-   "낚시 장비 대여는 취소할게. 캠핑 장비 대여는 그대로 둬."
+   "수영장 회원권과 헬스장 회원권을 둘 다 등록했어.",
+   "헬스장 회원권은 취소하고 수영장 회원권만 유지해 줘."
   ],
-  "question": "아직 남아 있는 대여가 뭐야?",
-  "expected": "캠핑 장비 대여가 남아 있다.",
-  "obsolete": "낚시 장비 대여가 유지된다.",
+  "question": "아직 남아 있는 회원권이 뭐야?",
+  "expected": "아직 남아 있는 회원권은 수영장 회원권이다.",
+  "obsolete": "헬스장 회원권이 아직 유효하다.",
   "second": [
-   "낚시 장비 대여가 아직 유효해?",
-   "아니요. 낚시 장비 대여는 취소되었다."
+   "헬스장 회원권이 아직 유효해?",
+   "아니요. 헬스장 회원권은 취소되었다."
   ],
   "forbidden_value": null,
   "current_values": [
-   "캠핑 장비 대여"
+   "수영장 회원권"
   ],
   "obsolete_values": [
-   "낚시 장비 대여"
+   "헬스장 회원권"
   ],
   "other_values": []
  },
@@ -1172,22 +1170,22 @@
   "category": "delete",
   "variant": "cancel_one",
   "turns": [
-   "영화관 정기권과 헬스장 정기권을 둘 다 끊었어.",
-   "헬스장 정기권은 취소하고 영화관 정기권은 유지해 줘."
+   "피아노 학원과 요가 학원을 둘 다 등록했어.",
+   "피아노 학원은 취소하고 요가 학원은 그대로 둬."
   ],
-  "question": "아직 남아 있는 정기권이 뭐야?",
-  "expected": "아직 남아 있는 정기권은 영화관 정기권이다.",
-  "obsolete": "헬스장 정기권이 아직 유효하다.",
+  "question": "아직 남아 있는 학원이 뭐야?",
+  "expected": "아직 남아 있는 학원은 요가 학원이다.",
+  "obsolete": "피아노 학원이 아직 유효하다",
   "second": [
-   "헬스장 정기권이 아직 유효해?",
-   "아니요. 헬스장 정기권은 취소되었다."
+   "취소한 피아노 학원이 아직 유효해?",
+   "아니요. 피아노 학원은 취소되었다."
   ],
   "forbidden_value": null,
   "current_values": [
-   "영화관 정기권"
+   "요가 학원"
   ],
   "obsolete_values": [
-   "헬스장 정기권"
+   "피아노 학원"
   ],
   "other_values": []
  },
@@ -1743,19 +1741,19 @@
   "category": "preferences",
   "variant": "unchanged",
   "turns": [
-   "나는 비 오는 날엔 카페에 가는 걸 좋아해.",
-   "친구가 집에 와서 같이 홈카페를 하자고 했는데, 그래도 비 오는 날은 카페가 좋아. 선호는 그대로야."
+   "내가 제일 좋아하는 음료는 콜라야.",
+   "새로 탄산수 제조기를 샀는데, 그래도 내 제일 좋아하는 음료는 여전히 콜라야."
   ],
-  "question": "비 오는 날 나는 뭘 좋아해?",
-  "expected": "비 오는 날 나는 카페를 좋아한다.",
-  "obsolete": "비 오는 날 나는 홈카페를 좋아한다.",
+  "question": "내가 제일 좋아하는 음료가 뭐야?",
+  "expected": "내가 제일 좋아하는 음료는 콜라이다.",
+  "obsolete": "내가 제일 좋아하는 음료는 탄산수이다.",
   "second": null,
   "forbidden_value": null,
   "current_values": [
-   "카페"
+   "콜라"
   ],
   "obsolete_values": [
-   "홈카페"
+   "탄산수"
   ],
   "other_values": []
  },
@@ -2257,24 +2255,24 @@
   "category": "project_isolation",
   "variant": "delete_one",
   "turns": [
-   "고운 프로젝트의 API 키는 sk-abc123이야.",
-   "드림 프로젝트의 API 키는 sk-xyz789이야.",
-   "고운 프로젝트의 API 키 기억만 삭제해 줘. 드림 프로젝트는 그대로 둬."
+   "새벽 프로젝트의 FTP 계정 비밀번호는 tree42야.",
+   "빛결 프로젝트의 FTP 계정 비밀번호는 sun77이야.",
+   "새벽 프로젝트의 FTP 계정 비밀번호만 기억에서 지워 줘. 빛결 건은 그대로 둬."
   ],
-  "question": "고운 프로젝트의 API 키를 기억해?",
-  "expected": "고운 프로젝트의 API 키는 삭제되어 알 수 없다.",
-  "obsolete": "고운 프로젝트의 API 키는 sk-abc123이다.",
+  "question": "새벽 프로젝트의 FTP 계정 비밀번호를 기억해?",
+  "expected": "새벽 프로젝트의 FTP 계정 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "새벽 프로젝트의 FTP 계정 비밀번호는 tree42이다.",
   "second": [
-   "드림 프로젝트의 API 키는?",
-   "드림 프로젝트의 API 키는 sk-xyz789이다."
+   "빛결 프로젝트의 FTP 계정 비밀번호는?",
+   "빛결 프로젝트의 FTP 계정 비밀번호는 sun77이다."
   ],
   "forbidden_value": null,
   "current_values": [],
   "obsolete_values": [
-   "sk-abc123"
+   "tree42"
   ],
   "other_values": [
-   "sk-xyz789"
+   "sun77"
   ]
  },
  {

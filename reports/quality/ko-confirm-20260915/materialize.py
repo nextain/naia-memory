@@ -76,11 +76,11 @@ lines = []
 for name in ["memory-inputs.json", "memory-gold.json", "rubric.json"]:
     lines.append(f"{hashlib.sha256((OUT / name).read_bytes()).hexdigest()}  {name}")
 seal = {"sealed_at": "2026-09-15", "files": {}}
-for name in ["AUTHOR-BRIEF.md", "author-receipts.json", "first-set-questions.json", "curation-log-round1.json", "curation-log-2.json", "curation-log-3.json", "curation-log-4-review.json", "curation-log-5.json", "curation-log-6.json", "rows.json", "materialize.py", "factstate.py", "compare.py"]:
+for name in ["AUTHOR-BRIEF.md", "author-receipts.json", "first-set-questions.json", "curate.mjs", "curation-log-round1.json", "curation-log-2.json", "curation-log-3.json", "curation-log-4-review.json", "curation-log-5.json", "curation-log-6.json", "curation-log-7-review.json", "curation-log-8.json", "curation-log-9-review.json", "curation-log-10.json", "curation-log-11.json", "curation-log-12.json", "curation-log-13-review.json", "curation-log-14.json", "rows.json", "materialize.py", "factstate.py", "compare.py"]:
     seal["files"][name] = hashlib.sha256((HERE / name).read_bytes()).hexdigest()
 for name in ["memory-inputs.json", "memory-gold.json", "rubric.json"]:
     seal["files"]["design/" + name] = hashlib.sha256((OUT / name).read_bytes()).hexdigest()
-seal["note"] = "Confirmation set sealed on 2026-09-15 before any result. Row replacements: mechanical checks (curation logs) and reviewer rejections recorded as FORCE_ROWS reasons in curation-log-4-review.json; no hand edits."
+seal["note"] = "Confirmation set resealed on 2026-09-15 before any result after the Fable seal review rejected rows 8, 55, 88 and 110 (curation-log-7-review.json); later checks added second-question hint and structure rules (logs 8-14). No hand edits. Known residual: case 60 (index 59) second question contains the hint '취소한' after five regenerations."
 seal["regenerated_rows"] = "see review-regeneration-log.json (rounds 1-2, manual review reasons) and curation-log*.json (mechanical check reasons)"
 (HERE / "SEAL.json").write_text(json.dumps(seal, indent=1) + "\n")
 (OUT / "manifest.sha256").write_text("\n".join(lines) + "\n")

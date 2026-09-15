@@ -14,9 +14,15 @@ const log = { model: MODEL, startedAt: new Date().toISOString(), rounds: [] };
 
 async function call(prompt, maxTokens = 3000) {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const res = await fetch(`${BASE}chat/completions`, { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${process.env.AZURE_FOUNDRY_KEY}` },
-      body: JSON.stringify({ model: MODEL, messages: [{ role: "user", content: prompt }], temperature: 0.7, max_tokens: maxTokens, response_format: { type: "json_object" } }) });
-    const data = await res.json();
+    let res, data;
+    try {
+      res = await fetch(`${BASE}chat/completions`, { method: "POST", signal: AbortSignal.timeout(120_000), headers: { "content-type": "application/json", authorization: `Bearer ${process.env.AZURE_FOUNDRY_KEY}` },
+        body: JSON.stringify({ model: MODEL, messages: [{ role: "user", content: prompt }], temperature: 0.7, max_tokens: maxTokens, response_format: { type: "json_object" } }) });
+      data = await res.json();
+    } catch (error) {
+      if (attempt === 3) throw error;
+      continue;
+    }
     try { return JSON.parse(data.choices[0].message.content); } catch { if (attempt === 3) throw new Error(`unparseable response: ${res.status}`); }
   }
 }
@@ -61,6 +67,9 @@ function check(index) {
   const q = norm(row.question);
   for (const v of values) if (norm(v) && q.includes(norm(v))) reasons.push(`질문에 값 '${v}'이 들어 있다. 값을 담지 않은 열린 질문으로 써야 한다`);
   if (row.second) for (const v of row.other_values ?? []) if (norm(v) && norm(row.second[0]).includes(norm(v))) reasons.push(`두 번째 질문에 값 '${v}'이 들어 있다`);
+  if (row.second && /(취소된|취소한|삭제된|삭제한|지운|바뀐 뒤)/.test(row.second[0])) reasons.push("두 번째 질문이 답('취소된' 등)을 암시한다");
+  if (row.variant === "cancel_one" && row.second && !(row.obsolete_values ?? []).some((v) => norm(row.second[0]).includes(norm(v)))) reasons.push("cancel_one의 두 번째 질문은 취소한 항목이 아직 유효한지 물어야 한다(정답은 '아니요')");
+  if (row.second && (row.current_values ?? []).some((v) => norm(v) && norm(row.second[0]).includes(norm(v)))) reasons.push("두 번째 질문에 현재 값이 들어 있다");
   const blob = JSON.stringify(row);
   for (const b of BANNED) if (blob.includes(b)) reasons.push(`금지 소재 '${b}'가 들어 있다`);
   const names = projectNames(row);
@@ -79,7 +88,12 @@ function check(index) {
   }
   if (/맞아\?|맞지\?|맞니\?/.test(row.question)) reasons.push("확인형 질문이다. 값을 담지 않은 열린 질문으로 써야 한다");
   if (firstSet.includes(row.question)) reasons.push("첫 번째 보유셋과 질문이 같다");
-  if (rows.some((other, j) => j < index && other.question === row.question)) reasons.push("이번 보유셋의 다른 사례와 질문이 같다");
+  // Identical question text across cases is not a leak (each case has its own
+  // store); reject only when the values also coincide.
+  if (rows.some((other, j) => j < index && other.question === row.question && JSON.stringify(other.current_values) === JSON.stringify(row.current_values))) reasons.push("이번 보유셋의 다른 사례와 질문과 값이 같다");
+  for (const v of values) if (norm(v).includes(norm(row.current_values?.[0] ?? "\u0000")) && norm(v) !== norm(row.current_values?.[0] ?? "") && (row.obsolete_values ?? []).includes(v)) reasons.push(`옛 값 '${v}'이 현재 값을 포함한다`);
+  for (const cur of row.current_values ?? []) for (const old of row.obsolete_values ?? []) if (norm(cur) && norm(old) && norm(cur) !== norm(old) && (norm(old).includes(norm(cur)) || norm(cur).includes(norm(old)))) reasons.push(`현재 값 '${cur}'과 옛 값 '${old}'이 서로 포함된다`);
+  if (/^sk-|api[_-]?key|AKIA/i.test(values.join(" "))) reasons.push("값이 실제 비밀키 형태다");
   if (row.variant === "forget" && rows.some((other, j) => j !== index && other.variant === "forget" && other.turns[1] === row.turns[1])) reasons.push("2턴이 다른 forget 사례와 똑같다. 지울 항목 이름을 넣어 표현을 바꿔야 한다");
   if (row.variant === "forget" && (!row.forbidden_value || !(row.obsolete_values ?? []).map(norm).includes(norm(row.forbidden_value)))) reasons.push("forbidden_value가 obsolete_values와 다르다");
   return [...new Set(reasons)];

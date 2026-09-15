@@ -1,0 +1,260 @@
+{
+ "model": "deepseek-v4-flash",
+ "startedAt": "2026-09-15T07:45:21.122Z",
+ "rounds": [
+  {
+   "round": 1,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "검토 반려: 다른 cancel_one 사례와 질문이나 항목이 겹친다. 이미 쓰인 항목(골프 강습, 기차 예약, 넷플릭스 구독, 도서관 회원권, 바이올린 레슨, 보드 대여, 비행기 예약, 수영 강습, 수영장 등록, 수영장 정기권, 스키 대여, 영화 티켓, 영화관 정기권, 요가 클래스, 유튜브 프리미엄 구독, 자동차 보험, 체육관 회원권, 콘서트 티켓, 피아노 레슨, 필라테스 클래스, 헬스장 등록, 헬스장 정기권, 화재 보험)과 질문(아직 남아 있는 강습이 뭐야? / 아직 남아 있는 구독이 뭐야? / 아직 남아 있는 대여가 뭐야? / 아직 남아 있는 등록이 뭐야? / 아직 남아 있는 레슨이 뭐야? / 아직 남아 있는 보험이 뭐야? / 아직 남아 있는 예약이 뭐야? / 아직 남아 있는 정기권이 뭐야? / 아직 남아 있는 클래스가 뭐야? / 아직 남아 있는 티켓이 뭐야? / 아직 남아 있는 회원권이 뭐야?)을 쓰지 않는다. 두 항목의 부류(예: 병원 진료, 택배, 공연)도 이미 쓰인 것과 다르게 한다."
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "영화관 정기권과 수영장 정기권을 둘 다 등록했어.",
+       "영화관 정기권은 취소하고 수영장 정기권은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 정기권이 뭐야?",
+      "expected": "수영장 정기권이 남아 있다.",
+      "obsolete": "영화관 정기권이 유지된다.",
+      "second": [
+       "취소된 정기권이 아직 유효해?",
+       "아니요. 영화관 정기권은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "수영장 정기권"
+      ],
+      "obsolete_values": [
+       "영화관 정기권"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 59,
+     "reasons": [
+      "값이 다른 사례와 겹친다(영화관정기권)",
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "영화관 정기권과 헬스장 정기권을 둘 다 끊었어.",
+       "헬스장 정기권은 취소하고 영화관 정기권은 유지해 줘."
+      ],
+      "question": "아직 남아 있는 정기권이 뭐야?",
+      "expected": "아직 남아 있는 정기권은 영화관 정기권이다.",
+      "obsolete": "헬스장 정기권이 아직 유효하다.",
+      "second": [
+       "헬스장 정기권이 아직 유효해?",
+       "아니요. 헬스장 정기권은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "영화관 정기권"
+      ],
+      "obsolete_values": [
+       "헬스장 정기권"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "치과 스케일링 예약과 안과 검진 예약을 둘 다 잡았어.",
+       "안과 검진 예약만 취소해 줘. 치과 스케일링은 그대로 유지해."
+      ],
+      "question": "아직 남아 있는 예약이 뭐야?",
+      "expected": "치과 스케일링 예약이 남아 있다.",
+      "obsolete": "안과 검진 예약이 유지된다.",
+      "second": [
+       "취소된 안과 검진 예약이 아직 유효해?",
+       "아니요. 안과 검진 예약은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "치과 스케일링 예약"
+      ],
+      "obsolete_values": [
+       "안과 검진 예약"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 59,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "도서관 회원증과 헬스장 회원증을 둘 다 등록했어.",
+       "도서관 회원증은 취소하고 헬스장 회원증은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 등록이 뭐야?",
+      "expected": "헬스장 회원증이 남아 있다.",
+      "obsolete": "도서관 회원증이 유지된다.",
+      "second": [
+       "취소된 도서관 회원증이 아직 유효해?",
+       "아니요. 도서관 회원증은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "헬스장 회원증"
+      ],
+      "obsolete_values": [
+       "도서관 회원증"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "헬스장 1년 등록과 PT 10회 등록을 둘 다 했어.",
+       "PT 10회 등록은 취소하고 헬스장 1년 등록만 유지해 줘."
+      ],
+      "question": "아직 남아 있는 등록이 뭐야?",
+      "expected": "헬스장 1년 등록이 남아 있다.",
+      "obsolete": "PT 10회 등록이 유지된다.",
+      "second": [
+       "취소된 등록이 아직 유효해?",
+       "아니요. PT 10회 등록은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "헬스장 1년 등록"
+      ],
+      "obsolete_values": [
+       "PT 10회 등록"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 59,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "피부과 예약과 치과 예약을 둘 다 잡았어.",
+       "피부과 예약은 취소하고 치과 예약은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 예약이 뭐야?",
+      "expected": "아직 남아 있는 예약은 치과 예약이다.",
+      "obsolete": "피부과 예약이 아직 유효하다.",
+      "second": [
+       "취소된 예약이 아직 유효해?",
+       "아니요. 피부과 예약은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "치과 예약"
+      ],
+      "obsolete_values": [
+       "피부과 예약"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 4,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "피부과 예약과 안과 예약을 둘 다 잡았어.",
+       "안과 예약은 취소할게. 피부과 예약은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 예약이 뭐야?",
+      "expected": "남아 있는 예약은 피부과 예약이다.",
+      "obsolete": "안과 예약이 유지된다.",
+      "second": [
+       "취소된 안과 예약이 아직 유효해?",
+       "아니요. 안과 예약은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "피부과 예약"
+      ],
+      "obsolete_values": [
+       "안과 예약"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 59,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "도서관 대출과 영화관 대여를 둘 다 신청했어.",
+       "도서관 대출은 취소하고 영화관 대여는 그대로 둬."
+      ],
+      "question": "아직 남아 있는 대여가 뭐야?",
+      "expected": "영화관 대여가 남아 있다.",
+      "obsolete": "도서관 대출이 유지된다.",
+      "second": [
+       "취소된 도서관 대출이 아직 유효해?",
+       "아니요. 도서관 대출은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "영화관 대여"
+      ],
+      "obsolete_values": [
+       "도서관 대출"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-09-15T07:46:35.558Z"
+}

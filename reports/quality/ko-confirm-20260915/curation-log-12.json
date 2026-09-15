@@ -1,0 +1,201 @@
+{
+ "model": "deepseek-v4-flash",
+ "startedAt": "2026-09-15T07:49:26.779Z",
+ "rounds": [
+  {
+   "round": 1,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "영화관 정기권과 수영장 정기권을 둘 다 끊었어.",
+       "영화관 정기권은 취소하고 수영장 정기권은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 정기권이 뭐야?",
+      "expected": "수영장 정기권이 남아 있다.",
+      "obsolete": "영화관 정기권이 유지된다.",
+      "second": [
+       "취소한 정기권이 아직 유효해?",
+       "아니요. 영화관 정기권은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "수영장 정기권"
+      ],
+      "obsolete_values": [
+       "영화관 정기권"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 59,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "주말 농장 텃밭과 허브 화분을 둘 다 신청했어.",
+       "주말 농장 텃밭은 취소하고 허브 화분만 유지할게."
+      ],
+      "question": "아직 남아 있는 신청이 뭐야?",
+      "expected": "아직 남아 있는 신청은 허브 화분이다.",
+      "obsolete": "주말 농장 텃밭이 아직 유효하다.",
+      "second": [
+       "취소한 텃밭 신청이 아직 유효해?",
+       "아니요. 주말 농장 텃밭 신청은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "허브 화분"
+      ],
+      "obsolete_values": [
+       "주말 농장 텃밭"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "도서관 회원증과 헬스장 회원증을 둘 다 등록했어.",
+       "도서관 회원증은 취소하고 헬스장 회원증은 유지해 줘."
+      ],
+      "question": "아직 남아 있는 등록이 뭐야?",
+      "expected": "아직 남아 있는 등록은 헬스장 회원증이다.",
+      "obsolete": "도서관 회원증이 아직 유효하다.",
+      "second": [
+       "취소된 등록이 아직 유효해?",
+       "아니요. 도서관 회원증은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "헬스장 회원증"
+      ],
+      "obsolete_values": [
+       "도서관 회원증"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 59,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "도서관 대출과 영화 대여를 둘 다 신청했어.",
+       "도서관 대출은 취소하고 영화 대여는 그대로 둬."
+      ],
+      "question": "아직 남아 있는 신청이 뭐야?",
+      "expected": "영화 대여가 남아 있다.",
+      "obsolete": "도서관 대출이 유지된다.",
+      "second": [
+       "취소된 도서관 대출이 아직 유효해?",
+       "아니요. 도서관 대출은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "영화 대여"
+      ],
+      "obsolete_values": [
+       "도서관 대출"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "failing": [
+    {
+     "index": 59,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "야구장 대관 예약과 족구장 대관 예약을 둘 다 잡았어.",
+       "야구장 대관 예약은 취소하고 족구장 대관 예약은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 대관 예약이 뭐야?",
+      "expected": "족구장 대관 예약이 남아 있다.",
+      "obsolete": "야구장 대관 예약이 유지된다.",
+      "second": [
+       "취소된 대관 예약이 아직 유효해?",
+       "아니요. 야구장 대관 예약은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "족구장 대관 예약"
+      ],
+      "obsolete_values": [
+       "야구장 대관 예약"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 4,
+   "failing": [
+    {
+     "index": 59,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "음악 감상실 대관과 요가실 대관을 둘 다 예약했어.",
+       "음악 감상실 대관은 취소하고 요가실 대관만 유지해 줘."
+      ],
+      "question": "아직 남아 있는 대관 예약이 뭐야?",
+      "expected": "아직 남아 있는 대관 예약은 요가실 대관이다.",
+      "obsolete": "음악 감상실 대관이 아직 유효하다.",
+      "second": [
+       "취소한 음악 감상실 대관이 아직 유효해?",
+       "아니요. 음악 감상실 대관은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "요가실 대관"
+      ],
+      "obsolete_values": [
+       "음악 감상실 대관"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-09-15T07:49:51.239Z"
+}

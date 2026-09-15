@@ -358,7 +358,7 @@
       "propositions": [
         {
           "id": "p1",
-          "text": "내가 가입한 보험은 삼성화재 자동차보험이다.",
+          "text": "건강검진 보험은 국민건강보험이다.",
           "status": "current",
           "project": "memory-ko-009-a",
           "source_event_ids": [
@@ -371,7 +371,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "내가 가입한 보험은 삼성화재 자동차보험이다.",
+          "expected_answer": "건강검진 보험은 국민건강보험이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -391,12 +391,10 @@
       "values": {
         "variant": "stable",
         "current_values": [
-          "삼성화재 자동차보험"
+          "국민건강보험"
         ],
         "obsolete_values": [],
-        "other_values": [
-          "국민건강보험"
-        ]
+        "other_values": []
       }
     },
     {
@@ -3110,7 +3108,7 @@
       "propositions": [
         {
           "id": "p1",
-          "text": "도서관 대출이 남아 있다.",
+          "text": "아직 남아 있는 대여는 보드 대여이다.",
           "status": "current",
           "project": "memory-ko-056-a",
           "source_event_ids": [
@@ -3121,7 +3119,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "DVD 대여가 유지된다.",
+          "text": "스키 대여가 아직 유효하다.",
           "status": "deleted",
           "project": "memory-ko-056-a",
           "source_event_ids": [
@@ -3131,7 +3129,7 @@
         },
         {
           "id": "p2",
-          "text": "아니요. DVD 대여는 취소되었다.",
+          "text": "아니요. 스키 대여는 취소되었다.",
           "status": "current",
           "project": "memory-ko-056-a",
           "source_event_ids": [
@@ -3143,7 +3141,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "도서관 대출이 남아 있다.",
+          "expected_answer": "아직 남아 있는 대여는 보드 대여이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -3163,7 +3161,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "아니요. DVD 대여는 취소되었다.",
+          "expected_answer": "아니요. 스키 대여는 취소되었다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -3185,10 +3183,10 @@
       "values": {
         "variant": "cancel_one",
         "current_values": [
-          "도서관 대출"
+          "보드 대여"
         ],
         "obsolete_values": [
-          "DVD 대여"
+          "스키 대여"
         ],
         "other_values": []
       }
@@ -3374,7 +3372,7 @@
       "propositions": [
         {
           "id": "p1",
-          "text": "캠핑 장비 대여가 남아 있다.",
+          "text": "아직 남아 있는 회원권은 수영장 회원권이다.",
           "status": "current",
           "project": "memory-ko-059-a",
           "source_event_ids": [
@@ -3385,7 +3383,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "낚시 장비 대여가 유지된다.",
+          "text": "헬스장 회원권이 아직 유효하다.",
           "status": "deleted",
           "project": "memory-ko-059-a",
           "source_event_ids": [
@@ -3395,7 +3393,7 @@
         },
         {
           "id": "p2",
-          "text": "아니요. 낚시 장비 대여는 취소되었다.",
+          "text": "아니요. 헬스장 회원권은 취소되었다.",
           "status": "current",
           "project": "memory-ko-059-a",
           "source_event_ids": [
@@ -3407,7 +3405,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "캠핑 장비 대여가 남아 있다.",
+          "expected_answer": "아직 남아 있는 회원권은 수영장 회원권이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -3427,7 +3425,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "아니요. 낚시 장비 대여는 취소되었다.",
+          "expected_answer": "아니요. 헬스장 회원권은 취소되었다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -3449,10 +3447,10 @@
       "values": {
         "variant": "cancel_one",
         "current_values": [
-          "캠핑 장비 대여"
+          "수영장 회원권"
         ],
         "obsolete_values": [
-          "낚시 장비 대여"
+          "헬스장 회원권"
         ],
         "other_values": []
       }
@@ -3462,7 +3460,7 @@
       "propositions": [
         {
           "id": "p1",
-          "text": "아직 남아 있는 정기권은 영화관 정기권이다.",
+          "text": "아직 남아 있는 학원은 요가 학원이다.",
           "status": "current",
           "project": "memory-ko-060-a",
           "source_event_ids": [
@@ -3473,7 +3471,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "헬스장 정기권이 아직 유효하다.",
+          "text": "피아노 학원이 아직 유효하다",
           "status": "deleted",
           "project": "memory-ko-060-a",
           "source_event_ids": [
@@ -3483,7 +3481,7 @@
         },
         {
           "id": "p2",
-          "text": "아니요. 헬스장 정기권은 취소되었다.",
+          "text": "아니요. 피아노 학원은 취소되었다.",
           "status": "current",
           "project": "memory-ko-060-a",
           "source_event_ids": [
@@ -3495,7 +3493,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "아직 남아 있는 정기권은 영화관 정기권이다.",
+          "expected_answer": "아직 남아 있는 학원은 요가 학원이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -3515,7 +3513,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "아니요. 헬스장 정기권은 취소되었다.",
+          "expected_answer": "아니요. 피아노 학원은 취소되었다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -3537,10 +3535,10 @@
       "values": {
         "variant": "cancel_one",
         "current_values": [
-          "영화관 정기권"
+          "요가 학원"
         ],
         "obsolete_values": [
-          "헬스장 정기권"
+          "피아노 학원"
         ],
         "other_values": []
       }
@@ -5018,7 +5016,7 @@
       "propositions": [
         {
           "id": "p1",
-          "text": "비 오는 날 나는 카페를 좋아한다.",
+          "text": "내가 제일 좋아하는 음료는 콜라이다.",
           "status": "current",
           "project": "memory-ko-089-a",
           "source_event_ids": [
@@ -5029,7 +5027,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "비 오는 날 나는 홈카페를 좋아한다.",
+          "text": "내가 제일 좋아하는 음료는 탄산수이다.",
           "status": "false_or_foreign",
           "project": "memory-ko-089-a",
           "source_event_ids": [
@@ -5041,7 +5039,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "비 오는 날 나는 카페를 좋아한다.",
+          "expected_answer": "내가 제일 좋아하는 음료는 콜라이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -5063,10 +5061,10 @@
       "values": {
         "variant": "unchanged",
         "current_values": [
-          "카페"
+          "콜라"
         ],
         "obsolete_values": [
-          "홈카페"
+          "탄산수"
         ],
         "other_values": []
       }
@@ -6798,7 +6796,7 @@
       "propositions": [
         {
           "id": "p1",
-          "text": "고운 프로젝트의 API 키는 삭제되어 알 수 없다.",
+          "text": "새벽 프로젝트의 FTP 계정 비밀번호는 삭제되어 알 수 없다.",
           "status": "deleted_unknown",
           "project": "memory-ko-111-a",
           "source_event_ids": [
@@ -6809,7 +6807,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "고운 프로젝트의 API 키는 sk-abc123이다.",
+          "text": "새벽 프로젝트의 FTP 계정 비밀번호는 tree42이다.",
           "status": "deleted",
           "project": "memory-ko-111-a",
           "source_event_ids": [
@@ -6819,7 +6817,7 @@
         },
         {
           "id": "p2",
-          "text": "드림 프로젝트의 API 키는 sk-xyz789이다.",
+          "text": "빛결 프로젝트의 FTP 계정 비밀번호는 sun77이다.",
           "status": "current",
           "project": "memory-ko-111-b",
           "source_event_ids": [
@@ -6831,7 +6829,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "고운 프로젝트의 API 키는 삭제되어 알 수 없다.",
+          "expected_answer": "새벽 프로젝트의 FTP 계정 비밀번호는 삭제되어 알 수 없다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -6851,7 +6849,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "드림 프로젝트의 API 키는 sk-xyz789이다.",
+          "expected_answer": "빛결 프로젝트의 FTP 계정 비밀번호는 sun77이다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -6874,10 +6872,10 @@
         "variant": "delete_one",
         "current_values": [],
         "obsolete_values": [
-          "sk-abc123"
+          "tree42"
         ],
         "other_values": [
-          "sk-xyz789"
+          "sun77"
         ]
       }
     },

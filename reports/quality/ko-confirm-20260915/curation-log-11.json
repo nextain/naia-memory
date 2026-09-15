@@ -1,0 +1,108 @@
+{
+ "model": "deepseek-v4-flash",
+ "startedAt": "2026-09-15T07:47:06.163Z",
+ "rounds": [
+  {
+   "round": 1,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "피부과 예약과 안과 예약을 둘 다 잡았어.",
+       "안과 예약은 취소할게. 피부과 예약은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 예약이 뭐야?",
+      "expected": "남아 있는 예약은 피부과 예약이다.",
+      "obsolete": "안과 예약이 유지된다.",
+      "second": [
+       "취소된 안과 예약이 아직 유효해?",
+       "아니요. 안과 예약은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "피부과 예약"
+      ],
+      "obsolete_values": [
+       "안과 예약"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 59,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "도서관 대출과 영화관 대여를 둘 다 신청했어.",
+       "도서관 대출은 취소하고 영화관 대여는 그대로 둬."
+      ],
+      "question": "아직 남아 있는 대여가 뭐야?",
+      "expected": "영화관 대여가 남아 있다.",
+      "obsolete": "도서관 대출이 유지된다.",
+      "second": [
+       "취소된 도서관 대출이 아직 유효해?",
+       "아니요. 도서관 대출은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "영화관 대여"
+      ],
+      "obsolete_values": [
+       "도서관 대출"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "두 번째 질문이 답('취소된' 등)을 암시한다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "필라테스 회원권과 수영장 회원권을 둘 다 등록했어.",
+       "필라테스 회원권은 취소하고 수영장 회원권은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 회원권이 뭐야?",
+      "expected": "아직 남아 있는 회원권은 수영장 회원권이다.",
+      "obsolete": "필라테스 회원권이 아직 유효하다.",
+      "second": [
+       "취소된 회원권이 아직 유효해?",
+       "아니요. 필라테스 회원권은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "수영장 회원권"
+      ],
+      "obsolete_values": [
+       "필라테스 회원권"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "failing": []
+  }
+ ],
+ "finishedAt": "2026-09-15T07:49:17.879Z"
+}

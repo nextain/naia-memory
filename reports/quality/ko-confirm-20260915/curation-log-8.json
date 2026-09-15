@@ -1,0 +1,146 @@
+{
+ "model": "deepseek-v4-flash",
+ "startedAt": "2026-09-15T07:44:17.006Z",
+ "rounds": [
+  {
+   "round": 1,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "값이 다른 사례와 겹친다(수영장등록)",
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "수영장 등록과 필라테스 등록을 둘 다 했어.",
+       "수영장 등록은 취소하고 필라테스 등록은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 등록이 뭐야?",
+      "expected": "아직 남아 있는 등록은 필라테스 등록이다.",
+      "obsolete": "수영장 등록이 아직 유효하다.",
+      "second": [
+       "취소된 수영장 등록이 아직 유효해?",
+       "아니요. 수영장 등록은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "필라테스 등록"
+      ],
+      "obsolete_values": [
+       "수영장 등록"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "값이 다른 사례와 겹친다(수영장등록)",
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "수영장 등록과 요가 등록을 둘 다 했어.",
+       "수영장 등록은 취소하고 요가 등록은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 등록이 뭐야?",
+      "expected": "아직 남아 있는 등록은 요가 등록이다.",
+      "obsolete": "수영장 등록이 아직 유효하다.",
+      "second": [
+       "취소된 수영장 등록이 아직 유효해?",
+       "아니요. 수영장 등록은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "요가 등록"
+      ],
+      "obsolete_values": [
+       "수영장 등록"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "failing": [
+    {
+     "index": 58,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "도서관 회원 등록과 헬스장 회원 등록을 둘 다 했어.",
+       "도서관 회원 등록은 취소할게. 헬스장 회원 등록은 그대로 둬."
+      ],
+      "question": "아직 남아 있는 등록이 뭐야?",
+      "expected": "헬스장 회원 등록이 남아 있다.",
+      "obsolete": "도서관 회원 등록이 유지된다.",
+      "second": [
+       "취소된 도서관 회원 등록이 아직 유효해?",
+       "아니요. 도서관 회원 등록은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "헬스장 회원 등록"
+      ],
+      "obsolete_values": [
+       "도서관 회원 등록"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 4,
+   "failing": [
+    {
+     "index": 59,
+     "reasons": [
+      "값이 다른 사례와 겹친다(영화관정기권)",
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "영화관 정기권과 헬스장 정기권을 둘 다 끊었어.",
+       "헬스장 정기권은 취소하고 영화관 정기권은 유지해 줘."
+      ],
+      "question": "아직 남아 있는 정기권이 뭐야?",
+      "expected": "아직 남아 있는 정기권은 영화관 정기권이다.",
+      "obsolete": "헬스장 정기권이 아직 유효하다.",
+      "second": [
+       "헬스장 정기권이 아직 유효해?",
+       "아니요. 헬스장 정기권은 취소되었다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "영화관 정기권"
+      ],
+      "obsolete_values": [
+       "헬스장 정기권"
+      ],
+      "other_values": []
+     }
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-09-15T07:45:02.658Z"
+}
