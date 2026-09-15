@@ -1,0 +1,63 @@
+{
+  "runId": "candidate-ko-before-20260915",
+  "stage": "capture",
+  "backend": "azure",
+  "startedAt": "2026-09-15T06:02:08.388Z",
+  "finishedAt": "2026-09-15T06:13:26.092Z",
+  "manifestSha": "f0487ab631c0d24f853899d2e6a483fe7f716bb4b0495512864a4b0e6c2d2925",
+  "provenance": {
+    "commit": "70dc1476b6308999d459946f5a36b2829f992f5c",
+    "srcDirty": false,
+    "node": "v26.7.0",
+    "host": "bazzite"
+  },
+  "models": {
+    "lite": "gpt-5-4-nano",
+    "judge": "deepseek-v4-flash",
+    "embedding": "multilingual-e5-base"
+  },
+  "embeddingSpaceId": "offline:Xenova/multilingual-e5-base@1ec9243030a27d1a115d5c340572074c125b58b2:dims=768:dtype=q8:mean-normalized:query-passage-v2",
+  "embeddingPolicy": {
+    "model": "Xenova/multilingual-e5-base",
+    "revision": "1ec9243030a27d1a115d5c340572074c125b58b2",
+    "dtype": "q8",
+    "dimensions": 768,
+    "queryPrefix": "query: ",
+    "passagePrefix": "passage: ",
+    "pooling": "mean",
+    "normalize": true,
+    "tokenizerMaxLength": 512,
+    "truncation": true,
+    "titleConcatenation": "provider-receives-precomposed-text"
+  },
+  "embeddingWarmupMs": 750,
+  "embeddingProbe": {
+    "firstCaseQueryVectorSha": "e9fe0eaf45fb3b17d950e406c9e179527e558aa802e33f9eb9800f2da2f3509d"
+  },
+  "onnxThreads": "default",
+  "cases": 84,
+  "perLanguage": null,
+  "rows": 456,
+  "replay": null,
+  "census": {
+    "expectedRows": 456,
+    "reopensPerNaiaArm": 42,
+    "physicalExtraction": 84,
+    "physicalDeleteVerification": 8,
+    "physicalAnswers": 456
+  },
+  "extractionFailures": [],
+  "totals": {
+    "requests": 562,
+    "inputTokens": 296066,
+    "outputTokens": 28511,
+    "reasoningTokens": 0
+  },
+  "censusChecks": {
+    "rows": true,
+    "extractionPerCase": true,
+    "contradictionFilterCalls": 14,
+    "contradictionFilterNon200": 0,
+    "llmFilterFallbacks": 0
+  }
+}

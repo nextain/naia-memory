@@ -1,0 +1,1388 @@
+{
+  "runId": "candidate-ko-before-20260915",
+  "scoredAt": "2026-09-15T06:43:59.366Z",
+  "scope": "Azure Foundry gpt-5-4-nano extraction/answer + deepseek-v4-flash judge; model-authored synthetic development-exposed fixtures; not product-path (local reasoning) evidence; not independent human evaluation",
+  "byArm": {
+    "no-memory": {
+      "overall": {
+        "rows": 114,
+        "executionFailures": 0,
+        "executionFailureKinds": {},
+        "judgeUnavailable": 0,
+        "answerCorrectness": {
+          "n": 114,
+          "correct": 13,
+          "uncertain": 0,
+          "lower": 0.11403508771929824,
+          "upper": 0.11403508771929824
+        },
+        "currentAnswerCorrectness": {
+          "n": 90,
+          "correct": 0,
+          "uncertain": 0,
+          "lower": 0,
+          "upper": 0
+        },
+        "current_at_1": {
+          "n": 90,
+          "observed": 0,
+          "unavailable": 0
+        },
+        "current_at_5": {
+          "n": 90,
+          "observed": 0,
+          "unavailable": 0
+        },
+        "stale_exposure": {
+          "n": 48,
+          "notApplicable": 0,
+          "observed": 0,
+          "unavailable": 0
+        },
+        "deletion_leakage": {
+          "n": 30,
+          "notApplicable": 0,
+          "observed": 0,
+          "unavailable": 0
+        },
+        "project_leakage": {
+          "n": 24,
+          "notApplicable": 0,
+          "observed": 0,
+          "unavailable": 0
+        },
+        "false_overwrite": {
+          "n": 0,
+          "notApplicable": 36,
+          "observed": 0,
+          "unavailable": 0
+        },
+        "critical_reversal": {
+          "n": 42,
+          "notApplicable": 0,
+          "observed": 0,
+          "unavailable": 0
+        },
+        "retrievalMs": {
+          "p50": 0,
+          "p95": 0
+        },
+        "answerMs": {
+          "p50": 997,
+          "p95": 1520
+        }
+      },
+      "byLanguage": {
+        "ko": {
+          "rows": 114,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 114,
+            "correct": 13,
+            "uncertain": 0,
+            "lower": 0.11403508771929824,
+            "upper": 0.11403508771929824
+          },
+          "currentAnswerCorrectness": {
+            "n": 90,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": 0,
+            "upper": 0
+          },
+          "current_at_1": {
+            "n": 90,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 90,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 48,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 30,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 24,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 0,
+            "notApplicable": 36,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "critical_reversal": {
+            "n": 42,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": 0,
+            "p95": 0
+          },
+          "answerMs": {
+            "p50": 997,
+            "p95": 1520
+          }
+        },
+        "en": {
+          "rows": 0,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "currentAnswerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "current_at_1": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "critical_reversal": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": null,
+            "p95": null
+          },
+          "answerMs": {
+            "p50": null,
+            "p95": null
+          }
+        },
+        "ja": {
+          "rows": 0,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "currentAnswerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "current_at_1": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "critical_reversal": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": null,
+            "p95": null
+          },
+          "answerMs": {
+            "p50": null,
+            "p95": null
+          }
+        }
+      }
+    },
+    "simple-vector": {
+      "overall": {
+        "rows": 114,
+        "executionFailures": 0,
+        "executionFailureKinds": {},
+        "judgeUnavailable": 0,
+        "answerCorrectness": {
+          "n": 114,
+          "correct": 93,
+          "uncertain": 0,
+          "lower": 0.8157894736842105,
+          "upper": 0.8157894736842105
+        },
+        "currentAnswerCorrectness": {
+          "n": 90,
+          "correct": 80,
+          "uncertain": 0,
+          "lower": 0.8888888888888888,
+          "upper": 0.8888888888888888
+        },
+        "current_at_1": {
+          "n": 90,
+          "observed": 63,
+          "unavailable": 0
+        },
+        "current_at_5": {
+          "n": 90,
+          "observed": 82,
+          "unavailable": 0
+        },
+        "stale_exposure": {
+          "n": 48,
+          "notApplicable": 0,
+          "observed": 3,
+          "unavailable": 0
+        },
+        "deletion_leakage": {
+          "n": 30,
+          "notApplicable": 0,
+          "observed": 10,
+          "unavailable": 0
+        },
+        "project_leakage": {
+          "n": 24,
+          "notApplicable": 0,
+          "observed": 0,
+          "unavailable": 0
+        },
+        "false_overwrite": {
+          "n": 0,
+          "notApplicable": 36,
+          "observed": 0,
+          "unavailable": 0
+        },
+        "critical_reversal": {
+          "n": 42,
+          "notApplicable": 0,
+          "observed": 11,
+          "unavailable": 0
+        },
+        "retrievalMs": {
+          "p50": 4.994120999996085,
+          "p95": 6.135740999976406
+        },
+        "answerMs": {
+          "p50": 997,
+          "p95": 1639
+        }
+      },
+      "byLanguage": {
+        "ko": {
+          "rows": 114,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 114,
+            "correct": 93,
+            "uncertain": 0,
+            "lower": 0.8157894736842105,
+            "upper": 0.8157894736842105
+          },
+          "currentAnswerCorrectness": {
+            "n": 90,
+            "correct": 80,
+            "uncertain": 0,
+            "lower": 0.8888888888888888,
+            "upper": 0.8888888888888888
+          },
+          "current_at_1": {
+            "n": 90,
+            "observed": 63,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 90,
+            "observed": 82,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 48,
+            "notApplicable": 0,
+            "observed": 3,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 30,
+            "notApplicable": 0,
+            "observed": 10,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 24,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 0,
+            "notApplicable": 36,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "critical_reversal": {
+            "n": 42,
+            "notApplicable": 0,
+            "observed": 11,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": 4.994120999996085,
+            "p95": 6.135740999976406
+          },
+          "answerMs": {
+            "p50": 997,
+            "p95": 1639
+          }
+        },
+        "en": {
+          "rows": 0,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "currentAnswerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "current_at_1": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "critical_reversal": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": null,
+            "p95": null
+          },
+          "answerMs": {
+            "p50": null,
+            "p95": null
+          }
+        },
+        "ja": {
+          "rows": 0,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "currentAnswerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "current_at_1": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "critical_reversal": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": null,
+            "p95": null
+          },
+          "answerMs": {
+            "p50": null,
+            "p95": null
+          }
+        }
+      }
+    },
+    "naia": {
+      "overall": {
+        "rows": 114,
+        "executionFailures": 0,
+        "executionFailureKinds": {},
+        "judgeUnavailable": 0,
+        "answerCorrectness": {
+          "n": 114,
+          "correct": 91,
+          "uncertain": 0,
+          "lower": 0.7982456140350878,
+          "upper": 0.7982456140350878
+        },
+        "currentAnswerCorrectness": {
+          "n": 90,
+          "correct": 81,
+          "uncertain": 0,
+          "lower": 0.9,
+          "upper": 0.9
+        },
+        "current_at_1": {
+          "n": 90,
+          "observed": 66,
+          "unavailable": 0
+        },
+        "current_at_5": {
+          "n": 90,
+          "observed": 83,
+          "unavailable": 0
+        },
+        "stale_exposure": {
+          "n": 48,
+          "notApplicable": 0,
+          "observed": 4,
+          "unavailable": 0
+        },
+        "deletion_leakage": {
+          "n": 30,
+          "notApplicable": 0,
+          "observed": 11,
+          "unavailable": 0
+        },
+        "project_leakage": {
+          "n": 24,
+          "notApplicable": 0,
+          "observed": 0,
+          "unavailable": 0
+        },
+        "false_overwrite": {
+          "n": 36,
+          "notApplicable": 0,
+          "observed": 6,
+          "unavailable": 4
+        },
+        "critical_reversal": {
+          "n": 42,
+          "notApplicable": 0,
+          "observed": 9,
+          "unavailable": 0
+        },
+        "retrievalMs": {
+          "p50": 10.121656000002986,
+          "p95": 15.918187000002945
+        },
+        "answerMs": {
+          "p50": 947,
+          "p95": 1557
+        }
+      },
+      "byLanguage": {
+        "ko": {
+          "rows": 114,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 114,
+            "correct": 91,
+            "uncertain": 0,
+            "lower": 0.7982456140350878,
+            "upper": 0.7982456140350878
+          },
+          "currentAnswerCorrectness": {
+            "n": 90,
+            "correct": 81,
+            "uncertain": 0,
+            "lower": 0.9,
+            "upper": 0.9
+          },
+          "current_at_1": {
+            "n": 90,
+            "observed": 66,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 90,
+            "observed": 83,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 48,
+            "notApplicable": 0,
+            "observed": 4,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 30,
+            "notApplicable": 0,
+            "observed": 11,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 24,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 36,
+            "notApplicable": 0,
+            "observed": 6,
+            "unavailable": 4
+          },
+          "critical_reversal": {
+            "n": 42,
+            "notApplicable": 0,
+            "observed": 9,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": 10.121656000002986,
+            "p95": 15.918187000002945
+          },
+          "answerMs": {
+            "p50": 947,
+            "p95": 1557
+          }
+        },
+        "en": {
+          "rows": 0,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "currentAnswerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "current_at_1": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "critical_reversal": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": null,
+            "p95": null
+          },
+          "answerMs": {
+            "p50": null,
+            "p95": null
+          }
+        },
+        "ja": {
+          "rows": 0,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "currentAnswerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "current_at_1": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "critical_reversal": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": null,
+            "p95": null
+          },
+          "answerMs": {
+            "p50": null,
+            "p95": null
+          }
+        }
+      }
+    },
+    "naia-llm-filter": {
+      "overall": {
+        "rows": 114,
+        "executionFailures": 0,
+        "executionFailureKinds": {},
+        "judgeUnavailable": 0,
+        "answerCorrectness": {
+          "n": 114,
+          "correct": 91,
+          "uncertain": 0,
+          "lower": 0.7982456140350878,
+          "upper": 0.7982456140350878
+        },
+        "currentAnswerCorrectness": {
+          "n": 90,
+          "correct": 83,
+          "uncertain": 0,
+          "lower": 0.9222222222222223,
+          "upper": 0.9222222222222223
+        },
+        "current_at_1": {
+          "n": 90,
+          "observed": 70,
+          "unavailable": 0
+        },
+        "current_at_5": {
+          "n": 90,
+          "observed": 83,
+          "unavailable": 0
+        },
+        "stale_exposure": {
+          "n": 48,
+          "notApplicable": 0,
+          "observed": 3,
+          "unavailable": 0
+        },
+        "deletion_leakage": {
+          "n": 30,
+          "notApplicable": 0,
+          "observed": 11,
+          "unavailable": 0
+        },
+        "project_leakage": {
+          "n": 24,
+          "notApplicable": 0,
+          "observed": 0,
+          "unavailable": 0
+        },
+        "false_overwrite": {
+          "n": 36,
+          "notApplicable": 0,
+          "observed": 6,
+          "unavailable": 3
+        },
+        "critical_reversal": {
+          "n": 42,
+          "notApplicable": 0,
+          "observed": 10,
+          "unavailable": 0
+        },
+        "retrievalMs": {
+          "p50": 10.026488000061363,
+          "p95": 11.91958300000988
+        },
+        "answerMs": {
+          "p50": 974,
+          "p95": 1494
+        }
+      },
+      "byLanguage": {
+        "ko": {
+          "rows": 114,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 114,
+            "correct": 91,
+            "uncertain": 0,
+            "lower": 0.7982456140350878,
+            "upper": 0.7982456140350878
+          },
+          "currentAnswerCorrectness": {
+            "n": 90,
+            "correct": 83,
+            "uncertain": 0,
+            "lower": 0.9222222222222223,
+            "upper": 0.9222222222222223
+          },
+          "current_at_1": {
+            "n": 90,
+            "observed": 70,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 90,
+            "observed": 83,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 48,
+            "notApplicable": 0,
+            "observed": 3,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 30,
+            "notApplicable": 0,
+            "observed": 11,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 24,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 36,
+            "notApplicable": 0,
+            "observed": 6,
+            "unavailable": 3
+          },
+          "critical_reversal": {
+            "n": 42,
+            "notApplicable": 0,
+            "observed": 10,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": 10.026488000061363,
+            "p95": 11.91958300000988
+          },
+          "answerMs": {
+            "p50": 974,
+            "p95": 1494
+          }
+        },
+        "en": {
+          "rows": 0,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "currentAnswerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "current_at_1": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "critical_reversal": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": null,
+            "p95": null
+          },
+          "answerMs": {
+            "p50": null,
+            "p95": null
+          }
+        },
+        "ja": {
+          "rows": 0,
+          "executionFailures": 0,
+          "executionFailureKinds": {},
+          "judgeUnavailable": 0,
+          "answerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "currentAnswerCorrectness": {
+            "n": 0,
+            "correct": 0,
+            "uncertain": 0,
+            "lower": null,
+            "upper": null
+          },
+          "current_at_1": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "current_at_5": {
+            "n": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "stale_exposure": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "deletion_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "project_leakage": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "false_overwrite": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "critical_reversal": {
+            "n": 0,
+            "notApplicable": 0,
+            "observed": 0,
+            "unavailable": 0
+          },
+          "retrievalMs": {
+            "p50": null,
+            "p95": null
+          },
+          "answerMs": {
+            "p50": null,
+            "p95": null
+          }
+        }
+      }
+    }
+  },
+  "gates": {
+    "no-memory": {
+      "decision": "FAIL",
+      "fail": [
+        "overall current correctness upper 0/90 < 0.85",
+        "ko current correctness upper 0/90 < 0.8"
+      ],
+      "uncertain": [],
+      "formalNoninferiority": "INCONCLUSIVE (suite cannot support inference)"
+    },
+    "simple-vector": {
+      "decision": "FAIL",
+      "fail": [
+        "deletion_leakage observed 10",
+        "critical_reversal observed 11"
+      ],
+      "uncertain": [],
+      "formalNoninferiority": "INCONCLUSIVE (suite cannot support inference)"
+    },
+    "naia": {
+      "decision": "FAIL",
+      "fail": [
+        "deletion_leakage observed 11",
+        "false_overwrite observed 6",
+        "critical_reversal observed 9"
+      ],
+      "uncertain": [],
+      "formalNoninferiority": "INCONCLUSIVE (suite cannot support inference)"
+    },
+    "naia-llm-filter": {
+      "decision": "FAIL",
+      "fail": [
+        "deletion_leakage observed 11",
+        "false_overwrite observed 6",
+        "critical_reversal observed 10"
+      ],
+      "uncertain": [],
+      "formalNoninferiority": "INCONCLUSIVE (suite cannot support inference)"
+    }
+  },
+  "paired": {
+    "naia-vs-simple-vector": {
+      "cases": 78,
+      "meanCaseDifference": 0,
+      "familyBootstrap95": {
+        "lower": -0.10256410256410256,
+        "upper": 0.08974358974358974,
+        "degenerate": false
+      }
+    },
+    "naia-llm-filter-vs-simple-vector": {
+      "cases": 78,
+      "meanCaseDifference": 0.02564102564102564,
+      "familyBootstrap95": {
+        "lower": -0.07692307692307693,
+        "upper": 0.11538461538461539,
+        "degenerate": false
+      }
+    },
+    "naia-vs-no-memory": {
+      "cases": 78,
+      "meanCaseDifference": 0.8846153846153846,
+      "familyBootstrap95": {
+        "lower": 0.782051282051282,
+        "upper": 0.9743589743589743,
+        "degenerate": false
+      }
+    },
+    "naia-llm-filter-vs-naia": {
+      "cases": 78,
+      "meanCaseDifference": 0.02564102564102564,
+      "familyBootstrap95": {
+        "lower": 0,
+        "upper": 0.0641025641025641,
+        "degenerate": false
+      }
+    }
+  },
+  "extraction": {
+    "physicalCalls": 84,
+    "failures": 0,
+    "byCode": {},
+    "deleteUngrounded": [],
+    "preregisteredMax": 2,
+    "applicable": true,
+    "decision": "PASS (necessary condition only)"
+  },
+  "tokenizer": {
+    "answerRows": 456,
+    "medianRelativeDiff": 0.058823529411764705,
+    "maxRelativeDiff": 0.07633587786259542,
+    "note": "o200k_base is the budget tokenizer; not claimed identical to the model tokenizer"
+  },
+  "providerTotals": {
+    "capture": {
+      "requests": 562,
+      "inputTokens": 296066,
+      "outputTokens": 28511,
+      "reasoningTokens": 0
+    },
+    "judge": {
+      "requests": 117,
+      "inputTokens": 451480,
+      "outputTokens": 97692,
+      "reasoningTokens": 0
+    }
+  },
+  "reasoningTokensObserved": 0,
+  "atTimeUnsupported": {
+    "no-memory": [
+      {
+        "rowId": "memory-answer:memory-ko-12:no-memory:q1",
+        "mode": "latest",
+        "unsupportedAtTime": false,
+        "executionOk": true,
+        "judged": true,
+        "correct": false
+      }
+    ],
+    "simple-vector": [
+      {
+        "rowId": "memory-answer:memory-ko-12:simple-vector:q1",
+        "mode": "latest",
+        "unsupportedAtTime": false,
+        "executionOk": true,
+        "judged": true,
+        "correct": true
+      }
+    ],
+    "naia": [
+      {
+        "rowId": "memory-answer:memory-ko-12:naia:q1",
+        "mode": "latest",
+        "unsupportedAtTime": false,
+        "executionOk": true,
+        "judged": true,
+        "correct": true
+      }
+    ],
+    "naia-llm-filter": [
+      {
+        "rowId": "memory-answer:memory-ko-12:naia-llm-filter:q1",
+        "mode": "latest",
+        "unsupportedAtTime": false,
+        "executionOk": true,
+        "judged": true,
+        "correct": true
+      }
+    ]
+  },
+  "censusChecks": {
+    "rows": true,
+    "extractionPerCase": true,
+    "contradictionFilterCalls": 14,
+    "contradictionFilterNon200": 0,
+    "llmFilterFallbacks": 0
+  },
+  "rankingDiagnostics": {
+    "naia": {
+      "rows": 114,
+      "supersededRank1": 0,
+      "activeSuccessorAbsent": 5,
+      "episodeRank1": 9,
+      "latestRows": 102,
+      "retiredEpisodesTotal": 51,
+      "retiredEpisodeInRanked": 44,
+      "retiredEpisodeInSupplied": 44,
+      "retiredSuppliedRows": [
+        "memory-answer:memory-ko-01:naia:q1",
+        "memory-answer:memory-ko-08:naia:q1",
+        "memory-answer:memory-ko-09:naia:q1",
+        "memory-answer:memory-ko-11:naia:q1",
+        "memory-answer:memory-ko-12:naia:q1",
+        "memory-answer:memory-ko-13:naia:q1",
+        "memory-answer:memory-ko-14:naia:q1",
+        "memory-answer:memory-ko-17:naia:q1",
+        "memory-answer:memory-ko-18:naia:q1",
+        "memory-answer:memory-ko-19:naia:q1",
+        "memory-answer:memory-ko-20:naia:q1",
+        "memory-answer:memory-ko-21:naia:q1",
+        "memory-answer:memory-ko-22:naia:q1",
+        "memory-answer:memory-ko-23:naia:q1",
+        "memory-answer:memory-ko-24:naia:q1",
+        "memory-answer:memory-ko-25:naia:q1",
+        "memory-answer:memory-ko-27:naia:q1",
+        "memory-answer:memory-ko-37:naia:q1",
+        "memory-answer:memory-ko-38:naia:q1",
+        "memory-answer:memory-ko-40:naia:q1",
+        "memory-answer:memory-ko-42:naia:q1",
+        "memory-answer:memory-ko-45:naia:q1",
+        "memory-answer:memory-ko-49:naia:q1",
+        "memory-answer:memory-ko-50:naia:q1",
+        "memory-answer:memory-ko-51:naia:q1",
+        "memory-answer:memory-ko-54:naia:q1",
+        "memory-answer:memory-ko-55:naia:q1",
+        "memory-answer:memory-ko-56:naia:q1",
+        "memory-answer:memory-ko-57:naia:q1",
+        "memory-answer:memory-ko-58:naia:q1",
+        "memory-answer:memory-ko-59:naia:q1",
+        "memory-answer:memory-ko-60:naia:q1",
+        "memory-answer:memory-ko-61:naia:q1",
+        "memory-answer:memory-ko-62:naia:q1",
+        "memory-answer:memory-ko-63:naia:q1",
+        "memory-answer:memory-ko-64:naia:q1",
+        "memory-answer:memory-ko-65:naia:q1",
+        "memory-answer:memory-ko-66:naia:q1",
+        "memory-answer:memory-ko-68:naia:q2",
+        "memory-answer:memory-ko-69:naia:q2",
+        "memory-answer:memory-ko-70:naia:q2",
+        "memory-answer:memory-ko-71:naia:q2",
+        "memory-answer:memory-ko-72:naia:q2",
+        "memory-answer:memory-ko-81:naia:q1"
+      ],
+      "anchorOrderMismatches": 0
+    },
+    "naia-llm-filter": {
+      "rows": 114,
+      "supersededRank1": 0,
+      "activeSuccessorAbsent": 5,
+      "episodeRank1": 11,
+      "latestRows": 102,
+      "retiredEpisodesTotal": 57,
+      "retiredEpisodeInRanked": 48,
+      "retiredEpisodeInSupplied": 48,
+      "retiredSuppliedRows": [
+        "memory-answer:memory-ko-01:naia-llm-filter:q1",
+        "memory-answer:memory-ko-08:naia-llm-filter:q1",
+        "memory-answer:memory-ko-09:naia-llm-filter:q1",
+        "memory-answer:memory-ko-11:naia-llm-filter:q1",
+        "memory-answer:memory-ko-12:naia-llm-filter:q1",
+        "memory-answer:memory-ko-13:naia-llm-filter:q1",
+        "memory-answer:memory-ko-14:naia-llm-filter:q1",
+        "memory-answer:memory-ko-17:naia-llm-filter:q1",
+        "memory-answer:memory-ko-18:naia-llm-filter:q1",
+        "memory-answer:memory-ko-19:naia-llm-filter:q1",
+        "memory-answer:memory-ko-20:naia-llm-filter:q1",
+        "memory-answer:memory-ko-21:naia-llm-filter:q1",
+        "memory-answer:memory-ko-22:naia-llm-filter:q1",
+        "memory-answer:memory-ko-23:naia-llm-filter:q1",
+        "memory-answer:memory-ko-24:naia-llm-filter:q1",
+        "memory-answer:memory-ko-25:naia-llm-filter:q1",
+        "memory-answer:memory-ko-27:naia-llm-filter:q1",
+        "memory-answer:memory-ko-33:naia-llm-filter:q1",
+        "memory-answer:memory-ko-33:naia-llm-filter:q2",
+        "memory-answer:memory-ko-35:naia-llm-filter:q1",
+        "memory-answer:memory-ko-35:naia-llm-filter:q2",
+        "memory-answer:memory-ko-37:naia-llm-filter:q1",
+        "memory-answer:memory-ko-38:naia-llm-filter:q1",
+        "memory-answer:memory-ko-40:naia-llm-filter:q1",
+        "memory-answer:memory-ko-42:naia-llm-filter:q1",
+        "memory-answer:memory-ko-45:naia-llm-filter:q1",
+        "memory-answer:memory-ko-49:naia-llm-filter:q1",
+        "memory-answer:memory-ko-50:naia-llm-filter:q1",
+        "memory-answer:memory-ko-51:naia-llm-filter:q1",
+        "memory-answer:memory-ko-54:naia-llm-filter:q1",
+        "memory-answer:memory-ko-55:naia-llm-filter:q1",
+        "memory-answer:memory-ko-56:naia-llm-filter:q1",
+        "memory-answer:memory-ko-57:naia-llm-filter:q1",
+        "memory-answer:memory-ko-58:naia-llm-filter:q1",
+        "memory-answer:memory-ko-59:naia-llm-filter:q1",
+        "memory-answer:memory-ko-60:naia-llm-filter:q1",
+        "memory-answer:memory-ko-61:naia-llm-filter:q1",
+        "memory-answer:memory-ko-62:naia-llm-filter:q1",
+        "memory-answer:memory-ko-63:naia-llm-filter:q1",
+        "memory-answer:memory-ko-64:naia-llm-filter:q1",
+        "memory-answer:memory-ko-65:naia-llm-filter:q1",
+        "memory-answer:memory-ko-66:naia-llm-filter:q1",
+        "memory-answer:memory-ko-68:naia-llm-filter:q2",
+        "memory-answer:memory-ko-69:naia-llm-filter:q2",
+        "memory-answer:memory-ko-70:naia-llm-filter:q2",
+        "memory-answer:memory-ko-71:naia-llm-filter:q2",
+        "memory-answer:memory-ko-72:naia-llm-filter:q2",
+        "memory-answer:memory-ko-81:naia-llm-filter:q1"
+      ],
+      "anchorOrderMismatches": 0
+    }
+  }
+}
