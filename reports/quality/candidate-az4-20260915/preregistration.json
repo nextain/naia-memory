@@ -189,8 +189,8 @@
     "determinism_check": "mock dry-runs of both products with the replayed extraction reproduced the az3 fact states in every case except the predicted rows and the delete-verifier-dependent rows (mock verifier denies)"
   },
   "run_id": "candidate-az4-20260915",
-  "frozen": false,
-  "frozen_at": null,
+  "frozen": true,
+  "frozen_at": "2026-09-15",
   "runs": {
     "candidate-az4-20260915": {
       "product_commit_sha": "148907f947addb83d71ebde62cb4651fd290be60",
@@ -210,7 +210,7 @@
   },
   "runner": {
     "file": "reports/quality/candidate-az4-20260915/run-az4.mjs",
-    "sha256": null
+    "sha256": "8eaae8cad85764e373dcee9b4d857b2900436d307419dac2facfc0d9d0f31b08"
   },
   "primary_metric": {
     "name": "deletion fact state",
@@ -232,7 +232,9 @@
         "en-14"
       ],
       "wrong_archives": 0
-    }
+    },
+    "verifier_outcome_table": "one row per reached case: case, candidate source tag(s) from receipts, candidate count, verifier decision (authorized / denied), resulting archive; a denial is reported as a verifier outcome, not a rule failure",
+    "tag_precedence": "a fact found by several branches keeps the last tag in order structured -> structured-label -> string-exact (the code comment calling it 'most specific' is inaccurate); reach attribution follows the grounding rule that let the delete through, not the tag"
   },
   "predictions": {
     "registered_before_az4_results": true,
@@ -250,7 +252,8 @@
         "memory-en-05": "target quote 'amber canoe' is not in the utterance (extraction side); target fact is unstructured",
         "memory-en-14": "target quote does not contain the label 'status-report-day' (extraction side; known fragility of literal label containment)"
       },
-      "physical_delete_verification": 7
+      "physical_delete_verification": 7,
+      "candidate_count_per_reached_case": "1 for each of the seven reached cases (ko-05/ja-05 string-exact, ko-14/ja-14 structured-label, ko/en/ja-06 structured); resolutions 'oversized' and 'sibling-values>1' occur 0 times"
     },
     "fact_state": {
       "expected_archived_new": [
@@ -282,5 +285,14 @@
     "verifier_payload": "string-exact candidates send the fact content (which may hold a secret value) to the verifier endpoint; the delete operation already carries it",
     "default_verifier_cloud": "llm-delete-verifier.ts defaults to gemini-2.5-flash, so a default product configuration sends fact text to a cloud model; conflicts with the local-reasoning directive; owner decision item independent of az4"
   },
-  "review": "pending Fable fixed-and-executable verdict"
+  "review": "Fable 2026-09-15: fixed and executable, no product blockers; applied: delete verification == 7 invalidity, per-case candidate count 1 and zero oversized/sibling denials, verifier outcome table, tag precedence statement, runner sha, top-level interpretation_lock",
+  "invalidity": [
+    "replay hits != 42 or physical extraction requests != 0",
+    "physical delete verification calls != 7: under replayed extraction and deterministic candidate selection the reach count is a function of the rules, so another count means the run path differs from the mock dry-run"
+  ],
+  "interpretation_lock": "Reach (which cases produce verifier candidates, by source tag) is attributed to the az4 rules because extraction is replayed and candidate selection is deterministic. Archive outcomes of reached cases include the live verifier and are attributed to rule plus verifier. Answer-level aggregates are not attributed.",
+  "follow_ups_not_in_az4": [
+    "consolidation-level regression: a sibling value outside a top-k search must still block (today consolidation passes project-scoped getAll for structured operations)",
+    "replace single source tag with sources[] to fix the precedence comment"
+  ]
 }
