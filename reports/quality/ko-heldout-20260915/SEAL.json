@@ -7,11 +7,13 @@
   "curation-log.json": "c7c2cc0f6de9e76ff7feaf4805135c50f7f90e9ead046918031d3f70749c5122",
   "curation-log-2.json": "732faf30e518b6333b15f5029e1f0fac12f92f00d9d4238c533bf32d901650c8",
   "rows.json": "58c22a7b3f3da447b3e3309f08146a0e9658e4656c9a74b80e4baea2bd3361e8",
-  "materialize.py": "4bb1a0898ba8a55167ff5f5bceebc6d0f9409eae6010080aa05e7826c09b6372",
-  "factstate.py": "268b7e8abaea830cb5329833e0ab4f9aa504d545903ae6d2d19bede31cf264dd",
+  "materialize.py": "1f27609494532da4865d587332c0472cd35d6ff84fbd27a856f5b93acb65fe17",
+  "factstate.py": "42bcf362f61769060b44ed84754512c8fd68ee57345ae439ea0502bee6d8e63e",
+  "compare.py": "d292f6db8ee04430eb2a3c5b76c87b6bbb415b68785f7b8466a87c8ccf04f2a0",
   "design/memory-inputs.json": "c5f791398829da7cfd4c02cb75a2c5d02608f3241750c7be8c95dee88594f0ec",
   "design/memory-gold.json": "7cf508154bbe24c530c3309624bf4adb27696c42307c85665c073a57f05442cb",
   "design/rubric.json": "ed074585c57ced9dbd1dc6bf5c727348c125e5385bb3fbdc2c2117bcfad13ad2"
  },
+ "note": "Resealed on 2026-09-15 before any held-out result: factstate.py gained deletion_applied/obsolete_not_stored and compare.py was added (Fable seal review). Case files are byte-identical to the first seal.",
  "regenerated_rows": "see review-regeneration-log.json (rounds 1-2, manual review reasons) and curation-log*.json (mechanical check reasons)"
 }

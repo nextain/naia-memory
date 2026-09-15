@@ -2,15 +2,27 @@
  "cases": 42,
  "cases_with": {
   "not_superseded": 5,
+  "deletion_applied": 6,
   "wrong_supersession": 2,
   "unmatched": 7,
-  "deletion_not_applied": 2
+  "deletion_not_applied": 2,
+  "obsolete_not_stored": 1
  },
  "detail": {
   "memory-ko-04": {
    "not_superseded": [
     "오전 10시",
     "오전 11시"
+   ]
+  },
+  "memory-ko-05": {
+   "deletion_applied": [
+    "달빛상자"
+   ]
+  },
+  "memory-ko-06": {
+   "deletion_applied": [
+    "토요일 도예 수업"
    ]
   },
   "memory-ko-09": {
@@ -21,6 +33,11 @@
   "memory-ko-12": {
    "unmatched": [
     "4천 원"
+   ]
+  },
+  "memory-ko-14": {
+   "deletion_applied": [
+    "사내 게시판"
    ]
   },
   "memory-en-02": {
@@ -49,6 +66,9 @@
   "memory-en-06": {
    "unmatched": [
     "Wednesday swimming lesson"
+   ],
+   "deletion_applied": [
+    "Monday language lesson"
    ]
   },
   "memory-en-14": {
@@ -72,9 +92,17 @@
     "中央口"
    ]
   },
+  "memory-ja-05": {
+   "deletion_applied": [
+    "青い風車"
+   ]
+  },
   "memory-ja-06": {
    "unmatched": [
     "木曜の料理教室"
+   ],
+   "obsolete_not_stored": [
+    "火曜の書道教室"
    ]
   },
   "memory-ja-07": {
@@ -85,6 +113,11 @@
   "memory-ja-10": {
    "wrong_supersession": [
     "紙の地図"
+   ]
+  },
+  "memory-ja-14": {
+   "deletion_applied": [
+    "音声"
    ]
   }
  }

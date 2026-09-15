@@ -6,7 +6,9 @@ arm's final fact state for each case:
   not_superseded       an obsolete value is still active in an update/history case
   deletion_not_applied an obsolete value is still active in a delete case
   wrong_archive        a value that must stay (other project, kept booking) is held only by archived facts
-  unmatched            a value appears in no fact at all (surface form differs); the case is not judged on that value
+  unmatched            a value that must be present appears in no fact (not stored, or surface form differs); not judged
+  obsolete_not_stored  (delete variants, report only) the value to delete was never stored as a fact
+  deletion_applied     (delete variants) the value to delete was stored and is now held only by archived/superseded facts
 Usage: python3 factstate.py <capture.jsonl> <values.json> [arm]
 """
 import json, re, sys
@@ -57,14 +59,25 @@ def judge(case_id, variant, category, values, facts):
         for v in values["obsolete_values"]:
             if active(v):
                 out["deletion_not_applied"].append(v)
+            elif holders(v):
+                out["deletion_applied"].append(v)
+            else:
+                out["obsolete_not_stored"].append(v)
     if variant in ("different", "delete_one"):
         for v in values.get("other_values", []):
             if only_retired(v):
                 out["wrong_archive"].append(v)
     return dict(out)
 
+def load_values(path):
+    """Accept either a {case_id: values} map or a design memory-gold.json with cases[].values."""
+    data = json.load(open(path))
+    if isinstance(data, dict) and "cases" in data:
+        return {c["case_id"]: c["values"] for c in data["cases"]}
+    return data
+
 def run(capture_path, values_path, arm="naia"):
-    values = json.load(open(values_path))
+    values = load_values(values_path)
     seen, result = set(), {}
     for line in open(capture_path):
         r = json.loads(line)

@@ -4,7 +4,9 @@
   "wrong_supersession": 5,
   "not_superseded": 5,
   "deletion_not_applied": 6,
-  "unmatched": 7
+  "deletion_applied": 2,
+  "unmatched": 7,
+  "obsolete_not_stored": 1
  },
  "detail": {
   "memory-ko-01": {
@@ -26,6 +28,11 @@
   "memory-ko-05": {
    "deletion_not_applied": [
     "달빛상자"
+   ]
+  },
+  "memory-ko-06": {
+   "deletion_applied": [
+    "토요일 도예 수업"
    ]
   },
   "memory-ko-09": {
@@ -69,6 +76,9 @@
   "memory-en-06": {
    "unmatched": [
     "Wednesday swimming lesson"
+   ],
+   "deletion_applied": [
+    "Monday language lesson"
    ]
   },
   "memory-en-14": {
@@ -100,6 +110,9 @@
   "memory-ja-06": {
    "unmatched": [
     "木曜の料理教室"
+   ],
+   "obsolete_not_stored": [
+    "火曜の書道教室"
    ]
   },
   "memory-ja-07": {

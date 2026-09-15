@@ -76,10 +76,11 @@ lines = []
 for name in ["memory-inputs.json", "memory-gold.json", "rubric.json"]:
     lines.append(f"{hashlib.sha256((OUT / name).read_bytes()).hexdigest()}  {name}")
 seal = {"sealed_at": "2026-09-15", "files": {}}
-for name in ["AUTHOR-BRIEF.md", "author-receipts.json", "review-regeneration-log.json", "curation-log.json", "curation-log-2.json", "rows.json", "materialize.py", "factstate.py"]:
+for name in ["AUTHOR-BRIEF.md", "author-receipts.json", "review-regeneration-log.json", "curation-log.json", "curation-log-2.json", "rows.json", "materialize.py", "factstate.py", "compare.py"]:
     seal["files"][name] = hashlib.sha256((HERE / name).read_bytes()).hexdigest()
 for name in ["memory-inputs.json", "memory-gold.json", "rubric.json"]:
     seal["files"]["design/" + name] = hashlib.sha256((OUT / name).read_bytes()).hexdigest()
+seal["note"] = "Resealed on 2026-09-15 before any held-out result: factstate.py gained deletion_applied/obsolete_not_stored and compare.py was added (Fable seal review). Case files are byte-identical to the first seal."
 seal["regenerated_rows"] = "see review-regeneration-log.json (rounds 1-2, manual review reasons) and curation-log*.json (mechanical check reasons)"
 (HERE / "SEAL.json").write_text(json.dumps(seal, indent=1) + "\n")
 (OUT / "manifest.sha256").write_text("\n".join(lines) + "\n")

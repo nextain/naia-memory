@@ -101,8 +101,8 @@
   },
   "gold_access_note": "verifyDesign hashes every design file including gold bytes but does not parse gold in capture",
   "judge_prompt_unchanged": "judge input construction is byte-identical to az1 for the same capture content; the judge already receives question.mode and query_context.at_timestamp",
-  "frozen": false,
-  "frozen_at": null,
+  "frozen": true,
+  "frozen_at": "2026-09-15",
   "registered_before_any_provider_result": true,
   "owner_decisions": {
     "2026-09-15": "Luke: '우선 한국어에 집중해서 증명 해줬으면 좋겠어', '관련한 목표와 상세계획 세우고, 이 계획에 따라 진행하고 루프를 확인', '잘 진행해줘'. Plan: reports/quality/ko-heldout-20260915/PLAN.md"
@@ -118,8 +118,9 @@
       "curation-log.json": "c7c2cc0f6de9e76ff7feaf4805135c50f7f90e9ead046918031d3f70749c5122",
       "curation-log-2.json": "732faf30e518b6333b15f5029e1f0fac12f92f00d9d4238c533bf32d901650c8",
       "rows.json": "58c22a7b3f3da447b3e3309f08146a0e9658e4656c9a74b80e4baea2bd3361e8",
-      "materialize.py": "4bb1a0898ba8a55167ff5f5bceebc6d0f9409eae6010080aa05e7826c09b6372",
-      "factstate.py": "268b7e8abaea830cb5329833e0ab4f9aa504d545903ae6d2d19bede31cf264dd",
+      "materialize.py": "1f27609494532da4865d587332c0472cd35d6ff84fbd27a856f5b93acb65fe17",
+      "factstate.py": "42bcf362f61769060b44ed84754512c8fd68ee57345ae439ea0502bee6d8e63e",
+      "compare.py": "d292f6db8ee04430eb2a3c5b76c87b6bbb415b68785f7b8466a87c8ccf04f2a0",
       "design/memory-inputs.json": "c5f791398829da7cfd4c02cb75a2c5d02608f3241750c7be8c95dee88594f0ec",
       "design/memory-gold.json": "7cf508154bbe24c530c3309624bf4adb27696c42307c85665c073a57f05442cb",
       "design/rubric.json": "ed074585c57ced9dbd1dc6bf5c727348c125e5385bb3fbdc2c2117bcfad13ad2"
@@ -149,13 +150,14 @@
   },
   "runner": {
     "file": "reports/quality/candidate-ko-20260915/run-ko.mjs",
-    "sha256": null
+    "sha256": "2272ac8bf4376ddc675f07261d578700ab3742038e7ad2d23b70a04602004a01"
   },
   "invalidity": [
-    "before run: physical extraction calls != 84 or extraction call failures beyond the extraction gate",
+    "before run: physical extraction calls != 84, or extraction call failures beyond the extraction gate",
     "after run: extraction not replayed 84/84 from the sealed before file (runner aborts on a miss)",
-    "naia-llm-filter: zero contradiction-filter calls in a run, any non-200 filter response, or any heuristic fallback (runner aborts)",
-    "product src differs from the registered commit, or runner/design sha mismatch"
+    "either run: extractionPerCase census check false (both naia arms consume one extraction per case)",
+    "naia-llm-filter: zero contradiction-filter calls in a run, or any heuristic fallback (runner aborts)",
+    "product src differs from the registered commit, or runner/design/analysis-script sha mismatch"
   ],
   "primary_metric": {
     "name": "fact state by rule-based judgement (factstate.py, calibrated on az3/az5b/az4 development runs: no disagreement with human listings on judged cases)",
@@ -164,14 +166,23 @@
       "not_superseded",
       "deletion_not_applied",
       "wrong_archive",
-      "unmatched (reported, not judged)"
+      "deletion_applied",
+      "obsolete_not_stored (report only)",
+      "unmatched (report only)"
     ],
     "case_error": "a case has an error when it has wrong_supersession, deletion_not_applied or wrong_archive; not_superseded is reported separately",
     "comparison": "after minus before, per contradiction-filter path (naia, naia-llm-filter), paired by case",
     "uncertainty": "cluster bootstrap over the 14 construction families (6 cases each), seed 20260915, 10,000 resamples, 95% interval of the difference in case-error count",
     "wording": "interval excludes 0 in the predicted direction -> 'improvement observed'; includes 0 -> 'no difference shown'",
     "hard_condition": "after-run wrong_archive = 0 in both naia arms",
-    "judgement_order": "factstate output committed before score.json is opened"
+    "judgement_order": "factstate output committed before score.json is opened",
+    "analysis_script": {
+      "file": "reports/quality/ko-heldout-20260915/compare.py",
+      "sha256": "d292f6db8ee04430eb2a3c5b76c87b6bbb415b68785f7b8466a87c8ccf04f2a0",
+      "factstate_sha256": "42bcf362f61769060b44ed84754512c8fd68ee57345ae439ea0502bee6d8e63e",
+      "usage": "python3 compare.py <before capture.jsonl> <after capture.jsonl> reports/quality/ko-heldout-20260915/design"
+    },
+    "calibration": "factstate on az3/az5b/az4 development captures: no disagreement with human listings on judged cases (not_superseded had no human counterpart); az4 deletion_applied 6 matches human archives except ja-06 (stored in English, reported as obsolete_not_stored). Development-exposed, so calibration only."
   },
   "secondary_metric": {
     "name": "answer-level current correctness, deletion leakage, stale exposure (unchanged judge and rubric)",
@@ -182,20 +193,37 @@
   "predictions": {
     "registered_before_ko_results": true,
     "by_variant_after_vs_before": {
-      "new/stable, new/deadline": "wrong_supersession decreases (category identity rule); these are the analogue of dev ko-01/ko-02",
+      "new/stable, new/deadline": "wrong_supersession decreases (category identity rule) when the extractor gives the two facts different labels under one category id; when it gives the same label the error remains (registered residual)",
       "update/correction, update/chain": "correct supersession kept; not_superseded does not increase",
-      "delete/forget": "deletion_not_applied decreases (label grounding and string-exact candidates); cases whose delete wording does not name the property literally or whose target quote is not in the stored fact content may stay unapplied",
+      "delete/forget": "deletion_applied increases and deletion_not_applied decreases (label grounding and string-exact candidates); cases whose delete wording does not name the property literally, or whose target quote is not in the stored fact content, may stay unapplied; obsolete_not_stored is reported separately and not counted as applied",
       "delete/cancel_one": "deletion_not_applied unchanged (already reachable before); wrong_archive decreases (same-episode rule)",
       "contradiction/quotation, contradiction/hypothetical, preferences/unchanged": "wrong_supersession does not increase",
       "preferences/coexist": "no systematic change (labels are often identical; registered extraction residual)",
       "history/former": "correct supersession kept",
       "history/at_time": "excluded from wrong_supersession; answers expected to fail in every naia arm (registered unsupported at-time path)",
       "project_isolation/different": "no change expected",
-      "project_isolation/delete_one": "deletion_not_applied decreases; wrong_archive of the other project stays 0"
+      "project_isolation/delete_one": "deletion_applied increases; wrong_archive of the other project stays 0"
     },
     "path": "the improvement on naia-llm-filter is expected in the same direction but smaller: the LLM filter decides same-subject replacements through fallbackFacts, which the category rule does not govern",
     "answers": "deletion_leakage decreases in the after run (episode exclude filter plus applied deletions); current correctness not lower beyond noise"
   },
   "interpretation_lock": "Fact-state differences between runs are attributed to the product change (identical extraction by replay); live delete verification and the LLM filter are part of each product path and reported with receipts. Answer-level differences are attributed only when the judge passes stage 1 and the cluster interval excludes 0.",
-  "review": "pending Fable fixed-and-executable verdict"
+  "review": "Fable 2026-09-15: fixed and executable after applying deletion_applied/obsolete_not_stored with reseal, registered compare.py, scope_limits, runner sha",
+  "fallback_detection": "The LLM filter class has two catch branches (callLLMOrFallback and the vLLM batch path), both of which console.warn a '[...ContradictionFilter]' message before falling back; the runner counts these and aborts, and separately counts non-200 filter receipts. A response with missing per-pair entries is treated by the product as 'no contradiction' without a warning; that is product behaviour, not a fallback.",
+  "recorded_not_invalidating": [
+    "delete verification physical call counts per run and arm",
+    "contradiction-filter call and non-200 counts"
+  ],
+  "scope_limits": {
+    "synthetic_cloud": "Synthetic cases; cloud extraction/answer/judge models; no local-model measurement.",
+    "author_judge_family": "The case author (deepseek-v4-flash) is the same model family as the judge.",
+    "llm_filter_proxy": "naia-llm-filter uses the product filter class with a prompt written for Gemini, sent to gpt-5-4-nano; a proxy for the product LLM path. The filter model differs from the judge.",
+    "delete_verification_live": "Delete verification is live in both runs and treated as part of each product path; receipts reported separately.",
+    "bundle_effect": "The after product bundles five changes (same-episode rule, category identity, value-less and string deletion rules, delete diagnostics, episode exclude filter); results are the bundle's effect, not per-rule attribution.",
+    "at_time": "history/at_time 6 cases use the registered unsupported at-time path.",
+    "factstate_limits": "Rule-based matching misses values stored in another surface form or language (reported as unmatched); Korean date and 천/만 amount forms are converted.",
+    "curation": "20 rows were replaced by mechanical checks and 16 by reviewer rejections before sealing; residuals kept: identical question text in cases 36/37, a weak hint in case 38, project name '솔솔' containing a banned development name.",
+    "cancel_one_second_question": "cancel_one second questions name the cancelled item with the answer 'no', as in the development design (not a leak).",
+    "real_names": "A few real brand or title names appear as user-owned values."
+  }
 }
