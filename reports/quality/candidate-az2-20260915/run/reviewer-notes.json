@@ -1,0 +1,30 @@
+{
+  "run_id": "candidate-az2-20260915",
+  "recorded_at": "2026-09-15",
+  "policy": "score.json unchanged; no rejudging. Notes and disputes recorded beside results; reports show as-judged numbers and sensitivity.",
+  "closure_rule": {
+    "as_registered": "naia supersededRank1 = 0, activeSuccessorAbsent = 2 → registered wording: residual, listed per row",
+    "rows": [
+      "memory-en-12:q1 (at-time)",
+      "memory-ja-12:q1 (at-time)"
+    ],
+    "note": "Both rows are the preregistered unsupported at-time queries; the successor's validFrom is the consolidation time, so it is correctly absent at the first event time. The diagnostic definition did not exclude at-time rows (definition defect, not a result). Latest-mode rows: 0/54. Harness deviation is closed. The number 2 is not edited.",
+    "attribution_lock": "az1→az2 changes (supersededRank1 16→0, stale 4→0, current 39→43, current_at_1 27→34) are attributed only to the atTimestamp change"
+  },
+  "allowed_conclusion": "After correcting the harness deviation, naia vs no-memory +94.9pp [84.6, 100]; naia vs simple-vector +2.6pp [0, 7.7] — no evidence of superiority (the suite cannot support equivalence). Stale exposure 0/24. Unreflected deletion requests (4/15) and two update cases (ko-04, en-04) remain. naia vs no-KG-spreading +2.6pp [0, 7.7]; az1's +7.7pp was an artefact of the deviation.",
+  "false_overwrite_note": "All 4 naia false_overwrite=true rows are unreflected-deletion rows (ko-14 q1/q2, en-14, ja-14); the judge labelled deletion failure as overwrite. Actual wrong supersessions: 0. The preregistered expectation that ja-10 q1 may become incorrect did not happen.",
+  "disputes": [
+    {
+      "rowId": "memory-answer:memory-ko-14:naia:q2",
+      "field": "false_overwrite",
+      "judged": true,
+      "reviewer_claim": false,
+      "reason": "same pattern as az1: no preserved fact was superseded; deletion failure labelled as overwrite"
+    }
+  ],
+  "mechanism": "Latest-mode recall returns raw episodes with facts in all 57 naia rows (episode at rank 1 in 7 rows); the episode channel bypasses fact lifecycle. Sole cause only in ko-04 (active fact rank 1, state correct, answer chose the cancelled 10:00 from an episode). en-04: supersession incomplete (east and west both active). 14-series and en-05: facts still active (deletion not reflected).",
+  "next": {
+    "az3": "latest mode: exclude source episodes whose derived facts are all superseded/archived/deleted; demote episodes with at least one active derived fact below active facts; leave episodes without derived facts unchanged; history/at-time unchanged. Value: makes az4 deletion measurable.",
+    "az4": "narrow delete rule with sibling-value-1 and verifier label payload conditions + typed rejection; per-event consolidation (harness deviation declared)"
+  }
+}
