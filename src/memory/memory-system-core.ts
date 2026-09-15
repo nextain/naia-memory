@@ -355,6 +355,22 @@ export abstract class MemorySystemCore {
 			this.adapter.procedural.getReflections(query, topK),
 		]);
 
+		// Latest-mode lifecycle filter for raw episodes. Episodes carry the
+		// original utterance, so without this a superseded, cancelled or deleted
+		// value re-enters recall through the episode channel even when the fact
+		// lifecycle is correct (candidate-az2: a correct active fact ranked first
+		// while the answer used the cancelled value from its source episode).
+		// Nothing is deleted; history, at-time, epoch and deep recall are unchanged.
+		const latestMode =
+			(context.mode ?? "latest") === "latest" &&
+			context.atTimestamp === undefined &&
+			!context.epochAnchor &&
+			!context.deepRecall;
+		const visibleEpisodes =
+			latestMode && episodes.length > 0
+				? await this.withoutRetiredEpisodes(episodes)
+				: episodes;
+
 		// R4 Step 3c — recall history ring buffer.
 		this.recallHistory.push({
 			query,
@@ -365,7 +381,37 @@ export abstract class MemorySystemCore {
 			this.recallHistory.shift();
 		}
 
-		return { episodes, facts, reflections };
+		return { episodes: visibleEpisodes, facts, reflections };
+	}
+
+	/**
+	 * Drop episodes whose derived facts exist and are all retired (superseded,
+	 * archived, or past validTo). An episode with no derived fact is the only
+	 * record of what was said and stays visible. An episode with at least one
+	 * live derived fact stays visible.
+	 */
+	protected async withoutRetiredEpisodes(
+		episodes: Episode[],
+	): Promise<Episode[]> {
+		const wanted = new Set(episodes.map((episode) => episode.id));
+		const now = Date.now();
+		const derived = new Map<string, { live: number; total: number }>();
+		for (const fact of await this.adapter.semantic.getAll()) {
+			const live =
+				(fact.status ?? "active") === "active" &&
+				(fact.validTo === undefined || fact.validTo === null || fact.validTo > now);
+			for (const episodeId of fact.sourceEpisodes ?? []) {
+				if (!wanted.has(episodeId)) continue;
+				const entry = derived.get(episodeId) ?? { live: 0, total: 0 };
+				entry.total += 1;
+				if (live) entry.live += 1;
+				derived.set(episodeId, entry);
+			}
+		}
+		return episodes.filter((episode) => {
+			const entry = derived.get(episode.id);
+			return !entry || entry.live > 0;
+		});
 	}
 
 	/** R4 Step 3c — recall-failure-resolved detection.
