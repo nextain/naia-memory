@@ -1,0 +1,943 @@
+{
+  "runId": "candidate-az3-20260915",
+  "stage": "judge",
+  "backend": "azure",
+  "finishedAt": "2026-09-15T00:59:33.297Z",
+  "captureSeal": {
+    "runId": "candidate-az3-20260915",
+    "captureSha256": "b4dc3219cb567a43e5212761475f88bd32daf580c6d4a4ae6c7cd117e97e3943",
+    "metaSha256": "7fb8d6a2b28f046741e8763062e86de1a102a52c0f858d2c6cae15067b5d5e02",
+    "rawProviderSha256": "ef074cb079f8fd322dd47e6a854be79c20d6cf4841014b959dc523250702d542",
+    "rows": 228,
+    "sealedAt": "2026-09-15T00:51:30.218Z"
+  },
+  "batches": [
+    {
+      "batchId": "j001",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2612,
+        "completion_tokens": 835,
+        "total_tokens": 3447,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j002",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2857,
+        "completion_tokens": 857,
+        "total_tokens": 3714,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j003",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2709,
+        "completion_tokens": 751,
+        "total_tokens": 3460,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j004",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2759,
+        "completion_tokens": 911,
+        "total_tokens": 3670,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j005",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2909,
+        "completion_tokens": 688,
+        "total_tokens": 3597,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j006",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2522,
+        "completion_tokens": 728,
+        "total_tokens": 3250,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j007",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2556,
+        "completion_tokens": 761,
+        "total_tokens": 3317,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j008",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2542,
+        "completion_tokens": 781,
+        "total_tokens": 3323,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j009",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2565,
+        "completion_tokens": 823,
+        "total_tokens": 3388,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j010",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2669,
+        "completion_tokens": 844,
+        "total_tokens": 3513,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j011",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2725,
+        "completion_tokens": 818,
+        "total_tokens": 3543,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j012",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2653,
+        "completion_tokens": 843,
+        "total_tokens": 3496,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j013",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2695,
+        "completion_tokens": 910,
+        "total_tokens": 3605,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j014",
+      "arm": "no-memory",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2772,
+        "completion_tokens": 773,
+        "total_tokens": 3545,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j015",
+      "arm": "no-memory",
+      "size": 1,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 1297,
+        "completion_tokens": 204,
+        "total_tokens": 1501,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j016",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3490,
+        "completion_tokens": 845,
+        "total_tokens": 4335,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j017",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3761,
+        "completion_tokens": 860,
+        "total_tokens": 4621,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j018",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3457,
+        "completion_tokens": 791,
+        "total_tokens": 4248,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j019",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3276,
+        "completion_tokens": 818,
+        "total_tokens": 4094,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j020",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3447,
+        "completion_tokens": 772,
+        "total_tokens": 4219,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j021",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3142,
+        "completion_tokens": 741,
+        "total_tokens": 3883,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j022",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3116,
+        "completion_tokens": 753,
+        "total_tokens": 3869,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j023",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3120,
+        "completion_tokens": 681,
+        "total_tokens": 3801,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j024",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 2887,
+        "completion_tokens": 762,
+        "total_tokens": 3649,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j025",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3263,
+        "completion_tokens": 763,
+        "total_tokens": 4026,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j026",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3499,
+        "completion_tokens": 893,
+        "total_tokens": 4392,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j027",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3402,
+        "completion_tokens": 780,
+        "total_tokens": 4182,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j028",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3268,
+        "completion_tokens": 822,
+        "total_tokens": 4090,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j029",
+      "arm": "simple-vector",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3245,
+        "completion_tokens": 749,
+        "total_tokens": 3994,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j030",
+      "arm": "simple-vector",
+      "size": 1,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 1354,
+        "completion_tokens": 183,
+        "total_tokens": 1537,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j031",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4392,
+        "completion_tokens": 846,
+        "total_tokens": 5238,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j032",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4491,
+        "completion_tokens": 800,
+        "total_tokens": 5291,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j033",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4176,
+        "completion_tokens": 791,
+        "total_tokens": 4967,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j034",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4091,
+        "completion_tokens": 839,
+        "total_tokens": 4930,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j035",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4202,
+        "completion_tokens": 876,
+        "total_tokens": 5078,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j036",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3892,
+        "completion_tokens": 805,
+        "total_tokens": 4697,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j037",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3491,
+        "completion_tokens": 735,
+        "total_tokens": 4226,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j038",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4039,
+        "completion_tokens": 703,
+        "total_tokens": 4742,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j039",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3683,
+        "completion_tokens": 770,
+        "total_tokens": 4453,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j040",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4271,
+        "completion_tokens": 875,
+        "total_tokens": 5146,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j041",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4412,
+        "completion_tokens": 902,
+        "total_tokens": 5314,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j042",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4005,
+        "completion_tokens": 819,
+        "total_tokens": 4824,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j043",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4217,
+        "completion_tokens": 821,
+        "total_tokens": 5038,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j044",
+      "arm": "naia",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4049,
+        "completion_tokens": 734,
+        "total_tokens": 4783,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j045",
+      "arm": "naia",
+      "size": 1,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 1540,
+        "completion_tokens": 170,
+        "total_tokens": 1710,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j046",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4398,
+        "completion_tokens": 816,
+        "total_tokens": 5214,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j047",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4508,
+        "completion_tokens": 778,
+        "total_tokens": 5286,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j048",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4178,
+        "completion_tokens": 826,
+        "total_tokens": 5004,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j049",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4091,
+        "completion_tokens": 753,
+        "total_tokens": 4844,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j050",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4206,
+        "completion_tokens": 876,
+        "total_tokens": 5082,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j051",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3890,
+        "completion_tokens": 807,
+        "total_tokens": 4697,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j052",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3494,
+        "completion_tokens": 759,
+        "total_tokens": 4253,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j053",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4034,
+        "completion_tokens": 721,
+        "total_tokens": 4755,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j054",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 3685,
+        "completion_tokens": 773,
+        "total_tokens": 4458,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j055",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4274,
+        "completion_tokens": 802,
+        "total_tokens": 5076,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j056",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4409,
+        "completion_tokens": 793,
+        "total_tokens": 5202,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j057",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4024,
+        "completion_tokens": 750,
+        "total_tokens": 4774,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j058",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4228,
+        "completion_tokens": 720,
+        "total_tokens": 4948,
+        "audio_prompt_tokens": 0
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j059",
+      "arm": "naia-no-kg-spreading",
+      "size": 4,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 4056,
+        "completion_tokens": 789,
+        "total_tokens": 4845,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    },
+    {
+      "batchId": "j060",
+      "arm": "naia-no-kg-spreading",
+      "size": 1,
+      "unavailable": null,
+      "usage": {
+        "prompt_tokens": 1539,
+        "completion_tokens": 177,
+        "total_tokens": 1716,
+        "audio_prompt_tokens": 0,
+        "prompt_tokens_details": {
+          "cached_tokens": 512
+        }
+      },
+      "finishReason": "stop"
+    }
+  ],
+  "totals": {
+    "requests": 60,
+    "inputTokens": 204534,
+    "outputTokens": 45366,
+    "reasoningTokens": 0
+  }
+}
