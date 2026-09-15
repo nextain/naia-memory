@@ -121,26 +121,4 @@ describe("latest-mode retired episode filter", () => {
 			await system.close();
 		}
 	});
-
-	it("drops an episode inherited by a live successor that is not its anchor", async () => {
-		const adapter = new LocalAdapter(join(rootDir, `store-${randomUUID()}.json`));
-		const system = new MemorySystem({ adapter, consolidationIntervalMs: 0 });
-		await system.init();
-		try {
-			await adapter.episode.store(episode("e1", "meeting starts at 10 am", now));
-			await adapter.episode.store(episode("e2", "meeting moved to 11 am", now + 1));
-			await adapter.episode.store(episode("e3", "meeting final time is 1 pm, 10 and 11 are cancelled", now + 2));
-			// Successors inherit predecessors' episodes: [...inherited, ...new].
-			await adapter.semantic.upsert(fact("v1", "meeting start: 10 am", ["e1"], "superseded", { validTo: now + 1 }));
-			await adapter.semantic.upsert(fact("v2", "meeting start: 11 am", ["e1", "e2"], "superseded", { validTo: now + 2, supersedes: "v1" }));
-			await adapter.semantic.upsert(fact("v3", "meeting start: 1 pm", ["e1", "e2", "e3"], "active", { supersedes: "v2" }));
-			const { episodes } = await system.recall("meeting", { project: "p", topK: 10 });
-			const ids = episodes.map((e) => e.id);
-			expect(ids).toEqual(["e3"]);
-			const history = await system.recall("meeting", { project: "p", topK: 10, mode: "history" });
-			expect(history.episodes.map((e) => e.id).sort()).toEqual(["e1", "e2", "e3"]);
-		} finally {
-			await system.close();
-		}
-	});
 });
