@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "models": {
+    "provider": "Azure Foundry (naia-azure-foundry, koreacentral, GlobalStandard), OpenAI-compatible v1 chat/completions, bearer auth",
+    "extraction": "gpt-5-4-nano",
+    "answer": "gpt-5-4-nano",
+    "delete_verification": "deepseek-v4-flash",
+    "judge": "deepseek-v4-flash",
+    "embedding": {
+      "provider": "OfflineEmbeddingProvider (product path provider:'offline'), device cpu",
+      "model": "Xenova/multilingual-e5-base",
+      "embedding_space_id": "offline:Xenova/multilingual-e5-base@1ec9243030a27d1a115d5c340572074c125b58b2:dims=768:dtype=q8:mean-normalized:query-passage-v2",
+      "prefixes": "passages via embedBatch ('passage: '), queries via embed ('query: ') for both simple-vector and naia arms",
+      "reopen_in_simple_vector": "declared no-op (append-only index), as in candidate-e",
+      "warmup": "outside measurement",
+      "provider_request_caps": "embedding is local and not counted toward provider caps; it is inside wall time"
+    },
+    "returned_model_ids": "recorded per receipt"
+  },
+  "tokenizer": {
+    "budget_tokenizer": "o200k_base via js-tiktoken 1.0.21",
+    "claim": "not claimed identical to the model tokenizers",
+    "memory_context_budget": "1024 o200k tokens, local only (cannot be verified from usage)",
+    "answer_prompt_ceiling_rule": "an answer row whose usage.prompt_tokens > 8192 is budget-failure and stays in the denominator",
+    "reported": "median and max of |local - usage.prompt_tokens| / usage.prompt_tokens over answer rows; above 10% is marked a measurement limit, not a failure",
+    "judge_preflight": "o200k x 1.3 <= 16000 per batch or the batch is split to 2 then 1 rows, decided before dispatch",
+    "no_pairing_with_first_run": "token counts are not compared with the Gemini native counts of candidate-e"
+  },
+  "budget_caps": {
+    "usd": "not estimated: Azure credit with no bound list price source; token caps are the binding limits",
+    "on_cap": "requests past a cap are refused locally and recorded; affected rows are failures in the denominator; report INCOMPLETE if any cap is reached; caps are not raised",
+    "per_stage": {
+      "capture": {
+        "provider_requests": 1500,
+        "input_tokens": 3000000,
+        "output_tokens": 600000,
+        "wall_minutes": 45
+      },
+      "judge": {
+        "provider_requests": 300,
+        "input_tokens": 3000000,
+        "output_tokens": 600000,
+        "wall_minutes": 45
+      }
+    },
+    "request_timeout_ms": 60000
+  },
+  "retries": {
+    "quality_retries": 0,
+    "transport_retry": "one retry for 5xx or deadline only, both receipts kept; the product extractor's internal 5xx loop is capped to two physical attempts by the transport",
+    "rejudging": "none; the judge stage refuses to run twice",
+    "refusal_codes": "498 = local cap refusal, 499 = transport retry cap refusal; the product extractor classifies both as http failures, which this registration maps to the transport class"
+  },
+  "extraction_failure_gate": {
+    "primary_metric": "failed physical extraction calls / physical extraction calls (expected 42)",
+    "max_failed": 2,
+    "classes": [
+      "invalid-json",
+      "invalid-top-level-shape",
+      "invalid-episode-shape",
+      "truncated (finish_reason length)",
+      "http",
+      "transport",
+      "missing-content",
+      "semantic-rejection",
+      "configuration"
+    ],
+    "expected_truncation": 0,
+    "empty_facts": "a schema-valid response with no facts is not an extraction failure; it flows into answer metrics",
+    "meaning": "necessary condition for accepting the extractor path only; the answer correctness gates must also pass"
+  },
+  "judge_rules": {
+    "blinding": "opaque blind ids (sha256 of run id and row id); arm identity and row ids are never sent",
+    "batching": "4 rows of one hidden arm per batch, split before dispatch by the size preflight",
+    "request": "temperature 0, max_tokens 2048, response_format json_object",
+    "gold_access": "judge opens gold only after verifying the capture seal (capture.jsonl and capture-meta.json sha256)",
+    "batch_unavailable": "transport failure, finish_reason length, invalid JSON, id coverage mismatch, or a declared field with the wrong type make the whole batch unavailable-judge. Undeclared fields are recorded and ignored.",
+    "row_unavailable": "an evidence quote that is not a whitespace-normalized substring of the row's supplied texts makes that row unavailable-judge",
+    "unavailable_effect": "Execution failures (engine, transport, parse, budget) are definite incorrect answers. Judge-unavailable rows with a successful execution are uncertain: correctness is reported as a lower bound (uncertain counted incorrect) and an upper bound (uncertain counted correct). Gate: lower bound >= threshold is PASS for that check, upper bound < threshold is FAIL, otherwise INCONCLUSIVE. Leak/overwrite/reversal checks: any observed > 0 is FAIL; otherwise any unavailable is INCONCLUSIVE.",
+    "false_overwrite": "each row carries false_overwrite_applies = native state available AND gold denominators.false_overwrite. The judge returns a boolean only when it applies, otherwise null. A null where it applies is unavailable for that metric on that row only; a boolean where it does not apply is discarded.",
+    "projection": "question, query context, retrieved items as {rank, content, project} without engine kind labels, recovered context with [fact]/[episode] prefixes removed, recent tail, candidate answer text, native active state as fact lifecycle list {id, content, status, project, validFrom, validTo, supersedes} (full store is not sent), source events, gold propositions and query gold. Evidence quote texts include active-state fact contents.",
+    "fields_derivation": "The twelve booleans plus false_overwrite, reason and evidence_quotes are candidate-e's fixed row contract (RUBRIC_CONTRACT.memory). forbidden_asserted, retrieval_critical_reversal and answer_critical_reversal split rubric answer_fields.correct and critical_reversal into the surfaces rubric memory_denominators.critical_reversal asks to report separately.",
+    "request_caps": "judge stage has its own cap of 300 requests"
+  },
+  "memory_acceptance": {
+    "current_answer_correctness_overall_min": 0.85,
+    "current_answer_correctness_each_language_min": 0.8,
+    "deletion_leakage_observed_max": 0,
+    "project_leakage_observed_max": 0,
+    "false_overwrite_observed_max": 0,
+    "critical_reversal_observed_max": 0,
+    "all_query_correctness": "published beside the current-query gate"
+  },
+  "answer_prompt": {
+    "system_exact": "Answer only from the supplied recent conversation and retrieved memory or recap. Preserve project and time distinctions. If the value is unknown, deleted, cancelled or undecided, say so; do not invent it. Return JSON mapping question IDs to concise answers in the question language. Return a JSON object {\"answers\": {\"<question id>\": \"<answer>\"}}.",
+    "system_sha256": "dbf88d97d26ad08a6cf4073ebe9bc2227d8db14235e5c7f7910afbc3f38a5829",
+    "user_template": "QUESTION_ID <id>\\nQUESTION: <text>\\nRETRIEVED MEMORY:\\n<one line per supplied item: '- <content>', or (none)>\\nRECENT CONVERSATION:\\n<role: content lines>",
+    "request": "gpt-5-4-nano, temperature 0, max_completion_tokens 512, response_format json_object",
+    "parse_rule": "answers[<question id>] must be a string; otherwise status parse-failure (execution failure, denominator kept, incorrect)",
+    "item_prefix": "neutral '- ' for all arms (candidate-e used [fact]/[episode], an arm-dependent label; changed on Fable recommendation before freezing). The 1024-token context budget is counted on this text."
+  },
+  "gold_access_note": "verifyDesign hashes every design file including gold bytes but does not parse gold in capture",
+  "judge_prompt_unchanged": "judge input construction is byte-identical to az1 for the same capture content; the judge already receives question.mode and query_context.at_timestamp",
+  "arms": {
+    "no-memory": "no recovered context",
+    "simple-vector": "append-only raw turns, e5 embeddings; product-independent, used as noise reference between the two runs",
+    "naia": "LocalAdapter with HeuristicContradictionFilter",
+    "naia-llm-filter": "LocalAdapter with the product GeminiFlashLiteContradictionFilter class pointed at Azure gpt-5-4-nano (a proxy for the product LLM filter path; its prompt was written for Gemini). Different model from the judge (deepseek-v4-flash)",
+    "shared": "both naia arms consume one extraction response per case; delete verification is live per arm"
+  },
+  "fallback_detection": "The LLM filter class has two catch branches (callLLMOrFallback and the vLLM batch path), both of which console.warn a '[...ContradictionFilter]' message before falling back; the runner counts these and aborts, and separately counts non-200 filter receipts. A response with missing per-pair entries is treated by the product as 'no contradiction' without a warning; that is product behaviour, not a fallback.",
+  "recorded_not_invalidating": [
+    "delete verification physical call counts per run and arm",
+    "contradiction-filter call and non-200 counts"
+  ],
+  "frozen": false,
+  "frozen_at": null,
+  "registered_before_any_provider_result": true,
+  "owner_decisions": {
+    "2026-09-15": "Luke: prove on Korean first; plan and follow it with checkpoints. First Korean run (candidate-ko) did not pass its registered criteria; plan revised (PLAN.md progress log)."
+  },
+  "scope": "Korean confirmation set: 120 sealed cases (14 construction families; 6 mechanism-targeted families at 12 cases, 8 others at 6), authored by a model with no repository access from a brief, curated by mechanical checks and reviewer rejections without hand edits. Topics disjoint from the first Korean held-out set. Cloud path, synthetic.",
+  "design": {
+    "directory": "reports/quality/ko-confirm-20260915/design",
+    "manifest_sha256": "91f2791d9a22bbb3085b904cb826c498b5da7e8c48b83fd0cadc4105218e6d8c",
+    "seal": {
+      "AUTHOR-BRIEF.md": "5f359e15aa4834312894a6d4ba3c3bd38517bc18c01a4c473daebd2cfd67fd39",
+      "author-receipts.json": "4a27ea8230abf9d3a748c003b10b3af5ce8e502aac5f7d276959c4e614f14f9a",
+      "first-set-questions.json": "b293bd4121a2b4b3bffbd7abf0305a4c5270a4b4935fe457f6a05ef92b1c5634",
+      "curation-log-round1.json": "5dded3256597a572547b8715c3d98253ee5d3abb65dc0e07970da2060668ee1c",
+      "curation-log-2.json": "822808c60e1c4f4d331a7b988df64b2870d18becc8ce61f4608974a5df34e0ac",
+      "curation-log-3.json": "1529b3c078ccda87ac3fb81f1c10b2cee8e3d18bc7ff5a0c40dc08ff3d1cc8d7",
+      "curation-log-4-review.json": "72f992cf45cc872bac63175a0a267dd64a32fd65492582fcb9ea1279c8d5b8e4",
+      "curation-log-5.json": "6809936436a5f0e93c7425802528d3d24ead1dc2328b8ae46ffe5367289abf0a",
+      "curation-log-6.json": "f4da98b10f0d4c874caf02cf72c2c5493633f2cd4c18202700f42c7e3d5531cc",
+      "rows.json": "73a65365c0c62eaa3a50a095ac09b0e9d01f03ece0a145579f714318c1e4577d",
+      "materialize.py": "23a26b5cc0a2c3564272e9a43be4c064e79e2400af61a701d1e6b144f8778885",
+      "factstate.py": "e29ed06b5d012a486e3fbdeb56c0ffe2c8d1566f841cd5ef64be528fc863d80e",
+      "compare.py": "599aac5866d33dd98aff5e09e6396dea24c445aebcd3da665c07967f048c18e4",
+      "design/memory-inputs.json": "16cda8bdb1cc5fad07f450b6705a4638a9460dd1308f85961d62cc9f5cf7aedb",
+      "design/memory-gold.json": "58efa9872027c063b8cc2a1319c799f3de6e0d9b8b080675479ed0cc05fdb2ba",
+      "design/rubric.json": "ed074585c57ced9dbd1dc6bf5c727348c125e5385bb3fbdc2c2117bcfad13ad2"
+    }
+  },
+  "runs": {
+    "candidate-kc-before-20260915": {
+      "product_commit_sha": "70dc1476b6308999d459946f5a36b2829f992f5c",
+      "product": "before the 2026-09-15 rules",
+      "extraction": "live, sealed",
+      "worktree": "ko-before detached at 70dc147"
+    },
+    "candidate-kc-after-20260915": {
+      "product_commit_sha": "366141beff56fc63c50e37e914c6a06bbb1ba797",
+      "product": "a0dd0b5 bundle (same-episode rule, category identity, value-less and string deletion, delete diagnostics, episode exclude filter) plus R3: a delete naming a value never offers a fact holding a different value",
+      "extraction": "replayed from the sealed before run; runner asserts seal match",
+      "worktree": "delete-value-match (branch feat/delete-value-match)"
+    }
+  },
+  "runner": {
+    "file": "reports/quality/candidate-kc-20260915/run-kc.mjs",
+    "sha256": null
+  },
+  "invalidity": [
+    "before run: physical extraction calls != 84, or extraction call failures beyond the extraction gate",
+    "after run: extraction not replayed 84/84 from the sealed before file (runner aborts on a miss)",
+    "either run: extractionPerCase census check false (both naia arms consume one extraction per case)",
+    "naia-llm-filter: zero contradiction-filter calls in a run, or any heuristic fallback (runner aborts)",
+    "product src differs from the registered commit, or runner/design/analysis-script sha mismatch"
+  ],
+  "primary_metric": {
+    "name": "case error in the six mechanism-targeted families (rule-based fact state, factstate.py v2)",
+    "target_families": [
+      "memory-new-stable",
+      "memory-new-deadline",
+      "memory-preferences-coexist",
+      "memory-delete-forget",
+      "memory-project_isolation-delete_one",
+      "memory-delete-cancel_one"
+    ],
+    "target_rationale": "Fixed by mechanism before results: category identity rule -> new/stable, new/deadline, preferences/coexist; deletion rules -> delete/forget, project_isolation/delete_one, delete/cancel_one; same-episode rule and R3 -> delete/cancel_one. delete/cancel_one got worse on the first Korean set and is included.",
+    "case_error": "wrong_supersession or deletion_not_applied or wrong_archive",
+    "test": "paired sign-flip permutation on after-minus-before case-error differences over the 72 target cases, one-sided for a decrease, seed 20260915, 10,000 permutations",
+    "wording": "p < 0.05 -> 'improvement observed'; otherwise 'no difference shown'",
+    "paths": "reported for naia (heuristic) and naia-llm-filter; the claim is made per path",
+    "hard_condition": "after-run wrong_archive = 0 in both naia arms (all 120 cases)",
+    "analysis_script": {
+      "file": "reports/quality/ko-confirm-20260915/compare.py",
+      "sha256": "599aac5866d33dd98aff5e09e6396dea24c445aebcd3da665c07967f048c18e4",
+      "factstate_sha256": "e29ed06b5d012a486e3fbdeb56c0ffe2c8d1566f841cd5ef64be528fc863d80e"
+    },
+    "factstate_v2_changes": "structured value from trace lineage is matched before sentence text; deletion_applied counts archived only; supersession of a value to delete is reported as deletion_by_supersession (not applied). Motivated by ko-33 and ko-34 misclassification on the first set, fixed before confirmation results.",
+    "judgement_order": "compare.py output committed before judge and score",
+    "design_rationale_from_first_run": "On the first Korean set the 14-family cluster bootstrap put the upper bound at 0 because the effect sits in a few families; a mechanism-targeted subset with a paired permutation test is registered instead. The first set is development-exposed; an exploratory run of this analysis on it is committed as ko-confirm-20260915/calibration-firstset-r3check.json and is not evidence."
+  },
+  "secondary_metric": {
+    "all_cases": "same case-error difference over all 120 cases with the 14-family cluster bootstrap (as in the first run)",
+    "answers": "current correctness, deletion leakage, stale exposure per path, after minus before; provisional until the Korean human review (stage 1) shows at least 90% judge agreement",
+    "noise_reference": "simple-vector changes between runs"
+  },
+  "predictions": {
+    "registered_before_kc_results": true,
+    "by_family_after_vs_before": {
+      "new/stable, new/deadline": "case error decreases where the extractor gives the two facts different labels under one category id; same-label cases remain",
+      "preferences/coexist": "small decrease or none (labels often identical)",
+      "delete/forget": "deletion_applied increases (turn 2 names the item, so label grounding and string-exact candidates can reach the verifier)",
+      "project_isolation/delete_one": "deletion_applied increases; wrong_archive of the other project stays 0",
+      "delete/cancel_one": "case error does not increase; wrong_archive stays 0 (R3); deletion_applied roughly unchanged",
+      "non-target families": "no systematic change"
+    },
+    "paths": "improvement on naia-llm-filter in the same direction, possibly smaller",
+    "hard_condition": "after wrong_archive = 0 in both paths"
+  },
+  "interpretation_lock": "Fact-state differences are attributed to the product bundle including R3 (identical extraction by replay). Live delete verification and the LLM filter are part of each path. The confirmation claim is limited to the six target families on this synthetic Korean set; answer-level differences are provisional until stage 1.",
+  "scope_limits": {
+    "synthetic_cloud": "Synthetic cases; cloud extraction/answer/judge models; no local-model measurement.",
+    "author_judge_family": "The case author (deepseek-v4-flash) is the same model family as the judge.",
+    "llm_filter_proxy": "naia-llm-filter uses the product filter class with a prompt written for Gemini, sent to gpt-5-4-nano; a proxy for the product LLM path. The filter model differs from the judge.",
+    "delete_verification_live": "Delete verification is live in both runs and treated as part of each product path; receipts reported separately.",
+    "bundle_effect": "The after product is the a0dd0b5 bundle plus R3; results are the bundle's effect.",
+    "at_time": "history/at_time 6 cases use the registered unsupported at-time path.",
+    "factstate_limits": "Rule-based matching misses values stored in another surface form or language (reported as unmatched); Korean date and 천/만 amount forms are converted.",
+    "curation": "Rows replaced by mechanical checks across six curation logs and by reviewer rejections (forget turn 2 lacking the item name, coexist verb-phrase values, unchanged rows without an alternative, one swapped value annotation); project names were assigned for rows rejected for name reuse. Known residuals: several coexist cases share the rain/snow day frame; unchanged case 88 has values '카페' and '홈카페' where one contains the other.",
+    "cancel_one_second_question": "cancel_one second questions name the cancelled item with the answer 'no', as in the development design (not a leak).",
+    "real_names": "A few real brand or title names appear as user-owned values.",
+    "case_ids": "three-digit case ids (memory-ko-001..120) outside the development schema's two-digit pattern; the runner does not validate that pattern."
+  },
+  "review": "pending Fable fixed-and-executable verdict"
+}

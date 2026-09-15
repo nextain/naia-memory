@@ -1,0 +1,493 @@
+{
+ "seed": 20260915,
+ "n": 10000,
+ "target_families": [
+  "memory-new-stable",
+  "memory-new-deadline",
+  "memory-preferences-coexist",
+  "memory-delete-forget",
+  "memory-project_isolation-delete_one",
+  "memory-delete-cancel_one"
+ ],
+ "paths": {
+  "naia": {
+   "primary": {
+    "target_cases": 36,
+    "difference": -12,
+    "p_one_sided": 0.00019998000199980003,
+    "wording": "improvement observed"
+   },
+   "secondary_all_cases": {
+    "difference": -12,
+    "cluster_interval_95": {
+     "lower": -24,
+     "upper": -2
+    }
+   },
+   "hard_condition_after_wrong_archive_zero": true,
+   "counts": {
+    "before": {
+     "wrong_supersession": 8,
+     "deletion_not_applied": 12,
+     "wrong_archive": 0,
+     "not_superseded": 2,
+     "deletion_applied": 4,
+     "deletion_by_supersession": 0,
+     "obsolete_not_stored": 2,
+     "unmatched": 14,
+     "case_error": 20,
+     "target_case_error": 20
+    },
+    "after": {
+     "wrong_supersession": 3,
+     "deletion_not_applied": 5,
+     "wrong_archive": 0,
+     "not_superseded": 2,
+     "deletion_applied": 11,
+     "deletion_by_supersession": 0,
+     "obsolete_not_stored": 2,
+     "unmatched": 14,
+     "case_error": 8,
+     "target_case_error": 8
+    }
+   },
+   "by_family": {
+    "memory-contradiction-hypothetical": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-contradiction-quotation": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-delete-cancel_one": {
+     "before": 4,
+     "after": 4
+    },
+    "memory-delete-forget": {
+     "before": 4,
+     "after": 0
+    },
+    "memory-history-at_time": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-history-former": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-new-deadline": {
+     "before": 4,
+     "after": 0
+    },
+    "memory-new-stable": {
+     "before": 1,
+     "after": 1
+    },
+    "memory-preferences-coexist": {
+     "before": 3,
+     "after": 2
+    },
+    "memory-preferences-unchanged": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-project_isolation-delete_one": {
+     "before": 4,
+     "after": 1
+    },
+    "memory-project_isolation-different": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-update-chain": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-update-correction": {
+     "before": 0,
+     "after": 0
+    }
+   },
+   "changed_cases": {
+    "memory-ko-08": {
+     "before": {
+      "wrong_supersession": [
+       "5월 31일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-09": {
+     "before": {
+      "wrong_supersession": [
+       "4월 7일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-11": {
+     "before": {
+      "wrong_supersession": [
+       "6월 1일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-12": {
+     "before": {
+      "wrong_supersession": [
+       "7월 15일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-26": {
+     "before": {
+      "deletion_not_applied": [
+       "7283"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "7283"
+      ]
+     }
+    },
+    "memory-ko-28": {
+     "before": {
+      "deletion_not_applied": [
+       "5842"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "5842"
+      ]
+     }
+    },
+    "memory-ko-29": {
+     "before": {
+      "deletion_not_applied": [
+       "별빛사탕"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "별빛사탕"
+      ]
+     }
+    },
+    "memory-ko-30": {
+     "before": {
+      "deletion_not_applied": [
+       "달빛공원77"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "달빛공원77"
+      ]
+     }
+    },
+    "memory-ko-54": {
+     "before": {
+      "wrong_supersession": [
+       "지하철을 타는 게 편해"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-79": {
+     "before": {
+      "deletion_not_applied": [
+       "/v1/data"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "/v1/data"
+      ]
+     }
+    },
+    "memory-ko-80": {
+     "before": {
+      "deletion_not_applied": [
+       "Narae2024!"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "Narae2024!"
+      ]
+     }
+    },
+    "memory-ko-82": {
+     "before": {
+      "deletion_not_applied": [
+       "한글(hwp)"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "한글(hwp)"
+      ]
+     }
+    }
+   }
+  },
+  "naia-llm-filter": {
+   "primary": {
+    "target_cases": 36,
+    "difference": -11,
+    "p_one_sided": 0.001999800019998,
+    "wording": "improvement observed"
+   },
+   "secondary_all_cases": {
+    "difference": -11,
+    "cluster_interval_95": {
+     "lower": -24,
+     "upper": 0
+    }
+   },
+   "hard_condition_after_wrong_archive_zero": true,
+   "counts": {
+    "before": {
+     "wrong_supersession": 8,
+     "deletion_not_applied": 10,
+     "wrong_archive": 1,
+     "not_superseded": 2,
+     "deletion_applied": 5,
+     "deletion_by_supersession": 1,
+     "obsolete_not_stored": 2,
+     "unmatched": 14,
+     "case_error": 19,
+     "target_case_error": 19
+    },
+    "after": {
+     "wrong_supersession": 3,
+     "deletion_not_applied": 5,
+     "wrong_archive": 0,
+     "not_superseded": 2,
+     "deletion_applied": 11,
+     "deletion_by_supersession": 0,
+     "obsolete_not_stored": 2,
+     "unmatched": 14,
+     "case_error": 8,
+     "target_case_error": 8
+    }
+   },
+   "by_family": {
+    "memory-contradiction-hypothetical": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-contradiction-quotation": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-delete-cancel_one": {
+     "before": 3,
+     "after": 4
+    },
+    "memory-delete-forget": {
+     "before": 4,
+     "after": 0
+    },
+    "memory-history-at_time": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-history-former": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-new-deadline": {
+     "before": 4,
+     "after": 0
+    },
+    "memory-new-stable": {
+     "before": 1,
+     "after": 1
+    },
+    "memory-preferences-coexist": {
+     "before": 3,
+     "after": 2
+    },
+    "memory-preferences-unchanged": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-project_isolation-delete_one": {
+     "before": 4,
+     "after": 1
+    },
+    "memory-project_isolation-different": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-update-chain": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-update-correction": {
+     "before": 0,
+     "after": 0
+    }
+   },
+   "changed_cases": {
+    "memory-ko-08": {
+     "before": {
+      "wrong_supersession": [
+       "5월 31일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-09": {
+     "before": {
+      "wrong_supersession": [
+       "4월 7일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-11": {
+     "before": {
+      "wrong_supersession": [
+       "6월 1일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-12": {
+     "before": {
+      "wrong_supersession": [
+       "7월 15일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-26": {
+     "before": {
+      "deletion_not_applied": [
+       "7283"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "7283"
+      ]
+     }
+    },
+    "memory-ko-28": {
+     "before": {
+      "deletion_not_applied": [
+       "5842"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "5842"
+      ]
+     }
+    },
+    "memory-ko-29": {
+     "before": {
+      "deletion_not_applied": [
+       "별빛사탕"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "별빛사탕"
+      ]
+     }
+    },
+    "memory-ko-30": {
+     "before": {
+      "deletion_not_applied": [
+       "달빛공원77"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "달빛공원77"
+      ]
+     }
+    },
+    "memory-ko-33": {
+     "before": {
+      "wrong_archive": [
+       "필라테스"
+      ],
+      "deletion_applied": [
+       "요가"
+      ]
+     },
+     "after": {
+      "deletion_not_applied": [
+       "요가"
+      ]
+     }
+    },
+    "memory-ko-34": {
+     "before": {
+      "deletion_by_supersession": [
+       "오전 10시 미팅"
+      ]
+     },
+     "after": {
+      "deletion_not_applied": [
+       "오전 10시 미팅"
+      ]
+     }
+    },
+    "memory-ko-54": {
+     "before": {
+      "wrong_supersession": [
+       "지하철을 타는 게 편해"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-79": {
+     "before": {
+      "deletion_not_applied": [
+       "/v1/data"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "/v1/data"
+      ]
+     }
+    },
+    "memory-ko-80": {
+     "before": {
+      "deletion_not_applied": [
+       "Narae2024!"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "Narae2024!"
+      ]
+     }
+    },
+    "memory-ko-82": {
+     "before": {
+      "deletion_not_applied": [
+       "한글(hwp)"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "한글(hwp)"
+      ]
+     }
+    }
+   }
+  }
+ }
+}

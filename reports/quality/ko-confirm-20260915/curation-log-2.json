@@ -1,0 +1,992 @@
+{
+ "model": "deepseek-v4-flash",
+ "startedAt": "2026-09-15T07:15:42.162Z",
+ "rounds": [
+  {
+   "round": 1,
+   "failing": [
+    {
+     "index": 101,
+     "reasons": [
+      "값이 다른 사례와 겹친다(파란색)"
+     ],
+     "row": {
+      "category": "history",
+      "variant": "at_time",
+      "turns": [
+       "내 운동화 끈 색깔이 빨간색이야.",
+       "오늘부터 운동화 끈을 파란색으로 바꿨어."
+      ],
+      "question": "변경 전에 내 운동화 끈 색깔이 뭐였어?",
+      "expected": "변경 전 운동화 끈 색깔은 빨간색이었다.",
+      "obsolete": "",
+      "second": [
+       "지금 내 운동화 끈 색깔은 뭐야?",
+       "지금 운동화 끈 색깔은 파란색이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "파란색"
+      ],
+      "obsolete_values": [],
+      "other_values": [
+       "빨간색"
+      ]
+     }
+    },
+    {
+     "index": 103,
+     "reasons": [
+      "프로젝트 이름 노을이 다른 사례와 겹친다",
+      "프로젝트 이름 노을, 새벽이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "노을 프로젝트의 서버 OS는 우분투야.",
+       "새벽 프로젝트의 서버 OS는 센트OS야."
+      ],
+      "question": "노을 프로젝트의 서버 OS가 뭐야?",
+      "expected": "노을 프로젝트의 서버 OS는 우분투이다.",
+      "obsolete": "노을 프로젝트의 서버 OS는 센트OS이다.",
+      "second": [
+       "새벽 프로젝트의 서버 OS가 뭐야?",
+       "새벽 프로젝트의 서버 OS는 센트OS이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "우분투"
+      ],
+      "obsolete_values": [
+       "센트OS"
+      ],
+      "other_values": [
+       "센트OS"
+      ]
+     }
+    },
+    {
+     "index": 104,
+     "reasons": [
+      "금지 소재 '숲'가 들어 있다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "수풀 프로젝트의 서버 언어는 자바야.",
+       "숲길 프로젝트의 서버 언어는 파이썬이야."
+      ],
+      "question": "수풀 프로젝트의 서버 언어가 뭐야?",
+      "expected": "수풀 프로젝트의 서버 언어는 자바입니다.",
+      "obsolete": "수풀 프로젝트의 서버 언어는 파이썬입니다.",
+      "second": [
+       "숲길 프로젝트의 서버 언어가 뭐야?",
+       "숲길 프로젝트의 서버 언어는 파이썬입니다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "자바"
+      ],
+      "obsolete_values": [
+       "파이썬"
+      ],
+      "other_values": [
+       "파이썬"
+      ]
+     }
+    },
+    {
+     "index": 105,
+     "reasons": [
+      "프로젝트 이름 가온이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "가온 프로젝트의 서버 OS는 리눅스야.",
+       "봄 프로젝트의 서버 OS는 윈도우야."
+      ],
+      "question": "가온 프로젝트의 서버 OS가 뭐야?",
+      "expected": "가온 프로젝트의 서버 OS는 리눅스이다.",
+      "obsolete": "가온 프로젝트의 서버 OS는 윈도우이다.",
+      "second": [
+       "봄 프로젝트의 서버 OS가 뭐야?",
+       "봄 프로젝트의 서버 OS는 윈도우이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "리눅스"
+      ],
+      "obsolete_values": [
+       "윈도우"
+      ],
+      "other_values": [
+       "윈도우"
+      ]
+     }
+    },
+    {
+     "index": 106,
+     "reasons": [
+      "프로젝트 이름 노을이 다른 사례와 겹친다",
+      "프로젝트 이름 솔빛, 노을이 다른 사례와 겹친다",
+      "프로젝트 이름 솔빛이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "솔빛 프로젝트의 서버 포트 번호는 8080이야.",
+       "노을 프로젝트의 서버 포트 번호는 9090이야."
+      ],
+      "question": "솔빛 프로젝트의 서버 포트 번호가 뭐야?",
+      "expected": "솔빛 프로젝트의 서버 포트 번호는 8080이다.",
+      "obsolete": "솔빛 프로젝트의 서버 포트 번호는 9090이다.",
+      "second": [
+       "노을 프로젝트의 서버 포트 번호가 뭐야?",
+       "노을 프로젝트의 서버 포트 번호는 9090이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "8080"
+      ],
+      "obsolete_values": [
+       "9090"
+      ],
+      "other_values": [
+       "9090"
+      ]
+     }
+    },
+    {
+     "index": 107,
+     "reasons": [
+      "값이 다른 사례와 겹친다(192.168.1.10)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "초롱 프로젝트의 배포 서버 주소는 192.168.1.10이야.",
+       "은결 프로젝트의 배포 서버 주소는 10.0.0.5야."
+      ],
+      "question": "초롱 프로젝트의 배포 서버 주소가 뭐야?",
+      "expected": "초롱 프로젝트의 배포 서버 주소는 192.168.1.10이다.",
+      "obsolete": "초롱 프로젝트의 배포 서버 주소는 10.0.0.5이다.",
+      "second": [
+       "은결 프로젝트의 배포 서버 주소가 뭐야?",
+       "은결 프로젝트의 배포 서버 주소는 10.0.0.5이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "192.168.1.10"
+      ],
+      "obsolete_values": [
+       "10.0.0.5"
+      ],
+      "other_values": [
+       "10.0.0.5"
+      ]
+     }
+    },
+    {
+     "index": 108,
+     "reasons": [
+      "프로젝트 이름 노을이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "노을 프로젝트의 API 키는 'nk123'이야.",
+       "봄빛 프로젝트의 API 키는 'sp456'이야.",
+       "노을 프로젝트의 API 키 기억만 삭제해 줘. 봄빛은 그대로 둬."
+      ],
+      "question": "노을 프로젝트의 API 키를 기억해?",
+      "expected": "노을 프로젝트의 API 키는 삭제되어 알 수 없다.",
+      "obsolete": "노을 프로젝트의 API 키는 'nk123'이다.",
+      "second": [
+       "봄빛 프로젝트의 API 키는?",
+       "봄빛 프로젝트의 API 키는 'sp456'이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "'nk123'"
+      ],
+      "other_values": [
+       "'sp456'"
+      ]
+     }
+    },
+    {
+     "index": 109,
+     "reasons": [
+      "프로젝트 이름 노을이 다른 사례와 겹친다",
+      "값 'deploy1.example.com'이 12자를 넘는다. 짧은 명사나 숫자로 써야 한다",
+      "값 'deploy2.example.com'이 12자를 넘는다. 짧은 명사나 숫자로 써야 한다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "노을 프로젝트의 배포 서버 주소를 'deploy1.example.com'으로 설정해 줘.",
+       "은하 프로젝트의 배포 서버 주소는 'deploy2.example.com'으로 해 줘.",
+       "노을 프로젝트의 배포 서버 주소 기억만 삭제해 줘. 은하 프로젝트는 그대로 둬."
+      ],
+      "question": "노을 프로젝트의 배포 서버 주소를 기억해?",
+      "expected": "노을 프로젝트의 배포 서버 주소는 삭제되어 알 수 없다.",
+      "obsolete": "노을 프로젝트의 배포 서버 주소는 deploy1.example.com이다.",
+      "second": [
+       "은하 프로젝트의 배포 서버 주소는?",
+       "은하 프로젝트의 배포 서버 주소는 deploy2.example.com이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "deploy1.example.com"
+      ],
+      "other_values": [
+       "deploy2.example.com"
+      ]
+     }
+    },
+    {
+     "index": 110,
+     "reasons": [
+      "프로젝트 이름 노을이 다른 사례와 겹친다",
+      "프로젝트 이름 노을, 솔빛이 다른 사례와 겹친다",
+      "프로젝트 이름 솔빛이 다른 사례와 겹친다",
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "노을 프로젝트의 API 키는 sk-abc123이야.",
+       "솔빛 프로젝트의 API 키는 sk-xyz789이야.",
+       "노을 프로젝트의 API 키 기억만 삭제해 줘. 솔빛 프로젝트는 그대로 둬."
+      ],
+      "question": "노을 프로젝트의 API 키를 기억해?",
+      "expected": "노을 프로젝트의 API 키는 삭제되어 알 수 없다.",
+      "obsolete": "노을 프로젝트의 API 키는 sk-abc123이다.",
+      "second": [
+       "솔빛 프로젝트의 API 키는?",
+       "솔빛 프로젝트의 API 키는 sk-xyz789이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "sk-abc123"
+      ],
+      "other_values": [
+       "sk-xyz789"
+      ]
+     }
+    },
+    {
+     "index": 111,
+     "reasons": [
+      "프로젝트 이름 노을이 다른 사례와 겹친다",
+      "프로젝트 이름 솔빛, 노을이 다른 사례와 겹친다",
+      "프로젝트 이름 솔빛이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "솔빛 프로젝트의 FTP 계정은 guest야.",
+       "노을 프로젝트의 FTP 계정은 admin이야.",
+       "솔빛 프로젝트의 FTP 계정 기억만 삭제해 줘. 노을 프로젝트는 그대로 둬."
+      ],
+      "question": "솔빛 프로젝트의 FTP 계정을 기억해?",
+      "expected": "솔빛 프로젝트의 FTP 계정은 삭제되어 알 수 없다.",
+      "obsolete": "솔빛 프로젝트의 FTP 계정은 guest이다.",
+      "second": [
+       "노을 프로젝트의 FTP 계정은?",
+       "노을 프로젝트의 FTP 계정은 admin이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "guest"
+      ],
+      "other_values": [
+       "admin"
+      ]
+     }
+    },
+    {
+     "index": 112,
+     "reasons": [
+      "프로젝트 이름 노을이 다른 사례와 겹친다",
+      "프로젝트 이름 노을, 솔빛이 다른 사례와 겹친다",
+      "프로젝트 이름 솔빛이 다른 사례와 겹친다",
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "노을 프로젝트의 배포 서버 주소는 192.168.0.10이야.",
+       "솔빛 프로젝트의 배포 서버 주소는 192.168.0.20이야.",
+       "노을 프로젝트의 배포 서버 주소 기억만 삭제해 줘. 솔빛 프로젝트는 그대로 둬."
+      ],
+      "question": "노을 프로젝트의 배포 서버 주소를 기억해?",
+      "expected": "노을 프로젝트의 배포 서버 주소는 삭제되어 알 수 없다.",
+      "obsolete": "노을 프로젝트의 배포 서버 주소는 192.168.0.10이다.",
+      "second": [
+       "솔빛 프로젝트의 배포 서버 주소는?",
+       "솔빛 프로젝트의 배포 서버 주소는 192.168.0.20이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "192.168.0.10"
+      ],
+      "other_values": [
+       "192.168.0.20"
+      ]
+     }
+    },
+    {
+     "index": 113,
+     "reasons": [
+      "프로젝트 이름 가온이 다른 사례와 겹친다",
+      "프로젝트 이름 솔빛이 다른 사례와 겹친다",
+      "값이 다른 사례와 겹친다(guest, admin)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "가온 프로젝트의 FTP 계정이 guest야.",
+       "솔빛 프로젝트의 FTP 계정이 admin이야.",
+       "가온 프로젝트의 FTP 계정 기억만 삭제해 줘. 솔빛은 그대로 둬."
+      ],
+      "question": "가온 프로젝트의 FTP 계정을 기억해?",
+      "expected": "가온 프로젝트의 FTP 계정은 삭제되어 알 수 없다.",
+      "obsolete": "가온 프로젝트의 FTP 계정은 guest이다.",
+      "second": [
+       "솔빛 프로젝트의 FTP 계정은?",
+       "솔빛 프로젝트의 FTP 계정은 admin이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "guest"
+      ],
+      "other_values": [
+       "admin"
+      ]
+     }
+    },
+    {
+     "index": 114,
+     "reasons": [
+      "프로젝트 이름 노을이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "호수 프로젝트의 데이터베이스 포트 번호는 3306이야.",
+       "노을 프로젝트의 데이터베이스 포트 번호는 5432야.",
+       "호수 프로젝트의 데이터베이스 포트 번호 기억만 삭제해 줘. 노을 프로젝트는 그대로 둬."
+      ],
+      "question": "호수 프로젝트의 데이터베이스 포트 번호를 기억해?",
+      "expected": "호수 프로젝트의 데이터베이스 포트 번호는 삭제되어 알 수 없다.",
+      "obsolete": "호수 프로젝트의 데이터베이스 포트 번호는 3306이다.",
+      "second": [
+       "노을 프로젝트의 데이터베이스 포트 번호는?",
+       "노을 프로젝트의 데이터베이스 포트 번호는 5432이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "3306"
+      ],
+      "other_values": [
+       "5432"
+      ]
+     }
+    },
+    {
+     "index": 115,
+     "reasons": [
+      "프로젝트 이름 노을이 다른 사례와 겹친다",
+      "값이 다른 사례와 겹친다(8080, 9090, 9090)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "나루 프로젝트의 서버 포트는 8080이야.",
+       "노을 프로젝트의 서버 포트는 9090이야.",
+       "나루 프로젝트의 서버 포트 기억만 삭제해 줘. 노을은 그대로 둬."
+      ],
+      "question": "나루 프로젝트의 서버 포트를 기억해?",
+      "expected": "나루 프로젝트의 서버 포트는 삭제되어 알 수 없다.",
+      "obsolete": "나루 프로젝트의 서버 포트는 8080이다.",
+      "second": [
+       "노을 프로젝트의 서버 포트는?",
+       "노을 프로젝트의 서버 포트는 9090이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "8080"
+      ],
+      "other_values": [
+       "9090"
+      ]
+     }
+    },
+    {
+     "index": 117,
+     "reasons": [
+      "값이 다른 사례와 겹친다(192.168.1.10)",
+      "프로젝트 이름 새벽, 노을이 다른 사례와 겹친다",
+      "프로젝트 이름 노을이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "새벽 프로젝트의 배포 서버 주소는 192.168.1.10이야.",
+       "노을 프로젝트의 배포 서버 주소는 192.168.1.20이야.",
+       "새벽 프로젝트의 배포 서버 주소 기억만 삭제해 줘. 노을 프로젝트는 그대로 둬."
+      ],
+      "question": "새벽 프로젝트의 배포 서버 주소를 기억해?",
+      "expected": "새벽 프로젝트의 배포 서버 주소는 삭제되어 알 수 없다.",
+      "obsolete": "새벽 프로젝트의 배포 서버 주소는 192.168.1.10이다.",
+      "second": [
+       "노을 프로젝트의 배포 서버 주소는?",
+       "노을 프로젝트의 배포 서버 주소는 192.168.1.20이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "192.168.1.10"
+      ],
+      "other_values": [
+       "192.168.1.20"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "failing": [
+    {
+     "index": 104,
+     "reasons": [
+      "프로젝트 이름 달빛이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "달빛 프로젝트의 데이터베이스 비밀번호는 'qwerty'야.",
+       "이슬 프로젝트의 데이터베이스 비밀번호는 'asdfgh'야."
+      ],
+      "question": "달빛 프로젝트의 데이터베이스 비밀번호가 뭐야?",
+      "expected": "달빛 프로젝트의 데이터베이스 비밀번호는 'qwerty'이다.",
+      "obsolete": "달빛 프로젝트의 데이터베이스 비밀번호가 'asdfgh'라는 명제",
+      "second": [
+       "이슬 프로젝트의 데이터베이스 비밀번호가 뭐야?",
+       "이슬 프로젝트의 데이터베이스 비밀번호는 'asdfgh'이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "qwerty"
+      ],
+      "obsolete_values": [
+       "asdfgh"
+      ],
+      "other_values": [
+       "asdfgh"
+      ]
+     }
+    },
+    {
+     "index": 106,
+     "reasons": [
+      "값이 다른 사례와 겹친다(3306, 5432, 5432)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "바투 프로젝트의 데이터베이스 포트 번호는 3306이야.",
+       "사랑 프로젝트의 데이터베이스 포트 번호는 5432야."
+      ],
+      "question": "바투 프로젝트의 데이터베이스 포트 번호가 뭐야?",
+      "expected": "바투 프로젝트의 데이터베이스 포트 번호는 3306이다.",
+      "obsolete": "바투 프로젝트의 데이터베이스 포트 번호는 5432이다.",
+      "second": [
+       "사랑 프로젝트의 데이터베이스 포트 번호가 뭐야?",
+       "사랑 프로젝트의 데이터베이스 포트 번호는 5432이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "3306"
+      ],
+      "obsolete_values": [
+       "5432"
+      ],
+      "other_values": [
+       "5432"
+      ]
+     }
+    },
+    {
+     "index": 107,
+     "reasons": [
+      "프로젝트 이름 달빛이 다른 사례와 겹친다",
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "달빛 프로젝트의 데이터베이스 비밀번호를 'blue123'으로 설정해 줘.",
+       "햇살 프로젝트의 데이터베이스 비밀번호는 'red456'으로 해 줘."
+      ],
+      "question": "달빛 프로젝트의 데이터베이스 비밀번호가 뭐야?",
+      "expected": "달빛 프로젝트의 데이터베이스 비밀번호는 blue123이다.",
+      "obsolete": "달빛 프로젝트의 데이터베이스 비밀번호는 red456이다.",
+      "second": [
+       "햇살 프로젝트의 데이터베이스 비밀번호가 뭐야?",
+       "햇살 프로젝트의 데이터베이스 비밀번호는 red456이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "blue123"
+      ],
+      "obsolete_values": [
+       "red456"
+      ],
+      "other_values": [
+       "red456"
+      ]
+     }
+    },
+    {
+     "index": 110,
+     "reasons": [
+      "값이 다른 사례와 겹친다(3306, 5432, 5432)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "타래 프로젝트의 데이터베이스 포트 번호는 3306이야.",
+       "파랑 프로젝트의 데이터베이스 포트 번호는 5432야.",
+       "타래 프로젝트의 포트 번호 기억만 삭제해 줘. 파랑 건은 그대로 둬."
+      ],
+      "question": "타래 프로젝트의 데이터베이스 포트 번호를 기억해?",
+      "expected": "타래 프로젝트의 데이터베이스 포트 번호는 삭제되어 알 수 없다.",
+      "obsolete": "타래 프로젝트의 데이터베이스 포트 번호는 3306이다.",
+      "second": [
+       "파랑 프로젝트의 데이터베이스 포트 번호는?",
+       "파랑 프로젝트의 데이터베이스 포트 번호는 5432이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "3306"
+      ],
+      "other_values": [
+       "5432"
+      ]
+     }
+    },
+    {
+     "index": 111,
+     "reasons": [
+      "값이 다른 사례와 겹친다(192.168.1.10)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "하랑 프로젝트의 백업 서버 주소는 192.168.1.10이야.",
+       "고운 프로젝트의 백업 서버 주소는 10.0.0.5야.",
+       "하랑 프로젝트의 백업 서버 주소 기억만 삭제해 줘. 고운 프로젝트는 그대로 둬."
+      ],
+      "question": "하랑 프로젝트의 백업 서버 주소를 기억해?",
+      "expected": "하랑 프로젝트의 백업 서버 주소는 삭제되어 알 수 없다.",
+      "obsolete": "하랑 프로젝트의 백업 서버 주소는 192.168.1.10이다.",
+      "second": [
+       "고운 프로젝트의 백업 서버 주소는?",
+       "고운 프로젝트의 백업 서버 주소는 10.0.0.5이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "192.168.1.10"
+      ],
+      "other_values": [
+       "10.0.0.5"
+      ]
+     }
+    },
+    {
+     "index": 112,
+     "reasons": [
+      "값이 다른 사례와 겹친다(3306, 5432, 5432)",
+      "값이 다른 사례와 겹친다(3306, 5432)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "누리 프로젝트의 데이터베이스 포트 번호는 3306이야.",
+       "도담 프로젝트의 데이터베이스 포트 번호는 5432야.",
+       "누리 프로젝트의 데이터베이스 포트 번호만 기억에서 지워 줘. 도담 프로젝트는 그대로 둬."
+      ],
+      "question": "누리 프로젝트의 데이터베이스 포트 번호를 기억해?",
+      "expected": "누리 프로젝트의 데이터베이스 포트 번호는 삭제되어 알 수 없다.",
+      "obsolete": "누리 프로젝트의 데이터베이스 포트 번호는 3306이다.",
+      "second": [
+       "도담 프로젝트의 데이터베이스 포트 번호는?",
+       "도담 프로젝트의 데이터베이스 포트 번호는 5432이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "3306"
+      ],
+      "other_values": [
+       "5432"
+      ]
+     }
+    },
+    {
+     "index": 116,
+     "reasons": [
+      "값이 다른 사례와 겹친다(qwerty)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "봄 프로젝트의 데이터베이스 비밀번호는 qwerty야.",
+       "여름 프로젝트의 데이터베이스 비밀번호는 abcde야.",
+       "봄 프로젝트의 데이터베이스 비밀번호 기억만 삭제해 줘. 여름 프로젝트는 그대로 둬."
+      ],
+      "question": "봄 프로젝트의 데이터베이스 비밀번호를 기억해?",
+      "expected": "봄 프로젝트의 데이터베이스 비밀번호는 삭제되어 알 수 없다.",
+      "obsolete": "봄 프로젝트의 데이터베이스 비밀번호는 qwerty이다.",
+      "second": [
+       "여름 프로젝트의 데이터베이스 비밀번호는?",
+       "여름 프로젝트의 데이터베이스 비밀번호는 abcde이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "qwerty"
+      ],
+      "other_values": [
+       "abcde"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "failing": [
+    {
+     "index": 104,
+     "reasons": [
+      "값 '192.168.10.10'이 12자를 넘는다. 짧은 명사나 숫자로 써야 한다",
+      "값 '192.168.10.20'이 12자를 넘는다. 짧은 명사나 숫자로 써야 한다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "틔움 프로젝트의 배포 서버 주소는 192.168.10.10이야.",
+       "포근 프로젝트의 배포 서버 주소는 192.168.10.20이야."
+      ],
+      "question": "틔움 프로젝트의 배포 서버 주소가 뭐야?",
+      "expected": "틔움 프로젝트의 배포 서버 주소는 192.168.10.10이다.",
+      "obsolete": "틔움 프로젝트의 배포 서버 주소는 192.168.10.20이다.",
+      "second": [
+       "포근 프로젝트의 배포 서버 주소가 뭐야?",
+       "포근 프로젝트의 배포 서버 주소는 192.168.10.20이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "192.168.10.10"
+      ],
+      "obsolete_values": [
+       "192.168.10.20"
+      ],
+      "other_values": [
+       "192.168.10.20"
+      ]
+     }
+    },
+    {
+     "index": 106,
+     "reasons": [
+      "프로젝트 이름 가온이 다른 사례와 겹친다",
+      "프로젝트 이름 초롬이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "초롬 프로젝트의 API 키는 sk-abc123이야.",
+       "가온 프로젝트의 API 키는 sk-xyz789이야."
+      ],
+      "question": "초롬 프로젝트의 API 키가 뭐야?",
+      "expected": "초롬 프로젝트의 API 키는 sk-abc123이다.",
+      "obsolete": "초롬 프로젝트의 API 키는 sk-xyz789이다.",
+      "second": [
+       "가온 프로젝트의 API 키가 뭐야?",
+       "가온 프로젝트의 API 키는 sk-xyz789이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "sk-abc123"
+      ],
+      "obsolete_values": [
+       "sk-xyz789"
+      ],
+      "other_values": [
+       "sk-xyz789"
+      ]
+     }
+    },
+    {
+     "index": 110,
+     "reasons": [
+      "값이 다른 사례와 겹친다(3306, 5432, 5432)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "하늘 프로젝트의 데이터베이스 포트 번호는 3306이야.",
+       "바다 프로젝트의 데이터베이스 포트 번호는 5432야.",
+       "하늘 프로젝트의 데이터베이스 포트 번호 기억만 삭제해 줘. 바다 프로젝트는 그대로 둬."
+      ],
+      "question": "하늘 프로젝트의 데이터베이스 포트 번호를 기억해?",
+      "expected": "하늘 프로젝트의 데이터베이스 포트 번호는 삭제되어 알 수 없다.",
+      "obsolete": "하늘 프로젝트의 데이터베이스 포트 번호는 3306이다.",
+      "second": [
+       "바다 프로젝트의 데이터베이스 포트 번호는?",
+       "바다 프로젝트의 데이터베이스 포트 번호는 5432이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "3306"
+      ],
+      "other_values": [
+       "5432"
+      ]
+     }
+    },
+    {
+     "index": 111,
+     "reasons": [
+      "프로젝트 이름 가온이 다른 사례와 겹친다",
+      "값이 다른 사례와 겹친다(sk-abc123, sk-xyz789, sk-xyz789)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "가온 프로젝트의 API 키는 sk-abc123이야.",
+       "솔빛 프로젝트의 API 키는 sk-xyz789이야.",
+       "가온 프로젝트의 API 키 기억만 삭제해 줘. 솔빛은 그대로 둬."
+      ],
+      "question": "가온 프로젝트의 API 키를 기억해?",
+      "expected": "가온 프로젝트의 API 키는 삭제되어 알 수 없다.",
+      "obsolete": "가온 프로젝트의 API 키는 sk-abc123이다.",
+      "second": [
+       "솔빛 프로젝트의 API 키는?",
+       "솔빛 프로젝트의 API 키는 sk-xyz789이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "sk-abc123"
+      ],
+      "other_values": [
+       "sk-xyz789"
+      ]
+     }
+    },
+    {
+     "index": 112,
+     "reasons": [
+      "값이 다른 사례와 겹친다(3306, 5432, 5432)",
+      "프로젝트 이름 초롬이 다른 사례와 겹친다",
+      "값이 다른 사례와 겹친다(3306, 5432)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "초롬 프로젝트의 데이터베이스 포트 번호는 3306이야.",
+       "하나비 프로젝트의 데이터베이스 포트 번호는 5432야.",
+       "초롬 프로젝트의 데이터베이스 포트 번호 기억만 삭제해 줘. 하나비 프로젝트는 그대로 둬."
+      ],
+      "question": "초롬 프로젝트의 데이터베이스 포트 번호를 기억해?",
+      "expected": "초롬 프로젝트의 데이터베이스 포트 번호는 삭제되어 알 수 없다.",
+      "obsolete": "초롬 프로젝트의 데이터베이스 포트 번호는 3306이다.",
+      "second": [
+       "하나비 프로젝트의 데이터베이스 포트 번호는?",
+       "하나비 프로젝트의 데이터베이스 포트 번호는 5432이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "3306"
+      ],
+      "other_values": [
+       "5432"
+      ]
+     }
+    },
+    {
+     "index": 116,
+     "reasons": [
+      "프로젝트 이름 가온이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "가온 프로젝트의 FTP 포트 번호는 2233이야.",
+       "빛나 프로젝트의 FTP 포트 번호는 3344야.",
+       "가온 프로젝트의 FTP 포트 번호 기억만 삭제해 줘. 빛나는 그대로 둬."
+      ],
+      "question": "가온 프로젝트의 FTP 포트 번호를 기억해?",
+      "expected": "가온 프로젝트의 FTP 포트 번호는 삭제되어 알 수 없다.",
+      "obsolete": "가온 프로젝트의 FTP 포트 번호는 2233이다.",
+      "second": [
+       "빛나 프로젝트의 FTP 포트 번호는?",
+       "빛나 프로젝트의 FTP 포트 번호는 3344이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "2233"
+      ],
+      "other_values": [
+       "3344"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "round": 4,
+   "failing": [
+    {
+     "index": 104,
+     "reasons": [
+      "값이 다른 사례와 겹친다(3306, 5432, 5432)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "가온 프로젝트의 데이터베이스 포트는 3306으로 설정해 줘.",
+       "바로 프로젝트의 데이터베이스 포트는 5432로 설정해 줘."
+      ],
+      "question": "가온 프로젝트의 데이터베이스 포트가 뭐야?",
+      "expected": "가온 프로젝트의 데이터베이스 포트는 3306이다.",
+      "obsolete": "가온 프로젝트의 데이터베이스 포트는 5432이다.",
+      "second": [
+       "바로 프로젝트의 데이터베이스 포트가 뭐야?",
+       "바로 프로젝트의 데이터베이스 포트는 5432이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "3306"
+      ],
+      "obsolete_values": [
+       "5432"
+      ],
+      "other_values": [
+       "5432"
+      ]
+     }
+    },
+    {
+     "index": 110,
+     "reasons": [
+      "프로젝트 이름 고운이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "고운 프로젝트의 API 키는 'a1b2c3'야.",
+       "드림 프로젝트의 API 키는 'x9y8z7'이야.",
+       "고운 프로젝트의 API 키 기억만 삭제해 줘. 드림 프로젝트는 그대로 둬."
+      ],
+      "question": "고운 프로젝트의 API 키를 기억해?",
+      "expected": "고운 프로젝트의 API 키는 삭제되어 알 수 없다.",
+      "obsolete": "고운 프로젝트의 API 키는 'a1b2c3'이다.",
+      "second": [
+       "드림 프로젝트의 API 키는?",
+       "드림 프로젝트의 API 키는 'x9y8z7'이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "a1b2c3"
+      ],
+      "other_values": [
+       "x9y8z7"
+      ]
+     }
+    },
+    {
+     "index": 112,
+     "reasons": [
+      "프로젝트 이름 고운이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "하랑 프로젝트의 API 키는 7702야.",
+       "고운 프로젝트의 API 키는 2280이야.",
+       "하랑 프로젝트의 API 키 기억만 삭제해 줘. 고운은 그대로 둬."
+      ],
+      "question": "하랑 프로젝트의 API 키를 기억해?",
+      "expected": "하랑 프로젝트의 API 키는 삭제되어 알 수 없다.",
+      "obsolete": "하랑 프로젝트의 API 키는 7702이다.",
+      "second": [
+       "고운 프로젝트의 API 키는?",
+       "고운 프로젝트의 API 키는 2280이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "7702"
+      ],
+      "other_values": [
+       "2280"
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-09-15T07:18:51.654Z"
+}

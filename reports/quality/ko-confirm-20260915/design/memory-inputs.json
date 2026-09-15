@@ -1,0 +1,6425 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "memory-ko-001",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-001-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 여권 만료일은 2027년 3월 15일이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-001-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 주민등록증 발급일은 2010년 8월 20일이야. 여권 만료일이랑은 다른 날짜야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 여권 만료일이 언제야?",
+          "project": "memory-ko-001-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-002",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-002-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 가장 좋아하는 색은 파랑이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-002-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "요즘 노란색 옷도 자주 입게 되더라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 가장 좋아하는 색이 뭐야?",
+          "project": "memory-ko-002-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-003",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-003-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 집 보일러 모델은 나비엔 NR-20이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-003-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 에어컨 모델은 LG 휘센 18평형이야. 보일러 모델이랑은 달라."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 집 보일러 모델이 뭐야?",
+          "project": "memory-ko-003-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-004",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-004-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 쓰는 안경 브랜드는 보스턴이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-004-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 쓰는 안경테 재질은 티타늄이야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 안경 브랜드가 뭐야?",
+          "project": "memory-ko-004-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-005",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-005-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 타는 자전거 브랜드는 삼천리야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-005-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 헬멧 브랜드는 지오스야. 자전거 브랜드랑은 달라."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 타는 자전거 브랜드가 뭐야?",
+          "project": "memory-ko-005-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-006",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-006-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 쓰는 샴푸는 케라시스 퍼퓸이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-006-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 린스는 엘라스틴 퍼플이야. 샴푸랑은 달라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 쓰는 샴푸가 뭐야?",
+          "project": "memory-ko-006-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-007",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-007-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 다니는 미용실은 리안헤어야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-007-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 피부관리실은 에스테샵이야. 미용실이랑은 다른 곳이야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 다니는 미용실이 어디야?",
+          "project": "memory-ko-007-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-008",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-008-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 키우는 고양이 이름은 나비야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-008-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 키우는 강아지 이름은 초코야. 고양이 이름이랑은 달라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 키우는 고양이 이름이 뭐야?",
+          "project": "memory-ko-008-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-009",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-009-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 가입한 보험은 삼성화재 자동차보험이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-009-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 건강보험은 국민건강보험이야. 자동차보험이랑은 달라."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 가입한 보험은 뭐야?",
+          "project": "memory-ko-009-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-010",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-010-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 제일 좋아하는 과일은 수박이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-010-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 제일 싫어하는 과일은 파인애플이야. 좋아하는 과일은 그대로야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 제일 좋아하는 과일이 뭐야?",
+          "project": "memory-ko-010-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-011",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-011-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 쓰는 지갑은 빨간색 루이비통이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-011-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 가방은 검은색 구찌야. 지갑이랑은 달라."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 쓰는 지갑이 뭐야?",
+          "project": "memory-ko-011-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-012",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-stable",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-012-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 예약한 치과는 서울치과야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-012-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 안과 예약은 서울안과야. 치과랑은 다른 곳이야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 예약한 치과가 어디야?",
+          "project": "memory-ko-012-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-013",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-013-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "쿠폰 사용 마감일이 다음 주 금요일까지야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-013-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "멤버십 포인트 소멸일은 내년 3월 말이고, 쿠폰 마감일이랑은 다른 날짜야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "쿠폰 사용 마감일이 언제야?",
+          "project": "memory-ko-013-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-014",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-014-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "냉장고 AS 신청 접수 마감이 이번 달 20일까지야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-014-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "세탁기 AS 접수 마감은 다음 달 5일까지고, 냉장고랑은 달라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "냉장고 AS 신청 접수 마감이 언제야?",
+          "project": "memory-ko-014-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-015",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-015-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "영화 시사회 초대권 사용 기한이 8월 15일까지야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-015-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "영화 일반 관람권 사용 기한은 9월 1일까지고, 시사회랑은 달라."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "영화 시사회 초대권 사용 기한이 언제야?",
+          "project": "memory-ko-015-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-016",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-016-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "공모전 접수 마감이 10월 7일까지야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-016-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "공모전 결과 발표일은 11월 1일이고, 접수 마감이랑은 달라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "공모전 접수 마감이 언제야?",
+          "project": "memory-ko-016-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-017",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-017-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "운동화 반품 기한이 구매일로부터 30일 이내야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-017-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "운동화 교환 기한은 구매일로부터 60일 이내고, 반품이랑은 달라."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "운동화 반품 기한이 어떻게 돼?",
+          "project": "memory-ko-017-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-018",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-018-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "도시가스 요금 납부 마감일이 매월 25일이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-018-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "전기 요금 납부 마감일은 매월 15일이고, 도시가스랑은 달라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "도시가스 요금 납부 마감일이 언제야?",
+          "project": "memory-ko-018-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-019",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-019-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "강아지 예방접종 1차 날짜가 3월 2일이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-019-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "강아지 예방접종 2차 날짜는 4월 6일이고, 1차랑은 달라."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "강아지 예방접종 1차 날짜가 언제야?",
+          "project": "memory-ko-019-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-020",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-020-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "렌트카 반납 예정 시각이 오후 6시야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-020-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "렌트카 픽업 예정 시각은 오전 10시고, 반납이랑은 달라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "렌트카 반납 예정 시각이 몇 시야?",
+          "project": "memory-ko-020-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-021",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-021-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "도서 대출 연장 가능 기간이 7일이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-021-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "도서 예약 대기 기간은 3일이고, 연장이랑은 달라."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "도서 대출 연장 가능 기간이 얼마야?",
+          "project": "memory-ko-021-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-022",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-022-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "보험료 납입 유예 기간이 2개월이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-022-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "보험 계약 갱신 기간은 1개월이고, 유예랑은 달라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "보험료 납입 유예 기간이 얼마야?",
+          "project": "memory-ko-022-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-023",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-023-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 신청한 도서관 문화강좌 신청 마감일이 11월 5일이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-023-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "도서관에서 다른 강좌 프로그램 신청 마감일은 12월 10일인데, 그건 아까 말한 강좌와는 다른 날짜야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 신청한 도서관 문화강좌 신청 마감일이 언제야?",
+          "project": "memory-ko-023-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-024",
+      "language": "ko",
+      "category": "new",
+      "construction_family": "memory-new-deadline",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-024-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "화분 물 주는 주기가 3일에 한 번이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-024-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "화분 영양제 주는 주기는 2주에 한 번이고, 물 주기랑은 달라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "화분 물 주는 주기가 어떻게 돼?",
+          "project": "memory-ko-024-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-025",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-correction",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-025-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 강아지 이름은 초코야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-025-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아니, 잘못 말했어. 강아지 이름은 루루야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 강아지 이름이 뭐야?",
+          "project": "memory-ko-025-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-026",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-correction",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-026-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 사는 아파트 동호수가 102동 304호야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-026-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아니 잘못 말했어, 103동 405호가 맞아."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 사는 아파트 동호수가 뭐야?",
+          "project": "memory-ko-026-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-027",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-correction",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-027-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 차는 소나타야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-027-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아니, 잘못 말했어. 내 차는 그랜저야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 차종이 뭐야?",
+          "project": "memory-ko-027-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-028",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-correction",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-028-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 키는 170이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-028-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아니, 착각했어. 내 키는 165야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 키가 얼마야?",
+          "project": "memory-ko-028-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-029",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-correction",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-029-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 동생은 대구에 살아."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-029-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아니, 잘못 알려줬어. 동생은 부산에 살아."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 동생이 사는 곳이 어디야?",
+          "project": "memory-ko-029-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-030",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-correction",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-030-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 쓰는 립스틱 색상은 핑크야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-030-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아니, 방금 착각했어. 립스틱은 코랄이야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 쓰는 립스틱 색상이 뭐야?",
+          "project": "memory-ko-030-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-031",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-chain",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-031-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "냉장고 온도를 3도로 설정해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-031-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아니야, 5도로 바꿔."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-031-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "최종적으로 2도로 맞추고, 앞서 말한 3도와 5도는 취소야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-04T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "냉장고 온도가 몇 도로 설정되어 있어?",
+          "project": "memory-ko-031-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-032",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-chain",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-032-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 비상 연락처는 엄마야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-032-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아빠로 바꿔."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-032-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "최종적으로 언니로 정정하고, 앞서 말한 엄마와 아빠는 취소."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 비상 연락처가 누구야?",
+          "project": "memory-ko-032-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-033",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-chain",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-033-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 와이파이 비밀번호는 1234야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-033-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "5678로 바꿔."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-033-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "최종 비밀번호는 9012로 하고, 1234와 5678은 무효야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-04T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 와이파이 비밀번호가 뭐야?",
+          "project": "memory-ko-033-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-034",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-chain",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-034-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 자전거 보관 장소는 지하실이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-034-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아니, 베란다야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-034-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "최종적으로 현관으로 정하고, 지하실과 베란다는 취소."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 자전거 보관 장소가 어디야?",
+          "project": "memory-ko-034-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-035",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-chain",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-035-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 좋아하는 빵은 소보루빵이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-035-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아니, 단팥빵으로 바꿔."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-035-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "최종적으로 크루아상으로 하고, 소보루빵과 단팥빵은 취소."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-04T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 좋아하는 빵이 뭐야?",
+          "project": "memory-ko-035-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-036",
+      "language": "ko",
+      "category": "update",
+      "construction_family": "memory-update-chain",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-036-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 운동화 사이즈는 260이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-036-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아니, 270이야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-036-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "최종적으로 265로 정정하고, 260과 270은 취소."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 운동화 사이즈가 몇이야?",
+          "project": "memory-ko-036-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-037",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-037-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 테스트용 가상 이메일 계정 비밀번호는 'apple1234'야. 절대 진짜 비밀번호가 아니니 테스트용으로만 기억해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-037-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아까 알려준 그 가상 이메일 계정 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 가상 이메일 계정 비밀번호를 기억해?",
+          "project": "memory-ko-037-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-038",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-038-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 테스트용 가상 문고리 비밀번호는 3371이야. 꼭 기억해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-038-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아까 말한 문고리 비밀번호는 기억에서 지워 줘. 값을 다시 말하지 마."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 가상 문고리 비밀번호를 기억해?",
+          "project": "memory-ko-038-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-039",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-039-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 테스트용 가상 사물함 비밀번호는 7392야. 이건 진짜가 아니고 테스트용이니까 기억해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-039-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아까 말한 그 사물함 비밀번호는 기억에서 지워 줘. 숫자는 다시 말하지 마."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 가상 사물함 비밀번호를 기억해?",
+          "project": "memory-ko-039-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-040",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-040-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "테스트용 가상 내 서재 금고 비밀번호는 '백합 3852'야. 기억해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-040-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아까 말한 서재 금고 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 서재 금고 비밀번호를 기억해?",
+          "project": "memory-ko-040-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-041",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-041-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 가상 와이파이 비밀번호는 '겨울1234'야. 테스트용 가상이니 기억해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-041-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아까 말한 가상 와이파이 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 가상 와이파이 비밀번호를 기억해?",
+          "project": "memory-ko-041-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-042",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-042-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "테스트용 가상 내 위키 계정 비밀번호는 '산호초123'이야. 기억해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-042-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아까 말한 위키 계정 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 위키 계정 비밀번호를 기억해?",
+          "project": "memory-ko-042-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-043",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-043-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 테스트용 가상 이메일 비밀번호는 '초록별123'이야. 기억해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-043-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "그 이메일 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 가상 이메일 비밀번호를 기억해?",
+          "project": "memory-ko-043-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-044",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-044-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 가상 도서관 대출 암호는 '별하늘123'이야. 테스트용 가상이니까 기억해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-044-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "그 가상 도서관 대출 암호는 기억에서 지워 줘. 값을 다시 말하지 마."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 가상 도서관 대출 암호를 기억해?",
+          "project": "memory-ko-044-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-045",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-045-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "테스트용 가상 내 금고 비밀번호는 3852야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-045-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아까 말한 내 금고 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 가상 금고 비밀번호를 기억해?",
+          "project": "memory-ko-045-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-046",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-046-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 가상 클라우드 접속 암호는 '겨울눈2024'야. 테스트용 가상이니 기억해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-046-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "그 클라우드 접속 암호는 기억에서 지워 줘. 값을 다시 말하지 마."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 가상 클라우드 접속 암호를 기억해?",
+          "project": "memory-ko-046-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-047",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-047-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 가상 안전장치 암호는 '별빛789'야. 테스트용 가상이니까 기록해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-047-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "그 가상 안전장치 암호는 기억에서 지워 줘. 값은 다시 말하지 마."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 가상 안전장치 암호를 기억해?",
+          "project": "memory-ko-047-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-048",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-forget",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-048-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 가상 자전거 보관함 비밀번호는 5823이야. 테스트용 가상 값이니까 기억해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-048-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아까 말한 가상 자전거 보관함 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 가상 자전거 보관함 비밀번호를 기억해?",
+          "project": "memory-ko-048-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-049",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-049-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "헬스장 등록과 수영장 등록을 둘 다 했어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-049-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "헬스장 등록은 취소할게. 수영장 등록은 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 등록이 뭐야?",
+          "project": "memory-ko-049-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "헬스장 등록이 아직 유효해?",
+          "project": "memory-ko-049-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-050",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-050-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "피아노 레슨과 바이올린 레슨을 둘 다 신청했어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-050-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "바이올린 레슨은 취소해 줘. 피아노 레슨은 그대로 둬."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 레슨이 뭐야?",
+          "project": "memory-ko-050-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "바이올린 레슨이 아직 유효해?",
+          "project": "memory-ko-050-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-051",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-051-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "도서관 회원권과 체육관 회원권을 둘 다 갱신했어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-051-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "체육관 회원권은 취소할게. 도서관 회원권은 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 회원권이 뭐야?",
+          "project": "memory-ko-051-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "체육관 회원권이 아직 유효해?",
+          "project": "memory-ko-051-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-052",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-052-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "영화 티켓과 콘서트 티켓을 둘 다 예매했어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-052-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "콘서트 티켓은 취소해 줘. 영화 티켓은 그대로 둬."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 티켓이 뭐야?",
+          "project": "memory-ko-052-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "콘서트 티켓이 아직 유효해?",
+          "project": "memory-ko-052-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-053",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-053-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "자동차 보험과 화재 보험을 둘 다 가입했어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-053-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "화재 보험은 취소할게. 자동차 보험은 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 보험이 뭐야?",
+          "project": "memory-ko-053-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "화재 보험이 아직 유효해?",
+          "project": "memory-ko-053-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-054",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-054-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "요가 클래스와 필라테스 클래스를 둘 다 등록했어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-054-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "필라테스 클래스는 취소해 줘. 요가 클래스는 그대로 둬."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 클래스가 뭐야?",
+          "project": "memory-ko-054-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "필라테스 클래스가 아직 유효해?",
+          "project": "memory-ko-054-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-055",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-055-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "비행기 예약과 기차 예약을 둘 다 했어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-055-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "기차 예약은 취소할게. 비행기 예약은 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 예약이 뭐야?",
+          "project": "memory-ko-055-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "기차 예약이 아직 유효해?",
+          "project": "memory-ko-055-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-056",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-056-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "도서관 대출과 DVD 대여를 둘 다 신청했어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-056-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "DVD 대여는 취소할게. 도서관 대출은 그대로 둬."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 신청이 뭐야?",
+          "project": "memory-ko-056-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "취소된 DVD 대여가 아직 유효해?",
+          "project": "memory-ko-056-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-057",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-057-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "넷플릭스 구독과 유튜브 프리미엄 구독을 둘 다 했어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-057-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "유튜브 프리미엄 구독은 취소할게. 넷플릭스 구독은 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 구독이 뭐야?",
+          "project": "memory-ko-057-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "유튜브 프리미엄 구독이 아직 유효해?",
+          "project": "memory-ko-057-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-058",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-058-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "수영 강습과 골프 강습을 둘 다 신청했어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-058-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "골프 강습은 취소해 줘. 수영 강습은 그대로 둬."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 강습이 뭐야?",
+          "project": "memory-ko-058-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "골프 강습이 아직 유효해?",
+          "project": "memory-ko-058-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-059",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-059-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "캠핑 장비 대여와 낚시 장비 대여를 둘 다 예약했어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-059-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "낚시 장비 대여는 취소할게. 캠핑 장비 대여는 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 대여가 뭐야?",
+          "project": "memory-ko-059-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "낚시 장비 대여가 아직 유효해?",
+          "project": "memory-ko-059-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-060",
+      "language": "ko",
+      "category": "delete",
+      "construction_family": "memory-delete-cancel_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-060-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "영화관 정기권과 헬스장 정기권을 둘 다 끊었어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-060-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "헬스장 정기권은 취소하고 영화관 정기권은 유지해 줘."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아직 남아 있는 정기권이 뭐야?",
+          "project": "memory-ko-060-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "헬스장 정기권이 아직 유효해?",
+          "project": "memory-ko-060-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-061",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-quotation",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-061-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "나는 매운 음식을 잘 못 먹어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-061-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "친구가 \"너 요즘 매운 거 엄청 잘 먹더라\"라고 하던데, 내 입맛은 바뀐 거 아니야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 입맛은 어떤 음식을 잘 못 먹어?",
+          "project": "memory-ko-061-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-062",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-quotation",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-062-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "나는 일주일에 세 번 운동해."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-062-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "동료가 \"넌 거의 매일 운동한다고 들었어\"라고 말하더라. 내 운동 횟수는 바뀐 거 아니야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "나는 일주일에 몇 번 운동해?",
+          "project": "memory-ko-062-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-063",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-quotation",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-063-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "우리 집 난방은 가스보일러야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-063-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "엄마가 \"네 집 전기히터로 바꿨다며?\"라고 묻더라. 우리 집 난방은 바뀐 거 아니야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "우리 집 난방은 뭐야?",
+          "project": "memory-ko-063-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-064",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-quotation",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-064-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 취미는 독서야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-064-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "옆집 아주머니가 \"요즘 등산 다닌다면서?\"라고 하시던데, 내 취미는 바뀐 거 아니야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 취미는 뭐야?",
+          "project": "memory-ko-064-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-065",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-quotation",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-065-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 출근 시간은 아홉 시야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-065-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "팀장님이 \"너 요즘 여덟 시에 출근한다며?\"라고 하시던데, 내 출근 시간은 바뀐 거 아니야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 출근 시간은 몇 시야?",
+          "project": "memory-ko-065-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-066",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-quotation",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-066-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 결혼식은 예식장에서 할 거야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-066-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "시어머니가 \"야외에서 한다고 들었는데\"라고 하시더라. 내 결혼식 장소는 바뀐 거 아니야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 결혼식은 어디에서 할 거야?",
+          "project": "memory-ko-066-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-067",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-hypothetical",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-067-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "지금 내 차는 아반떼야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-067-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "만약 예산이 넉넉하면 제네시스로 바꿀 수도 있겠지. 아직 안 바꿨어."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "지금 내 차는 뭐야?",
+          "project": "memory-ko-067-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-068",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-hypothetical",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-068-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "우리 집 강아지 사료는 로얄캐닌이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-068-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "만약 알레르기가 생기면 자연식으로 바꿀 수도 있겠지. 아직 안 바꿨어."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "지금 우리 집 강아지 사료는 뭐야?",
+          "project": "memory-ko-068-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-069",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-hypothetical",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-069-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 지금 다니는 요가원은 하늘요가야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-069-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "만약 집 근처에 생기면 더 가까운 곳으로 옮길 수도 있겠지. 아직 안 옮겼어."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 지금 다니는 요가원은 어디야?",
+          "project": "memory-ko-069-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-070",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-hypothetical",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-070-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 휴대폰 요금제는 5G 프리미엄이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-070-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "만약 데이터를 덜 쓰면 LTE 중간 요금제로 내릴 수도 있겠지. 아직 안 내렸어."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 휴대폰 요금제는 뭐야?",
+          "project": "memory-ko-070-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-071",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-hypothetical",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-071-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 방 벽지는 아이보리야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-071-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "만약 기분이 우울하면 파란색으로 바꿀 수도 있겠지. 아직 안 바꿨어."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내 방 벽지는 무슨 색이야?",
+          "project": "memory-ko-071-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-072",
+      "language": "ko",
+      "category": "contradiction",
+      "construction_family": "memory-contradiction-hypothetical",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-072-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 쓰는 노트북은 LG 그램이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-072-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "만약 맥북이 더 편하면 갈아탈 수도 있겠지. 아직 안 갈아탔어."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 쓰는 노트북은 뭐야?",
+          "project": "memory-ko-072-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-073",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-073-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "비 오는 날은 독서가 좋아."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-073-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "눈 오는 날은 영화가 좋아. 비 오는 날이랑은 별개야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "비 오는 날과 눈 오는 날에 각각 뭘 좋아해?",
+          "project": "memory-ko-073-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-074",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-074-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "날씨가 흐릴 때는 국수를 좋아해."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-074-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "비 오는 날에는 찌개를 좋아해. 흐릴 때랑은 별개야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "날씨가 흐릴 때와 비 오는 날에 각각 뭘 좋아해?",
+          "project": "memory-ko-074-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-075",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-075-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "더울 때는 냉면이 최고야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-075-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "추울 때는 우동이 좋아. 더울 때랑은 별개야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "더울 때와 추울 때 각각 뭘 좋아해?",
+          "project": "memory-ko-075-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-076",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-076-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "집에서 쉴 때는 녹차를 마셔."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-076-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "밖에 나갈 때는 아이스 아메리카노를 마셔. 집에서랑은 달라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "집에서 쉴 때와 밖에 나갈 때 각각 뭘 마셔?",
+          "project": "memory-ko-076-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-077",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-077-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "비 오는 날에는 따뜻한 코코아를 마셔."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-077-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "눈 오는 날에는 뜨거운 홍차를 마셔. 비 오는 날 취향이랑은 별개야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "비 오는 날과 눈 오는 날에 각각 뭘 마셔?",
+          "project": "memory-ko-077-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-078",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-078-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "비 오는 날에는 국수를 좋아해."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-078-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "눈 오는 날에는 떡국이 좋아. 비 오는 날이랑은 별개야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "비 오는 날과 눈 오는 날 각각 뭘 좋아해?",
+          "project": "memory-ko-078-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-079",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-079-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "실내에서 운동할 때는 요가 매트를 쓰는 게 좋아."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-079-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "야외에서 운동할 때는 러닝화를 신는 게 좋아. 실내랑은 별개야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "실내에서 운동할 때 뭘 쓰는 걸 좋아하고, 야외에서 운동할 때 뭘 신는 걸 좋아해?",
+          "project": "memory-ko-079-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-080",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-080-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아침 식사로는 오트밀을 먹는 게 좋아."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-080-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "점심 식사로는 샐러드를 먹는 게 좋아. 아침이랑은 달라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아침 식사로는 뭘 좋아하고, 점심 식사로는 뭘 좋아해?",
+          "project": "memory-ko-080-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-081",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-081-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "주말 아침에는 커피를 마셔."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-081-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "평일 점심에는 녹차를 마셔. 주말 아침과는 별개야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "주말 아침과 평일 점심에 각각 뭘 마셔?",
+          "project": "memory-ko-081-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-082",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-082-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "여행 갈 때는 창가 자리를 좋아해."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-082-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "식당에 갈 때는 복도 자리를 좋아해. 창가랑은 별개야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "여행 갈 때와 식당에 갈 때 각각 어떤 자리를 좋아해?",
+          "project": "memory-ko-082-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-083",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-083-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "휴일에는 등산이 좋아."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-083-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "평일 저녁에는 요가야. 휴일 선호랑은 별개야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "휴일과 평일 저녁에 각각 뭘 좋아해?",
+          "project": "memory-ko-083-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-084",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-coexist",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-084-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아침에는 따뜻한 우유를 마셔."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-084-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "저녁에는 레몬차를 마셔. 아침과는 달라."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아침과 저녁에 각각 뭘 마셔?",
+          "project": "memory-ko-084-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-085",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-unchanged",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-085-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "나는 종이책을 더 좋아해."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-085-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "전자책 리더기를 새로 샀는데, 그래도 나는 종이책이 좋아. 선호는 그대로야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 선호하는 책 형태는 뭐야?",
+          "project": "memory-ko-085-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-086",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-unchanged",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-086-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "나는 운동할 때 요가복을 입는 게 좋아."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-086-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "친구가 필라테스복을 추천해 줬는데, 난 여전히 요가복이 편해."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 운동할 때 입는 옷은 뭐야?",
+          "project": "memory-ko-086-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-087",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-unchanged",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-087-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "나는 간식으로 초콜릿을 제일 좋아해."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-087-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "새로 마카다미아 쿠키를 샀는데, 그래도 간식은 초콜릿이 제일 좋아."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 제일 좋아하는 간식이 뭐야?",
+          "project": "memory-ko-087-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-088",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-unchanged",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-088-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 마실 차는 녹차가 제일 좋아."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-088-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "할머니가 홍차 선물 세트를 보내주셨는데, 그래도 내 선호는 그대로야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 마실 차로 좋아하는 게 뭐야?",
+          "project": "memory-ko-088-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-089",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-unchanged",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-089-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "나는 비 오는 날엔 카페에 가는 걸 좋아해."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-089-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "친구가 집에 와서 같이 홈카페를 하자고 했는데, 그래도 비 오는 날은 카페가 좋아. 선호는 그대로야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "비 오는 날 나는 뭘 좋아해?",
+          "project": "memory-ko-089-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-090",
+      "language": "ko",
+      "category": "preferences",
+      "construction_family": "memory-preferences-unchanged",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-090-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "나는 마실 차로 보이차를 제일 좋아해."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-090-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "얼그레이 티백을 새로 샀는데, 그래도 내가 가장 좋아하는 차는 여전히 보이차야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "내가 가장 좋아하는 차가 뭐야?",
+          "project": "memory-ko-090-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-091",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-former",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-091-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "우리 아파트 관리사무소장님이 박민수 씨였어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-091-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "이제는 김지영 씨로 바뀌었어."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "지금 우리 아파트 관리사무소장님은 누구야?",
+          "project": "memory-ko-091-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "이전 아파트 관리사무소장님은 누구였어?",
+          "project": "memory-ko-091-a",
+          "scope_mode": "strict",
+          "mode": "history"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-092",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-former",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-092-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 동네 슈퍼 마감 시간이 밤 10시였어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-092-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "이제는 밤 11시로 바뀌었어."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "지금 동네 슈퍼 마감 시간이 몇 시야?",
+          "project": "memory-ko-092-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "이전 동네 슈퍼 마감 시간은 몇 시였어?",
+          "project": "memory-ko-092-a",
+          "scope_mode": "strict",
+          "mode": "history"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-093",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-former",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-093-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 은행 적금 금리가 연 2.5%였어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-093-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "이제는 연 3.0%로 바뀌었어."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "지금 내 은행 적금 금리가 얼마야?",
+          "project": "memory-ko-093-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "이전 은행 적금 금리는 얼마였어?",
+          "project": "memory-ko-093-a",
+          "scope_mode": "strict",
+          "mode": "history"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-094",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-former",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-094-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 가입한 독서 모임 회비가 월 1만 원이었어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-094-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "이제는 월 1만 5천 원으로 바뀌었어."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "지금 독서 모임 월 회비가 얼마야?",
+          "project": "memory-ko-094-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "이전 독서 모임 월 회비는 얼마였어?",
+          "project": "memory-ko-094-a",
+          "scope_mode": "strict",
+          "mode": "history"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-095",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-former",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-095-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 아이 유치원 담임 선생님이 이수미 선생님이었어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-095-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "이제는 최은주 선생님으로 바뀌었어."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "지금 내 아이 유치원 담임 선생님은 누구야?",
+          "project": "memory-ko-095-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "이전 유치원 담임 선생님은 누구였어?",
+          "project": "memory-ko-095-a",
+          "scope_mode": "strict",
+          "mode": "history"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-096",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-former",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-096-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내가 쓰는 정수기 렌탈료가 월 2만 원이었어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-096-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "이제는 월 2만 5천 원으로 바뀌었어."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "지금 내 정수기 렌탈료가 얼마야?",
+          "project": "memory-ko-096-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "이전 정수기 렌탈료는 얼마였어?",
+          "project": "memory-ko-096-a",
+          "scope_mode": "strict",
+          "mode": "history"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-097",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-at_time",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-097-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 동네 헬스장 월 회비가 5만 원이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-097-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "오늘부터 헬스장 월 회비를 6만 원으로 올렸어."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "변경 전에 내 동네 헬스장 월 회비가 얼마였어?",
+          "project": "memory-ko-097-a",
+          "scope_mode": "strict",
+          "mode": "at-time",
+          "at_timestamp": "2026-07-01T09:00:00Z"
+        },
+        {
+          "id": "q2",
+          "text": "지금 내 동네 헬스장 월 회비는 얼마야?",
+          "project": "memory-ko-097-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-098",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-at_time",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-098-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 자동차 보험료는 매월 8만 원이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-098-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "오늘부터 보험료를 매월 10만 원으로 올렸어."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "변경 전에 내 자동차 보험료가 얼마였어?",
+          "project": "memory-ko-098-a",
+          "scope_mode": "strict",
+          "mode": "at-time",
+          "at_timestamp": "2026-07-01T09:00:00Z"
+        },
+        {
+          "id": "q2",
+          "text": "현재 내 자동차 보험료는 얼마야?",
+          "project": "memory-ko-098-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-099",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-at_time",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-099-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 동네 카페 단골 메뉴는 아메리카노야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-099-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "오늘부터 단골 메뉴를 라떼로 바꿨어."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "변경 전에 내 동네 카페 단골 메뉴가 뭐였어?",
+          "project": "memory-ko-099-a",
+          "scope_mode": "strict",
+          "mode": "at-time",
+          "at_timestamp": "2026-07-01T09:00:00Z"
+        },
+        {
+          "id": "q2",
+          "text": "현재 내 동네 카페 단골 메뉴는 뭐야?",
+          "project": "memory-ko-099-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-100",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-at_time",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-100-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 집 보일러 온도가 24도였어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-100-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "오늘부터 22도로 낮췄어."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "변경 전에 보일러 온도가 몇 도였어?",
+          "project": "memory-ko-100-a",
+          "scope_mode": "strict",
+          "mode": "at-time",
+          "at_timestamp": "2026-07-01T09:00:00Z"
+        },
+        {
+          "id": "q2",
+          "text": "현재 보일러 온도는 몇 도야?",
+          "project": "memory-ko-100-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-101",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-at_time",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-101-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 반려동물 등록번호가 2023-4567이었어."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-101-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "오늘부터 새로 바꿔서 2024-1234로 바뀌었어."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "변경 전에 내 반려동물 등록번호가 뭐였어?",
+          "project": "memory-ko-101-a",
+          "scope_mode": "strict",
+          "mode": "at-time",
+          "at_timestamp": "2026-07-01T09:00:00Z"
+        },
+        {
+          "id": "q2",
+          "text": "현재 내 반려동물 등록번호는 뭐야?",
+          "project": "memory-ko-101-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-102",
+      "language": "ko",
+      "category": "history",
+      "construction_family": "memory-history-at_time",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-102-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "내 방 벽지 색깔이 연두색이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-102-a",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "오늘부터 회색으로 바꿨어."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "변경 전에 내 방 벽지 색깔이 뭐였어?",
+          "project": "memory-ko-102-a",
+          "scope_mode": "strict",
+          "mode": "at-time",
+          "at_timestamp": "2026-07-01T09:00:00Z"
+        },
+        {
+          "id": "q2",
+          "text": "지금 내 방 벽지 색깔은 뭐야?",
+          "project": "memory-ko-102-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-103",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-different",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-103-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "마루 프로젝트의 서버 IP 주소가 192.168.1.10이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-103-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "그리고 물결 프로젝트의 서버 IP 주소는 192.168.2.20이야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "마루 프로젝트의 서버 IP 주소가 뭐야?",
+          "project": "memory-ko-103-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "물결 프로젝트의 서버 IP 주소가 뭐야?",
+          "project": "memory-ko-103-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-104",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-different",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-104-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "가람 프로젝트의 데이터베이스 포트 번호는 3306이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-104-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "나린 프로젝트의 데이터베이스 포트 번호는 5432야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "가람 프로젝트의 데이터베이스 포트 번호가 뭐야?",
+          "project": "memory-ko-104-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "나린 프로젝트의 데이터베이스 포트 번호가 뭐야?",
+          "project": "memory-ko-104-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-105",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-different",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-105-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "하늘 프로젝트의 캐시 서버 주소는 10.0.1.50이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-105-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "솔빛 프로젝트의 캐시 서버 주소는 10.0.1.60이야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "하늘 프로젝트의 캐시 서버 주소가 뭐야?",
+          "project": "memory-ko-105-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "솔빛 프로젝트의 캐시 서버 주소가 뭐야?",
+          "project": "memory-ko-105-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-106",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-different",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-106-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "다온 프로젝트의 DB 이름은 한빛이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-106-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "라희 프로젝트의 DB 이름은 샘물이야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "다온 프로젝트의 DB 이름이 뭐야?",
+          "project": "memory-ko-106-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "라희 프로젝트의 DB 이름은 뭐야?",
+          "project": "memory-ko-106-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-107",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-different",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-107-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "바투 프로젝트의 서버 IP 주소가 192.168.0.10이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-107-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "사랑 프로젝트의 서버 IP 주소는 192.168.0.20이야."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-03T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "바투 프로젝트의 서버 IP 주소가 뭐야?",
+          "project": "memory-ko-107-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "사랑 프로젝트의 서버 IP 주소는 뭐야?",
+          "project": "memory-ko-107-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-108",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-different",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-108-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "한울 프로젝트의 서버 IP 주소가 10.0.1.5야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-108-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "가비 프로젝트의 서버 IP 주소는 10.0.1.8이야."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "한울 프로젝트의 서버 IP 주소가 뭐야?",
+          "project": "memory-ko-108-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "가비 프로젝트의 서버 IP 주소가 뭐야?",
+          "project": "memory-ko-108-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-109",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-109-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아라 프로젝트의 데이터베이스 비밀번호는 'arA1234'야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-109-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "자운 프로젝트의 데이터베이스 비밀번호는 'jaun5678'이야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-109-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "아라 프로젝트의 데이터베이스 비밀번호 기억만 삭제해 줘. 자운 프로젝트는 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-04T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "아라 프로젝트의 데이터베이스 비밀번호를 기억해?",
+          "project": "memory-ko-109-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "자운 프로젝트의 데이터베이스 비밀번호는?",
+          "project": "memory-ko-109-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-110",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-110-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "차미 프로젝트의 데이터베이스 비밀번호는 7531이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-110-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "카라 프로젝트의 데이터베이스 비밀번호는 8642야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-110-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "차미 프로젝트의 데이터베이스 비밀번호만 기억에서 지워 줘. 카라는 그대로 둬."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "차미 프로젝트의 데이터베이스 비밀번호를 기억해?",
+          "project": "memory-ko-110-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "카라 프로젝트의 데이터베이스 비밀번호는?",
+          "project": "memory-ko-110-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-111",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-111-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "고운 프로젝트의 API 키는 sk-abc123이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-111-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "드림 프로젝트의 API 키는 sk-xyz789이야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-111-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "고운 프로젝트의 API 키 기억만 삭제해 줘. 드림 프로젝트는 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-04T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "고운 프로젝트의 API 키를 기억해?",
+          "project": "memory-ko-111-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "드림 프로젝트의 API 키는?",
+          "project": "memory-ko-111-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-112",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-112-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "타래 프로젝트의 FTP 계정을 'tarae_ftp'로 기억해 줘."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-112-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "파랑 프로젝트의 FTP 계정은 'parang_ftp'야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-112-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "타래 프로젝트의 FTP 계정 기억만 삭제해 줘. 파랑 프로젝트는 그대로 둬."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "타래 프로젝트의 FTP 계정을 기억해?",
+          "project": "memory-ko-112-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "파랑 프로젝트의 FTP 계정은 뭐야?",
+          "project": "memory-ko-112-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-113",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-113-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "너울 프로젝트의 서버 호스트명은 'seagull'이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-113-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "달래 프로젝트의 서버 호스트명은 'violet'이야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-113-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "너울 프로젝트의 서버 호스트명 기억만 삭제해 줘. 달래는 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-04T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "너울 프로젝트의 서버 호스트명을 기억해?",
+          "project": "memory-ko-113-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "달래 프로젝트의 서버 호스트명은?",
+          "project": "memory-ko-113-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-114",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-114-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "로운 프로젝트의 FTP 계정은 guest야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-114-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "미르 프로젝트의 FTP 계정은 admin이야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-114-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "로운 프로젝트의 FTP 계정 기억만 삭제해 줘. 미르 프로젝트는 그대로 둬."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "로운 프로젝트의 FTP 계정을 기억해?",
+          "project": "memory-ko-114-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "미르 프로젝트의 FTP 계정은?",
+          "project": "memory-ko-114-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-115",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-115-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "벼리 프로젝트의 데이터베이스 비밀번호는 'qwerty12'야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-115-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "새론 프로젝트의 데이터베이스 비밀번호는 'abcde34'야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-115-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "벼리 프로젝트의 데이터베이스 비밀번호 기억만 삭제해 줘. 새론 프로젝트는 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-04T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "벼리 프로젝트의 데이터베이스 비밀번호를 기억해?",
+          "project": "memory-ko-115-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "새론 프로젝트의 데이터베이스 비밀번호는?",
+          "project": "memory-ko-115-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-116",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-116-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "온새 프로젝트의 FTP 포트 번호는 2020이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-116-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "주름 프로젝트의 FTP 포트 번호는 3030이야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-116-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "온새 프로젝트의 FTP 포트 번호 기억만 삭제해 줘. 주름은 그대로 둬."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "온새 프로젝트의 FTP 포트 번호를 기억해?",
+          "project": "memory-ko-116-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "주름 프로젝트의 FTP 포트 번호는?",
+          "project": "memory-ko-116-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-117",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-117-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "누리 프로젝트의 데이터베이스 비밀번호는 'blue123'이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-117-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "도담 프로젝트의 데이터베이스 비밀번호는 'red456'이야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-117-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "누리 프로젝트의 데이터베이스 비밀번호만 기억에서 지워 줘. 도담 프로젝트는 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-04T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "누리 프로젝트의 데이터베이스 비밀번호를 기억해?",
+          "project": "memory-ko-117-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "도담 프로젝트의 데이터베이스 비밀번호는?",
+          "project": "memory-ko-117-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-118",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-118-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "채움 프로젝트의 FTP 계정은 admin1이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-118-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "키움 프로젝트의 FTP 계정은 admin2야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-118-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "채움 프로젝트의 FTP 계정 기억만 삭제해 줘. 키움은 그대로 둬."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "채움 프로젝트의 FTP 계정을 기억해?",
+          "project": "memory-ko-118-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "키움 프로젝트의 FTP 계정은?",
+          "project": "memory-ko-118-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-119",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-119-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "눈빛 프로젝트의 담당자가 수지야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-119-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "빛꽃 프로젝트의 담당자가 민호야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-119-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "눈빛 프로젝트의 담당자만 기억에서 지워 줘. 빛꽃 프로젝트는 그대로 둬."
+          }
+        },
+        {
+          "id": "reopen",
+          "operation": "reopen",
+          "timestamp": "2026-07-04T09:00:00Z"
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "눈빛 프로젝트의 담당자를 기억해?",
+          "project": "memory-ko-119-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "빛꽃 프로젝트의 담당자는?",
+          "project": "memory-ko-119-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    },
+    {
+      "id": "memory-ko-120",
+      "language": "ko",
+      "category": "project_isolation",
+      "construction_family": "memory-project_isolation-delete_one",
+      "events": [
+        {
+          "id": "e1",
+          "operation": "encode",
+          "project": "memory-ko-120-a",
+          "timestamp": "2026-07-01T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "다솔 프로젝트의 서버 IP는 203.0.113.10이야."
+          }
+        },
+        {
+          "id": "e2",
+          "operation": "encode",
+          "project": "memory-ko-120-b",
+          "timestamp": "2026-07-02T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "별빛 프로젝트의 서버 IP는 203.0.113.20이야."
+          }
+        },
+        {
+          "id": "e3",
+          "operation": "encode",
+          "project": "memory-ko-120-a",
+          "timestamp": "2026-07-03T09:00:00Z",
+          "message": {
+            "role": "user",
+            "content": "다솔 프로젝트의 서버 IP 기억만 삭제해 줘. 별빛은 그대로 둬."
+          }
+        }
+      ],
+      "recent_tail": [
+        {
+          "role": "user",
+          "content": "기록에 관한 말은 여기까지야."
+        },
+        {
+          "role": "user",
+          "content": "이제 다음 질문으로 넘어갈게."
+        }
+      ],
+      "queries": [
+        {
+          "id": "q1",
+          "text": "다솔 프로젝트의 서버 IP를 기억해?",
+          "project": "memory-ko-120-a",
+          "scope_mode": "strict",
+          "mode": "latest"
+        },
+        {
+          "id": "q2",
+          "text": "별빛 프로젝트의 서버 IP는?",
+          "project": "memory-ko-120-b",
+          "scope_mode": "strict",
+          "mode": "latest"
+        }
+      ]
+    }
+  ]
+}

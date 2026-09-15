@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "judge_blinding": "Use randomized opaque arm IDs, raw returned text, original synthetic source conversation and relevant gold. Do not expose engine identity, expected winner, rank hints or other arms. Score before unblinding.",
+  "answer_prompt": "Answer only from the supplied recent conversation and retrieved memory or recap. Preserve project and time distinctions. If the value is unknown, deleted, cancelled or undecided, say so; do not invent it. Return JSON mapping question IDs to concise answers in the question language.",
+  "retrieval_labels": [
+    "current",
+    "stale",
+    "deleted_value_exposed",
+    "historical_appropriate",
+    "foreign_project",
+    "irrelevant",
+    "uncertain"
+  ],
+  "answer_fields": {
+    "correct": "true only when all required propositions are semantically supported and no forbidden current proposition is affirmed",
+    "unsupported": "true when any asserted factual answer lacks support in the supplied evidence",
+    "abstained": "true when requested value is not supplied; correct only when gold requires unknown/deleted/unresolved",
+    "critical_reversal": "true for changed quantity/date/name, reversed negation, treating cancellation as active, or assigning a value to unresolved state",
+    "evidence_quotes": "short exact spans from answer/retrieval and gold proposition IDs; never infer correctness from engine label"
+  },
+  "memory_denominators": {
+    "answer_correctness": "All query rows flagged answer_correctness; transport failures remain in intended denominator and score incorrect, with separate execution-failure count.",
+    "current_answer_correctness_gate": "Query rows flagged current_at_k only; report overall and each language. Also publish all-query correctness so history/deletion failures remain visible.",
+    "current_at_1": "Rows flagged current_at_k: first retrieved item supports all required current proposition components; no-memory has empty retrieval and scores zero.",
+    "current_at_5": "Rows flagged current_at_k: union of the first five items supports the required current proposition; annotate multi-fact requirements.",
+    "stale_exposure": "Flagged latest-mode query rows with at least one stale/false replacement asserted as current in retrieved context. Clearly marked valid history is reported separately.",
+    "deletion_leakage": "Flagged query rows where a deleted secret/value is reproduced even in a denial, or a cancelled commitment is asserted active. A cancellation statement without forbidden secret text is appropriate, not leakage.",
+    "project_leakage": "Flagged query rows containing an item sourced only from another project without cross-project authorization. Correct answer content does not excuse leaked retrieval.",
+    "false_overwrite": "Flagged rows where the gold preserved fact is absent from native active state after ingestion/reopen and an unsupported replacement is active. Retrieval miss alone is NOT false overwrite; report native-state measurement unavailable when no provenance is exposed.",
+    "critical_reversal": "Flagged rows with reversal in retrieved current context or final answer; report those two surfaces separately."
+  },
+  "compression_denominators": {
+    "retention": "Ten declared current gold propositions in the 16-message head per conversation. Each gets 1 only if the summary explicitly or unambiguously entails it; omissions and contradictions get 0. History may be retained if clearly historical.",
+    "fabrication": "Judge every assertion in the summary against the entire head, not just the ten gold facts. Unsupported incidental and critical assertions are separate counts.",
+    "downstream_correctness": "Three binary questions per conversation. A question is correct only when every required proposition is answered and no contradictory/unsupported value is asserted.",
+    "compression_ratio": "Actual model-tokenizer summary tokens divided by actual head tokens, excluding shared tail from both. Report tail and complete downstream prompt tokens separately.",
+    "llm_success": "Nonempty summary PLUS confirmed successful provider response receipt. Deterministic fallback text, errors and missing receipts cannot count as actual LLM success."
+  },
+  "uncertain_policy": "Uncertain labels remain visible and count as non-success for acceptance metrics; no selective retry/rejudge. Publish count and reasons.",
+  "prohibited_shortcuts": [
+    "gold/expected-answer injection into extraction, embeddings, memory engine, summarizer or downstream answer prompt",
+    "mock summarizer called actual LLM",
+    "heuristic extraction called LLM extraction",
+    "lexical search called real vector",
+    "character estimates called tokenizer counts",
+    "native semantic search called complete memory recall",
+    "reruns counted as new samples"
+  ]
+}

@@ -1,0 +1,202 @@
+{
+ "model": "deepseek-v4-flash",
+ "startedAt": "2026-09-15T07:24:56.541Z",
+ "rounds": [
+  {
+   "round": 1,
+   "failing": [
+    {
+     "index": 80,
+     "reasons": [
+      "값이 다른 사례와 겹친다(샐러드)"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "coexist",
+      "turns": [
+       "주말 아침에는 파스타가 좋아.",
+       "평일 저녁에는 샐러드가 좋아. 주말 아침이랑은 별개야."
+      ],
+      "question": "주말 아침과 평일 저녁에 각각 뭘 좋아해?",
+      "expected": "주말 아침에는 파스타, 평일 저녁에는 샐러드를 좋아한다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "파스타",
+       "샐러드"
+      ],
+      "obsolete_values": [],
+      "other_values": []
+     }
+    },
+    {
+     "index": 83,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "coexist",
+      "turns": [
+       "비 오는 날에는 독서가 좋아.",
+       "눈 오는 날에는 영화 감상이 좋아. 비 오는 날이랑은 달라."
+      ],
+      "question": "비 오는 날과 눈 오는 날에 각각 뭘 좋아해?",
+      "expected": "비 오는 날에는 독서를 좋아하고, 눈 오는 날에는 영화 감상을 좋아한다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "독서",
+       "영화 감상"
+      ],
+      "obsolete_values": [],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "failing": [
+    {
+     "index": 80,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "coexist",
+      "turns": [
+       "비 올 때는 국수를 좋아해.",
+       "눈 올 때는 떡국을 좋아해. 비 올 때랑은 별개야."
+      ],
+      "question": "비 오는 날과 눈 오는 날에 각각 뭘 좋아해?",
+      "expected": "비 오는 날에는 국수, 눈 오는 날에는 떡국을 좋아한다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "국수",
+       "떡국"
+      ],
+      "obsolete_values": [],
+      "other_values": []
+     }
+    },
+    {
+     "index": 83,
+     "reasons": [
+      "값이 다른 사례와 겹친다(아이스아메리카노)"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "coexist",
+      "turns": [
+       "더울 때는 아이스 아메리카노가 좋아.",
+       "추울 때는 호박차를 마셔. 더울 때랑은 별개야."
+      ],
+      "question": "더울 때와 추울 때 각각 뭘 마셔?",
+      "expected": "더울 때는 아이스 아메리카노, 추울 때는 호박차를 마신다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "아이스 아메리카노",
+       "호박차"
+      ],
+      "obsolete_values": [],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "failing": [
+    {
+     "index": 80,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "coexist",
+      "turns": [
+       "비 오는 날에는 영화 보는 게 좋아.",
+       "눈 오는 날에는 독서가 좋아. 비 오는 날이랑은 별개야."
+      ],
+      "question": "비 오는 날과 눈 오는 날에 각각 뭘 좋아해?",
+      "expected": "비 오는 날에는 영화를 좋아하고 눈 오는 날에는 독서를 좋아한다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "영화",
+       "독서"
+      ],
+      "obsolete_values": [],
+      "other_values": []
+     }
+    },
+    {
+     "index": 83,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "coexist",
+      "turns": [
+       "비 오는 날에는 국수를 좋아해.",
+       "눈 오는 날에는 떡국을 좋아해. 국수랑은 별개야."
+      ],
+      "question": "비 오는 날과 눈 오는 날에 각각 뭘 좋아해?",
+      "expected": "비 오는 날에는 국수, 눈 오는 날에는 떡국을 좋아한다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "국수",
+       "떡국"
+      ],
+      "obsolete_values": [],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 4,
+   "failing": [
+    {
+     "index": 83,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "coexist",
+      "turns": [
+       "비 오는 날에는 국화차를 마셔.",
+       "눈 오는 날에는 대추차를 마셔. 비 오는 날이랑은 별개야."
+      ],
+      "question": "비 오는 날과 눈 오는 날에 각각 뭘 마셔?",
+      "expected": "비 오는 날에는 국화차, 눈 오는 날에는 대추차를 마신다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "국화차",
+       "대추차"
+      ],
+      "obsolete_values": [],
+      "other_values": []
+     }
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-09-15T07:25:14.096Z"
+}

@@ -1,0 +1,101 @@
+{
+ "model": "deepseek-v4-flash",
+ "startedAt": "2026-09-15T07:25:26.368Z",
+ "rounds": [
+  {
+   "round": 1,
+   "failing": [
+    {
+     "index": 83,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "coexist",
+      "turns": [
+       "비 오는 날에는 국화차를 마셔.",
+       "눈 오는 날에는 대추차를 마셔. 비 오는 날이랑은 별개야."
+      ],
+      "question": "비 오는 날과 눈 오는 날에 각각 뭘 마셔?",
+      "expected": "비 오는 날에는 국화차, 눈 오는 날에는 대추차를 마신다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "국화차",
+       "대추차"
+      ],
+      "obsolete_values": [],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "failing": [
+    {
+     "index": 83,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "coexist",
+      "turns": [
+       "비 올 때는 국물 요리가 좋아.",
+       "눈 올 때는 찌개가 좋아. 비 올 때랑은 별개야."
+      ],
+      "question": "비 오는 날과 눈 오는 날 각각 뭘 좋아해?",
+      "expected": "비 오는 날은 국물 요리, 눈 오는 날은 찌개를 좋아한다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "국물 요리",
+       "찌개"
+      ],
+      "obsolete_values": [],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "failing": [
+    {
+     "index": 83,
+     "reasons": [
+      "이번 보유셋의 다른 사례와 질문이 같다"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "coexist",
+      "turns": [
+       "휴일에는 등산을 좋아해.",
+       "평일 저녁에는 요가를 좋아해. 휴일 취미랑은 별개야."
+      ],
+      "question": "휴일과 평일 저녁에 각각 뭘 좋아해?",
+      "expected": "휴일에는 등산, 평일 저녁에는 요가를 좋아한다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "등산",
+       "요가"
+      ],
+      "obsolete_values": [],
+      "other_values": []
+     }
+    }
+   ]
+  },
+  {
+   "round": 4,
+   "failing": []
+  }
+ ],
+ "finishedAt": "2026-09-15T07:26:35.431Z"
+}

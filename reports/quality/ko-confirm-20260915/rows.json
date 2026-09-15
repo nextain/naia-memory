@@ -1,0 +1,2496 @@
+[
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내 여권 만료일은 2027년 3월 15일이야.",
+   "내 주민등록증 발급일은 2010년 8월 20일이야. 여권 만료일이랑은 다른 날짜야."
+  ],
+  "question": "내 여권 만료일이 언제야?",
+  "expected": "내 여권 만료일은 2027년 3월 15일이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "2027년 3월 15일"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내가 가장 좋아하는 색은 파랑이야.",
+   "요즘 노란색 옷도 자주 입게 되더라."
+  ],
+  "question": "내가 가장 좋아하는 색이 뭐야?",
+  "expected": "내가 가장 좋아하는 색은 파랑이야.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "파랑"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내 집 보일러 모델은 나비엔 NR-20이야.",
+   "내 에어컨 모델은 LG 휘센 18평형이야. 보일러 모델이랑은 달라."
+  ],
+  "question": "내 집 보일러 모델이 뭐야?",
+  "expected": "내 집 보일러 모델은 나비엔 NR-20이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "나비엔 NR-20"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내가 쓰는 안경 브랜드는 보스턴이야.",
+   "내가 쓰는 안경테 재질은 티타늄이야."
+  ],
+  "question": "내 안경 브랜드가 뭐야?",
+  "expected": "내 안경 브랜드는 보스턴이야.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "보스턴"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내가 타는 자전거 브랜드는 삼천리야.",
+   "내 헬멧 브랜드는 지오스야. 자전거 브랜드랑은 달라."
+  ],
+  "question": "내가 타는 자전거 브랜드가 뭐야?",
+  "expected": "내가 타는 자전거 브랜드는 삼천리이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "삼천리"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내가 쓰는 샴푸는 케라시스 퍼퓸이야.",
+   "내 린스는 엘라스틴 퍼플이야. 샴푸랑은 달라."
+  ],
+  "question": "내가 쓰는 샴푸가 뭐야?",
+  "expected": "내가 쓰는 샴푸는 케라시스 퍼퓸이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "케라시스 퍼퓸"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내가 다니는 미용실은 리안헤어야.",
+   "내 피부관리실은 에스테샵이야. 미용실이랑은 다른 곳이야."
+  ],
+  "question": "내가 다니는 미용실이 어디야?",
+  "expected": "내가 다니는 미용실은 리안헤어이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "리안헤어"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내가 키우는 고양이 이름은 나비야.",
+   "내가 키우는 강아지 이름은 초코야. 고양이 이름이랑은 달라."
+  ],
+  "question": "내가 키우는 고양이 이름이 뭐야?",
+  "expected": "내가 키우는 고양이 이름은 나비이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "나비"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내가 가입한 보험은 삼성화재 자동차보험이야.",
+   "내 건강보험은 국민건강보험이야. 자동차보험이랑은 달라."
+  ],
+  "question": "내가 가입한 보험은 뭐야?",
+  "expected": "내가 가입한 보험은 삼성화재 자동차보험이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "삼성화재 자동차보험"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "국민건강보험"
+  ]
+ },
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내가 제일 좋아하는 과일은 수박이야.",
+   "내가 제일 싫어하는 과일은 파인애플이야. 좋아하는 과일은 그대로야."
+  ],
+  "question": "내가 제일 좋아하는 과일이 뭐야?",
+  "expected": "내가 제일 좋아하는 과일은 수박이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "수박"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내가 쓰는 지갑은 빨간색 루이비통이야.",
+   "내 가방은 검은색 구찌야. 지갑이랑은 달라."
+  ],
+  "question": "내가 쓰는 지갑이 뭐야?",
+  "expected": "내가 쓰는 지갑은 빨간색 루이비통이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "빨간색 루이비통"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "stable",
+  "turns": [
+   "내가 예약한 치과는 서울치과야.",
+   "내 안과 예약은 서울안과야. 치과랑은 다른 곳이야."
+  ],
+  "question": "내가 예약한 치과가 어디야?",
+  "expected": "내가 예약한 치과는 서울치과이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "서울치과"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "쿠폰 사용 마감일이 다음 주 금요일까지야.",
+   "멤버십 포인트 소멸일은 내년 3월 말이고, 쿠폰 마감일이랑은 다른 날짜야."
+  ],
+  "question": "쿠폰 사용 마감일이 언제야?",
+  "expected": "쿠폰 사용 마감일은 다음 주 금요일이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "다음 주 금요일"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "내년 3월 말"
+  ]
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "냉장고 AS 신청 접수 마감이 이번 달 20일까지야.",
+   "세탁기 AS 접수 마감은 다음 달 5일까지고, 냉장고랑은 달라."
+  ],
+  "question": "냉장고 AS 신청 접수 마감이 언제야?",
+  "expected": "냉장고 AS 신청 접수 마감은 이번 달 20일이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "이번 달 20일"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "다음 달 5일"
+  ]
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "영화 시사회 초대권 사용 기한이 8월 15일까지야.",
+   "영화 일반 관람권 사용 기한은 9월 1일까지고, 시사회랑은 달라."
+  ],
+  "question": "영화 시사회 초대권 사용 기한이 언제야?",
+  "expected": "영화 시사회 초대권 사용 기한은 8월 15일이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "8월 15일"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "공모전 접수 마감이 10월 7일까지야.",
+   "공모전 결과 발표일은 11월 1일이고, 접수 마감이랑은 달라."
+  ],
+  "question": "공모전 접수 마감이 언제야?",
+  "expected": "공모전 접수 마감은 10월 7일이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "10월 7일"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "운동화 반품 기한이 구매일로부터 30일 이내야.",
+   "운동화 교환 기한은 구매일로부터 60일 이내고, 반품이랑은 달라."
+  ],
+  "question": "운동화 반품 기한이 어떻게 돼?",
+  "expected": "운동화 반품 기한은 구매일로부터 30일 이내이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "30일"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "60일"
+  ]
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "도시가스 요금 납부 마감일이 매월 25일이야.",
+   "전기 요금 납부 마감일은 매월 15일이고, 도시가스랑은 달라."
+  ],
+  "question": "도시가스 요금 납부 마감일이 언제야?",
+  "expected": "도시가스 요금 납부 마감일은 매월 25일이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "25일"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "15일"
+  ]
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "강아지 예방접종 1차 날짜가 3월 2일이야.",
+   "강아지 예방접종 2차 날짜는 4월 6일이고, 1차랑은 달라."
+  ],
+  "question": "강아지 예방접종 1차 날짜가 언제야?",
+  "expected": "강아지 예방접종 1차 날짜는 3월 2일이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "3월 2일"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "렌트카 반납 예정 시각이 오후 6시야.",
+   "렌트카 픽업 예정 시각은 오전 10시고, 반납이랑은 달라."
+  ],
+  "question": "렌트카 반납 예정 시각이 몇 시야?",
+  "expected": "렌트카 반납 예정 시각은 오후 6시이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "오후 6시"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "도서 대출 연장 가능 기간이 7일이야.",
+   "도서 예약 대기 기간은 3일이고, 연장이랑은 달라."
+  ],
+  "question": "도서 대출 연장 가능 기간이 얼마야?",
+  "expected": "도서 대출 연장 가능 기간은 7일이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "7일"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "3일"
+  ]
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "보험료 납입 유예 기간이 2개월이야.",
+   "보험 계약 갱신 기간은 1개월이고, 유예랑은 달라."
+  ],
+  "question": "보험료 납입 유예 기간이 얼마야?",
+  "expected": "보험료 납입 유예 기간은 2개월이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "2개월"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "1개월"
+  ]
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "내가 신청한 도서관 문화강좌 신청 마감일이 11월 5일이야.",
+   "도서관에서 다른 강좌 프로그램 신청 마감일은 12월 10일인데, 그건 아까 말한 강좌와는 다른 날짜야."
+  ],
+  "question": "내가 신청한 도서관 문화강좌 신청 마감일이 언제야?",
+  "expected": "도서관 문화강좌 신청 마감일은 11월 5일이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "11월 5일"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "12월 10일"
+  ]
+ },
+ {
+  "category": "new",
+  "variant": "deadline",
+  "turns": [
+   "화분 물 주는 주기가 3일에 한 번이야.",
+   "화분 영양제 주는 주기는 2주에 한 번이고, 물 주기랑은 달라."
+  ],
+  "question": "화분 물 주는 주기가 어떻게 돼?",
+  "expected": "화분 물 주는 주기는 3일에 한 번이다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "3일에 한 번"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "correction",
+  "turns": [
+   "내 강아지 이름은 초코야.",
+   "아니, 잘못 말했어. 강아지 이름은 루루야."
+  ],
+  "question": "내 강아지 이름이 뭐야?",
+  "expected": "강아지 이름은 루루이다.",
+  "obsolete": "강아지 이름은 초코이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "루루"
+  ],
+  "obsolete_values": [
+   "초코"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "correction",
+  "turns": [
+   "내가 사는 아파트 동호수가 102동 304호야.",
+   "아니 잘못 말했어, 103동 405호가 맞아."
+  ],
+  "question": "내가 사는 아파트 동호수가 뭐야?",
+  "expected": "내가 사는 아파트 동호수는 103동 405호이다.",
+  "obsolete": "내가 사는 아파트 동호수는 102동 304호이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "103동 405호"
+  ],
+  "obsolete_values": [
+   "102동 304호"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "correction",
+  "turns": [
+   "내 차는 소나타야.",
+   "아니, 잘못 말했어. 내 차는 그랜저야."
+  ],
+  "question": "내 차종이 뭐야?",
+  "expected": "차종은 그랜저이다.",
+  "obsolete": "차종은 소나타이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "그랜저"
+  ],
+  "obsolete_values": [
+   "소나타"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "correction",
+  "turns": [
+   "내 키는 170이야.",
+   "아니, 착각했어. 내 키는 165야."
+  ],
+  "question": "내 키가 얼마야?",
+  "expected": "키는 165이다.",
+  "obsolete": "키는 170이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "165"
+  ],
+  "obsolete_values": [
+   "170"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "correction",
+  "turns": [
+   "내 동생은 대구에 살아.",
+   "아니, 잘못 알려줬어. 동생은 부산에 살아."
+  ],
+  "question": "내 동생이 사는 곳이 어디야?",
+  "expected": "동생은 부산에 산다.",
+  "obsolete": "동생은 대구에 산다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "부산"
+  ],
+  "obsolete_values": [
+   "대구"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "correction",
+  "turns": [
+   "내가 쓰는 립스틱 색상은 핑크야.",
+   "아니, 방금 착각했어. 립스틱은 코랄이야."
+  ],
+  "question": "내가 쓰는 립스틱 색상이 뭐야?",
+  "expected": "립스틱 색상은 코랄이다.",
+  "obsolete": "립스틱 색상은 핑크이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "코랄"
+  ],
+  "obsolete_values": [
+   "핑크"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "chain",
+  "turns": [
+   "냉장고 온도를 3도로 설정해 줘.",
+   "아니야, 5도로 바꿔.",
+   "최종적으로 2도로 맞추고, 앞서 말한 3도와 5도는 취소야."
+  ],
+  "question": "냉장고 온도가 몇 도로 설정되어 있어?",
+  "expected": "냉장고 온도는 2도로 설정되어 있다.",
+  "obsolete": "냉장고 온도가 3도 또는 5도로 설정되어 있다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "2도"
+  ],
+  "obsolete_values": [
+   "3도",
+   "5도"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "chain",
+  "turns": [
+   "내 비상 연락처는 엄마야.",
+   "아빠로 바꿔.",
+   "최종적으로 언니로 정정하고, 앞서 말한 엄마와 아빠는 취소."
+  ],
+  "question": "내 비상 연락처가 누구야?",
+  "expected": "내 비상 연락처는 언니이다.",
+  "obsolete": "내 비상 연락처가 엄마 또는 아빠이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "언니"
+  ],
+  "obsolete_values": [
+   "엄마",
+   "아빠"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "chain",
+  "turns": [
+   "내 와이파이 비밀번호는 1234야.",
+   "5678로 바꿔.",
+   "최종 비밀번호는 9012로 하고, 1234와 5678은 무효야."
+  ],
+  "question": "내 와이파이 비밀번호가 뭐야?",
+  "expected": "내 와이파이 비밀번호는 9012이다.",
+  "obsolete": "내 와이파이 비밀번호가 1234 또는 5678이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "9012"
+  ],
+  "obsolete_values": [
+   "1234",
+   "5678"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "chain",
+  "turns": [
+   "내 자전거 보관 장소는 지하실이야.",
+   "아니, 베란다야.",
+   "최종적으로 현관으로 정하고, 지하실과 베란다는 취소."
+  ],
+  "question": "내 자전거 보관 장소가 어디야?",
+  "expected": "내 자전거 보관 장소는 현관이다.",
+  "obsolete": "내 자전거 보관 장소가 지하실 또는 베란다이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "현관"
+  ],
+  "obsolete_values": [
+   "지하실",
+   "베란다"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "chain",
+  "turns": [
+   "내가 좋아하는 빵은 소보루빵이야.",
+   "아니, 단팥빵으로 바꿔.",
+   "최종적으로 크루아상으로 하고, 소보루빵과 단팥빵은 취소."
+  ],
+  "question": "내가 좋아하는 빵이 뭐야?",
+  "expected": "내가 좋아하는 빵은 크루아상이다.",
+  "obsolete": "내가 좋아하는 빵이 소보루빵 또는 단팥빵이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "크루아상"
+  ],
+  "obsolete_values": [
+   "소보루빵",
+   "단팥빵"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "update",
+  "variant": "chain",
+  "turns": [
+   "내 운동화 사이즈는 260이야.",
+   "아니, 270이야.",
+   "최종적으로 265로 정정하고, 260과 270은 취소."
+  ],
+  "question": "내 운동화 사이즈가 몇이야?",
+  "expected": "내 운동화 사이즈는 265이다.",
+  "obsolete": "내 운동화 사이즈가 260 또는 270이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "265"
+  ],
+  "obsolete_values": [
+   "260",
+   "270"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "내 테스트용 가상 이메일 계정 비밀번호는 'apple1234'야. 절대 진짜 비밀번호가 아니니 테스트용으로만 기억해 줘.",
+   "아까 알려준 그 가상 이메일 계정 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+  ],
+  "question": "내 가상 이메일 계정 비밀번호를 기억해?",
+  "expected": "가상 이메일 계정 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "가상 이메일 계정 비밀번호는 apple1234이다.",
+  "second": null,
+  "forbidden_value": "apple1234",
+  "current_values": [],
+  "obsolete_values": [
+   "apple1234"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "내 테스트용 가상 문고리 비밀번호는 3371이야. 꼭 기억해 줘.",
+   "아까 말한 문고리 비밀번호는 기억에서 지워 줘. 값을 다시 말하지 마."
+  ],
+  "question": "내 가상 문고리 비밀번호를 기억해?",
+  "expected": "가상 문고리 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "가상 문고리 비밀번호는 3371이다.",
+  "second": null,
+  "forbidden_value": "3371",
+  "current_values": [],
+  "obsolete_values": [
+   "3371"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "내 테스트용 가상 사물함 비밀번호는 7392야. 이건 진짜가 아니고 테스트용이니까 기억해 줘.",
+   "아까 말한 그 사물함 비밀번호는 기억에서 지워 줘. 숫자는 다시 말하지 마."
+  ],
+  "question": "내 가상 사물함 비밀번호를 기억해?",
+  "expected": "가상 사물함 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "가상 사물함 비밀번호는 7392이다.",
+  "second": null,
+  "forbidden_value": "7392",
+  "current_values": [],
+  "obsolete_values": [
+   "7392"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "테스트용 가상 내 서재 금고 비밀번호는 '백합 3852'야. 기억해 줘.",
+   "아까 말한 서재 금고 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+  ],
+  "question": "내 서재 금고 비밀번호를 기억해?",
+  "expected": "서재 금고 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "서재 금고 비밀번호는 '백합 3852'이다.",
+  "second": null,
+  "forbidden_value": "백합 3852",
+  "current_values": [],
+  "obsolete_values": [
+   "'백합 3852'"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "내 가상 와이파이 비밀번호는 '겨울1234'야. 테스트용 가상이니 기억해 줘.",
+   "아까 말한 가상 와이파이 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+  ],
+  "question": "내 가상 와이파이 비밀번호를 기억해?",
+  "expected": "가상 와이파이 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "가상 와이파이 비밀번호는 '겨울1234'이다.",
+  "second": null,
+  "forbidden_value": "겨울1234",
+  "current_values": [],
+  "obsolete_values": [
+   "겨울1234"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "테스트용 가상 내 위키 계정 비밀번호는 '산호초123'이야. 기억해 줘.",
+   "아까 말한 위키 계정 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+  ],
+  "question": "내 위키 계정 비밀번호를 기억해?",
+  "expected": "위키 계정 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "위키 계정 비밀번호는 산호초123이다.",
+  "second": null,
+  "forbidden_value": "산호초123",
+  "current_values": [],
+  "obsolete_values": [
+   "산호초123"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "내 테스트용 가상 이메일 비밀번호는 '초록별123'이야. 기억해 줘.",
+   "그 이메일 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+  ],
+  "question": "내 가상 이메일 비밀번호를 기억해?",
+  "expected": "가상 이메일 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "가상 이메일 비밀번호는 '초록별123'이다.",
+  "second": null,
+  "forbidden_value": "초록별123",
+  "current_values": [],
+  "obsolete_values": [
+   "초록별123"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "내 가상 도서관 대출 암호는 '별하늘123'이야. 테스트용 가상이니까 기억해 줘.",
+   "그 가상 도서관 대출 암호는 기억에서 지워 줘. 값을 다시 말하지 마."
+  ],
+  "question": "내 가상 도서관 대출 암호를 기억해?",
+  "expected": "가상 도서관 대출 암호는 삭제되어 알 수 없다.",
+  "obsolete": "가상 도서관 대출 암호는 별하늘123이다.",
+  "second": null,
+  "forbidden_value": "별하늘123",
+  "current_values": [],
+  "obsolete_values": [
+   "별하늘123"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "테스트용 가상 내 금고 비밀번호는 3852야.",
+   "아까 말한 내 금고 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+  ],
+  "question": "내 가상 금고 비밀번호를 기억해?",
+  "expected": "내 가상 금고 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "내 가상 금고 비밀번호는 3852이다.",
+  "second": null,
+  "forbidden_value": "3852",
+  "current_values": [],
+  "obsolete_values": [
+   "3852"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "내 가상 클라우드 접속 암호는 '겨울눈2024'야. 테스트용 가상이니 기억해 줘.",
+   "그 클라우드 접속 암호는 기억에서 지워 줘. 값을 다시 말하지 마."
+  ],
+  "question": "내 가상 클라우드 접속 암호를 기억해?",
+  "expected": "가상 클라우드 접속 암호는 삭제되어 알 수 없다.",
+  "obsolete": "가상 클라우드 접속 암호는 겨울눈2024이다.",
+  "second": null,
+  "forbidden_value": "겨울눈2024",
+  "current_values": [],
+  "obsolete_values": [
+   "겨울눈2024"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "내 가상 안전장치 암호는 '별빛789'야. 테스트용 가상이니까 기록해 줘.",
+   "그 가상 안전장치 암호는 기억에서 지워 줘. 값은 다시 말하지 마."
+  ],
+  "question": "내 가상 안전장치 암호를 기억해?",
+  "expected": "가상 안전장치 암호는 삭제되어 알 수 없다.",
+  "obsolete": "가상 안전장치 암호는 '별빛789'이다.",
+  "second": null,
+  "forbidden_value": "별빛789",
+  "current_values": [],
+  "obsolete_values": [
+   "별빛789"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "forget",
+  "turns": [
+   "내 가상 자전거 보관함 비밀번호는 5823이야. 테스트용 가상 값이니까 기억해 줘.",
+   "아까 말한 가상 자전거 보관함 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마."
+  ],
+  "question": "내 가상 자전거 보관함 비밀번호를 기억해?",
+  "expected": "가상 자전거 보관함 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "가상 자전거 보관함 비밀번호는 5823이다.",
+  "second": null,
+  "forbidden_value": "5823",
+  "current_values": [],
+  "obsolete_values": [
+   "5823"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "헬스장 등록과 수영장 등록을 둘 다 했어.",
+   "헬스장 등록은 취소할게. 수영장 등록은 그대로 둬."
+  ],
+  "question": "아직 남아 있는 등록이 뭐야?",
+  "expected": "수영장 등록이 남아 있다.",
+  "obsolete": "헬스장 등록이 유지된다.",
+  "second": [
+   "헬스장 등록이 아직 유효해?",
+   "아니요. 헬스장 등록은 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "수영장 등록"
+  ],
+  "obsolete_values": [
+   "헬스장 등록"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "피아노 레슨과 바이올린 레슨을 둘 다 신청했어.",
+   "바이올린 레슨은 취소해 줘. 피아노 레슨은 그대로 둬."
+  ],
+  "question": "아직 남아 있는 레슨이 뭐야?",
+  "expected": "피아노 레슨이 남아 있다.",
+  "obsolete": "바이올린 레슨이 유지된다.",
+  "second": [
+   "바이올린 레슨이 아직 유효해?",
+   "아니요. 바이올린 레슨은 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "피아노 레슨"
+  ],
+  "obsolete_values": [
+   "바이올린 레슨"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "도서관 회원권과 체육관 회원권을 둘 다 갱신했어.",
+   "체육관 회원권은 취소할게. 도서관 회원권은 그대로 둬."
+  ],
+  "question": "아직 남아 있는 회원권이 뭐야?",
+  "expected": "도서관 회원권이 남아 있다.",
+  "obsolete": "체육관 회원권이 유지된다.",
+  "second": [
+   "체육관 회원권이 아직 유효해?",
+   "아니요. 체육관 회원권은 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "도서관 회원권"
+  ],
+  "obsolete_values": [
+   "체육관 회원권"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "영화 티켓과 콘서트 티켓을 둘 다 예매했어.",
+   "콘서트 티켓은 취소해 줘. 영화 티켓은 그대로 둬."
+  ],
+  "question": "아직 남아 있는 티켓이 뭐야?",
+  "expected": "영화 티켓이 남아 있다.",
+  "obsolete": "콘서트 티켓이 유지된다.",
+  "second": [
+   "콘서트 티켓이 아직 유효해?",
+   "아니요. 콘서트 티켓은 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "영화 티켓"
+  ],
+  "obsolete_values": [
+   "콘서트 티켓"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "자동차 보험과 화재 보험을 둘 다 가입했어.",
+   "화재 보험은 취소할게. 자동차 보험은 그대로 둬."
+  ],
+  "question": "아직 남아 있는 보험이 뭐야?",
+  "expected": "자동차 보험이 남아 있다.",
+  "obsolete": "화재 보험이 유지된다.",
+  "second": [
+   "화재 보험이 아직 유효해?",
+   "아니요. 화재 보험은 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "자동차 보험"
+  ],
+  "obsolete_values": [
+   "화재 보험"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "요가 클래스와 필라테스 클래스를 둘 다 등록했어.",
+   "필라테스 클래스는 취소해 줘. 요가 클래스는 그대로 둬."
+  ],
+  "question": "아직 남아 있는 클래스가 뭐야?",
+  "expected": "요가 클래스가 남아 있다.",
+  "obsolete": "필라테스 클래스가 유지된다.",
+  "second": [
+   "필라테스 클래스가 아직 유효해?",
+   "아니요. 필라테스 클래스는 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "요가 클래스"
+  ],
+  "obsolete_values": [
+   "필라테스 클래스"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "비행기 예약과 기차 예약을 둘 다 했어.",
+   "기차 예약은 취소할게. 비행기 예약은 그대로 둬."
+  ],
+  "question": "아직 남아 있는 예약이 뭐야?",
+  "expected": "비행기 예약이 남아 있다.",
+  "obsolete": "기차 예약이 유지된다.",
+  "second": [
+   "기차 예약이 아직 유효해?",
+   "아니요. 기차 예약은 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "비행기 예약"
+  ],
+  "obsolete_values": [
+   "기차 예약"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "도서관 대출과 DVD 대여를 둘 다 신청했어.",
+   "DVD 대여는 취소할게. 도서관 대출은 그대로 둬."
+  ],
+  "question": "아직 남아 있는 신청이 뭐야?",
+  "expected": "도서관 대출이 남아 있다.",
+  "obsolete": "DVD 대여가 유지된다.",
+  "second": [
+   "취소된 DVD 대여가 아직 유효해?",
+   "아니요. DVD 대여는 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "도서관 대출"
+  ],
+  "obsolete_values": [
+   "DVD 대여"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "넷플릭스 구독과 유튜브 프리미엄 구독을 둘 다 했어.",
+   "유튜브 프리미엄 구독은 취소할게. 넷플릭스 구독은 그대로 둬."
+  ],
+  "question": "아직 남아 있는 구독이 뭐야?",
+  "expected": "넷플릭스 구독이 남아 있다.",
+  "obsolete": "유튜브 프리미엄 구독이 유지된다.",
+  "second": [
+   "유튜브 프리미엄 구독이 아직 유효해?",
+   "아니요. 유튜브 프리미엄 구독은 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "넷플릭스 구독"
+  ],
+  "obsolete_values": [
+   "유튜브 프리미엄 구독"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "수영 강습과 골프 강습을 둘 다 신청했어.",
+   "골프 강습은 취소해 줘. 수영 강습은 그대로 둬."
+  ],
+  "question": "아직 남아 있는 강습이 뭐야?",
+  "expected": "수영 강습이 남아 있다.",
+  "obsolete": "골프 강습이 유지된다.",
+  "second": [
+   "골프 강습이 아직 유효해?",
+   "아니요. 골프 강습은 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "수영 강습"
+  ],
+  "obsolete_values": [
+   "골프 강습"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "캠핑 장비 대여와 낚시 장비 대여를 둘 다 예약했어.",
+   "낚시 장비 대여는 취소할게. 캠핑 장비 대여는 그대로 둬."
+  ],
+  "question": "아직 남아 있는 대여가 뭐야?",
+  "expected": "캠핑 장비 대여가 남아 있다.",
+  "obsolete": "낚시 장비 대여가 유지된다.",
+  "second": [
+   "낚시 장비 대여가 아직 유효해?",
+   "아니요. 낚시 장비 대여는 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "캠핑 장비 대여"
+  ],
+  "obsolete_values": [
+   "낚시 장비 대여"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "delete",
+  "variant": "cancel_one",
+  "turns": [
+   "영화관 정기권과 헬스장 정기권을 둘 다 끊었어.",
+   "헬스장 정기권은 취소하고 영화관 정기권은 유지해 줘."
+  ],
+  "question": "아직 남아 있는 정기권이 뭐야?",
+  "expected": "아직 남아 있는 정기권은 영화관 정기권이다.",
+  "obsolete": "헬스장 정기권이 아직 유효하다.",
+  "second": [
+   "헬스장 정기권이 아직 유효해?",
+   "아니요. 헬스장 정기권은 취소되었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "영화관 정기권"
+  ],
+  "obsolete_values": [
+   "헬스장 정기권"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "quotation",
+  "turns": [
+   "나는 매운 음식을 잘 못 먹어.",
+   "친구가 \"너 요즘 매운 거 엄청 잘 먹더라\"라고 하던데, 내 입맛은 바뀐 거 아니야."
+  ],
+  "question": "내 입맛은 어떤 음식을 잘 못 먹어?",
+  "expected": "내 입맛은 매운 음식을 잘 못 먹는다.",
+  "obsolete": "내 입맛은 매운 음식을 잘 먹는다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "매운 음식"
+  ],
+  "obsolete_values": [
+   "매운 거"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "quotation",
+  "turns": [
+   "나는 일주일에 세 번 운동해.",
+   "동료가 \"넌 거의 매일 운동한다고 들었어\"라고 말하더라. 내 운동 횟수는 바뀐 거 아니야."
+  ],
+  "question": "나는 일주일에 몇 번 운동해?",
+  "expected": "나는 일주일에 세 번 운동한다.",
+  "obsolete": "나는 거의 매일 운동한다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "세 번"
+  ],
+  "obsolete_values": [
+   "매일"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "quotation",
+  "turns": [
+   "우리 집 난방은 가스보일러야.",
+   "엄마가 \"네 집 전기히터로 바꿨다며?\"라고 묻더라. 우리 집 난방은 바뀐 거 아니야."
+  ],
+  "question": "우리 집 난방은 뭐야?",
+  "expected": "우리 집 난방은 가스보일러다.",
+  "obsolete": "우리 집 난방은 전기히터다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "가스보일러"
+  ],
+  "obsolete_values": [
+   "전기히터"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "quotation",
+  "turns": [
+   "내 취미는 독서야.",
+   "옆집 아주머니가 \"요즘 등산 다닌다면서?\"라고 하시던데, 내 취미는 바뀐 거 아니야."
+  ],
+  "question": "내 취미는 뭐야?",
+  "expected": "내 취미는 독서다.",
+  "obsolete": "내 취미는 등산이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "독서"
+  ],
+  "obsolete_values": [
+   "등산"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "quotation",
+  "turns": [
+   "내 출근 시간은 아홉 시야.",
+   "팀장님이 \"너 요즘 여덟 시에 출근한다며?\"라고 하시던데, 내 출근 시간은 바뀐 거 아니야."
+  ],
+  "question": "내 출근 시간은 몇 시야?",
+  "expected": "내 출근 시간은 아홉 시다.",
+  "obsolete": "내 출근 시간은 여덟 시다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "아홉 시"
+  ],
+  "obsolete_values": [
+   "여덟 시"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "quotation",
+  "turns": [
+   "내 결혼식은 예식장에서 할 거야.",
+   "시어머니가 \"야외에서 한다고 들었는데\"라고 하시더라. 내 결혼식 장소는 바뀐 거 아니야."
+  ],
+  "question": "내 결혼식은 어디에서 할 거야?",
+  "expected": "내 결혼식은 예식장에서 할 것이다.",
+  "obsolete": "내 결혼식은 야외에서 할 것이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "예식장"
+  ],
+  "obsolete_values": [
+   "야외"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "hypothetical",
+  "turns": [
+   "지금 내 차는 아반떼야.",
+   "만약 예산이 넉넉하면 제네시스로 바꿀 수도 있겠지. 아직 안 바꿨어."
+  ],
+  "question": "지금 내 차는 뭐야?",
+  "expected": "내 차는 아반떼이다.",
+  "obsolete": "내 차는 제네시스이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "아반떼"
+  ],
+  "obsolete_values": [
+   "제네시스"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "hypothetical",
+  "turns": [
+   "우리 집 강아지 사료는 로얄캐닌이야.",
+   "만약 알레르기가 생기면 자연식으로 바꿀 수도 있겠지. 아직 안 바꿨어."
+  ],
+  "question": "지금 우리 집 강아지 사료는 뭐야?",
+  "expected": "우리 집 강아지 사료는 로얄캐닌이다.",
+  "obsolete": "우리 집 강아지 사료는 자연식이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "로얄캐닌"
+  ],
+  "obsolete_values": [
+   "자연식"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "hypothetical",
+  "turns": [
+   "내가 지금 다니는 요가원은 하늘요가야.",
+   "만약 집 근처에 생기면 더 가까운 곳으로 옮길 수도 있겠지. 아직 안 옮겼어."
+  ],
+  "question": "내가 지금 다니는 요가원은 어디야?",
+  "expected": "내가 다니는 요가원은 하늘요가이다.",
+  "obsolete": "내가 다니는 요가원은 집 근처 요가원이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "하늘요가"
+  ],
+  "obsolete_values": [
+   "집 근처"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "hypothetical",
+  "turns": [
+   "내 휴대폰 요금제는 5G 프리미엄이야.",
+   "만약 데이터를 덜 쓰면 LTE 중간 요금제로 내릴 수도 있겠지. 아직 안 내렸어."
+  ],
+  "question": "내 휴대폰 요금제는 뭐야?",
+  "expected": "내 휴대폰 요금제는 5G 프리미엄이다.",
+  "obsolete": "내 휴대폰 요금제는 LTE 중간 요금제이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "5G 프리미엄"
+  ],
+  "obsolete_values": [
+   "LTE 중간 요금제"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "hypothetical",
+  "turns": [
+   "내 방 벽지는 아이보리야.",
+   "만약 기분이 우울하면 파란색으로 바꿀 수도 있겠지. 아직 안 바꿨어."
+  ],
+  "question": "내 방 벽지는 무슨 색이야?",
+  "expected": "내 방 벽지는 아이보리이다.",
+  "obsolete": "내 방 벽지는 파란색이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "아이보리"
+  ],
+  "obsolete_values": [
+   "파란색"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "contradiction",
+  "variant": "hypothetical",
+  "turns": [
+   "내가 쓰는 노트북은 LG 그램이야.",
+   "만약 맥북이 더 편하면 갈아탈 수도 있겠지. 아직 안 갈아탔어."
+  ],
+  "question": "내가 쓰는 노트북은 뭐야?",
+  "expected": "내가 쓰는 노트북은 LG 그램이다.",
+  "obsolete": "내가 쓰는 노트북은 맥북이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "LG 그램"
+  ],
+  "obsolete_values": [
+   "맥북"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "비 오는 날은 독서가 좋아.",
+   "눈 오는 날은 영화가 좋아. 비 오는 날이랑은 별개야."
+  ],
+  "question": "비 오는 날과 눈 오는 날에 각각 뭘 좋아해?",
+  "expected": "비 오는 날은 독서를 좋아하고 눈 오는 날은 영화를 좋아한다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "독서",
+   "영화"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "날씨가 흐릴 때는 국수를 좋아해.",
+   "비 오는 날에는 찌개를 좋아해. 흐릴 때랑은 별개야."
+  ],
+  "question": "날씨가 흐릴 때와 비 오는 날에 각각 뭘 좋아해?",
+  "expected": "날씨가 흐릴 때는 국수, 비 오는 날에는 찌개를 좋아한다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "국수",
+   "찌개"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "더울 때는 냉면이 최고야.",
+   "추울 때는 우동이 좋아. 더울 때랑은 별개야."
+  ],
+  "question": "더울 때와 추울 때 각각 뭘 좋아해?",
+  "expected": "더울 때는 냉면, 추울 때는 우동을 좋아한다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "냉면",
+   "우동"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "집에서 쉴 때는 녹차를 마셔.",
+   "밖에 나갈 때는 아이스 아메리카노를 마셔. 집에서랑은 달라."
+  ],
+  "question": "집에서 쉴 때와 밖에 나갈 때 각각 뭘 마셔?",
+  "expected": "집에서는 녹차, 밖에서는 아이스 아메리카노를 마신다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "녹차",
+   "아이스 아메리카노"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "비 오는 날에는 따뜻한 코코아를 마셔.",
+   "눈 오는 날에는 뜨거운 홍차를 마셔. 비 오는 날 취향이랑은 별개야."
+  ],
+  "question": "비 오는 날과 눈 오는 날에 각각 뭘 마셔?",
+  "expected": "비 오는 날에는 코코아, 눈 오는 날에는 홍차를 마신다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "따뜻한 코코아",
+   "뜨거운 홍차"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "비 오는 날에는 국수를 좋아해.",
+   "눈 오는 날에는 떡국이 좋아. 비 오는 날이랑은 별개야."
+  ],
+  "question": "비 오는 날과 눈 오는 날 각각 뭘 좋아해?",
+  "expected": "비 오는 날에는 국수, 눈 오는 날에는 떡국을 좋아한다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "국수",
+   "떡국"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "실내에서 운동할 때는 요가 매트를 쓰는 게 좋아.",
+   "야외에서 운동할 때는 러닝화를 신는 게 좋아. 실내랑은 별개야."
+  ],
+  "question": "실내에서 운동할 때 뭘 쓰는 걸 좋아하고, 야외에서 운동할 때 뭘 신는 걸 좋아해?",
+  "expected": "실내 운동할 때는 요가 매트, 야외 운동할 때는 러닝화를 선호해.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "요가 매트",
+   "러닝화"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "아침 식사로는 오트밀을 먹는 게 좋아.",
+   "점심 식사로는 샐러드를 먹는 게 좋아. 아침이랑은 달라."
+  ],
+  "question": "아침 식사로는 뭘 좋아하고, 점심 식사로는 뭘 좋아해?",
+  "expected": "아침 식사로는 오트밀을 좋아하고 점심 식사로는 샐러드를 좋아한다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "오트밀",
+   "샐러드"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "주말 아침에는 커피를 마셔.",
+   "평일 점심에는 녹차를 마셔. 주말 아침과는 별개야."
+  ],
+  "question": "주말 아침과 평일 점심에 각각 뭘 마셔?",
+  "expected": "주말 아침에는 커피, 평일 점심에는 녹차를 마신다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "커피",
+   "녹차"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "여행 갈 때는 창가 자리를 좋아해.",
+   "식당에 갈 때는 복도 자리를 좋아해. 창가랑은 별개야."
+  ],
+  "question": "여행 갈 때와 식당에 갈 때 각각 어떤 자리를 좋아해?",
+  "expected": "여행 갈 때는 창가 자리, 식당에 갈 때는 복도 자리를 좋아한다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "창가 자리",
+   "복도 자리"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "휴일에는 등산이 좋아.",
+   "평일 저녁에는 요가야. 휴일 선호랑은 별개야."
+  ],
+  "question": "휴일과 평일 저녁에 각각 뭘 좋아해?",
+  "expected": "휴일에는 등산, 평일 저녁에는 요가를 좋아한다.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "등산",
+   "요가"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "coexist",
+  "turns": [
+   "아침에는 따뜻한 우유를 마셔.",
+   "저녁에는 레몬차를 마셔. 아침과는 달라."
+  ],
+  "question": "아침과 저녁에 각각 뭘 마셔?",
+  "expected": "아침에는 따뜻한 우유, 저녁에는 레몬차를 마셔.",
+  "obsolete": "",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "따뜻한 우유",
+   "레몬차"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "unchanged",
+  "turns": [
+   "나는 종이책을 더 좋아해.",
+   "전자책 리더기를 새로 샀는데, 그래도 나는 종이책이 좋아. 선호는 그대로야."
+  ],
+  "question": "내가 선호하는 책 형태는 뭐야?",
+  "expected": "내가 선호하는 책 형태는 종이책이다.",
+  "obsolete": "내가 선호하는 책 형태는 전자책이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "종이책"
+  ],
+  "obsolete_values": [
+   "전자책"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "unchanged",
+  "turns": [
+   "나는 운동할 때 요가복을 입는 게 좋아.",
+   "친구가 필라테스복을 추천해 줬는데, 난 여전히 요가복이 편해."
+  ],
+  "question": "내가 운동할 때 입는 옷은 뭐야?",
+  "expected": "운동할 때 입는 옷은 요가복이다.",
+  "obsolete": "운동할 때 입는 옷은 필라테스복이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "요가복"
+  ],
+  "obsolete_values": [
+   "필라테스복"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "unchanged",
+  "turns": [
+   "나는 간식으로 초콜릿을 제일 좋아해.",
+   "새로 마카다미아 쿠키를 샀는데, 그래도 간식은 초콜릿이 제일 좋아."
+  ],
+  "question": "내가 제일 좋아하는 간식이 뭐야?",
+  "expected": "내가 제일 좋아하는 간식은 초콜릿이다.",
+  "obsolete": "내가 제일 좋아하는 간식은 마카다미아 쿠키이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "초콜릿"
+  ],
+  "obsolete_values": [
+   "마카다미아 쿠키"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "unchanged",
+  "turns": [
+   "내가 마실 차는 녹차가 제일 좋아.",
+   "할머니가 홍차 선물 세트를 보내주셨는데, 그래도 내 선호는 그대로야."
+  ],
+  "question": "내가 마실 차로 좋아하는 게 뭐야?",
+  "expected": "내가 마실 차로 좋아하는 것은 녹차이다.",
+  "obsolete": "내가 홍차를 선호한다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "녹차"
+  ],
+  "obsolete_values": [
+   "홍차"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "unchanged",
+  "turns": [
+   "나는 비 오는 날엔 카페에 가는 걸 좋아해.",
+   "친구가 집에 와서 같이 홈카페를 하자고 했는데, 그래도 비 오는 날은 카페가 좋아. 선호는 그대로야."
+  ],
+  "question": "비 오는 날 나는 뭘 좋아해?",
+  "expected": "비 오는 날 나는 카페를 좋아한다.",
+  "obsolete": "비 오는 날 나는 홈카페를 좋아한다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "카페"
+  ],
+  "obsolete_values": [
+   "홈카페"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "preferences",
+  "variant": "unchanged",
+  "turns": [
+   "나는 마실 차로 보이차를 제일 좋아해.",
+   "얼그레이 티백을 새로 샀는데, 그래도 내가 가장 좋아하는 차는 여전히 보이차야."
+  ],
+  "question": "내가 가장 좋아하는 차가 뭐야?",
+  "expected": "내가 가장 좋아하는 차는 보이차다.",
+  "obsolete": "내가 가장 좋아하는 차는 얼그레이다.",
+  "second": null,
+  "forbidden_value": null,
+  "current_values": [
+   "보이차"
+  ],
+  "obsolete_values": [
+   "얼그레이"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "history",
+  "variant": "former",
+  "turns": [
+   "우리 아파트 관리사무소장님이 박민수 씨였어.",
+   "이제는 김지영 씨로 바뀌었어."
+  ],
+  "question": "지금 우리 아파트 관리사무소장님은 누구야?",
+  "expected": "지금 아파트 관리사무소장은 김지영 씨이다.",
+  "obsolete": "아파트 관리사무소장이 박민수 씨이다.",
+  "second": [
+   "이전 아파트 관리사무소장님은 누구였어?",
+   "이전 아파트 관리사무소장은 박민수 씨였다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "김지영 씨"
+  ],
+  "obsolete_values": [
+   "박민수 씨"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "history",
+  "variant": "former",
+  "turns": [
+   "내 동네 슈퍼 마감 시간이 밤 10시였어.",
+   "이제는 밤 11시로 바뀌었어."
+  ],
+  "question": "지금 동네 슈퍼 마감 시간이 몇 시야?",
+  "expected": "지금 동네 슈퍼 마감 시간은 밤 11시이다.",
+  "obsolete": "동네 슈퍼 마감 시간이 밤 10시이다.",
+  "second": [
+   "이전 동네 슈퍼 마감 시간은 몇 시였어?",
+   "이전 동네 슈퍼 마감 시간은 밤 10시였다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "밤 11시"
+  ],
+  "obsolete_values": [
+   "밤 10시"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "history",
+  "variant": "former",
+  "turns": [
+   "내 은행 적금 금리가 연 2.5%였어.",
+   "이제는 연 3.0%로 바뀌었어."
+  ],
+  "question": "지금 내 은행 적금 금리가 얼마야?",
+  "expected": "지금 은행 적금 금리는 연 3.0%이다.",
+  "obsolete": "은행 적금 금리가 연 2.5%이다.",
+  "second": [
+   "이전 은행 적금 금리는 얼마였어?",
+   "이전 은행 적금 금리는 연 2.5%였다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "연 3.0%"
+  ],
+  "obsolete_values": [
+   "연 2.5%"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "history",
+  "variant": "former",
+  "turns": [
+   "내가 가입한 독서 모임 회비가 월 1만 원이었어.",
+   "이제는 월 1만 5천 원으로 바뀌었어."
+  ],
+  "question": "지금 독서 모임 월 회비가 얼마야?",
+  "expected": "지금 독서 모임 월 회비는 1만 5천 원이다.",
+  "obsolete": "독서 모임 월 회비가 1만 원이다.",
+  "second": [
+   "이전 독서 모임 월 회비는 얼마였어?",
+   "이전 독서 모임 월 회비는 1만 원이었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "1만 5천 원"
+  ],
+  "obsolete_values": [
+   "1만 원"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "history",
+  "variant": "former",
+  "turns": [
+   "내 아이 유치원 담임 선생님이 이수미 선생님이었어.",
+   "이제는 최은주 선생님으로 바뀌었어."
+  ],
+  "question": "지금 내 아이 유치원 담임 선생님은 누구야?",
+  "expected": "지금 아이 유치원 담임 선생님은 최은주 선생님이다.",
+  "obsolete": "아이 유치원 담임 선생님이 이수미 선생님이다.",
+  "second": [
+   "이전 유치원 담임 선생님은 누구였어?",
+   "이전 유치원 담임 선생님은 이수미 선생님이었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "최은주 선생님"
+  ],
+  "obsolete_values": [
+   "이수미 선생님"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "history",
+  "variant": "former",
+  "turns": [
+   "내가 쓰는 정수기 렌탈료가 월 2만 원이었어.",
+   "이제는 월 2만 5천 원으로 바뀌었어."
+  ],
+  "question": "지금 내 정수기 렌탈료가 얼마야?",
+  "expected": "지금 정수기 렌탈료는 월 2만 5천 원이다.",
+  "obsolete": "정수기 렌탈료가 월 2만 원이다.",
+  "second": [
+   "이전 정수기 렌탈료는 얼마였어?",
+   "이전 정수기 렌탈료는 월 2만 원이었다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "월 2만 5천 원"
+  ],
+  "obsolete_values": [
+   "월 2만 원"
+  ],
+  "other_values": []
+ },
+ {
+  "category": "history",
+  "variant": "at_time",
+  "turns": [
+   "내 동네 헬스장 월 회비가 5만 원이야.",
+   "오늘부터 헬스장 월 회비를 6만 원으로 올렸어."
+  ],
+  "question": "변경 전에 내 동네 헬스장 월 회비가 얼마였어?",
+  "expected": "변경 전 동네 헬스장 월 회비는 5만 원이었다.",
+  "obsolete": "",
+  "second": [
+   "지금 내 동네 헬스장 월 회비는 얼마야?",
+   "지금 동네 헬스장 월 회비는 6만 원이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "5만 원"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "6만 원"
+  ]
+ },
+ {
+  "category": "history",
+  "variant": "at_time",
+  "turns": [
+   "내 자동차 보험료는 매월 8만 원이야.",
+   "오늘부터 보험료를 매월 10만 원으로 올렸어."
+  ],
+  "question": "변경 전에 내 자동차 보험료가 얼마였어?",
+  "expected": "변경 전 자동차 보험료는 매월 8만 원이었다.",
+  "obsolete": "",
+  "second": [
+   "현재 내 자동차 보험료는 얼마야?",
+   "현재 자동차 보험료는 매월 10만 원이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "8만 원"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "10만 원"
+  ]
+ },
+ {
+  "category": "history",
+  "variant": "at_time",
+  "turns": [
+   "내 동네 카페 단골 메뉴는 아메리카노야.",
+   "오늘부터 단골 메뉴를 라떼로 바꿨어."
+  ],
+  "question": "변경 전에 내 동네 카페 단골 메뉴가 뭐였어?",
+  "expected": "변경 전 동네 카페 단골 메뉴는 아메리카노였다.",
+  "obsolete": "",
+  "second": [
+   "현재 내 동네 카페 단골 메뉴는 뭐야?",
+   "현재 동네 카페 단골 메뉴는 라떼이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "아메리카노"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "라떼"
+  ]
+ },
+ {
+  "category": "history",
+  "variant": "at_time",
+  "turns": [
+   "내 집 보일러 온도가 24도였어.",
+   "오늘부터 22도로 낮췄어."
+  ],
+  "question": "변경 전에 보일러 온도가 몇 도였어?",
+  "expected": "변경 전 보일러 온도는 24도였다.",
+  "obsolete": "",
+  "second": [
+   "현재 보일러 온도는 몇 도야?",
+   "현재 보일러 온도는 22도이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "24도"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "22도"
+  ]
+ },
+ {
+  "category": "history",
+  "variant": "at_time",
+  "turns": [
+   "내 반려동물 등록번호가 2023-4567이었어.",
+   "오늘부터 새로 바꿔서 2024-1234로 바뀌었어."
+  ],
+  "question": "변경 전에 내 반려동물 등록번호가 뭐였어?",
+  "expected": "변경 전 반려동물 등록번호는 2023-4567이었다.",
+  "obsolete": "",
+  "second": [
+   "현재 내 반려동물 등록번호는 뭐야?",
+   "현재 반려동물 등록번호는 2024-1234이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "2023-4567"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "2024-1234"
+  ]
+ },
+ {
+  "category": "history",
+  "variant": "at_time",
+  "turns": [
+   "내 방 벽지 색깔이 연두색이야.",
+   "오늘부터 회색으로 바꿨어."
+  ],
+  "question": "변경 전에 내 방 벽지 색깔이 뭐였어?",
+  "expected": "변경 전 방 벽지 색깔은 연두색이었다.",
+  "obsolete": "",
+  "second": [
+   "지금 내 방 벽지 색깔은 뭐야?",
+   "지금 방 벽지 색깔은 회색이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "연두색"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "회색"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "different",
+  "turns": [
+   "마루 프로젝트의 서버 IP 주소가 192.168.1.10이야.",
+   "그리고 물결 프로젝트의 서버 IP 주소는 192.168.2.20이야."
+  ],
+  "question": "마루 프로젝트의 서버 IP 주소가 뭐야?",
+  "expected": "마루 프로젝트의 서버 IP 주소는 192.168.1.10이다.",
+  "obsolete": "마루 프로젝트의 서버 IP 주소는 192.168.2.20이다.",
+  "second": [
+   "물결 프로젝트의 서버 IP 주소가 뭐야?",
+   "물결 프로젝트의 서버 IP 주소는 192.168.2.20이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "192.168.1.10"
+  ],
+  "obsolete_values": [
+   "192.168.2.20"
+  ],
+  "other_values": [
+   "192.168.2.20"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "different",
+  "turns": [
+   "가람 프로젝트의 데이터베이스 포트 번호는 3306이야.",
+   "나린 프로젝트의 데이터베이스 포트 번호는 5432야."
+  ],
+  "question": "가람 프로젝트의 데이터베이스 포트 번호가 뭐야?",
+  "expected": "가람 프로젝트의 데이터베이스 포트 번호는 3306이다.",
+  "obsolete": "가람 프로젝트의 데이터베이스 포트 번호는 5432이다.",
+  "second": [
+   "나린 프로젝트의 데이터베이스 포트 번호가 뭐야?",
+   "나린 프로젝트의 데이터베이스 포트 번호는 5432이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "3306"
+  ],
+  "obsolete_values": [
+   "5432"
+  ],
+  "other_values": [
+   "5432"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "different",
+  "turns": [
+   "하늘 프로젝트의 캐시 서버 주소는 10.0.1.50이야.",
+   "솔빛 프로젝트의 캐시 서버 주소는 10.0.1.60이야."
+  ],
+  "question": "하늘 프로젝트의 캐시 서버 주소가 뭐야?",
+  "expected": "하늘 프로젝트의 캐시 서버 주소는 10.0.1.50이다.",
+  "obsolete": "하늘 프로젝트의 캐시 서버 주소는 10.0.1.60이다.",
+  "second": [
+   "솔빛 프로젝트의 캐시 서버 주소가 뭐야?",
+   "솔빛 프로젝트의 캐시 서버 주소는 10.0.1.60이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "10.0.1.50"
+  ],
+  "obsolete_values": [
+   "10.0.1.60"
+  ],
+  "other_values": [
+   "10.0.1.60"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "different",
+  "turns": [
+   "다온 프로젝트의 DB 이름은 한빛이야.",
+   "라희 프로젝트의 DB 이름은 샘물이야."
+  ],
+  "question": "다온 프로젝트의 DB 이름이 뭐야?",
+  "expected": "다온 프로젝트의 DB 이름은 한빛이다.",
+  "obsolete": "다온 프로젝트의 DB 이름은 샘물이다.",
+  "second": [
+   "라희 프로젝트의 DB 이름은 뭐야?",
+   "라희 프로젝트의 DB 이름은 샘물이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "한빛"
+  ],
+  "obsolete_values": [
+   "샘물"
+  ],
+  "other_values": [
+   "샘물"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "different",
+  "turns": [
+   "바투 프로젝트의 서버 IP 주소가 192.168.0.10이야.",
+   "사랑 프로젝트의 서버 IP 주소는 192.168.0.20이야."
+  ],
+  "question": "바투 프로젝트의 서버 IP 주소가 뭐야?",
+  "expected": "바투 프로젝트의 서버 IP 주소는 192.168.0.10이다.",
+  "obsolete": "바투 프로젝트의 서버 IP 주소가 192.168.0.20이다.",
+  "second": [
+   "사랑 프로젝트의 서버 IP 주소는 뭐야?",
+   "사랑 프로젝트의 서버 IP 주소는 192.168.0.20이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "192.168.0.10"
+  ],
+  "obsolete_values": [
+   "192.168.0.20"
+  ],
+  "other_values": [
+   "192.168.0.20"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "different",
+  "turns": [
+   "한울 프로젝트의 서버 IP 주소가 10.0.1.5야.",
+   "가비 프로젝트의 서버 IP 주소는 10.0.1.8이야."
+  ],
+  "question": "한울 프로젝트의 서버 IP 주소가 뭐야?",
+  "expected": "한울 프로젝트의 서버 IP 주소는 10.0.1.5이다.",
+  "obsolete": "한울 프로젝트의 서버 IP 주소는 10.0.1.8이다.",
+  "second": [
+   "가비 프로젝트의 서버 IP 주소가 뭐야?",
+   "가비 프로젝트의 서버 IP 주소는 10.0.1.8이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [
+   "10.0.1.5"
+  ],
+  "obsolete_values": [
+   "10.0.1.8"
+  ],
+  "other_values": [
+   "10.0.1.8"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "아라 프로젝트의 데이터베이스 비밀번호는 'arA1234'야.",
+   "자운 프로젝트의 데이터베이스 비밀번호는 'jaun5678'이야.",
+   "아라 프로젝트의 데이터베이스 비밀번호 기억만 삭제해 줘. 자운 프로젝트는 그대로 둬."
+  ],
+  "question": "아라 프로젝트의 데이터베이스 비밀번호를 기억해?",
+  "expected": "아라 프로젝트의 데이터베이스 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "아라 프로젝트의 데이터베이스 비밀번호는 'arA1234'이다.",
+  "second": [
+   "자운 프로젝트의 데이터베이스 비밀번호는?",
+   "자운 프로젝트의 데이터베이스 비밀번호는 'jaun5678'이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [],
+  "obsolete_values": [
+   "'arA1234'"
+  ],
+  "other_values": [
+   "'jaun5678'"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "차미 프로젝트의 데이터베이스 비밀번호는 7531이야.",
+   "카라 프로젝트의 데이터베이스 비밀번호는 8642야.",
+   "차미 프로젝트의 데이터베이스 비밀번호만 기억에서 지워 줘. 카라는 그대로 둬."
+  ],
+  "question": "차미 프로젝트의 데이터베이스 비밀번호를 기억해?",
+  "expected": "차미 프로젝트의 데이터베이스 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "차미 프로젝트의 데이터베이스 비밀번호는 7531이다.",
+  "second": [
+   "카라 프로젝트의 데이터베이스 비밀번호는?",
+   "카라 프로젝트의 데이터베이스 비밀번호는 8642이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [],
+  "obsolete_values": [
+   "7531"
+  ],
+  "other_values": [
+   "8642"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "고운 프로젝트의 API 키는 sk-abc123이야.",
+   "드림 프로젝트의 API 키는 sk-xyz789이야.",
+   "고운 프로젝트의 API 키 기억만 삭제해 줘. 드림 프로젝트는 그대로 둬."
+  ],
+  "question": "고운 프로젝트의 API 키를 기억해?",
+  "expected": "고운 프로젝트의 API 키는 삭제되어 알 수 없다.",
+  "obsolete": "고운 프로젝트의 API 키는 sk-abc123이다.",
+  "second": [
+   "드림 프로젝트의 API 키는?",
+   "드림 프로젝트의 API 키는 sk-xyz789이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [],
+  "obsolete_values": [
+   "sk-abc123"
+  ],
+  "other_values": [
+   "sk-xyz789"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "타래 프로젝트의 FTP 계정을 'tarae_ftp'로 기억해 줘.",
+   "파랑 프로젝트의 FTP 계정은 'parang_ftp'야.",
+   "타래 프로젝트의 FTP 계정 기억만 삭제해 줘. 파랑 프로젝트는 그대로 둬."
+  ],
+  "question": "타래 프로젝트의 FTP 계정을 기억해?",
+  "expected": "타래 프로젝트의 FTP 계정은 삭제되어 알 수 없다.",
+  "obsolete": "타래 프로젝트의 FTP 계정은 tarae_ftp이다.",
+  "second": [
+   "파랑 프로젝트의 FTP 계정은 뭐야?",
+   "파랑 프로젝트의 FTP 계정은 parang_ftp이다."
+  ],
+  "forbidden_value": "tarae_ftp",
+  "current_values": [],
+  "obsolete_values": [
+   "tarae_ftp"
+  ],
+  "other_values": [
+   "parang_ftp"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "너울 프로젝트의 서버 호스트명은 'seagull'이야.",
+   "달래 프로젝트의 서버 호스트명은 'violet'이야.",
+   "너울 프로젝트의 서버 호스트명 기억만 삭제해 줘. 달래는 그대로 둬."
+  ],
+  "question": "너울 프로젝트의 서버 호스트명을 기억해?",
+  "expected": "너울 프로젝트의 서버 호스트명은 삭제되어 알 수 없다.",
+  "obsolete": "너울 프로젝트의 서버 호스트명은 'seagull'이다.",
+  "second": [
+   "달래 프로젝트의 서버 호스트명은?",
+   "달래 프로젝트의 서버 호스트명은 'violet'이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [],
+  "obsolete_values": [
+   "seagull"
+  ],
+  "other_values": [
+   "violet"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "로운 프로젝트의 FTP 계정은 guest야.",
+   "미르 프로젝트의 FTP 계정은 admin이야.",
+   "로운 프로젝트의 FTP 계정 기억만 삭제해 줘. 미르 프로젝트는 그대로 둬."
+  ],
+  "question": "로운 프로젝트의 FTP 계정을 기억해?",
+  "expected": "로운 프로젝트의 FTP 계정은 삭제되어 알 수 없다.",
+  "obsolete": "로운 프로젝트의 FTP 계정은 guest이다.",
+  "second": [
+   "미르 프로젝트의 FTP 계정은?",
+   "미르 프로젝트의 FTP 계정은 admin이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [],
+  "obsolete_values": [
+   "guest"
+  ],
+  "other_values": [
+   "admin"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "벼리 프로젝트의 데이터베이스 비밀번호는 'qwerty12'야.",
+   "새론 프로젝트의 데이터베이스 비밀번호는 'abcde34'야.",
+   "벼리 프로젝트의 데이터베이스 비밀번호 기억만 삭제해 줘. 새론 프로젝트는 그대로 둬."
+  ],
+  "question": "벼리 프로젝트의 데이터베이스 비밀번호를 기억해?",
+  "expected": "벼리 프로젝트의 데이터베이스 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "벼리 프로젝트의 데이터베이스 비밀번호는 'qwerty12'이다.",
+  "second": [
+   "새론 프로젝트의 데이터베이스 비밀번호는?",
+   "새론 프로젝트의 데이터베이스 비밀번호는 'abcde34'이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [],
+  "obsolete_values": [
+   "qwerty12"
+  ],
+  "other_values": [
+   "abcde34"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "온새 프로젝트의 FTP 포트 번호는 2020이야.",
+   "주름 프로젝트의 FTP 포트 번호는 3030이야.",
+   "온새 프로젝트의 FTP 포트 번호 기억만 삭제해 줘. 주름은 그대로 둬."
+  ],
+  "question": "온새 프로젝트의 FTP 포트 번호를 기억해?",
+  "expected": "온새 프로젝트의 FTP 포트 번호는 삭제되어 알 수 없다.",
+  "obsolete": "온새 프로젝트의 FTP 포트 번호는 2020이다.",
+  "second": [
+   "주름 프로젝트의 FTP 포트 번호는?",
+   "주름 프로젝트의 FTP 포트 번호는 3030이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [],
+  "obsolete_values": [
+   "2020"
+  ],
+  "other_values": [
+   "3030"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "누리 프로젝트의 데이터베이스 비밀번호는 'blue123'이야.",
+   "도담 프로젝트의 데이터베이스 비밀번호는 'red456'이야.",
+   "누리 프로젝트의 데이터베이스 비밀번호만 기억에서 지워 줘. 도담 프로젝트는 그대로 둬."
+  ],
+  "question": "누리 프로젝트의 데이터베이스 비밀번호를 기억해?",
+  "expected": "누리 프로젝트의 데이터베이스 비밀번호는 삭제되어 알 수 없다.",
+  "obsolete": "누리 프로젝트의 데이터베이스 비밀번호는 'blue123'이다.",
+  "second": [
+   "도담 프로젝트의 데이터베이스 비밀번호는?",
+   "도담 프로젝트의 데이터베이스 비밀번호는 'red456'이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [],
+  "obsolete_values": [
+   "blue123"
+  ],
+  "other_values": [
+   "red456"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "채움 프로젝트의 FTP 계정은 admin1이야.",
+   "키움 프로젝트의 FTP 계정은 admin2야.",
+   "채움 프로젝트의 FTP 계정 기억만 삭제해 줘. 키움은 그대로 둬."
+  ],
+  "question": "채움 프로젝트의 FTP 계정을 기억해?",
+  "expected": "채움 프로젝트의 FTP 계정은 삭제되어 알 수 없다.",
+  "obsolete": "채움 프로젝트의 FTP 계정은 admin1이다.",
+  "second": [
+   "키움 프로젝트의 FTP 계정은?",
+   "키움 프로젝트의 FTP 계정은 admin2이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [],
+  "obsolete_values": [
+   "admin1"
+  ],
+  "other_values": [
+   "admin2"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "눈빛 프로젝트의 담당자가 수지야.",
+   "빛꽃 프로젝트의 담당자가 민호야.",
+   "눈빛 프로젝트의 담당자만 기억에서 지워 줘. 빛꽃 프로젝트는 그대로 둬."
+  ],
+  "question": "눈빛 프로젝트의 담당자를 기억해?",
+  "expected": "눈빛 프로젝트의 담당자는 삭제되어 알 수 없다.",
+  "obsolete": "눈빛 프로젝트의 담당자는 수지이다.",
+  "second": [
+   "빛꽃 프로젝트의 담당자는?",
+   "빛꽃 프로젝트의 담당자는 민호이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [],
+  "obsolete_values": [
+   "수지"
+  ],
+  "other_values": [
+   "민호"
+  ]
+ },
+ {
+  "category": "project_isolation",
+  "variant": "delete_one",
+  "turns": [
+   "다솔 프로젝트의 서버 IP는 203.0.113.10이야.",
+   "별빛 프로젝트의 서버 IP는 203.0.113.20이야.",
+   "다솔 프로젝트의 서버 IP 기억만 삭제해 줘. 별빛은 그대로 둬."
+  ],
+  "question": "다솔 프로젝트의 서버 IP를 기억해?",
+  "expected": "다솔 프로젝트의 서버 IP는 삭제되어 알 수 없다.",
+  "obsolete": "다솔 프로젝트의 서버 IP는 203.0.113.10이다.",
+  "second": [
+   "별빛 프로젝트의 서버 IP는?",
+   "별빛 프로젝트의 서버 IP는 203.0.113.20이다."
+  ],
+  "forbidden_value": null,
+  "current_values": [],
+  "obsolete_values": [
+   "203.0.113.10"
+  ],
+  "other_values": [
+   "203.0.113.20"
+  ]
+ }
+]

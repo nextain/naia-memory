@@ -1,0 +1,23 @@
+{
+ "sealed_at": "2026-09-15",
+ "files": {
+  "AUTHOR-BRIEF.md": "5f359e15aa4834312894a6d4ba3c3bd38517bc18c01a4c473daebd2cfd67fd39",
+  "author-receipts.json": "4a27ea8230abf9d3a748c003b10b3af5ce8e502aac5f7d276959c4e614f14f9a",
+  "first-set-questions.json": "b293bd4121a2b4b3bffbd7abf0305a4c5270a4b4935fe457f6a05ef92b1c5634",
+  "curation-log-round1.json": "5dded3256597a572547b8715c3d98253ee5d3abb65dc0e07970da2060668ee1c",
+  "curation-log-2.json": "822808c60e1c4f4d331a7b988df64b2870d18becc8ce61f4608974a5df34e0ac",
+  "curation-log-3.json": "1529b3c078ccda87ac3fb81f1c10b2cee8e3d18bc7ff5a0c40dc08ff3d1cc8d7",
+  "curation-log-4-review.json": "72f992cf45cc872bac63175a0a267dd64a32fd65492582fcb9ea1279c8d5b8e4",
+  "curation-log-5.json": "6809936436a5f0e93c7425802528d3d24ead1dc2328b8ae46ffe5367289abf0a",
+  "curation-log-6.json": "f4da98b10f0d4c874caf02cf72c2c5493633f2cd4c18202700f42c7e3d5531cc",
+  "rows.json": "73a65365c0c62eaa3a50a095ac09b0e9d01f03ece0a145579f714318c1e4577d",
+  "materialize.py": "23a26b5cc0a2c3564272e9a43be4c064e79e2400af61a701d1e6b144f8778885",
+  "factstate.py": "e29ed06b5d012a486e3fbdeb56c0ffe2c8d1566f841cd5ef64be528fc863d80e",
+  "compare.py": "599aac5866d33dd98aff5e09e6396dea24c445aebcd3da665c07967f048c18e4",
+  "design/memory-inputs.json": "16cda8bdb1cc5fad07f450b6705a4638a9460dd1308f85961d62cc9f5cf7aedb",
+  "design/memory-gold.json": "58efa9872027c063b8cc2a1319c799f3de6e0d9b8b080675479ed0cc05fdb2ba",
+  "design/rubric.json": "ed074585c57ced9dbd1dc6bf5c727348c125e5385bb3fbdc2c2117bcfad13ad2"
+ },
+ "note": "Confirmation set sealed on 2026-09-15 before any result. Row replacements: mechanical checks (curation logs) and reviewer rejections recorded as FORCE_ROWS reasons in curation-log-4-review.json; no hand edits.",
+ "regenerated_rows": "see review-regeneration-log.json (rounds 1-2, manual review reasons) and curation-log*.json (mechanical check reasons)"
+}
