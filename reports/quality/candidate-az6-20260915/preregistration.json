@@ -182,8 +182,8 @@
       "post_consolidation_reopen": "after consolidateNow and flush, close and reopen once before queries so recall also exercises fact persistence (no provider cost)"
     }
   },
-  "frozen": false,
-  "frozen_at": null,
+  "frozen": true,
+  "frozen_at": "2026-09-15",
   "runs": {
     "candidate-az6a-20260915": {
       "product_commit_sha": "a0dd0b515c4b517747f559141fbde9a9c5a6a2a1",
@@ -223,13 +223,18 @@
   ],
   "runner": {
     "file": "reports/quality/candidate-az6-20260915/run-az6.mjs",
-    "sha256": null
+    "sha256": "17179a906b4c79459281b1c5d16624d0b4118f09f4499b760cf55a33cd9dfdb4"
   },
   "primary_metric": {
     "name": "context change and its row-level answer effect",
     "context_level": "supplied sets are deterministic given identical stores; mock dry-runs registered below are exact predictions and are checked mechanically against the live capture",
     "answer_level": "for the rows whose supplied context changes, correct / deletion_leakage / stale_exposure / critical_reversal versus az4, judged by the unchanged judge; answer and judge noise measured in az5 (13/57 context-same answer changes) applies, so single-row flips outside the predictions are read as noise",
-    "judgement_order": "row-level table written and committed before score.json is opened"
+    "judgement_order": "row-level table written and committed before score.json is opened",
+    "noise_reference": "simple-vector supplied sets are identical to az4 (57/57), so its answer/judge changes between az4 and each az6 run are the noise reference, reported next to az5's 13/57 context-same answer changes",
+    "dry_run_artifacts": [
+      "reports/quality/candidate-az6-20260915/dryrun-mock-a (az6a, a0dd0b5)",
+      "reports/quality/candidate-az6-20260915/dryrun-mock-b (az6b, c2d66ec)"
+    ]
   },
   "predictions": {
     "registered_before_az6_results": true,
@@ -274,16 +279,18 @@
       "safety_net_loss": "ko-09 q1 expected to turn incorrect (jazz fact wrongly superseded and its episode removed); ja-10 q1 stays incorrect",
       "kept": "ko-01, ko-02, ja-09 contexts do not change (their supersessions were blocked in az5b), so the az3 losses do not recur",
       "possible_gain": "en-04 q1 may turn correct (north-office episode removed); direction only",
-      "unchanged_correct": "ko-03, ko-06 q1/q2, ko-10, ko-11, en-03, en-06 q1/q2, en-11, ja-05, ja-07, ja-11, ja-12 q2, ja-14 stay correct (the current fact is supplied)"
+      "unchanged_correct": "ko-03, ko-06 q1/q2, ko-10, ko-11, en-03, en-06 q1/q2, en-11, ja-05, ja-07, ja-11, ja-12 q2, ja-14 stay correct (the current fact is supplied)",
+      "deletion_leakage_count": "naia 3 -> 2 (ko-14 disappears; en-05 and en-14 stay). ko-05 stays exposed to the value but already abstained in az4 (not a leak); reported separately as exposure kept, verdict noise-sensitive"
     },
-    "az6b_answers": "no expected change beyond noise: supplied sets are identical to az4",
+    "az6b_answers": "no expected change beyond noise: supplied sets are identical to az4. A null result means this suite cannot discriminate demotion (facts come first and at most five items are supplied, so the budget rarely binds), not that demotion is useless; consumers that take only top-k episodes may differ (not measured)",
     "interpretation": "If the az6a row-level predictions hold, the harm seen in az3 was a function of supersession precision: with the az5/az4 rules the exclude filter costs one row (ko-09, a registered extraction residual) and removes one deletion leak (ko-14)."
   },
   "interpretation_lock": "Context changes are attributed to the filter variant (stores identical to az4 by replay). Answer-level flips on predicted rows are attributed to the context change; flips on unchanged-context rows are noise. Aggregates are descriptive.",
   "scope_limits": {
     "measured_path": "Only the heuristic contradiction filter path is measured: fallbackFacts are filled only when contradictionFilter.name !== 'heuristic' (structured-mutation-policy.ts). On the product default path (LLM contradiction filter) facts of the same subject can still be replaced by the LLM verdict, which the category rule does not govern. az5 cannot show that wrong replacement is prevented on that path.",
     "duplicate_merge": "restating a fact moves its anchor to the restating episode (ko-10, ja-07): the original utterance is excluded while the merged fact stays supplied",
-    "ko05_shared_episode": "an episode that anchors any live fact stays visible, so a deleted value in a multi-fact utterance can still be supplied (ko-05)"
+    "ko05_shared_episode": "an episode that anchors any live fact stays visible, so a deleted value in a multi-fact utterance can still be supplied (ko-05) This is an episode-level limit of the anchor rule; fact-level masking is a later design question, outside az6.",
+    "delete_rules_not_measured": "delete verification is replayed from az4, so az6 says nothing about the deletion rules or the verifier"
   },
-  "review": "pending Fable fixed-and-executable verdict"
+  "review": "Fable 2026-09-15: fixed and executable, no blockers; applied: dry-run artifacts committed, simple-vector noise reference, deletion_leakage 3->2 with ko-05 exposure note, demote null interpretation, delete-rules scope note, runner sha"
 }
