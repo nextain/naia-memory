@@ -1,0 +1,933 @@
+{
+ "model": "deepseek-v4-flash",
+ "startedAt": "2026-09-15T05:42:17.391Z",
+ "rounds": [
+  {
+   "round": 1,
+   "failing": [
+    {
+     "index": 18,
+     "reasons": [
+      "값이 다른 사례와 겹친다(오후2시)"
+     ],
+     "row": {
+      "category": "update",
+      "variant": "chain",
+      "turns": [
+       "내가 신청한 요가 강좌는 오전 10시 수업이야.",
+       "아니야, 오후 2시로 변경했어.",
+       "앞서 말한 오전 10시와 오후 2시는 취소, 최종적으로 오후 4시로 바꿨어."
+      ],
+      "question": "내 요가 강좌는 몇 시 수업이야?",
+      "expected": "요가 강좌는 오후 4시 수업이다.",
+      "obsolete": "요가 강좌는 오전 10시 수업이다 또는 요가 강좌는 오후 2시 수업이다",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "오후 4시"
+      ],
+      "obsolete_values": [
+       "오전 10시",
+       "오후 2시"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 23,
+     "reasons": [
+      "값이 다른 사례와 겹친다(오후3시)"
+     ],
+     "row": {
+      "category": "update",
+      "variant": "chain",
+      "turns": [
+       "내가 예약한 미용실 시간은 오전 11시야.",
+       "아니, 오후 1시로 변경했어.",
+       "앞서 말한 오전 11시와 오후 1시는 취소, 최종적으로 오후 3시로 다시 바꿨어."
+      ],
+      "question": "내 미용실 예약 시간은 몇 시야?",
+      "expected": "미용실 예약 시간은 오후 3시이다.",
+      "obsolete": "미용실 예약 시간은 오전 11시이다 또는 미용실 예약 시간은 오후 1시이다",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "오후 3시"
+      ],
+      "obsolete_values": [
+       "오전 11시",
+       "오후 1시"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 35,
+     "reasons": [
+      "값이 다른 사례와 겹친다(금요일, 수요일)"
+     ],
+     "row": {
+      "category": "delete",
+      "variant": "cancel_one",
+      "turns": [
+       "다음 주 수요일과 금요일에 헬스 PT 두 번 예약했어.",
+       "수요일 PT는 취소하고 금요일만 남겨 줘."
+      ],
+      "question": "다음 주 내 헬스 PT는 언제야?",
+      "expected": "다음 주 헬스 PT는 금요일입니다.",
+      "obsolete": "다음 주 헬스 PT는 수요일과 금요일입니다.",
+      "second": [
+       "수요일 PT가 아직 예약되어 있어?",
+       "아니요, 수요일 PT는 취소되었습니다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "금요일"
+      ],
+      "obsolete_values": [
+       "수요일"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 38,
+     "reasons": [
+      "질문에 값 '아침형 인간'이 들어 있다. 값을 담지 않은 열린 질문으로 써야 한다"
+     ],
+     "row": {
+      "category": "contradiction",
+      "variant": "quotation",
+      "turns": [
+       "나는 아침형 인간이야.",
+       "엄마가 '넌 저녁형 인간이지?'라고 하더라. 근데 내 성향은 바뀐 게 아니야."
+      ],
+      "question": "내가 아침형 인간이 맞아?",
+      "expected": "사용자는 아침형 인간이다.",
+      "obsolete": "사용자는 저녁형 인간이다.",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "아침형 인간"
+      ],
+      "obsolete_values": [
+       "저녁형 인간"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 39,
+     "reasons": [
+      "질문에 값 '에세이'이 들어 있다. 값을 담지 않은 열린 질문으로 써야 한다"
+     ],
+     "row": {
+      "category": "contradiction",
+      "variant": "quotation",
+      "turns": [
+       "나는 에세이보다 소설을 더 좋아해.",
+       "동생이 '네가 에세이를 더 좋아한다고 들었어'라고 말하던데, 내 취향은 안 바뀌었어."
+      ],
+      "question": "내가 에세이를 더 좋아해?",
+      "expected": "사용자는 소설을 더 좋아한다.",
+      "obsolete": "사용자는 에세이를 더 좋아한다.",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "소설"
+      ],
+      "obsolete_values": [
+       "에세이"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 40,
+     "reasons": [
+      "질문에 값 '등산'이 들어 있다. 값을 담지 않은 열린 질문으로 써야 한다",
+      "질문에 값 '주말마다'이 들어 있다. 값을 담지 않은 열린 질문으로 써야 한다"
+     ],
+     "row": {
+      "category": "contradiction",
+      "variant": "quotation",
+      "turns": [
+       "나는 주말마다 등산을 가.",
+       "옆집 아주머니가 '요즘 주말에 집에만 있지?'라고 하시던데, 내 생활 패턴은 바뀐 게 아니야."
+      ],
+      "question": "내가 주말마다 등산을 가?",
+      "expected": "사용자는 주말마다 등산을 간다.",
+      "obsolete": "사용자는 주말마다 등산을 가지 않는다.",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "등산"
+      ],
+      "obsolete_values": [
+       "집에만 있지"
+      ],
+      "other_values": [
+       "주말마다"
+      ]
+     }
+    },
+    {
+     "index": 41,
+     "reasons": [
+      "질문에 값 '고양이'이 들어 있다. 값을 담지 않은 열린 질문으로 써야 한다"
+     ],
+     "row": {
+      "category": "contradiction",
+      "variant": "quotation",
+      "turns": [
+       "나는 고양이를 키워.",
+       "친구가 '너 개 키우지?'라고 물었는데, 내 애완동물은 바뀐 적 없어."
+      ],
+      "question": "내가 키우는 애완동물은 고양이야?",
+      "expected": "사용자는 고양이를 키운다.",
+      "obsolete": "사용자는 개를 키운다.",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "고양이"
+      ],
+      "obsolete_values": [
+       "개"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 43,
+     "reasons": [
+      "값 개수가 규칙과 다르다 (current_values=[지금 상태의 핵심어], obsolete_values=[가정된 상태의 핵심어])",
+      "값 '영업 중이다'이 발화에 글자 그대로 없다",
+      "값 '문을 닫았다'이 발화에 글자 그대로 없다",
+      "질문에 값 '영업 중이야'이 들어 있다. 값을 담지 않은 열린 질문으로 써야 한다"
+     ],
+     "row": {
+      "category": "contradiction",
+      "variant": "hypothetical",
+      "turns": [
+       "우리 동네 카페는 아직 영업 중이야.",
+       "만약 주인이 바뀌면 문을 닫을 수도 있겠지. 아직 안 바뀌었어."
+      ],
+      "question": "우리 동네 카페는 지금 영업 중이야?",
+      "expected": "우리 동네 카페는 아직 영업 중이다.",
+      "obsolete": "우리 동네 카페는 문을 닫았다.",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "영업 중이야",
+       "영업 중이다"
+      ],
+      "obsolete_values": [
+       "문을 닫을 수도 있겠지",
+       "문을 닫았다"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 45,
+     "reasons": [
+      "값 '초등학교 4학년'이 발화에 글자 그대로 없다"
+     ],
+     "row": {
+      "category": "contradiction",
+      "variant": "hypothetical",
+      "turns": [
+       "우리 아들은 현재 초등학교 3학년이야.",
+       "만약 조기 진급하면 4학년으로 갈 수도 있겠지. 아직 그런 일은 없어."
+      ],
+      "question": "우리 아들은 현재 몇 학년이야?",
+      "expected": "우리 아들은 현재 초등학교 3학년이다.",
+      "obsolete": "우리 아들은 초등학교 4학년이다.",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "초등학교 3학년"
+      ],
+      "obsolete_values": [
+       "초등학교 4학년"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 58,
+     "reasons": [
+      "값이 다른 사례와 겹친다(달리기)"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "unchanged",
+      "turns": [
+       "나는 운동할 때 달리기보다 수영이 더 좋아.",
+       "새 운동화를 샀지만, 내 선호는 여전히 수영이야."
+      ],
+      "question": "내가 더 좋아하는 운동은?",
+      "expected": "나는 수영을 더 좋아한다.",
+      "obsolete": "새 운동화를 샀으므로 달리기를 더 좋아한다.",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "수영"
+      ],
+      "obsolete_values": [
+       "달리기"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 72,
+     "reasons": [
+      "프로젝트 이름 노을이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "바람 프로젝트의 예산은 500만 원이야.",
+       "노을 프로젝트의 예산은 800만 원이야."
+      ],
+      "question": "바람 프로젝트의 예산이 얼마야?",
+      "expected": "바람 프로젝트의 예산은 500만 원이다.",
+      "obsolete": "바람 프로젝트의 예산은 800만 원이다.",
+      "second": [
+       "노을 프로젝트의 예산은 얼마야?",
+       "노을 프로젝트의 예산은 800만 원이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "500만 원"
+      ],
+      "obsolete_values": [
+       "800만 원"
+      ],
+      "other_values": [
+       "800만 원"
+      ]
+     }
+    },
+    {
+     "index": 73,
+     "reasons": [
+      "프로젝트 이름 햇살이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "달빛 프로젝트의 팀장은 민수야.",
+       "햇살 프로젝트의 팀장은 지영이야."
+      ],
+      "question": "달빛 프로젝트의 팀장이 누구야?",
+      "expected": "달빛 프로젝트의 팀장은 민수이다.",
+      "obsolete": "달빛 프로젝트의 팀장은 지영이다.",
+      "second": [
+       "햇살 프로젝트의 팀장은 누구야?",
+       "햇살 프로젝트의 팀장은 지영이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "민수"
+      ],
+      "obsolete_values": [
+       "지영"
+      ],
+      "other_values": [
+       "지영"
+      ]
+     }
+    },
+    {
+     "index": 74,
+     "reasons": [
+      "프로젝트 이름 별빛이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "구름 프로젝트의 마감일은 12월 15일이야.",
+       "별빛 프로젝트의 마감일은 1월 20일이야."
+      ],
+      "question": "구름 프로젝트의 마감일이 언제야?",
+      "expected": "구름 프로젝트의 마감일은 12월 15일이다.",
+      "obsolete": "구름 프로젝트의 마감일은 1월 20일이다.",
+      "second": [
+       "별빛 프로젝트의 마감일은 언제야?",
+       "별빛 프로젝트의 마감일은 1월 20일이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "12월 15일"
+      ],
+      "obsolete_values": [
+       "1월 20일"
+      ],
+      "other_values": [
+       "1월 20일"
+      ]
+     }
+    },
+    {
+     "index": 76,
+     "reasons": [
+      "값이 다른 사례와 겹친다(500만원, 800만원, 800만원)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "가람 프로젝트의 예산이 500만 원이야.",
+       "누리 프로젝트의 예산은 800만 원이야."
+      ],
+      "question": "가람 프로젝트의 예산이 얼마야?",
+      "expected": "가람 프로젝트의 예산은 500만 원이다.",
+      "obsolete": "가람 프로젝트의 예산은 800만 원이다.",
+      "second": [
+       "누리 프로젝트의 예산은?",
+       "누리 프로젝트의 예산은 800만 원이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "500만 원"
+      ],
+      "obsolete_values": [
+       "800만 원"
+      ],
+      "other_values": [
+       "800만 원"
+      ]
+     }
+    },
+    {
+     "index": 78,
+     "reasons": [
+      "프로젝트 이름 노을이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "새벽 프로젝트의 서버 주소는 192.168.1.10이야.",
+       "노을 프로젝트의 서버 주소는 192.168.1.20이야.",
+       "새벽 프로젝트의 서버 주소 기억만 삭제해 줘. 노을은 그대로 둬."
+      ],
+      "question": "새벽 프로젝트의 서버 주소를 기억해?",
+      "expected": "새벽 프로젝트의 서버 주소는 삭제되어 알 수 없다.",
+      "obsolete": "새벽 프로젝트의 서버 주소는 192.168.1.10이다.",
+      "second": [
+       "노을 프로젝트의 서버 주소는?",
+       "노을 프로젝트의 서버 주소는 192.168.1.20이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "192.168.1.10"
+      ],
+      "other_values": [
+       "192.168.1.20"
+      ]
+     }
+    },
+    {
+     "index": 79,
+     "reasons": [
+      "프로젝트 이름 나래이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "라온 프로젝트의 담당자 전화번호는 010-1234-5678이야.",
+       "나래 프로젝트의 담당자 전화번호는 010-8765-4321이야.",
+       "라온 프로젝트의 전화번호 기억만 지워 줘. 나래는 그대로 둬."
+      ],
+      "question": "라온 프로젝트의 담당자 전화번호를 기억해?",
+      "expected": "라온 프로젝트의 담당자 전화번호는 삭제되어 알 수 없다.",
+      "obsolete": "라온 프로젝트의 담당자 전화번호는 010-1234-5678이다.",
+      "second": [
+       "나래 프로젝트의 담당자 전화번호는?",
+       "나래 프로젝트의 담당자 전화번호는 010-8765-4321이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "010-1234-5678"
+      ],
+      "other_values": [
+       "010-8765-4321"
+      ]
+     }
+    },
+    {
+     "index": 80,
+     "reasons": [
+      "프로젝트 이름 햇살이 다른 사례와 겹친다",
+      "프로젝트 이름 별빛이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "별빛 프로젝트의 완료율은 75%야.",
+       "햇살 프로젝트의 완료율은 40%야.",
+       "별빛 프로젝트의 완료율 기억만 삭제해 줘. 햇살은 그대로 둬."
+      ],
+      "question": "별빛 프로젝트의 완료율을 기억해?",
+      "expected": "별빛 프로젝트의 완료율은 삭제되어 알 수 없다.",
+      "obsolete": "별빛 프로젝트의 완료율은 75%이다.",
+      "second": [
+       "햇살 프로젝트의 완료율은?",
+       "햇살 프로젝트의 완료율은 40%이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "75%"
+      ],
+      "other_values": [
+       "40%"
+      ]
+     }
+    },
+    {
+     "index": 83,
+     "reasons": [
+      "프로젝트 이름 나래이 다른 사례와 겹친다",
+      "값이 다른 사례와 겹친다(010-1234-5678, 010-8765-4321)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "나래 프로젝트의 고객사 연락처를 기억해 줘. 010-1234-5678이야.",
+       "뜬돌 프로젝트의 고객사 연락처는 010-8765-4321이야.",
+       "나래 프로젝트의 고객사 연락처 기억만 삭제해 줘. 뜬돌 프로젝트는 그대로 둬."
+      ],
+      "question": "나래 프로젝트의 고객사 연락처를 기억해?",
+      "expected": "나래 프로젝트의 고객사 연락처는 삭제되어 알 수 없다.",
+      "obsolete": "나래 프로젝트의 고객사 연락처는 010-1234-5678이다.",
+      "second": [
+       "뜬돌 프로젝트의 고객사 연락처는?",
+       "뜬돌 프로젝트의 고객사 연락처는 010-8765-4321이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "010-1234-5678"
+      ],
+      "other_values": [
+       "010-8765-4321"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "round": 2,
+   "failing": [
+    {
+     "index": 38,
+     "reasons": [
+      "값 개수가 규칙과 다르다 (current_values=[사용자의 실제 선호나 사실을 나타내는 핵심어], obsolete_values=[인용된 반대 내용의 핵심어])"
+     ],
+     "row": {
+      "category": "contradiction",
+      "variant": "quotation",
+      "turns": [
+       "나는 채식을 선호해. 고기는 거의 안 먹어.",
+       "친구가 '너 예전에 소고기 좋아했잖아'라고 하던데, 내 선호는 바뀐 게 아니야."
+      ],
+      "question": "내 식습관 선호는 뭐야?",
+      "expected": "사용자는 채식을 선호하고 고기를 거의 먹지 않는다.",
+      "obsolete": "사용자는 소고기를 좋아한다.",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "채식을 선호",
+       "고기는 거의 안 먹어"
+      ],
+      "obsolete_values": [
+       "소고기 좋아했"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 46,
+     "reasons": [
+      "값이 다른 사례와 겹친다(5만원)"
+     ],
+     "row": {
+      "category": "contradiction",
+      "variant": "hypothetical",
+      "turns": [
+       "내 핸드폰 요금제는 월 5만 원짜리야.",
+       "만약 데이터를 더 쓰면 7만 원으로 바꿀 수도 있겠지. 아직 안 바꿨어."
+      ],
+      "question": "내 핸드폰 요금제는 얼마야?",
+      "expected": "내 핸드폰 요금제는 월 5만 원이다.",
+      "obsolete": "내 핸드폰 요금제는 월 7만 원이다.",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "5만 원"
+      ],
+      "obsolete_values": [
+       "7만 원"
+      ],
+      "other_values": []
+     }
+    },
+    {
+     "index": 49,
+     "reasons": [
+      "값이 다른 사례와 겹친다(김치찌개)"
+     ],
+     "row": {
+      "category": "preferences",
+      "variant": "coexist",
+      "turns": [
+       "점심으로는 김치찌개를 주로 먹어.",
+       "아침에는 간단히 토스트만 먹어. 점심이랑은 상관없어."
+      ],
+      "question": "점심으로는 뭘 주로 먹고, 아침에는 뭘 먹어?",
+      "expected": "점심으로는 김치찌개를 주로 먹고, 아침에는 간단히 토스트를 먹는다.",
+      "obsolete": "",
+      "second": null,
+      "forbidden_value": null,
+      "current_values": [
+       "김치찌개",
+       "토스트"
+      ],
+      "obsolete_values": [],
+      "other_values": []
+     }
+    },
+    {
+     "index": 72,
+     "reasons": [
+      "프로젝트 이름 초원, 들판이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "초원 프로젝트의 서버 IP는 10.0.1.10이야.",
+       "들판 프로젝트의 서버 IP는 10.0.2.20이야."
+      ],
+      "question": "초원 프로젝트의 서버 IP가 뭐야?",
+      "expected": "초원 프로젝트의 서버 IP는 10.0.1.10이다.",
+      "obsolete": "초원 프로젝트의 서버 IP는 10.0.2.20이다.",
+      "second": [
+       "들판 프로젝트의 서버 IP는?",
+       "들판 프로젝트의 서버 IP는 10.0.2.20이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "10.0.1.10"
+      ],
+      "obsolete_values": [
+       "10.0.2.20"
+      ],
+      "other_values": [
+       "10.0.2.20"
+      ]
+     }
+    },
+    {
+     "index": 76,
+     "reasons": [
+      "프로젝트 이름 다솜, 보람이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "다솜 프로젝트의 디자인 컨셉은 '미니멀'이야.",
+       "보람 프로젝트의 디자인 컨셉은 '레트로'로 정했어."
+      ],
+      "question": "다솜 프로젝트의 디자인 컨셉이 뭐야?",
+      "expected": "다솜 프로젝트의 디자인 컨셉은 '미니멀'이다.",
+      "obsolete": "다솜 프로젝트의 디자인 컨셉은 '레트로'이다.",
+      "second": [
+       "보람 프로젝트의 디자인 컨셉은?",
+       "보람 프로젝트의 디자인 컨셉은 '레트로'이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "미니멀"
+      ],
+      "obsolete_values": [
+       "레트로"
+      ],
+      "other_values": [
+       "레트로"
+      ]
+     }
+    },
+    {
+     "index": 78,
+     "reasons": [
+      "프로젝트 이름 초원, 들판이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "초원 프로젝트의 서버 주소를 192.168.0.10으로 기억해 줘.",
+       "들판 프로젝트의 서버 주소는 10.0.0.5야.",
+       "초원 프로젝트의 서버 주소 기억만 삭제해 줘. 들판 프로젝트는 그대로 둬."
+      ],
+      "question": "초원 프로젝트의 서버 주소를 기억해?",
+      "expected": "초원 프로젝트의 서버 주소는 삭제되어 알 수 없다.",
+      "obsolete": "초원 프로젝트의 서버 주소는 192.168.0.10이다.",
+      "second": [
+       "들판 프로젝트의 서버 주소는?",
+       "들판 프로젝트의 서버 주소는 10.0.0.5이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "192.168.0.10"
+      ],
+      "other_values": [
+       "10.0.0.5"
+      ]
+     }
+    },
+    {
+     "index": 79,
+     "reasons": [
+      "프로젝트 이름 다솜, 보람이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "다솜 프로젝트의 테스트용 계정 비밀번호를 'sunflower123'으로 설정해 줘.",
+       "보람 프로젝트의 테스트용 계정 비밀번호는 'moonrise456'이야.",
+       "다솜 프로젝트의 계정 비밀번호 기억만 삭제해 줘. 보람 프로젝트는 그대로 둬."
+      ],
+      "question": "다솜 프로젝트의 테스트용 계정 비밀번호를 기억해?",
+      "expected": "다솜 프로젝트의 테스트용 계정 비밀번호는 삭제되어 알 수 없다.",
+      "obsolete": "다솜 프로젝트의 테스트용 계정 비밀번호는 'sunflower123'이다.",
+      "second": [
+       "보람 프로젝트의 테스트용 계정 비밀번호는?",
+       "보람 프로젝트의 테스트용 계정 비밀번호는 'moonrise456'이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "sunflower123"
+      ],
+      "other_values": [
+       "moonrise456"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "round": 3,
+   "failing": [
+    {
+     "index": 72,
+     "reasons": [
+      "프로젝트 이름 누리이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "가람 프로젝트의 예산이 500만 원이야.",
+       "누리 프로젝트의 예산은 800만 원이야."
+      ],
+      "question": "가람 프로젝트의 예산이 얼마야?",
+      "expected": "가람 프로젝트의 예산은 500만 원이다.",
+      "obsolete": "가람 프로젝트의 예산은 800만 원이다.",
+      "second": [
+       "누리 프로젝트의 예산이 얼마야?",
+       "누리 프로젝트의 예산은 800만 원이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "500만 원"
+      ],
+      "obsolete_values": [
+       "800만 원"
+      ],
+      "other_values": [
+       "800만 원"
+      ]
+     }
+    },
+    {
+     "index": 76,
+     "reasons": [
+      "프로젝트 이름 별빛이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "different",
+      "turns": [
+       "별빛 프로젝트의 데이터베이스 비밀번호는 'star123'이야.",
+       "노을 프로젝트의 데이터베이스 비밀번호는 'sunset456'이야."
+      ],
+      "question": "별빛 프로젝트의 데이터베이스 비밀번호가 뭐야?",
+      "expected": "별빛 프로젝트의 데이터베이스 비밀번호는 'star123'이다.",
+      "obsolete": "별빛 프로젝트의 데이터베이스 비밀번호는 'sunset456'이다.",
+      "second": [
+       "노을 프로젝트의 데이터베이스 비밀번호는?",
+       "노을 프로젝트의 데이터베이스 비밀번호는 'sunset456'이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [
+       "'star123'"
+      ],
+      "obsolete_values": [
+       "'sunset456'"
+      ],
+      "other_values": [
+       "'sunset456'"
+      ]
+     }
+    },
+    {
+     "index": 78,
+     "reasons": [
+      "프로젝트 이름 누리이 다른 사례와 겹친다",
+      "프로젝트 이름 별빛이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "누리 프로젝트의 고객 담당자 전화번호는 010-1234-5678이야.",
+       "별빛 프로젝트의 고객 담당자 전화번호는 010-8765-4321이야.",
+       "누리 프로젝트의 고객 담당자 전화번호만 기억에서 지워 줘. 별빛 프로젝트는 그대로 둬."
+      ],
+      "question": "누리 프로젝트의 고객 담당자 전화번호를 기억해?",
+      "expected": "누리 프로젝트의 고객 담당자 전화번호는 삭제되어 알 수 없다.",
+      "obsolete": "누리 프로젝트의 고객 담당자 전화번호는 010-1234-5678이다.",
+      "second": [
+       "별빛 프로젝트의 고객 담당자 전화번호는?",
+       "별빛 프로젝트의 고객 담당자 전화번호는 010-8765-4321이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "010-1234-5678"
+      ],
+      "other_values": [
+       "010-8765-4321"
+      ]
+     }
+    },
+    {
+     "index": 79,
+     "reasons": [
+      "프로젝트 이름 누리이 다른 사례와 겹친다"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "누리 프로젝트의 테스트용 계정 아이디를 'test01'으로 설정해 줘.",
+       "빛솔 프로젝트의 테스트용 계정 아이디는 'test02'야.",
+       "누리 프로젝트의 테스트용 계정 아이디 기억만 삭제해 줘. 빛솔 프로젝트는 그대로 둬."
+      ],
+      "question": "누리 프로젝트의 테스트용 계정 아이디를 기억해?",
+      "expected": "누리 프로젝트의 테스트용 계정 아이디는 삭제되어 알 수 없다.",
+      "obsolete": "누리 프로젝트의 테스트용 계정 아이디는 'test01'이다.",
+      "second": [
+       "빛솔 프로젝트의 테스트용 계정 아이디는?",
+       "빛솔 프로젝트의 테스트용 계정 아이디는 'test02'이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "test01"
+      ],
+      "other_values": [
+       "test02"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "round": 4,
+   "failing": [
+    {
+     "index": 78,
+     "reasons": [
+      "금지 소재 '숲'가 들어 있다",
+      "값이 다른 사례와 겹친다(192.168.1.10)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "이슬 프로젝트의 서버 IP 주소를 192.168.1.10으로 기억해 줘.",
+       "그리고 숲길 프로젝트의 서버 IP 주소는 10.0.0.5로 저장해.",
+       "이슬 프로젝트의 IP 주소 기억만 삭제해 줘. 숲길 프로젝트는 그대로 둬."
+      ],
+      "question": "이슬 프로젝트의 서버 IP 주소를 기억해?",
+      "expected": "이슬 프로젝트의 서버 IP 주소는 삭제되어 알 수 없다.",
+      "obsolete": "이슬 프로젝트의 서버 IP 주소는 192.168.1.10이다.",
+      "second": [
+       "숲길 프로젝트의 서버 IP 주소는?",
+       "숲길 프로젝트의 서버 IP 주소는 10.0.0.5이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "192.168.1.10"
+      ],
+      "other_values": [
+       "10.0.0.5"
+      ]
+     }
+    },
+    {
+     "index": 79,
+     "reasons": [
+      "값이 다른 사례와 겹친다(192.168.1.10)",
+      "값이 다른 사례와 겹친다(192.168.1.10, 10.0.0.5)"
+     ],
+     "row": {
+      "category": "project_isolation",
+      "variant": "delete_one",
+      "turns": [
+       "안녕, 해솔 프로젝트의 테스트 서버 주소를 기억해 줘. 주소는 192.168.1.10이야.",
+       "그리고 별빛 프로젝트의 테스트 서버 주소는 10.0.0.5야.",
+       "해솔 프로젝트의 서버 주소 기억만 삭제해 줘. 별빛 프로젝트는 그대로 둬."
+      ],
+      "question": "해솔 프로젝트의 테스트 서버 주소를 기억해?",
+      "expected": "해솔 프로젝트의 테스트 서버 주소는 삭제되어 알 수 없다.",
+      "obsolete": "해솔 프로젝트의 테스트 서버 주소는 192.168.1.10이다.",
+      "second": [
+       "별빛 프로젝트의 테스트 서버 주소는?",
+       "별빛 프로젝트의 테스트 서버 주소는 10.0.0.5이다."
+      ],
+      "forbidden_value": null,
+      "current_values": [],
+      "obsolete_values": [
+       "192.168.1.10"
+      ],
+      "other_values": [
+       "10.0.0.5"
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-09-15T05:47:27.625Z"
+}

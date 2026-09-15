@@ -1,0 +1,412 @@
+{
+ "memory-ko-01": {
+  "variant": "stable",
+  "current_values": [
+   "보리차"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ "memory-ko-02": {
+  "variant": "deadline",
+  "current_values": [
+   "7월 18일"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "7월 12일"
+  ]
+ },
+ "memory-ko-03": {
+  "variant": "correction",
+  "current_values": [
+   "63세트"
+  ],
+  "obsolete_values": [
+   "36세트"
+  ],
+  "other_values": []
+ },
+ "memory-ko-04": {
+  "variant": "chain",
+  "current_values": [
+   "오후 1시"
+  ],
+  "obsolete_values": [
+   "오전 10시",
+   "오전 11시"
+  ],
+  "other_values": []
+ },
+ "memory-ko-05": {
+  "variant": "forget",
+  "current_values": [],
+  "obsolete_values": [
+   "달빛상자"
+  ],
+  "other_values": []
+ },
+ "memory-ko-06": {
+  "variant": "cancel_one",
+  "current_values": [
+   "일요일 사진 수업"
+  ],
+  "obsolete_values": [
+   "토요일 도예 수업"
+  ],
+  "other_values": []
+ },
+ "memory-ko-07": {
+  "variant": "quotation",
+  "current_values": [
+   "이메일"
+  ],
+  "obsolete_values": [
+   "문자"
+  ],
+  "other_values": []
+ },
+ "memory-ko-08": {
+  "variant": "hypothetical",
+  "current_values": [
+   "거실"
+  ],
+  "obsolete_values": [
+   "안방"
+  ],
+  "other_values": []
+ },
+ "memory-ko-09": {
+  "variant": "coexist",
+  "current_values": [
+   "재즈",
+   "전자음악"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ "memory-ko-10": {
+  "variant": "unchanged",
+  "current_values": [
+   "종이 출력본"
+  ],
+  "obsolete_values": [
+   "태블릿"
+  ],
+  "other_values": []
+ },
+ "memory-ko-11": {
+  "variant": "former",
+  "current_values": [
+   "민호"
+  ],
+  "obsolete_values": [
+   "수진"
+  ],
+  "other_values": []
+ },
+ "memory-ko-12": {
+  "variant": "at_time",
+  "current_values": [
+   "4천 원"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "6천 원"
+  ]
+ },
+ "memory-ko-13": {
+  "variant": "different",
+  "current_values": [
+   "유나"
+  ],
+  "obsolete_values": [
+   "태호"
+  ],
+  "other_values": [
+   "태호"
+  ]
+ },
+ "memory-ko-14": {
+  "variant": "delete_one",
+  "current_values": [],
+  "obsolete_values": [
+   "사내 게시판"
+  ],
+  "other_values": [
+   "소식지"
+  ]
+ },
+ "memory-en-01": {
+  "variant": "stable",
+  "current_values": [
+   "window seat"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ "memory-en-02": {
+  "variant": "deadline",
+  "current_values": [
+   "August 6"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ "memory-en-03": {
+  "variant": "correction",
+  "current_values": [
+   "75 minutes"
+  ],
+  "obsolete_values": [
+   "45 minutes"
+  ],
+  "other_values": []
+ },
+ "memory-en-04": {
+  "variant": "chain",
+  "current_values": [
+   "west office"
+  ],
+  "obsolete_values": [
+   "north office",
+   "east office"
+  ],
+  "other_values": []
+ },
+ "memory-en-05": {
+  "variant": "forget",
+  "current_values": [],
+  "obsolete_values": [
+   "amber canoe"
+  ],
+  "other_values": []
+ },
+ "memory-en-06": {
+  "variant": "cancel_one",
+  "current_values": [
+   "Wednesday swimming lesson"
+  ],
+  "obsolete_values": [
+   "Monday language lesson"
+  ],
+  "other_values": []
+ },
+ "memory-en-07": {
+  "variant": "quotation",
+  "current_values": [
+   "CSV"
+  ],
+  "obsolete_values": [
+   "PDF"
+  ],
+  "other_values": []
+ },
+ "memory-en-08": {
+  "variant": "hypothetical",
+  "current_values": [
+   "basement"
+  ],
+  "obsolete_values": [
+   "shed"
+  ],
+  "other_values": []
+ },
+ "memory-en-09": {
+  "variant": "coexist",
+  "current_values": [
+   "printed novels",
+   "audiobooks"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ "memory-en-10": {
+  "variant": "unchanged",
+  "current_values": [
+   "short written agendas"
+  ],
+  "obsolete_values": [
+   "video agendas"
+  ],
+  "other_values": []
+ },
+ "memory-en-11": {
+  "variant": "former",
+  "current_values": [
+   "Mateo"
+  ],
+  "obsolete_values": [
+   "Priya"
+  ],
+  "other_values": []
+ },
+ "memory-en-12": {
+  "variant": "at_time",
+  "current_values": [
+   "21 days"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "14 days"
+  ]
+ },
+ "memory-en-13": {
+  "variant": "different",
+  "current_values": [
+   "violet"
+  ],
+  "obsolete_values": [
+   "orange"
+  ],
+  "other_values": [
+   "orange"
+  ]
+ },
+ "memory-en-14": {
+  "variant": "delete_one",
+  "current_values": [],
+  "obsolete_values": [
+   "Tuesdays"
+  ],
+  "other_values": [
+   "Fridays"
+  ]
+ },
+ "memory-ja-01": {
+  "variant": "stable",
+  "current_values": [
+   "かぼちゃのスープ"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ "memory-ja-02": {
+  "variant": "deadline",
+  "current_values": [
+   "9月14日"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ "memory-ja-03": {
+  "variant": "correction",
+  "current_values": [
+   "82部"
+  ],
+  "obsolete_values": [
+   "28部"
+  ],
+  "other_values": []
+ },
+ "memory-ja-04": {
+  "variant": "chain",
+  "current_values": [
+   "北口"
+  ],
+  "obsolete_values": [
+   "南口",
+   "中央口"
+  ],
+  "other_values": []
+ },
+ "memory-ja-05": {
+  "variant": "forget",
+  "current_values": [],
+  "obsolete_values": [
+   "青い風車"
+  ],
+  "other_values": []
+ },
+ "memory-ja-06": {
+  "variant": "cancel_one",
+  "current_values": [
+   "木曜の料理教室"
+  ],
+  "obsolete_values": [
+   "火曜の書道教室"
+  ],
+  "other_values": []
+ },
+ "memory-ja-07": {
+  "variant": "quotation",
+  "current_values": [
+   "チャット"
+  ],
+  "obsolete_values": [
+   "電話"
+  ],
+  "other_values": []
+ },
+ "memory-ja-08": {
+  "variant": "hypothetical",
+  "current_values": [
+   "廊下の棚"
+  ],
+  "obsolete_values": [
+   "屋根裏"
+  ],
+  "other_values": []
+ },
+ "memory-ja-09": {
+  "variant": "coexist",
+  "current_values": [
+   "無糖の紅茶",
+   "ココア"
+  ],
+  "obsolete_values": [],
+  "other_values": []
+ },
+ "memory-ja-10": {
+  "variant": "unchanged",
+  "current_values": [
+   "紙の地図"
+  ],
+  "obsolete_values": [
+   "地図アプリ"
+  ],
+  "other_values": []
+ },
+ "memory-ja-11": {
+  "variant": "former",
+  "current_values": [
+   "蓮さん"
+  ],
+  "obsolete_values": [
+   "葵さん"
+  ],
+  "other_values": []
+ },
+ "memory-ja-12": {
+  "variant": "at_time",
+  "current_values": [
+   "3"
+  ],
+  "obsolete_values": [],
+  "other_values": [
+   "5"
+  ]
+ },
+ "memory-ja-13": {
+  "variant": "different",
+  "current_values": [
+   "美咲さん"
+  ],
+  "obsolete_values": [
+   "大地さん"
+  ],
+  "other_values": [
+   "大地さん"
+  ]
+ },
+ "memory-ja-14": {
+  "variant": "delete_one",
+  "current_values": [],
+  "obsolete_values": [
+   "音声"
+  ],
+  "other_values": [
+   "文章"
+  ]
+ }
+}

@@ -1,0 +1,91 @@
+{
+ "cases": 42,
+ "cases_with": {
+  "not_superseded": 5,
+  "wrong_supersession": 2,
+  "unmatched": 7,
+  "deletion_not_applied": 2
+ },
+ "detail": {
+  "memory-ko-04": {
+   "not_superseded": [
+    "오전 10시",
+    "오전 11시"
+   ]
+  },
+  "memory-ko-09": {
+   "wrong_supersession": [
+    "재즈"
+   ]
+  },
+  "memory-ko-12": {
+   "unmatched": [
+    "4천 원"
+   ]
+  },
+  "memory-en-02": {
+   "unmatched": [
+    "August 6"
+   ]
+  },
+  "memory-en-03": {
+   "unmatched": [
+    "75 minutes"
+   ],
+   "not_superseded": [
+    "45 minutes"
+   ]
+  },
+  "memory-en-04": {
+   "not_superseded": [
+    "east office"
+   ]
+  },
+  "memory-en-05": {
+   "deletion_not_applied": [
+    "amber canoe"
+   ]
+  },
+  "memory-en-06": {
+   "unmatched": [
+    "Wednesday swimming lesson"
+   ]
+  },
+  "memory-en-14": {
+   "deletion_not_applied": [
+    "Tuesdays"
+   ]
+  },
+  "memory-ja-02": {
+   "unmatched": [
+    "9月14日"
+   ]
+  },
+  "memory-ja-03": {
+   "not_superseded": [
+    "28部"
+   ]
+  },
+  "memory-ja-04": {
+   "not_superseded": [
+    "南口",
+    "中央口"
+   ]
+  },
+  "memory-ja-06": {
+   "unmatched": [
+    "木曜の料理教室"
+   ]
+  },
+  "memory-ja-07": {
+   "unmatched": [
+    "チャット"
+   ]
+  },
+  "memory-ja-10": {
+   "wrong_supersession": [
+    "紙の地図"
+   ]
+  }
+ }
+}
