@@ -77,15 +77,18 @@ async function seededSystem() {
 	return { adapter, system };
 }
 
-describe("latest-mode retired episode filter", () => {
-	it("drops an episode whose derived facts are all retired and keeps the rest", async () => {
+describe("latest-mode deleted episode filter", () => {
+	it("keeps an episode whose fact was only superseded and drops one whose fact was deleted", async () => {
 		const { system } = await seededSystem();
 		try {
 			const { episodes } = await system.recall("recording", { project: "p", topK: 10 });
 			const ids = episodes.map((e) => e.id);
-			expect(ids).not.toContain("e-old");
+			// e-old's fact was superseded: a wrong supersession would otherwise lose
+			// the only record of the value, so the utterance stays visible.
+			expect(ids).toContain("e-old");
 			expect(ids).toContain("e-new");
 			expect(ids).toContain("e-plain");
+			// e-mixed has an archived (deleted) fact but also anchors a live fact.
 			expect(ids).toContain("e-mixed");
 		} finally {
 			await system.close();
@@ -122,7 +125,7 @@ describe("latest-mode retired episode filter", () => {
 		}
 	});
 
-	it("drops an episode inherited by a live successor that is not its anchor", async () => {
+	it("keeps superseded chain episodes and drops every source of a deleted chain", async () => {
 		const adapter = new LocalAdapter(join(rootDir, `store-${randomUUID()}.json`));
 		const system = new MemorySystem({ adapter, consolidationIntervalMs: 0 });
 		await system.init();
@@ -135,10 +138,15 @@ describe("latest-mode retired episode filter", () => {
 			await adapter.semantic.upsert(fact("v2", "meeting start: 11 am", ["e1", "e2"], "superseded", { validTo: now + 2, supersedes: "v1" }));
 			await adapter.semantic.upsert(fact("v3", "meeting start: 1 pm", ["e1", "e2", "e3"], "active", { supersedes: "v2" }));
 			const { episodes } = await system.recall("meeting", { project: "p", topK: 10 });
-			const ids = episodes.map((e) => e.id);
-			expect(ids).toEqual(["e3"]);
+			expect(episodes.map((e) => e.id).sort()).toEqual(["e1", "e2", "e3"]);
+			await adapter.episode.store(episode("e4", "forget the meeting time entirely", now + 3));
+			await adapter.semantic.upsert(fact("v3", "meeting start: 1 pm", ["e1", "e2", "e3"], "archived", { supersedes: "v2", validTo: now + 3 }));
+			const afterDelete = await system.recall("meeting", { project: "p", topK: 10 });
+			expect(afterDelete.episodes.map((e) => e.id)).not.toContain("e1");
+			expect(afterDelete.episodes.map((e) => e.id)).not.toContain("e2");
+			expect(afterDelete.episodes.map((e) => e.id)).not.toContain("e3");
 			const history = await system.recall("meeting", { project: "p", topK: 10, mode: "history" });
-			expect(history.episodes.map((e) => e.id).sort()).toEqual(["e1", "e2", "e3"]);
+			expect(history.episodes.map((e) => e.id).sort()).toEqual(["e1", "e2", "e3", "e4"]);
 		} finally {
 			await system.close();
 		}

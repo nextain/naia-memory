@@ -400,12 +400,18 @@ export abstract class MemorySystemCore {
 	): Promise<Episode[]> {
 		const wanted = new Set(episodes.map((episode) => episode.id));
 		const now = Date.now();
-		const derived = new Set<string>();
+		// Only deletion retires an episode. An episode whose facts were merely
+		// superseded stays visible: when the supersession was wrong (same label,
+		// different context) the original utterance is the only record of the
+		// lost value (Korean confirmation set, preferences/coexist).
+		const deleted = new Set<string>();
 		const anchors = new Set<string>();
 		for (const fact of await this.adapter.semantic.getAll()) {
 			const sources = fact.sourceEpisodes ?? [];
-			for (const episodeId of sources) {
-				if (wanted.has(episodeId)) derived.add(episodeId);
+			if (fact.status === "archived") {
+				for (const episodeId of sources) {
+					if (wanted.has(episodeId)) deleted.add(episodeId);
+				}
 			}
 			const live =
 				(fact.status ?? "active") === "active" &&
@@ -414,7 +420,7 @@ export abstract class MemorySystemCore {
 			if (live && anchor !== undefined && wanted.has(anchor)) anchors.add(anchor);
 		}
 		return episodes.filter(
-			(episode) => !derived.has(episode.id) || anchors.has(episode.id),
+			(episode) => !deleted.has(episode.id) || anchors.has(episode.id),
 		);
 	}
 
