@@ -1,0 +1,94 @@
+{
+  "runId": "exploratory-kc-splitfilter-20260915",
+  "stage": "capture",
+  "backend": "azure",
+  "startedAt": "2026-09-15T09:06:53.280Z",
+  "finishedAt": "2026-09-15T09:20:24.156Z",
+  "manifestSha": "507307b191de2c3fc2d656c43c09febf4515c888e804e40d225603f1867b21a1",
+  "provenance": {
+    "commit": "82e7d5dd08244ca05a2ef26f8b8ac5ca26149c4f",
+    "srcDirty": false,
+    "node": "v26.7.0",
+    "host": "bazzite"
+  },
+  "models": {
+    "lite": "gpt-5-4-nano",
+    "judge": "deepseek-v4-flash",
+    "embedding": "multilingual-e5-base"
+  },
+  "embeddingSpaceId": "offline:Xenova/multilingual-e5-base@1ec9243030a27d1a115d5c340572074c125b58b2:dims=768:dtype=q8:mean-normalized:query-passage-v2",
+  "embeddingPolicy": {
+    "model": "Xenova/multilingual-e5-base",
+    "revision": "1ec9243030a27d1a115d5c340572074c125b58b2",
+    "dtype": "q8",
+    "dimensions": 768,
+    "queryPrefix": "query: ",
+    "passagePrefix": "passage: ",
+    "pooling": "mean",
+    "normalize": true,
+    "tokenizerMaxLength": 512,
+    "truncation": true,
+    "titleConcatenation": "provider-receives-precomposed-text"
+  },
+  "embeddingWarmupMs": 811,
+  "embeddingProbe": {
+    "firstCaseQueryVectorSha": "7059e2516f2af53a4db1ac851c965ce210175f92dfbed7ec17d983612b205190"
+  },
+  "onnxThreads": "default",
+  "cases": 120,
+  "perLanguage": null,
+  "rows": 648,
+  "replay": {
+    "file": "../ko-before/reports/quality/candidate-kc-20260915/run-before/capture-raw-provider.jsonl",
+    "sha256": "3567ffff835dfc59ec3f0288e7c490ba1a0d2d66fc788866db9602c379bf1e58",
+    "recorded": 120,
+    "hits": 120
+  },
+  "census": {
+    "expectedRows": 648,
+    "reopensPerNaiaArm": 60,
+    "physicalExtraction": 0,
+    "physicalDeleteVerification": 19,
+    "physicalAnswers": 647
+  },
+  "extractionFailures": [
+    {
+      "caseId": "memory-ko-023",
+      "code": "http",
+      "message": "LLM fact extraction failed with HTTP 429"
+    },
+    {
+      "caseId": "memory-ko-043",
+      "code": "delete-ungrounded",
+      "message": "LLM fact extraction episode 2 delete rejected: target-lacks-value-and-identity"
+    },
+    {
+      "caseId": "memory-ko-046",
+      "code": "delete-ungrounded",
+      "message": "LLM fact extraction episode 2 delete rejected: target-lacks-value-and-identity"
+    },
+    {
+      "caseId": "memory-ko-051",
+      "code": "delete-ungrounded",
+      "message": "LLM fact extraction episode 2 delete rejected: polarity-not-affirmed,subject-missing,property-missing,value-missing"
+    },
+    {
+      "caseId": "memory-ko-111",
+      "code": "delete-ungrounded",
+      "message": "LLM fact extraction episode 3 delete rejected: evidence-not-whole-episode"
+    }
+  ],
+  "totals": {
+    "requests": 697,
+    "inputTokens": 137600,
+    "outputTokens": 23677,
+    "reasoningTokens": 0
+  },
+  "censusChecks": {
+    "rows": true,
+    "extractionPerCase": true,
+    "contradictionFilterCalls": 31,
+    "contradictionFilterNon200": 0,
+    "llmFilterFallbacks": 0
+  }
+}
