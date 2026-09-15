@@ -1,0 +1,184 @@
+[
+  {
+    "caseId": "memory-ko-05",
+    "rejectedAtParse": [],
+    "deletes": [
+      {
+        "content": "사용자 창고 출입 암호: 달빛상자",
+        "structured": {
+          "subject": "사용자",
+          "property": "창고 출입 암호",
+          "subjectId": "person:self",
+          "propertyId": "preference:tool",
+          "value": "달빛상자",
+          "polarity": "affirmed",
+          "cardinality": "single",
+          "provenance": "extractor"
+        },
+        "grounded": true,
+        "candidates": 0,
+        "candidateValues": [],
+        "earlierFacts": [
+          {
+            "content": "사용자 창고 출입 암호: 달빛상자",
+            "structured": null
+          },
+          {
+            "content": "사용자 창고 출입 암호(테스트용): 가상 암호",
+            "structured": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "caseId": "memory-en-05",
+    "rejectedAtParse": [
+      "LLM fact extraction episode 2 delete rejected: target-not-in-episode"
+    ],
+    "deletes": []
+  },
+  {
+    "caseId": "memory-ja-05",
+    "rejectedAtParse": [],
+    "deletes": [
+      {
+        "content": "架空の貸金庫の合言葉: 『青い風車』",
+        "structured": {
+          "subject": "ユーザー",
+          "property": "貸金庫の合言葉",
+          "subjectId": "person:self",
+          "propertyId": "preference:tool",
+          "value": "『青い風車』",
+          "polarity": "affirmed",
+          "cardinality": "single",
+          "provenance": "extractor"
+        },
+        "grounded": true,
+        "candidates": 0,
+        "candidateValues": [],
+        "earlierFacts": [
+          {
+            "content": "架空の貸金庫の合言葉: 『青い風車』",
+            "structured": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "caseId": "memory-ko-14",
+    "rejectedAtParse": [
+      "LLM fact extraction episode 3 delete rejected: target-lacks-value-and-identity"
+    ],
+    "deletes": []
+  },
+  {
+    "caseId": "memory-en-14",
+    "rejectedAtParse": [
+      "LLM fact extraction episode 3 delete rejected: target-lacks-value-and-identity"
+    ],
+    "deletes": []
+  },
+  {
+    "caseId": "memory-ja-14",
+    "rejectedAtParse": [
+      "LLM fact extraction episode 3 delete rejected: target-lacks-value-and-identity"
+    ],
+    "deletes": []
+  },
+  {
+    "caseId": "memory-ko-06",
+    "rejectedAtParse": [],
+    "deletes": [
+      {
+        "content": "사용자 계획 활동: 토요일 도예 수업 신청 취소",
+        "structured": {
+          "subject": "사용자",
+          "property": "계획 활동",
+          "subjectId": "person:self",
+          "propertyId": "plan:activity",
+          "value": "토요일 도예 수업",
+          "polarity": "affirmed",
+          "cardinality": "single",
+          "provenance": "extractor"
+        },
+        "grounded": true,
+        "candidates": 1,
+        "candidateValues": [
+          "토요일 도예 수업"
+        ],
+        "earlierFacts": [
+          {
+            "content": "사용자 계획 활동: 토요일 도예 수업 신청",
+            "structured": "person:self|plan:activity|계획 활동|토요일 도예 수업"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "caseId": "memory-en-06",
+    "rejectedAtParse": [],
+    "deletes": [
+      {
+        "content": "User canceled the Monday language lesson.",
+        "structured": {
+          "subject": "User",
+          "property": "plan:activity",
+          "subjectId": "person:self",
+          "propertyId": "plan:activity",
+          "value": "Monday language lesson",
+          "polarity": "affirmed",
+          "cardinality": "single",
+          "provenance": "extractor"
+        },
+        "grounded": true,
+        "candidates": 1,
+        "candidateValues": [
+          "Monday language lesson"
+        ],
+        "earlierFacts": [
+          {
+            "content": "User booked a Monday language lesson.",
+            "structured": "person:self|plan:activity|plan:activity|Monday language lesson"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "caseId": "memory-ja-06",
+    "rejectedAtParse": [],
+    "deletes": [
+      {
+        "content": "User canceled the Tuesday calligraphy class.",
+        "structured": {
+          "subject": "User",
+          "property": "plan:activity",
+          "subjectId": "person:self",
+          "propertyId": "plan:activity",
+          "value": "火曜の書道教室",
+          "polarity": "affirmed",
+          "cardinality": "single",
+          "provenance": "extractor"
+        },
+        "grounded": true,
+        "candidates": 1,
+        "candidateValues": [
+          "火曜の書道教室"
+        ],
+        "earlierFacts": [
+          {
+            "content": "User reserved a calligraphy class on Tuesday.",
+            "structured": "person:self|plan:activity|plan:activity|火曜の書道教室"
+          },
+          {
+            "content": "User reserved a cooking class on Thursday.",
+            "structured": "person:self|plan:activity|plan:activity|木曜の料理教室"
+          }
+        ]
+      }
+    ]
+  }
+]
