@@ -77,16 +77,14 @@ async function seededSystem() {
 	return { adapter, system };
 }
 
-describe("latest-mode retired episode filter", () => {
-	it("drops an episode whose derived facts are all retired and keeps the rest", async () => {
+describe("latest-mode retired episode ordering", () => {
+	it("moves an episode whose derived facts are all retired after the rest", async () => {
 		const { system } = await seededSystem();
 		try {
 			const { episodes } = await system.recall("recording", { project: "p", topK: 10 });
 			const ids = episodes.map((e) => e.id);
-			expect(ids).not.toContain("e-old");
-			expect(ids).toContain("e-new");
-			expect(ids).toContain("e-plain");
-			expect(ids).toContain("e-mixed");
+			expect(ids.at(-1)).toBe("e-old");
+			expect(ids.slice(0, -1).sort()).toEqual(["e-mixed", "e-new", "e-plain"]);
 		} finally {
 			await system.close();
 		}
@@ -122,7 +120,7 @@ describe("latest-mode retired episode filter", () => {
 		}
 	});
 
-	it("drops an episode inherited by a live successor that is not its anchor", async () => {
+	it("moves episodes inherited by a live successor that are not its anchor last", async () => {
 		const adapter = new LocalAdapter(join(rootDir, `store-${randomUUID()}.json`));
 		const system = new MemorySystem({ adapter, consolidationIntervalMs: 0 });
 		await system.init();
@@ -136,7 +134,8 @@ describe("latest-mode retired episode filter", () => {
 			await adapter.semantic.upsert(fact("v3", "meeting start: 1 pm", ["e1", "e2", "e3"], "active", { supersedes: "v2" }));
 			const { episodes } = await system.recall("meeting", { project: "p", topK: 10 });
 			const ids = episodes.map((e) => e.id);
-			expect(ids).toEqual(["e3"]);
+			expect(ids[0]).toBe("e3");
+			expect(ids.slice(1).sort()).toEqual(["e1", "e2"]);
 			const history = await system.recall("meeting", { project: "p", topK: 10, mode: "history" });
 			expect(history.episodes.map((e) => e.id).sort()).toEqual(["e1", "e2", "e3"]);
 		} finally {

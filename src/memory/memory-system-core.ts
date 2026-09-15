@@ -368,7 +368,7 @@ export abstract class MemorySystemCore {
 			!context.deepRecall;
 		const visibleEpisodes =
 			latestMode && episodes.length > 0
-				? await this.withoutRetiredEpisodes(episodes)
+				? await this.retiredEpisodesLast(episodes)
 				: episodes;
 
 		// R4 Step 3c — recall history ring buffer.
@@ -394,8 +394,12 @@ export abstract class MemorySystemCore {
 	 * version was written. An episode stays visible when it is the anchor of a
 	 * live fact or has no derived fact at all (the only record of what was said).
 	 * A fact is live when active and validTo is unset or later than now.
+	 *
+	 * Retired episodes are moved after the others rather than removed: an
+	 * episode can still carry a value that a wrongly superseded or archived fact
+	 * lost (candidate-az3), so it stays available when the ranking has room.
 	 */
-	protected async withoutRetiredEpisodes(
+	protected async retiredEpisodesLast(
 		episodes: Episode[],
 	): Promise<Episode[]> {
 		const wanted = new Set(episodes.map((episode) => episode.id));
@@ -413,9 +417,12 @@ export abstract class MemorySystemCore {
 			const anchor = sources.at(-1);
 			if (live && anchor !== undefined && wanted.has(anchor)) anchors.add(anchor);
 		}
-		return episodes.filter(
-			(episode) => !derived.has(episode.id) || anchors.has(episode.id),
-		);
+		const isCurrent = (episode: Episode) =>
+			!derived.has(episode.id) || anchors.has(episode.id);
+		return [
+			...episodes.filter(isCurrent),
+			...episodes.filter((episode) => !isCurrent(episode)),
+		];
 	}
 
 	/** R4 Step 3c — recall-failure-resolved detection.
