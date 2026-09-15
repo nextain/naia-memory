@@ -1,0 +1,910 @@
+{
+ "seed": 20260915,
+ "n": 10000,
+ "target_families": [
+  "memory-new-stable",
+  "memory-new-deadline",
+  "memory-preferences-coexist",
+  "memory-delete-forget",
+  "memory-project_isolation-delete_one",
+  "memory-delete-cancel_one"
+ ],
+ "paths": {
+  "naia": {
+   "primary": {
+    "target_cases": 72,
+    "difference": -28,
+    "p_one_sided": 9.999000099990002e-05,
+    "wording": "improvement observed"
+   },
+   "secondary_all_cases": {
+    "difference": -30,
+    "cluster_interval_95": {
+     "lower": -56,
+     "upper": -8
+    }
+   },
+   "hard_condition_after_wrong_archive_zero": true,
+   "counts": {
+    "before": {
+     "wrong_supersession": 30,
+     "deletion_not_applied": 19,
+     "wrong_archive": 2,
+     "not_superseded": 0,
+     "deletion_applied": 10,
+     "deletion_by_supersession": 1,
+     "obsolete_not_stored": 6,
+     "unmatched": 9,
+     "case_error": 50,
+     "target_case_error": 46
+    },
+    "after": {
+     "wrong_supersession": 11,
+     "deletion_not_applied": 10,
+     "wrong_archive": 0,
+     "not_superseded": 0,
+     "deletion_applied": 19,
+     "deletion_by_supersession": 1,
+     "obsolete_not_stored": 6,
+     "unmatched": 9,
+     "case_error": 20,
+     "target_case_error": 18
+    }
+   },
+   "by_family": {
+    "memory-contradiction-hypothetical": {
+     "before": 2,
+     "after": 1
+    },
+    "memory-contradiction-quotation": {
+     "before": 1,
+     "after": 1
+    },
+    "memory-delete-cancel_one": {
+     "before": 4,
+     "after": 5
+    },
+    "memory-delete-forget": {
+     "before": 7,
+     "after": 3
+    },
+    "memory-history-at_time": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-history-former": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-new-deadline": {
+     "before": 7,
+     "after": 0
+    },
+    "memory-new-stable": {
+     "before": 10,
+     "after": 1
+    },
+    "memory-preferences-coexist": {
+     "before": 8,
+     "after": 7
+    },
+    "memory-preferences-unchanged": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-project_isolation-delete_one": {
+     "before": 10,
+     "after": 2
+    },
+    "memory-project_isolation-different": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-update-chain": {
+     "before": 1,
+     "after": 0
+    },
+    "memory-update-correction": {
+     "before": 0,
+     "after": 0
+    }
+   },
+   "changed_cases": {
+    "memory-ko-003": {
+     "before": {
+      "wrong_supersession": [
+       "나비엔 NR-20"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-004": {
+     "before": {
+      "wrong_supersession": [
+       "보스턴"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-005": {
+     "before": {
+      "wrong_supersession": [
+       "삼천리"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-006": {
+     "before": {
+      "wrong_supersession": [
+       "케라시스 퍼퓸"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-007": {
+     "before": {
+      "wrong_supersession": [
+       "리안헤어"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-008": {
+     "before": {
+      "wrong_supersession": [
+       "나비"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-009": {
+     "before": {
+      "wrong_supersession": [
+       "국민건강보험"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-011": {
+     "before": {
+      "wrong_supersession": [
+       "빨간색 루이비통"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-012": {
+     "before": {
+      "wrong_supersession": [
+       "서울치과"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-015": {
+     "before": {
+      "wrong_supersession": [
+       "8월 15일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-017": {
+     "before": {
+      "wrong_supersession": [
+       "30일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-019": {
+     "before": {
+      "wrong_supersession": [
+       "3월 2일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-020": {
+     "before": {
+      "wrong_supersession": [
+       "오후 6시"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-021": {
+     "before": {
+      "wrong_supersession": [
+       "7일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-022": {
+     "before": {
+      "wrong_supersession": [
+       "2개월"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-024": {
+     "before": {
+      "wrong_supersession": [
+       "3일에 한 번"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-031": {
+     "before": {
+      "wrong_supersession": [
+       "2도"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-037": {
+     "before": {
+      "deletion_not_applied": [
+       "apple1234"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "apple1234"
+      ]
+     }
+    },
+    "memory-ko-040": {
+     "before": {
+      "deletion_not_applied": [
+       "'백합 3852'"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "'백합 3852'"
+      ]
+     }
+    },
+    "memory-ko-042": {
+     "before": {
+      "deletion_not_applied": [
+       "산호초123"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "산호초123"
+      ]
+     }
+    },
+    "memory-ko-048": {
+     "before": {
+      "deletion_not_applied": [
+       "5823"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "5823"
+      ]
+     }
+    },
+    "memory-ko-049": {
+     "before": {
+      "deletion_applied": [
+       "헬스장 등록"
+      ]
+     },
+     "after": {
+      "deletion_not_applied": [
+       "헬스장 등록"
+      ]
+     }
+    },
+    "memory-ko-053": {
+     "before": {
+      "wrong_archive": [
+       "자동차 보험"
+      ],
+      "deletion_applied": [
+       "화재 보험"
+      ]
+     },
+     "after": {
+      "deletion_not_applied": [
+       "화재 보험"
+      ]
+     }
+    },
+    "memory-ko-054": {
+     "before": {
+      "deletion_applied": [
+       "필라테스 클래스"
+      ]
+     },
+     "after": {
+      "deletion_not_applied": [
+       "필라테스 클래스"
+      ]
+     }
+    },
+    "memory-ko-058": {
+     "before": {
+      "wrong_archive": [
+       "수영 강습"
+      ],
+      "obsolete_not_stored": [
+       "골프 강습"
+      ]
+     },
+     "after": {
+      "obsolete_not_stored": [
+       "골프 강습"
+      ]
+     }
+    },
+    "memory-ko-071": {
+     "before": {
+      "wrong_supersession": [
+       "아이보리"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-084": {
+     "before": {
+      "wrong_supersession": [
+       "따뜻한 우유"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-109": {
+     "before": {
+      "deletion_not_applied": [
+       "'arA1234'"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "'arA1234'"
+      ]
+     }
+    },
+    "memory-ko-110": {
+     "before": {
+      "deletion_not_applied": [
+       "7531"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "7531"
+      ]
+     }
+    },
+    "memory-ko-112": {
+     "before": {
+      "deletion_not_applied": [
+       "tarae_ftp"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "tarae_ftp"
+      ]
+     }
+    },
+    "memory-ko-114": {
+     "before": {
+      "deletion_not_applied": [
+       "guest"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "guest"
+      ]
+     }
+    },
+    "memory-ko-115": {
+     "before": {
+      "deletion_not_applied": [
+       "qwerty12"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "qwerty12"
+      ]
+     }
+    },
+    "memory-ko-116": {
+     "before": {
+      "deletion_not_applied": [
+       "2020"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "2020"
+      ]
+     }
+    },
+    "memory-ko-117": {
+     "before": {
+      "deletion_not_applied": [
+       "blue123"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "blue123"
+      ]
+     }
+    },
+    "memory-ko-120": {
+     "before": {
+      "deletion_not_applied": [
+       "203.0.113.10"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "203.0.113.10"
+      ]
+     }
+    }
+   }
+  },
+  "naia-llm-filter": {
+   "primary": {
+    "target_cases": 72,
+    "difference": -29,
+    "p_one_sided": 9.999000099990002e-05,
+    "wording": "improvement observed"
+   },
+   "secondary_all_cases": {
+    "difference": -31,
+    "cluster_interval_95": {
+     "lower": -55,
+     "upper": -10
+    }
+   },
+   "hard_condition_after_wrong_archive_zero": true,
+   "counts": {
+    "before": {
+     "wrong_supersession": 30,
+     "deletion_not_applied": 19,
+     "wrong_archive": 2,
+     "not_superseded": 0,
+     "deletion_applied": 10,
+     "deletion_by_supersession": 1,
+     "obsolete_not_stored": 6,
+     "unmatched": 9,
+     "case_error": 50,
+     "target_case_error": 46
+    },
+    "after": {
+     "wrong_supersession": 12,
+     "deletion_not_applied": 8,
+     "wrong_archive": 0,
+     "not_superseded": 0,
+     "deletion_applied": 19,
+     "deletion_by_supersession": 3,
+     "obsolete_not_stored": 6,
+     "unmatched": 9,
+     "case_error": 19,
+     "target_case_error": 17
+    }
+   },
+   "by_family": {
+    "memory-contradiction-hypothetical": {
+     "before": 2,
+     "after": 1
+    },
+    "memory-contradiction-quotation": {
+     "before": 1,
+     "after": 1
+    },
+    "memory-delete-cancel_one": {
+     "before": 4,
+     "after": 3
+    },
+    "memory-delete-forget": {
+     "before": 7,
+     "after": 3
+    },
+    "memory-history-at_time": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-history-former": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-new-deadline": {
+     "before": 7,
+     "after": 1
+    },
+    "memory-new-stable": {
+     "before": 10,
+     "after": 1
+    },
+    "memory-preferences-coexist": {
+     "before": 8,
+     "after": 7
+    },
+    "memory-preferences-unchanged": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-project_isolation-delete_one": {
+     "before": 10,
+     "after": 2
+    },
+    "memory-project_isolation-different": {
+     "before": 0,
+     "after": 0
+    },
+    "memory-update-chain": {
+     "before": 1,
+     "after": 0
+    },
+    "memory-update-correction": {
+     "before": 0,
+     "after": 0
+    }
+   },
+   "changed_cases": {
+    "memory-ko-003": {
+     "before": {
+      "wrong_supersession": [
+       "나비엔 NR-20"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-004": {
+     "before": {
+      "wrong_supersession": [
+       "보스턴"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-005": {
+     "before": {
+      "wrong_supersession": [
+       "삼천리"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-006": {
+     "before": {
+      "wrong_supersession": [
+       "케라시스 퍼퓸"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-007": {
+     "before": {
+      "wrong_supersession": [
+       "리안헤어"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-008": {
+     "before": {
+      "wrong_supersession": [
+       "나비"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-009": {
+     "before": {
+      "wrong_supersession": [
+       "국민건강보험"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-011": {
+     "before": {
+      "wrong_supersession": [
+       "빨간색 루이비통"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-012": {
+     "before": {
+      "wrong_supersession": [
+       "서울치과"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-015": {
+     "before": {
+      "wrong_supersession": [
+       "8월 15일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-017": {
+     "before": {
+      "wrong_supersession": [
+       "30일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-019": {
+     "before": {
+      "wrong_supersession": [
+       "3월 2일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-021": {
+     "before": {
+      "wrong_supersession": [
+       "7일"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-022": {
+     "before": {
+      "wrong_supersession": [
+       "2개월"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-024": {
+     "before": {
+      "wrong_supersession": [
+       "3일에 한 번"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-031": {
+     "before": {
+      "wrong_supersession": [
+       "2도"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-037": {
+     "before": {
+      "deletion_not_applied": [
+       "apple1234"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "apple1234"
+      ]
+     }
+    },
+    "memory-ko-040": {
+     "before": {
+      "deletion_not_applied": [
+       "'백합 3852'"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "'백합 3852'"
+      ]
+     }
+    },
+    "memory-ko-042": {
+     "before": {
+      "deletion_not_applied": [
+       "산호초123"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "산호초123"
+      ]
+     }
+    },
+    "memory-ko-048": {
+     "before": {
+      "deletion_not_applied": [
+       "5823"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "5823"
+      ]
+     }
+    },
+    "memory-ko-049": {
+     "before": {
+      "deletion_applied": [
+       "헬스장 등록"
+      ]
+     },
+     "after": {
+      "deletion_by_supersession": [
+       "헬스장 등록"
+      ]
+     }
+    },
+    "memory-ko-053": {
+     "before": {
+      "wrong_archive": [
+       "자동차 보험"
+      ],
+      "deletion_applied": [
+       "화재 보험"
+      ]
+     },
+     "after": {
+      "deletion_not_applied": [
+       "화재 보험"
+      ]
+     }
+    },
+    "memory-ko-054": {
+     "before": {
+      "deletion_applied": [
+       "필라테스 클래스"
+      ]
+     },
+     "after": {
+      "deletion_by_supersession": [
+       "필라테스 클래스"
+      ]
+     }
+    },
+    "memory-ko-058": {
+     "before": {
+      "wrong_archive": [
+       "수영 강습"
+      ],
+      "obsolete_not_stored": [
+       "골프 강습"
+      ]
+     },
+     "after": {
+      "obsolete_not_stored": [
+       "골프 강습"
+      ]
+     }
+    },
+    "memory-ko-071": {
+     "before": {
+      "wrong_supersession": [
+       "아이보리"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-084": {
+     "before": {
+      "wrong_supersession": [
+       "따뜻한 우유"
+      ]
+     },
+     "after": {}
+    },
+    "memory-ko-109": {
+     "before": {
+      "deletion_not_applied": [
+       "'arA1234'"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "'arA1234'"
+      ]
+     }
+    },
+    "memory-ko-110": {
+     "before": {
+      "deletion_not_applied": [
+       "7531"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "7531"
+      ]
+     }
+    },
+    "memory-ko-112": {
+     "before": {
+      "deletion_not_applied": [
+       "tarae_ftp"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "tarae_ftp"
+      ]
+     }
+    },
+    "memory-ko-114": {
+     "before": {
+      "deletion_not_applied": [
+       "guest"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "guest"
+      ]
+     }
+    },
+    "memory-ko-115": {
+     "before": {
+      "deletion_not_applied": [
+       "qwerty12"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "qwerty12"
+      ]
+     }
+    },
+    "memory-ko-116": {
+     "before": {
+      "deletion_not_applied": [
+       "2020"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "2020"
+      ]
+     }
+    },
+    "memory-ko-117": {
+     "before": {
+      "deletion_not_applied": [
+       "blue123"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "blue123"
+      ]
+     }
+    },
+    "memory-ko-120": {
+     "before": {
+      "deletion_not_applied": [
+       "203.0.113.10"
+      ]
+     },
+     "after": {
+      "deletion_applied": [
+       "203.0.113.10"
+      ]
+     }
+    }
+   }
+  }
+ }
+}
