@@ -120,6 +120,24 @@ describe("latest-mode retired episode ordering", () => {
 		}
 	});
 
+	it("puts a current episode ahead of a retired one that scores higher", async () => {
+		const adapter = new LocalAdapter(join(rootDir, `store-${randomUUID()}.json`));
+		const system = new MemorySystem({ adapter, consolidationIntervalMs: 0 });
+		await system.init();
+		try {
+			await adapter.episode.store(episode("e-hot", "studio studio studio booking is Monday", now));
+			await adapter.episode.store(episode("e-cur", "the booking moved to Friday", now + 1));
+			await adapter.semantic.upsert(fact("f-hot", "studio booking: Monday", ["e-hot"], "superseded", { validTo: now + 1 }));
+			await adapter.semantic.upsert(fact("f-cur", "studio booking: Friday", ["e-hot", "e-cur"], "active", { supersedes: "f-hot" }));
+			const { episodes } = await system.recall("studio", { project: "p", topK: 10 });
+			expect(episodes.map((e) => e.id)).toEqual(["e-cur", "e-hot"]);
+			const history = await system.recall("studio", { project: "p", topK: 10, mode: "history" });
+			expect(history.episodes[0].id).toBe("e-hot");
+		} finally {
+			await system.close();
+		}
+	});
+
 	it("moves episodes inherited by a live successor that are not its anchor last", async () => {
 		const adapter = new LocalAdapter(join(rootDir, `store-${randomUUID()}.json`));
 		const system = new MemorySystem({ adapter, consolidationIntervalMs: 0 });
