@@ -109,6 +109,7 @@ export function createLocalSemanticMemory(
 						if ("validFrom" in incoming)
 							existing.validFrom = incoming.validFrom;
 						if ("validTo" in incoming) existing.validTo = incoming.validTo;
+						if ("deletedAt" in incoming) existing.deletedAt = incoming.deletedAt;
 						if ("successorId" in incoming)
 							existing.successorId = incoming.successorId;
 						if ("supersedes" in incoming)
@@ -212,6 +213,7 @@ export function createLocalSemanticMemory(
 				.facts.find((candidate) => candidate.id === id);
 			if (!fact) return false;
 			fact.status = "archived";
+			fact.deletedAt = Date.now();
 			host.markDirty();
 			host.save();
 			return true;

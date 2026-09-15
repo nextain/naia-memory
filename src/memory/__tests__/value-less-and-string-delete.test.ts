@@ -76,7 +76,9 @@ describe("value-less explicit delete naming the property", () => {
 			["structured-label", "솔 프로젝트", "배포 채널", "사내 게시판"],
 		]);
 		expect(statusOf(facts, "솔 배포 채널: 사내 게시판")).toBe("archived");
+		expect(facts.find((f) => f.content === "솔 배포 채널: 사내 게시판")?.deletedAt).toEqual(expect.any(Number));
 		expect(statusOf(facts, "숲 배포 채널: 소식지")).toBe("active");
+		expect(facts.find((f) => f.content === "숲 배포 채널: 소식지")?.deletedAt).toBeUndefined();
 		expect(decisions).toEqual([
 			expect.objectContaining({ outcome: "authorized", reasons: ["structured-label"], targetIds: [expect.any(String)] }),
 		]);

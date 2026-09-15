@@ -231,6 +231,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								status: "archived",
 								updatedAt: now,
 								validTo: now,
+								deletedAt: now,
 							}),
 						);
 						if (this.adapter.semantic.upsertMany)

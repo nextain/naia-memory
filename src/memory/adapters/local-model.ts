@@ -124,7 +124,7 @@ function isFact(value: unknown): value is Fact {
 		(value.validTo === undefined ||
 			value.validTo === null ||
 			isFiniteNumber(value.validTo)) &&
-		["maxEmotion", "validFrom", "relevanceScore"].every(
+		["maxEmotion", "validFrom", "relevanceScore", "deletedAt"].every(
 			(key) => value[key] === undefined || isFiniteNumber(value[key]),
 		) &&
 		["supersedes", "successorId"].every(

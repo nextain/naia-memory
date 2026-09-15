@@ -87,6 +87,9 @@ export interface Episode extends Record<string, unknown> {
 	 *  decay 가 strength 약화 시 'archived' 로 변경, splice X.
 	 *  default search 에서 hide. */
 	status?: "active" | "archived";
+	/** Latest-mode recall only: ids of deleted facts whose values were masked
+	 *  in this copy of the content. Never stored. */
+	redactions?: string[];
 }
 
 /** Context captured at the time of memory encoding (Tulving's encoding specificity) */
@@ -274,6 +277,9 @@ export interface Fact extends Record<string, unknown> {
 	 *  *Data preservation guarantee*: validTo replaces hard delete; the
 	 *  fact record itself is never spliced from the store. */
 	validTo?: number | null;
+	/** When the user deleted this fact. Set with status "archived" by an
+	 *  authorized delete only; decay and insight distillation leave it unset. */
+	deletedAt?: number;
 	/** Source episode IDs that contributed to this fact */
 	sourceEpisodes: string[];
 	/** Cosine similarity score from vector search (0.0–1.0, optional) */

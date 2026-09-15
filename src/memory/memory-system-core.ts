@@ -6,6 +6,7 @@ import {
 	selectFilter,
 	HeuristicContradictionFilter,
 } from "./contradiction-filter.js";
+import { redactDeletedValues } from "./episode-redaction.js";
 import { filterNegativeCapture } from "./negative-capture.js";
 import {
 	findContradictions,
@@ -394,34 +395,71 @@ export abstract class MemorySystemCore {
 	 * version was written. An episode stays visible when it is the anchor of a
 	 * live fact or has no derived fact at all (the only record of what was said).
 	 * A fact is live when active and validTo is unset or later than now.
+	 *
+	 * An episode that sources a deleted fact but anchors a live one stays
+	 * visible with the deleted values masked. When a deleted value is not said
+	 * literally in it (the extractor paraphrased), masking cannot hide it and
+	 * the episode is dropped instead. History mode never reaches this path.
 	 */
 	protected async withoutRetiredEpisodes(
 		episodes: Episode[],
 	): Promise<Episode[]> {
 		const wanted = new Set(episodes.map((episode) => episode.id));
 		const now = Date.now();
-		// Only deletion retires an episode. An episode whose facts were merely
-		// superseded stays visible: when the supersession was wrong (same label,
-		// different context) the original utterance is the only record of the
-		// lost value (Korean confirmation set, preferences/coexist).
-		const deleted = new Set<string>();
+		// Only a user deletion retires an episode. An episode whose facts were
+		// merely superseded stays visible: when the supersession was wrong (same
+		// label, different context) the original utterance is the only record of
+		// the lost value (Korean confirmation set, preferences/coexist). Decay and
+		// insight distillation also archive facts but leave deletedAt unset.
+		const deleted = new Map<string, { factId: string; value: string }[]>();
+		const liveValues = new Map<string, string[]>();
 		const anchors = new Set<string>();
+		const valueOf = (fact: Fact) => fact.structured?.value ?? fact.content;
 		for (const fact of await this.adapter.semantic.getAll()) {
-			const sources = fact.sourceEpisodes ?? [];
-			if (fact.status === "archived") {
+			const sources = (fact.sourceEpisodes ?? []).filter((id) => wanted.has(id));
+			if (fact.status === "archived" && typeof fact.deletedAt === "number") {
 				for (const episodeId of sources) {
-					if (wanted.has(episodeId)) deleted.add(episodeId);
+					const list = deleted.get(episodeId) ?? [];
+					list.push({ factId: fact.id, value: valueOf(fact) });
+					deleted.set(episodeId, list);
 				}
 			}
 			const live =
 				(fact.status ?? "active") === "active" &&
 				(fact.validTo === undefined || fact.validTo === null || fact.validTo > now);
-			const anchor = sources.at(-1);
-			if (live && anchor !== undefined && wanted.has(anchor)) anchors.add(anchor);
+			if (!live) continue;
+			for (const episodeId of sources) {
+				const list = liveValues.get(episodeId) ?? [];
+				list.push(valueOf(fact));
+				liveValues.set(episodeId, list);
+			}
+			const anchor = fact.sourceEpisodes?.at(-1);
+			if (anchor !== undefined && wanted.has(anchor)) anchors.add(anchor);
 		}
-		return episodes.filter(
-			(episode) => !deleted.has(episode.id) || anchors.has(episode.id),
-		);
+		const visible: Episode[] = [];
+		for (const episode of episodes) {
+			const retired = deleted.get(episode.id);
+			if (!retired) {
+				visible.push(episode);
+				continue;
+			}
+			if (!anchors.has(episode.id)) continue;
+			const values = retired.map((entry) => entry.value);
+			const live = liveValues.get(episode.id) ?? [];
+			const content = redactDeletedValues(episode.content, values, live);
+			if (content.missing > 0) continue;
+			if (content.redacted === 0) {
+				visible.push(episode);
+				continue;
+			}
+			visible.push({
+				...episode,
+				content: content.content,
+				summary: redactDeletedValues(episode.summary ?? "", values, live).content,
+				redactions: [...new Set(retired.map((entry) => entry.factId))],
+			});
+		}
+		return visible;
 	}
 
 	/** R4 Step 3c — recall-failure-resolved detection.
