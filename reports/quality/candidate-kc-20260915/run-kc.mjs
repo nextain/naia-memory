@@ -265,9 +265,11 @@ export function loadExtractionReplay(file) {
   const replay = new Map();
   for (const line of fs.readFileSync(file, "utf8").split("\n").filter(Boolean)) {
     const entry = JSON.parse(line);
-    if (!REPLAYED_OPERATIONS.includes(entry.operation) || entry.status !== 200) continue;
+    // Failed responses (e.g. HTTP 429 no_capacity) are replayed too, so the after
+    // run sees exactly the extraction outcome the before run saw. When the
+    // product retried, the last recorded attempt is the one it acted on.
+    if (!REPLAYED_OPERATIONS.includes(entry.operation)) continue;
     const key = replayKey(entry.operation, entry.caseId, entry.requestMessages);
-    assertCondition(!replay.has(key), `duplicate recorded ${entry.operation} for ${entry.caseId}`);
     replay.set(key, { status: entry.status, responseText: entry.responseText });
   }
   return replay;

@@ -168,7 +168,7 @@
   },
   "runner": {
     "file": "reports/quality/candidate-kc-20260915/run-kc.mjs",
-    "sha256": "8d2b0e4e383ab35a39e8ec8b54ee0692ce16cf7ed09e11a9d775e5b20b089fd5"
+    "sha256": "a889dc6dbce4c7a4506f073b51c79fd122bc1367df249359529019503cb2b075"
   },
   "invalidity": [
     "before run: physical extraction calls != 84, or extraction call failures beyond the extraction gate",
@@ -234,5 +234,17 @@
     "case_ids": "three-digit case ids (memory-ko-001..120) outside the development schema's two-digit pattern; the runner does not validate that pattern."
   },
   "review": "Fable 2026-09-15: fixed and executable after regenerating rows 8/55/88/110 with reseal, security test pass, runner sha, design_change_basis heading, cancel_one prediction clause, value-mismatch recording",
-  "design_change_basis": "On the first Korean set the 14-family cluster bootstrap put the upper bound at 0 because the effect sits in a few families; a mechanism-targeted subset with a paired permutation test is registered instead. The first set is development-exposed; an exploratory run of this analysis on it is committed as ko-confirm-20260915/calibration-firstset-r3check.json and is not evidence."
+  "design_change_basis": "On the first Korean set the 14-family cluster bootstrap put the upper bound at 0 because the effect sits in a few families; a mechanism-targeted subset with a paired permutation test is registered instead. The first set is development-exposed; an exploratory run of this analysis on it is committed as ko-confirm-20260915/calibration-firstset-r3check.json and is not evidence.",
+  "deviations": [
+    {
+      "at": "2026-09-15 17:10 KST",
+      "before_any_after_result": true,
+      "what": "Replay loader now also replays non-200 recorded extraction responses (last attempt per request).",
+      "why": "The before run's extraction for memory-ko-023 failed with Azure HTTP 429 no_capacity (within the registered extraction failure gate of 2). The frozen loader replayed only status-200 responses, so the after run aborted at ko-023 on a replay miss, as designed. Replaying the recorded failure gives the after product the identical extraction outcome, which is what the pairing requires.",
+      "runner_sha256_frozen": "8d2b0e4e383ab35a39e8ec8b54ee0692ce16cf7ed09e11a9d775e5b20b089fd5",
+      "runner_sha256_amended": "a889dc6dbce4c7a4506f073b51c79fd122bc1367df249359529019503cb2b075",
+      "effect": "memory-ko-023 is an extraction failure in both runs (engine failure rows in the naia arms of both); no other case changes. The aborted after-run directory was discarded without reading any fact state.",
+      "before_run": "unchanged (completed with the frozen runner; its capture was not inspected beyond the census and the failure record)"
+    }
+  ]
 }
