@@ -385,33 +385,37 @@ export abstract class MemorySystemCore {
 	}
 
 	/**
-	 * Drop episodes whose derived facts exist and are all retired (superseded,
-	 * archived, or past validTo). An episode with no derived fact is the only
-	 * record of what was said and stays visible. An episode with at least one
-	 * live derived fact stays visible.
+	 * Drop episodes that are no longer the source of any live fact's current
+	 * version. A successor fact inherits its predecessors' sourceEpisodes (the
+	 * consolidation duplicate merge, structured supersession and encode-time
+	 * supersession all build `[...inherited, ...new]`), so "derived from a live
+	 * fact" alone would keep the cancelled episode. The anchor of a live fact is
+	 * the last element of its sourceEpisodes, i.e. the episode added when that
+	 * version was written. An episode stays visible when it is the anchor of a
+	 * live fact or has no derived fact at all (the only record of what was said).
+	 * A fact is live when active and validTo is unset or later than now.
 	 */
 	protected async withoutRetiredEpisodes(
 		episodes: Episode[],
 	): Promise<Episode[]> {
 		const wanted = new Set(episodes.map((episode) => episode.id));
 		const now = Date.now();
-		const derived = new Map<string, { live: number; total: number }>();
+		const derived = new Set<string>();
+		const anchors = new Set<string>();
 		for (const fact of await this.adapter.semantic.getAll()) {
+			const sources = fact.sourceEpisodes ?? [];
+			for (const episodeId of sources) {
+				if (wanted.has(episodeId)) derived.add(episodeId);
+			}
 			const live =
 				(fact.status ?? "active") === "active" &&
 				(fact.validTo === undefined || fact.validTo === null || fact.validTo > now);
-			for (const episodeId of fact.sourceEpisodes ?? []) {
-				if (!wanted.has(episodeId)) continue;
-				const entry = derived.get(episodeId) ?? { live: 0, total: 0 };
-				entry.total += 1;
-				if (live) entry.live += 1;
-				derived.set(episodeId, entry);
-			}
+			const anchor = sources.at(-1);
+			if (live && anchor !== undefined && wanted.has(anchor)) anchors.add(anchor);
 		}
-		return episodes.filter((episode) => {
-			const entry = derived.get(episode.id);
-			return !entry || entry.live > 0;
-		});
+		return episodes.filter(
+			(episode) => !derived.has(episode.id) || anchors.has(episode.id),
+		);
 	}
 
 	/** R4 Step 3c — recall-failure-resolved detection.
