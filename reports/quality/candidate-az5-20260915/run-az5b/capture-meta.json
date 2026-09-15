@@ -1,0 +1,66 @@
+{
+  "runId": "candidate-az5b-20260915",
+  "stage": "capture",
+  "backend": "azure",
+  "startedAt": "2026-09-15T01:30:21.782Z",
+  "finishedAt": "2026-09-15T01:34:31.240Z",
+  "manifestSha": "d0cb8bfce95c797ee6c8b00b7949f503e2d8cb6ef439530d641ad1eb12478f66",
+  "provenance": {
+    "commit": "5a89523e94a1864cd9afa6acb469c73d79136675",
+    "srcDirty": false,
+    "node": "v26.7.0",
+    "host": "bazzite"
+  },
+  "models": {
+    "lite": "gpt-5-4-nano",
+    "judge": "deepseek-v4-flash",
+    "embedding": "multilingual-e5-base"
+  },
+  "embeddingSpaceId": "offline:Xenova/multilingual-e5-base@1ec9243030a27d1a115d5c340572074c125b58b2:dims=768:dtype=q8:mean-normalized:query-passage-v2",
+  "embeddingPolicy": {
+    "model": "Xenova/multilingual-e5-base",
+    "revision": "1ec9243030a27d1a115d5c340572074c125b58b2",
+    "dtype": "q8",
+    "dimensions": 768,
+    "queryPrefix": "query: ",
+    "passagePrefix": "passage: ",
+    "pooling": "mean",
+    "normalize": true,
+    "tokenizerMaxLength": 512,
+    "truncation": true,
+    "titleConcatenation": "provider-receives-precomposed-text"
+  },
+  "embeddingWarmupMs": 730,
+  "embeddingProbe": {
+    "firstCaseQueryVectorSha": "3a781ca63e819236a8ddf11f0ccefed5d6a0499ac1e6d8bcfcb6fda1bd1fe050"
+  },
+  "onnxThreads": "default",
+  "cases": 42,
+  "perLanguage": null,
+  "rows": 228,
+  "replay": {
+    "file": "reports/quality/candidate-az3-20260915/run/capture-raw-provider.jsonl",
+    "sha256": "ef074cb079f8fd322dd47e6a854be79c20d6cf4841014b959dc523250702d542",
+    "recorded": 42,
+    "hits": 42
+  },
+  "census": {
+    "expectedRows": 228,
+    "reopensPerNaiaArm": 21,
+    "physicalExtraction": 0,
+    "physicalDeleteVerification": 3,
+    "physicalAnswers": 228
+  },
+  "extractionFailures": [],
+  "totals": {
+    "requests": 231,
+    "inputTokens": 38510,
+    "outputTokens": 6293,
+    "reasoningTokens": 0
+  },
+  "censusChecks": {
+    "rows": true,
+    "physicalExtractionIsZero": true,
+    "replayHitsEqualCases": true
+  }
+}
