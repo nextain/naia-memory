@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "frozen": false,
-  "frozen_at": null,
+  "frozen": true,
+  "frozen_at": "2026-09-15",
   "registered_before_any_provider_result": true,
   "owner_decisions": {
     "2026-09-15": [
@@ -146,7 +146,7 @@
   ],
   "runner": {
     "file": "reports/quality/candidate-az5-20260915/run-az5.mjs",
-    "sha256": null
+    "sha256": "34eead9c7fcd6234198732415d06551de913f5a9b56853fe03405f0effbbb4fe"
   },
   "stop_rules": [
     "One frozen capture and one judge pass. Fixtures are not edited after results.",
@@ -233,7 +233,13 @@
       "right_outcome_wrong_path": [
         "ja-06 Tuesday calligraphy superseded by Thursday cooking (same episode)"
       ]
-    }
+    },
+    "split": {
+      "i_superseded": "retirements by supersession: replayed extraction plus the deterministic heuristic contradiction filter, fully attributed to the rules",
+      "ii_archived": "retirements by deletion: live deepseek-v4-flash delete verification; reported separately with receipts and not attributed to the rules",
+      "delete_verification_physical_calls": "recorded per run; not an invalidity condition"
+    },
+    "procedure_order": "the analyze.py listing is judged and written before score.json is opened; the order is recorded in the result notes"
   },
   "predictions": {
     "registered_before_az5_results": true,
@@ -264,7 +270,12 @@
     "risk_registered": "ja-10: the active 'tried map app' fact may push answers toward the false_or_foreign 'prefers map app' proposition",
     "answer_level": "direction only, descriptive: ko-01 q1, ko-02 q1, ja-09 q1 expected correct in az5b. Answers and judge are live, so row flips outside the predicted rows are read against simple-vector row flips between az5a and az5b as the noise reference",
     "observational": "all-category wrong retirement count is published next to the unchanged rubric gates; the rubric is not changed",
-    "interpretation_lock": "Fact-state differences az3->az5a are attributed to the same-episode rule and the reverted filter has no fact-state effect (recall only); az5a->az5b differences to the category identity rule. Answer-level aggregates are not attributed. Known limit of the category rule: a category update restated with a different label (e.g. another language) is not replaced."
+    "interpretation_lock": "Applies to split (i) only. Fact-state (i) differences az3->az5a are attributed to the same-episode rule (the reverted filter acts on recall only); az5a->az5b to the category identity rule. Split (ii) and answer-level aggregates are not attributed. Determinism basis: mock dry-runs with the verifier denying reproduced az3 fact states outside the predicted rows."
   },
-  "review": "pending Fable fixed-and-executable verdict"
+  "review": "Fable 2026-09-15: fixed and executable, no blockers; applied: (i)/(ii) split with interpretation lock on (i), heuristic-path scope limit, generic-label residual, listing-before-score order, sameSingleIdentity follow-up",
+  "scope_limits": {
+    "measured_path": "Only the heuristic contradiction filter path is measured: fallbackFacts are filled only when contradictionFilter.name !== 'heuristic' (structured-mutation-policy.ts). On the product default path (LLM contradiction filter) facts of the same subject can still be replaced by the LLM verdict, which the category rule does not govern. az5 cannot show that wrong replacement is prevented on that path.",
+    "generic_label_residual": "The category rule is powerless when the extractor emits the ID itself or a generic word as the label ('plan:activity', '계획 활동'): the labels match and replacement proceeds. Examples already seen: ja-06 (label = ID) and the mock-denied ko-06 branch (Saturday pottery replaced by Sunday photo class, both '계획 활동'). Such rows are a registered residual, not a rule failure.",
+    "follow_up_not_in_az5": "structured-mutation-policy sameSingleIdentity still uses ID-only identity, so an untrusted (assistant/tool) fact meeting an active fact under the same category ID with a different label is blocked as structured_conflict_denied. Not changed here to keep attribution; benchmark turns are all user turns."
+  }
 }
