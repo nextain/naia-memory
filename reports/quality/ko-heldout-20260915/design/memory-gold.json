@@ -35,7 +35,15 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "stable",
+        "current_values": [
+          "3월 14일"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-02",
@@ -71,7 +79,15 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "stable",
+        "current_values": [
+          "초코"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-03",
@@ -107,7 +123,15 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "stable",
+        "current_values": [
+          "코미디"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-04",
@@ -143,7 +167,15 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "stable",
+        "current_values": [
+          "이번 주 금요일"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-05",
@@ -179,7 +211,15 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "stable",
+        "current_values": [
+          "흰색 아반떼"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-06",
@@ -215,7 +255,15 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "stable",
+        "current_values": [
+          "50만 원"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-07",
@@ -251,7 +299,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "deadline",
+        "current_values": [
+          "3월 15일"
+        ],
+        "obsolete_values": [],
+        "other_values": [
+          "3월 20일"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-08",
@@ -287,7 +345,15 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "deadline",
+        "current_values": [
+          "5월 31일"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-09",
@@ -323,7 +389,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "deadline",
+        "current_values": [
+          "4월 7일"
+        ],
+        "obsolete_values": [],
+        "other_values": [
+          "4월 10일"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-10",
@@ -359,7 +435,15 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "deadline",
+        "current_values": [
+          "2월 28일"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-11",
@@ -395,7 +479,15 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "deadline",
+        "current_values": [
+          "6월 1일"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-12",
@@ -431,7 +523,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "deadline",
+        "current_values": [
+          "7월 15일"
+        ],
+        "obsolete_values": [],
+        "other_values": [
+          "8월 10일"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-13",
@@ -479,7 +581,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "correction",
+        "current_values": [
+          "지민이"
+        ],
+        "obsolete_values": [
+          "지후"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-14",
@@ -527,7 +639,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "correction",
+        "current_values": [
+          "04568"
+        ],
+        "obsolete_values": [
+          "04567"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-15",
@@ -575,7 +697,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "correction",
+        "current_values": [
+          "35만 원"
+        ],
+        "obsolete_values": [
+          "25만 원"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-16",
@@ -623,7 +755,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "correction",
+        "current_values": [
+          "오후 3시"
+        ],
+        "obsolete_values": [
+          "오후 2시"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-17",
@@ -671,7 +813,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "correction",
+        "current_values": [
+          "초록색"
+        ],
+        "obsolete_values": [
+          "파란색"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-18",
@@ -719,14 +871,24 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "correction",
+        "current_values": [
+          "10월 22일"
+        ],
+        "obsolete_values": [
+          "10월 15일"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-19",
       "propositions": [
         {
           "id": "p1",
-          "text": "요가 강좌는 오후 4시 수업이다.",
+          "text": "오늘 점심 메뉴는 비빔밥이다.",
           "status": "current",
           "project": "memory-ko-19-a",
           "source_event_ids": [
@@ -738,7 +900,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "요가 강좌는 오전 10시 수업이다 또는 요가 강좌는 오후 2시 수업이다",
+          "text": "오늘 점심 메뉴는 파스타이다 또는 오늘 점심 메뉴는 김치찌개이다",
           "status": "stale",
           "project": "memory-ko-19-a",
           "source_event_ids": [
@@ -750,7 +912,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "요가 강좌는 오후 4시 수업이다.",
+          "expected_answer": "오늘 점심 메뉴는 비빔밥이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -768,7 +930,18 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "chain",
+        "current_values": [
+          "비빔밥"
+        ],
+        "obsolete_values": [
+          "파스타",
+          "김치찌개"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-20",
@@ -817,7 +990,18 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "chain",
+        "current_values": [
+          "708호"
+        ],
+        "obsolete_values": [
+          "301호",
+          "502호"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-21",
@@ -866,7 +1050,18 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "chain",
+        "current_values": [
+          "바닐라 라테"
+        ],
+        "obsolete_values": [
+          "카페라테",
+          "아메리카노"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-22",
@@ -915,7 +1110,18 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "chain",
+        "current_values": [
+          "금요일"
+        ],
+        "obsolete_values": [
+          "월요일",
+          "수요일"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-23",
@@ -964,14 +1170,25 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "chain",
+        "current_values": [
+          "VIP"
+        ],
+        "obsolete_values": [
+          "실버",
+          "골드"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-24",
       "propositions": [
         {
           "id": "p1",
-          "text": "미용실 예약 시간은 오후 3시이다.",
+          "text": "동아리 월 회비는 5만원이다.",
           "status": "current",
           "project": "memory-ko-24-a",
           "source_event_ids": [
@@ -983,7 +1200,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "미용실 예약 시간은 오전 11시이다 또는 미용실 예약 시간은 오후 1시이다",
+          "text": "동아리 월 회비는 2만원이다 또는 동아리 월 회비는 3만원이다.",
           "status": "stale",
           "project": "memory-ko-24-a",
           "source_event_ids": [
@@ -995,7 +1212,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "미용실 예약 시간은 오후 3시이다.",
+          "expected_answer": "동아리 월 회비는 5만원이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -1013,7 +1230,18 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "chain",
+        "current_values": [
+          "5만원"
+        ],
+        "obsolete_values": [
+          "2만원",
+          "3만원"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-25",
@@ -1064,7 +1292,15 @@
             "호박고구마123"
           ]
         }
-      ]
+      ],
+      "values": {
+        "variant": "forget",
+        "current_values": [],
+        "obsolete_values": [
+          "호박고구마123"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-26",
@@ -1115,7 +1351,15 @@
             "7283"
           ]
         }
-      ]
+      ],
+      "values": {
+        "variant": "forget",
+        "current_values": [],
+        "obsolete_values": [
+          "7283"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-27",
@@ -1166,7 +1410,15 @@
             "열쇠고리2024"
           ]
         }
-      ]
+      ],
+      "values": {
+        "variant": "forget",
+        "current_values": [],
+        "obsolete_values": [
+          "열쇠고리2024"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-28",
@@ -1217,7 +1469,15 @@
             "5842"
           ]
         }
-      ]
+      ],
+      "values": {
+        "variant": "forget",
+        "current_values": [],
+        "obsolete_values": [
+          "5842"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-29",
@@ -1268,7 +1528,15 @@
             "별빛사탕"
           ]
         }
-      ]
+      ],
+      "values": {
+        "variant": "forget",
+        "current_values": [],
+        "obsolete_values": [
+          "별빛사탕"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-30",
@@ -1319,7 +1587,15 @@
             "달빛공원77"
           ]
         }
-      ]
+      ],
+      "values": {
+        "variant": "forget",
+        "current_values": [],
+        "obsolete_values": [
+          "달빛공원77"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-31",
@@ -1397,7 +1673,17 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "cancel_one",
+        "current_values": [
+          "'더 씨'"
+        ],
+        "obsolete_values": [
+          "'더 문'"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-32",
@@ -1475,7 +1761,17 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "cancel_one",
+        "current_values": [
+          "B구역"
+        ],
+        "obsolete_values": [
+          "A구역"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-33",
@@ -1553,7 +1849,17 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "cancel_one",
+        "current_values": [
+          "필라테스"
+        ],
+        "obsolete_values": [
+          "요가"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-34",
@@ -1631,7 +1937,17 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "cancel_one",
+        "current_values": [
+          "오후 2시 미팅"
+        ],
+        "obsolete_values": [
+          "오전 10시 미팅"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-35",
@@ -1709,14 +2025,24 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "cancel_one",
+        "current_values": [
+          "안과"
+        ],
+        "obsolete_values": [
+          "치과"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-36",
       "propositions": [
         {
           "id": "p1",
-          "text": "다음 주 헬스 PT는 금요일입니다.",
+          "text": "이번 주 치과 예약이 있다.",
           "status": "current",
           "project": "memory-ko-36-a",
           "source_event_ids": [
@@ -1727,7 +2053,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "다음 주 헬스 PT는 수요일과 금요일입니다.",
+          "text": "이번 주 피부과 예약도 있다.",
           "status": "deleted",
           "project": "memory-ko-36-a",
           "source_event_ids": [
@@ -1737,7 +2063,7 @@
         },
         {
           "id": "p2",
-          "text": "아니요, 수요일 PT는 취소되었습니다.",
+          "text": "아니요. 피부과 예약은 취소되었다.",
           "status": "current",
           "project": "memory-ko-36-a",
           "source_event_ids": [
@@ -1749,7 +2075,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "다음 주 헬스 PT는 금요일입니다.",
+          "expected_answer": "이번 주 치과 예약이 있다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -1769,7 +2095,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "아니요, 수요일 PT는 취소되었습니다.",
+          "expected_answer": "아니요. 피부과 예약은 취소되었다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -1787,7 +2113,17 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "cancel_one",
+        "current_values": [
+          "치과 예약"
+        ],
+        "obsolete_values": [
+          "피부과 예약"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-37",
@@ -1835,208 +2171,26 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "quotation",
+        "current_values": [
+          "한식"
+        ],
+        "obsolete_values": [
+          "일식"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-38",
       "propositions": [
         {
           "id": "p1",
-          "text": "네, 당신은 아침형 인간입니다.",
-          "status": "current",
-          "project": "memory-ko-38-a",
-          "source_event_ids": [
-            "e1",
-            "e2"
-          ],
-          "critical": true
-        },
-        {
-          "id": "p_obsolete",
-          "text": "당신은 새벽까지 깨어 있습니다.",
-          "status": "false_or_foreign",
-          "project": "memory-ko-38-a",
-          "source_event_ids": [
-            "e1"
-          ],
-          "critical": true
-        }
-      ],
-      "queries": [
-        {
-          "query_id": "q1",
-          "expected_answer": "네, 당신은 아침형 인간입니다.",
-          "required_proposition_ids": [
-            "p1"
-          ],
-          "forbidden_proposition_ids": [
-            "p_obsolete"
-          ],
-          "requires_abstention_about_value": false,
-          "denominators": {
-            "answer_correctness": true,
-            "current_at_k": true,
-            "stale_exposure": true,
-            "deletion_leakage": false,
-            "project_leakage": false,
-            "false_overwrite": true,
-            "critical_reversal": true
-          }
-        }
-      ]
-    },
-    {
-      "case_id": "memory-ko-39",
-      "propositions": [
-        {
-          "id": "p1",
-          "text": "네, 당신은 에세이를 더 좋아합니다.",
-          "status": "current",
-          "project": "memory-ko-39-a",
-          "source_event_ids": [
-            "e1",
-            "e2"
-          ],
-          "critical": true
-        },
-        {
-          "id": "p_obsolete",
-          "text": "당신은 소설을 더 좋아합니다.",
-          "status": "false_or_foreign",
-          "project": "memory-ko-39-a",
-          "source_event_ids": [
-            "e1"
-          ],
-          "critical": true
-        }
-      ],
-      "queries": [
-        {
-          "query_id": "q1",
-          "expected_answer": "네, 당신은 에세이를 더 좋아합니다.",
-          "required_proposition_ids": [
-            "p1"
-          ],
-          "forbidden_proposition_ids": [
-            "p_obsolete"
-          ],
-          "requires_abstention_about_value": false,
-          "denominators": {
-            "answer_correctness": true,
-            "current_at_k": true,
-            "stale_exposure": true,
-            "deletion_leakage": false,
-            "project_leakage": false,
-            "false_overwrite": true,
-            "critical_reversal": true
-          }
-        }
-      ]
-    },
-    {
-      "case_id": "memory-ko-40",
-      "propositions": [
-        {
-          "id": "p1",
-          "text": "네, 당신은 주말마다 등산을 갑니다.",
-          "status": "current",
-          "project": "memory-ko-40-a",
-          "source_event_ids": [
-            "e1",
-            "e2"
-          ],
-          "critical": true
-        },
-        {
-          "id": "p_obsolete",
-          "text": "당신은 요즘 등산을 가지 않습니다.",
-          "status": "false_or_foreign",
-          "project": "memory-ko-40-a",
-          "source_event_ids": [
-            "e1"
-          ],
-          "critical": true
-        }
-      ],
-      "queries": [
-        {
-          "query_id": "q1",
-          "expected_answer": "네, 당신은 주말마다 등산을 갑니다.",
-          "required_proposition_ids": [
-            "p1"
-          ],
-          "forbidden_proposition_ids": [
-            "p_obsolete"
-          ],
-          "requires_abstention_about_value": false,
-          "denominators": {
-            "answer_correctness": true,
-            "current_at_k": true,
-            "stale_exposure": true,
-            "deletion_leakage": false,
-            "project_leakage": false,
-            "false_overwrite": true,
-            "critical_reversal": true
-          }
-        }
-      ]
-    },
-    {
-      "case_id": "memory-ko-41",
-      "propositions": [
-        {
-          "id": "p1",
-          "text": "네, 당신은 고양이를 키웁니다.",
-          "status": "current",
-          "project": "memory-ko-41-a",
-          "source_event_ids": [
-            "e1",
-            "e2"
-          ],
-          "critical": true
-        },
-        {
-          "id": "p_obsolete",
-          "text": "당신은 개를 키웁니다.",
-          "status": "false_or_foreign",
-          "project": "memory-ko-41-a",
-          "source_event_ids": [
-            "e1"
-          ],
-          "critical": true
-        }
-      ],
-      "queries": [
-        {
-          "query_id": "q1",
-          "expected_answer": "네, 당신은 고양이를 키웁니다.",
-          "required_proposition_ids": [
-            "p1"
-          ],
-          "forbidden_proposition_ids": [
-            "p_obsolete"
-          ],
-          "requires_abstention_about_value": false,
-          "denominators": {
-            "answer_correctness": true,
-            "current_at_k": true,
-            "stale_exposure": true,
-            "deletion_leakage": false,
-            "project_leakage": false,
-            "false_overwrite": true,
-            "critical_reversal": true
-          }
-        }
-      ]
-    },
-    {
-      "case_id": "memory-ko-42",
-      "propositions": [
-        {
-          "id": "p1",
           "text": "사용자는 매운 음식을 좋아한다.",
           "status": "current",
-          "project": "memory-ko-42-a",
+          "project": "memory-ko-38-a",
           "source_event_ids": [
             "e1",
             "e2"
@@ -2045,9 +2199,9 @@
         },
         {
           "id": "p_obsolete",
-          "text": "사용자는 매운 음식을 못 먹는다.",
+          "text": "사용자는 매운 음식을 싫어한다.",
           "status": "false_or_foreign",
-          "project": "memory-ko-42-a",
+          "project": "memory-ko-38-a",
           "source_event_ids": [
             "e1"
           ],
@@ -2075,7 +2229,249 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "quotation",
+        "current_values": [
+          "매운 음식을 좋아해"
+        ],
+        "obsolete_values": [
+          "매운 음식 싫어하지"
+        ],
+        "other_values": []
+      }
+    },
+    {
+      "case_id": "memory-ko-39",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "사용자는 매일 아침에 샤워를 한다.",
+          "status": "current",
+          "project": "memory-ko-39-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "사용자는 저녁에만 샤워를 한다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-39-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "사용자는 매일 아침에 샤워를 한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ],
+      "values": {
+        "variant": "quotation",
+        "current_values": [
+          "매일 아침에 샤워를 해"
+        ],
+        "obsolete_values": [
+          "아침에 안 씻고 저녁에만 샤워한다"
+        ],
+        "other_values": []
+      }
+    },
+    {
+      "case_id": "memory-ko-40",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "사용자가 가장 좋아하는 아이스크림 종류는 샤베트이다.",
+          "status": "current",
+          "project": "memory-ko-40-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "사용자가 가장 좋아하는 아이스크림 종류는 초코이다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-40-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "사용자가 가장 좋아하는 아이스크림 종류는 샤베트이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ],
+      "values": {
+        "variant": "quotation",
+        "current_values": [
+          "샤베트"
+        ],
+        "obsolete_values": [
+          "초코"
+        ],
+        "other_values": []
+      }
+    },
+    {
+      "case_id": "memory-ko-41",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "나는 평일에 자전거 타는 것을 가장 좋아한다.",
+          "status": "current",
+          "project": "memory-ko-41-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "나는 평일에 자전거 타는 것을 싫어한다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-41-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "나는 평일에 자전거 타는 것을 가장 좋아한다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ],
+      "values": {
+        "variant": "quotation",
+        "current_values": [
+          "자전거 타는 게 제일 좋아"
+        ],
+        "obsolete_values": [
+          "자전거 타는 걸 싫어한다고"
+        ],
+        "other_values": []
+      }
+    },
+    {
+      "case_id": "memory-ko-42",
+      "propositions": [
+        {
+          "id": "p1",
+          "text": "내가 가장 좋아하는 계절은 여름이다.",
+          "status": "current",
+          "project": "memory-ko-42-a",
+          "source_event_ids": [
+            "e1",
+            "e2"
+          ],
+          "critical": true
+        },
+        {
+          "id": "p_obsolete",
+          "text": "내가 가장 좋아하는 계절은 겨울이다.",
+          "status": "false_or_foreign",
+          "project": "memory-ko-42-a",
+          "source_event_ids": [
+            "e1"
+          ],
+          "critical": true
+        }
+      ],
+      "queries": [
+        {
+          "query_id": "q1",
+          "expected_answer": "내가 가장 좋아하는 계절은 여름이다.",
+          "required_proposition_ids": [
+            "p1"
+          ],
+          "forbidden_proposition_ids": [
+            "p_obsolete"
+          ],
+          "requires_abstention_about_value": false,
+          "denominators": {
+            "answer_correctness": true,
+            "current_at_k": true,
+            "stale_exposure": true,
+            "deletion_leakage": false,
+            "project_leakage": false,
+            "false_overwrite": true,
+            "critical_reversal": true
+          }
+        }
+      ],
+      "values": {
+        "variant": "quotation",
+        "current_values": [
+          "여름"
+        ],
+        "obsolete_values": [
+          "겨울"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-43",
@@ -2123,14 +2519,24 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "hypothetical",
+        "current_values": [
+          "재택 근무"
+        ],
+        "obsolete_values": [
+          "출근"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-44",
       "propositions": [
         {
           "id": "p1",
-          "text": "우리 동네 카페는 아직 영업 중이다.",
+          "text": "지금 방 온도는 24도이다.",
           "status": "current",
           "project": "memory-ko-44-a",
           "source_event_ids": [
@@ -2141,7 +2547,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "우리 동네 카페는 문을 닫았다.",
+          "text": "방 온도가 18도이다.",
           "status": "false_or_foreign",
           "project": "memory-ko-44-a",
           "source_event_ids": [
@@ -2153,7 +2559,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "우리 동네 카페는 아직 영업 중이다.",
+          "expected_answer": "지금 방 온도는 24도이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -2171,7 +2577,17 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "hypothetical",
+        "current_values": [
+          "24도"
+        ],
+        "obsolete_values": [
+          "18도"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-45",
@@ -2219,14 +2635,24 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "hypothetical",
+        "current_values": [
+          "집에"
+        ],
+        "obsolete_values": [
+          "공항에"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-46",
       "propositions": [
         {
           "id": "p1",
-          "text": "우리 아들은 현재 초등학교 3학년이다.",
+          "text": "나는 지금 집에서 재택근무 중이다.",
           "status": "current",
           "project": "memory-ko-46-a",
           "source_event_ids": [
@@ -2237,7 +2663,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "우리 아들은 초등학교 4학년이다.",
+          "text": "나는 지금 사무실에서 출근 중이다.",
           "status": "false_or_foreign",
           "project": "memory-ko-46-a",
           "source_event_ids": [
@@ -2249,7 +2675,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "우리 아들은 현재 초등학교 3학년이다.",
+          "expected_answer": "나는 지금 집에서 재택근무 중이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -2267,14 +2693,24 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "hypothetical",
+        "current_values": [
+          "집"
+        ],
+        "obsolete_values": [
+          "사무실"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-47",
       "propositions": [
         {
           "id": "p1",
-          "text": "내 핸드폰 요금제는 월 5만 원이다.",
+          "text": "지금 쓰는 휴대폰은 갤럭시이다.",
           "status": "current",
           "project": "memory-ko-47-a",
           "source_event_ids": [
@@ -2285,7 +2721,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "내 핸드폰 요금제는 월 7만 원이다.",
+          "text": "지금 쓰는 휴대폰이 아이폰이다.",
           "status": "false_or_foreign",
           "project": "memory-ko-47-a",
           "source_event_ids": [
@@ -2297,7 +2733,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "내 핸드폰 요금제는 월 5만 원이다.",
+          "expected_answer": "지금 쓰는 휴대폰은 갤럭시이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -2315,7 +2751,17 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "hypothetical",
+        "current_values": [
+          "갤럭시"
+        ],
+        "obsolete_values": [
+          "아이폰"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-48",
@@ -2363,7 +2809,17 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "hypothetical",
+        "current_values": [
+          "제주도로 여행 가기로 했어"
+        ],
+        "obsolete_values": [
+          "취소할 수도 있겠지"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-49",
@@ -2399,14 +2855,23 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "coexist",
+        "current_values": [
+          "카페에서 책 읽는 걸",
+          "집에서 넷플릭스 보는 게"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-50",
       "propositions": [
         {
           "id": "p1",
-          "text": "점심으로는 김치찌개를 주로 먹고, 아침에는 간단히 토스트를 먹는다.",
+          "text": "비 오는 날에는 집에서 영화 보는 것을 좋아하고, 눈 오는 날에는 밖에 나가서 사진 찍는 것을 좋아한다.",
           "status": "current",
           "project": "memory-ko-50-a",
           "source_event_ids": [
@@ -2419,7 +2884,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "점심으로는 김치찌개를 주로 먹고, 아침에는 간단히 토스트를 먹는다.",
+          "expected_answer": "비 오는 날에는 집에서 영화 보는 것을 좋아하고, 눈 오는 날에는 밖에 나가서 사진 찍는 것을 좋아한다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -2435,7 +2900,16 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "coexist",
+        "current_values": [
+          "집에서 영화 보는 게 좋아",
+          "밖에 나가서 사진 찍는 게 좋아"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-51",
@@ -2471,7 +2945,16 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "coexist",
+        "current_values": [
+          "달리기",
+          "요가 동작"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-52",
@@ -2507,7 +2990,16 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "coexist",
+        "current_values": [
+          "늦잠 자는 게 좋아",
+          "공원 산책이 좋아"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-53",
@@ -2543,7 +3035,16 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "coexist",
+        "current_values": [
+          "아이스커피",
+          "따뜻한 코코아"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-54",
@@ -2579,7 +3080,16 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "coexist",
+        "current_values": [
+          "지하철을 타는 게 편해",
+          "버스가 좋아"
+        ],
+        "obsolete_values": [],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-55",
@@ -2627,7 +3137,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "unchanged",
+        "current_values": [
+          "차"
+        ],
+        "obsolete_values": [
+          "커피"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-56",
@@ -2675,7 +3195,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "unchanged",
+        "current_values": [
+          "이어폰"
+        ],
+        "obsolete_values": [
+          "헤드폰"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-57",
@@ -2723,7 +3253,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "unchanged",
+        "current_values": [
+          "집에서 쉬는 걸"
+        ],
+        "obsolete_values": [
+          "놀러 가자고"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-58",
@@ -2771,14 +3311,24 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "unchanged",
+        "current_values": [
+          "게스트하우스"
+        ],
+        "obsolete_values": [
+          "호텔"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-59",
       "propositions": [
         {
           "id": "p1",
-          "text": "나는 수영을 더 좋아한다.",
+          "text": "사용자가 가장 좋아하는 술은 맥주이다.",
           "status": "current",
           "project": "memory-ko-59-a",
           "source_event_ids": [
@@ -2789,7 +3339,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "새 운동화를 샀으므로 달리기를 더 좋아한다.",
+          "text": "사용자가 가장 좋아하는 술은 소주이다.",
           "status": "false_or_foreign",
           "project": "memory-ko-59-a",
           "source_event_ids": [
@@ -2801,7 +3351,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "나는 수영을 더 좋아한다.",
+          "expected_answer": "사용자가 가장 좋아하는 술은 맥주이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -2819,7 +3369,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "unchanged",
+        "current_values": [
+          "맥주"
+        ],
+        "obsolete_values": [
+          "소주"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-60",
@@ -2867,7 +3427,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "unchanged",
+        "current_values": [
+          "밥"
+        ],
+        "obsolete_values": [
+          "빵"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-61",
@@ -2943,7 +3513,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "former",
+        "current_values": [
+          "박민호"
+        ],
+        "obsolete_values": [
+          "김수지"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-62",
@@ -3019,7 +3599,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "former",
+        "current_values": [
+          "최윤호 선생님"
+        ],
+        "obsolete_values": [
+          "이지영 선생님"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-63",
@@ -3095,7 +3685,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "former",
+        "current_values": [
+          "삼성 그랑데 12kg"
+        ],
+        "obsolete_values": [
+          "LG 트롬 9kg"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-64",
@@ -3171,7 +3771,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "former",
+        "current_values": [
+          "프리미엄"
+        ],
+        "obsolete_values": [
+          "스탠다드"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-65",
@@ -3247,7 +3857,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "former",
+        "current_values": [
+          "박지은 대표님"
+        ],
+        "obsolete_values": [
+          "김영수 대표님"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-66",
@@ -3323,7 +3943,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "former",
+        "current_values": [
+          "KT"
+        ],
+        "obsolete_values": [
+          "SK텔레콤"
+        ],
+        "other_values": []
+      }
     },
     {
       "case_id": "memory-ko-67",
@@ -3386,7 +4016,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "at_time",
+        "current_values": [
+          "지수"
+        ],
+        "obsolete_values": [],
+        "other_values": [
+          "민수"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-68",
@@ -3449,7 +4089,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "at_time",
+        "current_values": [
+          "3만 5천 원"
+        ],
+        "obsolete_values": [],
+        "other_values": [
+          "4만 원"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-69",
@@ -3512,7 +4162,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "at_time",
+        "current_values": [
+          "파워짐"
+        ],
+        "obsolete_values": [],
+        "other_values": [
+          "피트니스존"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-70",
@@ -3575,7 +4235,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "at_time",
+        "current_values": [
+          "78나 9012"
+        ],
+        "obsolete_values": [],
+        "other_values": [
+          "12가 3456"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-71",
@@ -3638,7 +4308,17 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "at_time",
+        "current_values": [
+          "2층 B구역"
+        ],
+        "obsolete_values": [],
+        "other_values": [
+          "3층 A구역"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-72",
@@ -3701,14 +4381,24 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "at_time",
+        "current_values": [
+          "포토샵"
+        ],
+        "obsolete_values": [],
+        "other_values": [
+          "라이트룸"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-73",
       "propositions": [
         {
           "id": "p1",
-          "text": "바람 프로젝트의 예산은 500만 원이다.",
+          "text": "솔솔 프로젝트의 로고 색상은 파랑이다.",
           "status": "current",
           "project": "memory-ko-73-a",
           "source_event_ids": [
@@ -3718,7 +4408,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "바람 프로젝트의 예산은 800만 원이다.",
+          "text": "솔솔 프로젝트의 로고 색상은 초록이다.",
           "status": "false_or_foreign",
           "project": "memory-ko-73-a",
           "source_event_ids": [
@@ -3728,7 +4418,7 @@
         },
         {
           "id": "p2",
-          "text": "노을 프로젝트의 예산은 800만 원이다.",
+          "text": "봄봄 프로젝트의 로고 색상은 초록이다.",
           "status": "current",
           "project": "memory-ko-73-b",
           "source_event_ids": [
@@ -3740,7 +4430,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "바람 프로젝트의 예산은 500만 원이다.",
+          "expected_answer": "솔솔 프로젝트의 로고 색상은 파랑이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -3760,7 +4450,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "노을 프로젝트의 예산은 800만 원이다.",
+          "expected_answer": "봄봄 프로젝트의 로고 색상은 초록이다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -3778,14 +4468,26 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "different",
+        "current_values": [
+          "파랑"
+        ],
+        "obsolete_values": [
+          "초록"
+        ],
+        "other_values": [
+          "초록"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-74",
       "propositions": [
         {
           "id": "p1",
-          "text": "달빛 프로젝트의 팀장은 민수이다.",
+          "text": "초롱 프로젝트의 발표 자료 형식은 PDF이다.",
           "status": "current",
           "project": "memory-ko-74-a",
           "source_event_ids": [
@@ -3795,7 +4497,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "달빛 프로젝트의 팀장은 지영이다.",
+          "text": "초롱 프로젝트의 발표 자료 형식은 PPT이다.",
           "status": "false_or_foreign",
           "project": "memory-ko-74-a",
           "source_event_ids": [
@@ -3805,7 +4507,7 @@
         },
         {
           "id": "p2",
-          "text": "햇살 프로젝트의 팀장은 지영이다.",
+          "text": "미르 프로젝트의 발표 자료 형식은 PPT이다.",
           "status": "current",
           "project": "memory-ko-74-b",
           "source_event_ids": [
@@ -3817,7 +4519,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "달빛 프로젝트의 팀장은 민수이다.",
+          "expected_answer": "초롱 프로젝트의 발표 자료 형식은 PDF이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -3837,7 +4539,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "햇살 프로젝트의 팀장은 지영이다.",
+          "expected_answer": "미르 프로젝트의 발표 자료 형식은 PPT이다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -3855,14 +4557,26 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "different",
+        "current_values": [
+          "PDF"
+        ],
+        "obsolete_values": [
+          "PPT"
+        ],
+        "other_values": [
+          "PPT"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-75",
       "propositions": [
         {
           "id": "p1",
-          "text": "구름 프로젝트의 마감일은 12월 15일이다.",
+          "text": "비안 프로젝트의 출시일은 9월 15일이다.",
           "status": "current",
           "project": "memory-ko-75-a",
           "source_event_ids": [
@@ -3872,7 +4586,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "구름 프로젝트의 마감일은 1월 20일이다.",
+          "text": "비안 프로젝트의 출시일은 11월 20일이다.",
           "status": "false_or_foreign",
           "project": "memory-ko-75-a",
           "source_event_ids": [
@@ -3882,7 +4596,7 @@
         },
         {
           "id": "p2",
-          "text": "별빛 프로젝트의 마감일은 1월 20일이다.",
+          "text": "나길 프로젝트의 출시일은 11월 20일이다.",
           "status": "current",
           "project": "memory-ko-75-b",
           "source_event_ids": [
@@ -3894,7 +4608,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "구름 프로젝트의 마감일은 12월 15일이다.",
+          "expected_answer": "비안 프로젝트의 출시일은 9월 15일이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -3914,7 +4628,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "별빛 프로젝트의 마감일은 1월 20일이다.",
+          "expected_answer": "나길 프로젝트의 출시일은 11월 20일이다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -3932,7 +4646,19 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "different",
+        "current_values": [
+          "9월 15일"
+        ],
+        "obsolete_values": [
+          "11월 20일"
+        ],
+        "other_values": [
+          "11월 20일"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-76",
@@ -4009,14 +4735,26 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "different",
+        "current_values": [
+          "강남역 회의실"
+        ],
+        "obsolete_values": [
+          "서초동 스튜디오"
+        ],
+        "other_values": [
+          "서초동 스튜디오"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-77",
       "propositions": [
         {
           "id": "p1",
-          "text": "숲길 프로젝트의 담당자는 수진이다.",
+          "text": "다솜 프로젝트의 서버 IP 주소는 192.168.1.10이다.",
           "status": "current",
           "project": "memory-ko-77-a",
           "source_event_ids": [
@@ -4026,7 +4764,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "숲길 프로젝트의 담당자는 철수이다.",
+          "text": "다솜 프로젝트의 서버 IP 주소는 192.168.1.20이다.",
           "status": "false_or_foreign",
           "project": "memory-ko-77-a",
           "source_event_ids": [
@@ -4036,7 +4774,7 @@
         },
         {
           "id": "p2",
-          "text": "강가 프로젝트의 담당자는 철수이다.",
+          "text": "별솔 프로젝트의 서버 IP 주소는 192.168.1.20이다.",
           "status": "current",
           "project": "memory-ko-77-b",
           "source_event_ids": [
@@ -4048,7 +4786,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "숲길 프로젝트의 담당자는 수진이다.",
+          "expected_answer": "다솜 프로젝트의 서버 IP 주소는 192.168.1.10이다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -4068,7 +4806,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "강가 프로젝트의 담당자는 철수이다.",
+          "expected_answer": "별솔 프로젝트의 서버 IP 주소는 192.168.1.20이다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -4086,7 +4824,19 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "different",
+        "current_values": [
+          "192.168.1.10"
+        ],
+        "obsolete_values": [
+          "192.168.1.20"
+        ],
+        "other_values": [
+          "192.168.1.20"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-78",
@@ -4163,14 +4913,26 @@
             "critical_reversal": false
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "different",
+        "current_values": [
+          "#FF5733"
+        ],
+        "obsolete_values": [
+          "#33FF57"
+        ],
+        "other_values": [
+          "#33FF57"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-79",
       "propositions": [
         {
           "id": "p1",
-          "text": "새벽 프로젝트의 서버 주소는 삭제되어 알 수 없다.",
+          "text": "구름 프로젝트의 API 엔드포인트는 삭제되어 알 수 없다.",
           "status": "deleted_unknown",
           "project": "memory-ko-79-a",
           "source_event_ids": [
@@ -4181,7 +4943,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "새벽 프로젝트의 서버 주소는 192.168.1.10이다.",
+          "text": "구름 프로젝트의 API 엔드포인트는 /v1/data이다.",
           "status": "deleted",
           "project": "memory-ko-79-a",
           "source_event_ids": [
@@ -4191,7 +4953,7 @@
         },
         {
           "id": "p2",
-          "text": "노을 프로젝트의 서버 주소는 192.168.1.20이다.",
+          "text": "노을 프로젝트의 API 엔드포인트는 /v2/info이다.",
           "status": "current",
           "project": "memory-ko-79-b",
           "source_event_ids": [
@@ -4203,7 +4965,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "새벽 프로젝트의 서버 주소는 삭제되어 알 수 없다.",
+          "expected_answer": "구름 프로젝트의 API 엔드포인트는 삭제되어 알 수 없다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -4223,7 +4985,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "노을 프로젝트의 서버 주소는 192.168.1.20이다.",
+          "expected_answer": "노을 프로젝트의 API 엔드포인트는 /v2/info이다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -4241,14 +5003,24 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "delete_one",
+        "current_values": [],
+        "obsolete_values": [
+          "/v1/data"
+        ],
+        "other_values": [
+          "/v2/info"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-80",
       "propositions": [
         {
           "id": "p1",
-          "text": "라온 프로젝트의 담당자 전화번호는 삭제되어 알 수 없다.",
+          "text": "나래 프로젝트의 테스트 계정 비밀번호는 삭제되어 알 수 없다.",
           "status": "deleted_unknown",
           "project": "memory-ko-80-a",
           "source_event_ids": [
@@ -4259,7 +5031,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "라온 프로젝트의 담당자 전화번호는 010-1234-5678이다.",
+          "text": "나래 프로젝트의 테스트 계정 비밀번호는 'Narae2024!'이다.",
           "status": "deleted",
           "project": "memory-ko-80-a",
           "source_event_ids": [
@@ -4269,7 +5041,7 @@
         },
         {
           "id": "p2",
-          "text": "나래 프로젝트의 담당자 전화번호는 010-8765-4321이다.",
+          "text": "온유 프로젝트의 테스트 계정 비밀번호는 'Onyu2024!'이다.",
           "status": "current",
           "project": "memory-ko-80-b",
           "source_event_ids": [
@@ -4281,7 +5053,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "라온 프로젝트의 담당자 전화번호는 삭제되어 알 수 없다.",
+          "expected_answer": "나래 프로젝트의 테스트 계정 비밀번호는 삭제되어 알 수 없다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -4301,7 +5073,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "나래 프로젝트의 담당자 전화번호는 010-8765-4321이다.",
+          "expected_answer": "온유 프로젝트의 테스트 계정 비밀번호는 'Onyu2024!'이다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -4319,14 +5091,24 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "delete_one",
+        "current_values": [],
+        "obsolete_values": [
+          "Narae2024!"
+        ],
+        "other_values": [
+          "Onyu2024!"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-81",
       "propositions": [
         {
           "id": "p1",
-          "text": "별빛 프로젝트의 완료율은 삭제되어 알 수 없다.",
+          "text": "마루 프로젝트의 샘플 코드 경로는 삭제되어 알 수 없다.",
           "status": "deleted_unknown",
           "project": "memory-ko-81-a",
           "source_event_ids": [
@@ -4337,7 +5119,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "별빛 프로젝트의 완료율은 75%이다.",
+          "text": "마루 프로젝트의 샘플 코드 경로는 /home/test/maru/sample.py이다.",
           "status": "deleted",
           "project": "memory-ko-81-a",
           "source_event_ids": [
@@ -4347,7 +5129,7 @@
         },
         {
           "id": "p2",
-          "text": "햇살 프로젝트의 완료율은 40%이다.",
+          "text": "보름 프로젝트의 샘플 코드 경로는 /home/test/boruem/test.py이다.",
           "status": "current",
           "project": "memory-ko-81-b",
           "source_event_ids": [
@@ -4359,7 +5141,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "별빛 프로젝트의 완료율은 삭제되어 알 수 없다.",
+          "expected_answer": "마루 프로젝트의 샘플 코드 경로는 삭제되어 알 수 없다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -4379,7 +5161,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "햇살 프로젝트의 완료율은 40%이다.",
+          "expected_answer": "보름 프로젝트의 샘플 코드 경로는 /home/test/boruem/test.py이다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -4397,7 +5179,17 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "delete_one",
+        "current_values": [],
+        "obsolete_values": [
+          "/home/test/maru/sample.py"
+        ],
+        "other_values": [
+          "/home/test/boruem/test.py"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-82",
@@ -4475,7 +5267,17 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "delete_one",
+        "current_values": [],
+        "obsolete_values": [
+          "한글(hwp)"
+        ],
+        "other_values": [
+          "워드(docx)"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-83",
@@ -4553,14 +5355,24 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "delete_one",
+        "current_values": [],
+        "obsolete_values": [
+          "산들 프로젝트의 회의 시간은 오전 10시"
+        ],
+        "other_values": [
+          "물결 프로젝트의 회의 시간은 오후 2시"
+        ]
+      }
     },
     {
       "case_id": "memory-ko-84",
       "propositions": [
         {
           "id": "p1",
-          "text": "초원 프로젝트의 색상 테마는 삭제되어 알 수 없다.",
+          "text": "서리 프로젝트의 테스트 계정 비밀번호는 삭제되어 알 수 없다.",
           "status": "deleted_unknown",
           "project": "memory-ko-84-a",
           "source_event_ids": [
@@ -4571,7 +5383,7 @@
         },
         {
           "id": "p_obsolete",
-          "text": "초원 프로젝트의 색상 테마는 파랑이다.",
+          "text": "서리 프로젝트의 테스트 계정 비밀번호는 guest123이다.",
           "status": "deleted",
           "project": "memory-ko-84-a",
           "source_event_ids": [
@@ -4581,7 +5393,7 @@
         },
         {
           "id": "p2",
-          "text": "숲속 프로젝트의 색상 테마는 초록이다.",
+          "text": "달빛 프로젝트의 테스트 계정 비밀번호는 admin456이다.",
           "status": "current",
           "project": "memory-ko-84-b",
           "source_event_ids": [
@@ -4593,7 +5405,7 @@
       "queries": [
         {
           "query_id": "q1",
-          "expected_answer": "초원 프로젝트의 색상 테마는 삭제되어 알 수 없다.",
+          "expected_answer": "서리 프로젝트의 테스트 계정 비밀번호는 삭제되어 알 수 없다.",
           "required_proposition_ids": [
             "p1"
           ],
@@ -4613,7 +5425,7 @@
         },
         {
           "query_id": "q2",
-          "expected_answer": "숲속 프로젝트의 색상 테마는 초록이다.",
+          "expected_answer": "달빛 프로젝트의 테스트 계정 비밀번호는 admin456이다.",
           "required_proposition_ids": [
             "p2"
           ],
@@ -4631,7 +5443,17 @@
             "critical_reversal": true
           }
         }
-      ]
+      ],
+      "values": {
+        "variant": "delete_one",
+        "current_values": [],
+        "obsolete_values": [
+          "guest123"
+        ],
+        "other_values": [
+          "admin456"
+        ]
+      }
     }
   ]
 }

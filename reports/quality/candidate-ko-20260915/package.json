@@ -1,0 +1,9 @@
+{
+  "name": "naia-memory-candidate-az2-runner",
+  "private": true,
+  "type": "module",
+  "description": "Lean memory quality runner for candidate-az3-20260915 (Azure Foundry). Tooling only; not a product dependency.",
+  "dependencies": {
+    "js-tiktoken": "1.0.21"
+  }
+}

@@ -66,7 +66,8 @@ for n, r in enumerate(rows):
         props[0]["source_event_ids"] = ["e1"]
     inputs.append({"id": cid, "language": "ko", "category": category, "construction_family": f"memory-{category}-{variant}",
                    "events": events, "recent_tail": [{"role": "user", "content": t} for t in TAIL], "queries": queries})
-    gold.append({"case_id": cid, "propositions": props, "queries": gq})
+    gold.append({"case_id": cid, "propositions": props, "queries": gq,
+                 "values": {"variant": variant, "current_values": r["current_values"], "obsolete_values": r["obsolete_values"], "other_values": r.get("other_values", [])}})
 
 OUT.mkdir(exist_ok=True)
 for name, obj in [("memory-inputs.json", inputs), ("memory-gold.json", gold)]:
@@ -74,5 +75,12 @@ for name, obj in [("memory-inputs.json", inputs), ("memory-gold.json", gold)]:
 lines = []
 for name in ["memory-inputs.json", "memory-gold.json", "rubric.json"]:
     lines.append(f"{hashlib.sha256((OUT / name).read_bytes()).hexdigest()}  {name}")
+seal = {"sealed_at": "2026-09-15", "files": {}}
+for name in ["AUTHOR-BRIEF.md", "author-receipts.json", "review-regeneration-log.json", "curation-log.json", "curation-log-2.json", "rows.json", "materialize.py", "factstate.py"]:
+    seal["files"][name] = hashlib.sha256((HERE / name).read_bytes()).hexdigest()
+for name in ["memory-inputs.json", "memory-gold.json", "rubric.json"]:
+    seal["files"]["design/" + name] = hashlib.sha256((OUT / name).read_bytes()).hexdigest()
+seal["regenerated_rows"] = "see review-regeneration-log.json (rounds 1-2, manual review reasons) and curation-log*.json (mechanical check reasons)"
+(HERE / "SEAL.json").write_text(json.dumps(seal, indent=1) + "\n")
 (OUT / "manifest.sha256").write_text("\n".join(lines) + "\n")
 print(len(inputs), "cases,", sum(len(c["queries"]) for c in inputs), "queries")

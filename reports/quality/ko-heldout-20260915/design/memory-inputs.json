@@ -905,7 +905,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "내가 신청한 요가 강좌는 오전 10시 수업이야."
+            "content": "오늘 점심 메뉴는 파스타로 할게."
           }
         },
         {
@@ -915,7 +915,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "아니야, 오후 2시로 변경했어."
+            "content": "아니야, 점심은 김치찌개로 바꿔."
           }
         },
         {
@@ -925,7 +925,7 @@
           "timestamp": "2026-07-03T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "앞서 말한 오전 10시와 오후 2시는 취소, 최종적으로 오후 4시로 바꿨어."
+            "content": "최종적으로 점심은 비빔밥으로 할게. 앞서 말한 파스타와 김치찌개는 취소."
           }
         },
         {
@@ -947,7 +947,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "내 요가 강좌는 몇 시 수업이야?",
+          "text": "내 오늘 점심 메뉴가 뭐야?",
           "project": "memory-ko-19-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -1205,7 +1205,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "내가 예약한 미용실 시간은 오전 11시야."
+            "content": "내 동아리 회비가 월 2만원이야."
           }
         },
         {
@@ -1215,7 +1215,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "아니, 오후 1시로 변경했어."
+            "content": "아니야, 월 3만원으로 바꿔 줘."
           }
         },
         {
@@ -1225,7 +1225,7 @@
           "timestamp": "2026-07-03T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "앞서 말한 오전 11시와 오후 1시는 취소, 최종적으로 오후 3시로 다시 바꿨어."
+            "content": "앞서 말한 2만원과 3만원은 취소하고, 최종적으로 월 5만원으로 해 줘."
           }
         }
       ],
@@ -1242,7 +1242,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "내 미용실 예약 시간은 몇 시야?",
+          "text": "내 동아리 월 회비는 얼마야?",
           "project": "memory-ko-24-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -1844,7 +1844,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "다음 주 수요일과 금요일에 헬스 PT 두 번 예약했어."
+            "content": "이번 주에 치과 예약과 피부과 예약을 둘 다 잡아 줘."
           }
         },
         {
@@ -1854,7 +1854,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "수요일 PT는 취소하고 금요일만 남겨 줘."
+            "content": "피부과 예약은 취소하고 치과 예약만 유지해 줘."
           }
         }
       ],
@@ -1871,14 +1871,14 @@
       "queries": [
         {
           "id": "q1",
-          "text": "다음 주 내 헬스 PT는 언제야?",
+          "text": "내가 이번 주에 잡은 예약이 뭐야?",
           "project": "memory-ko-36-a",
           "scope_mode": "strict",
           "mode": "latest"
         },
         {
           "id": "q2",
-          "text": "수요일 PT가 아직 예약되어 있어?",
+          "text": "피부과 예약이 아직 유효해?",
           "project": "memory-ko-36-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -1950,7 +1950,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "나는 아침형 인간이야."
+            "content": "나는 매운 음식을 좋아해."
           }
         },
         {
@@ -1960,7 +1960,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "엄마가 '너 새벽까지 안 자더라'고 하시던데, 내 생활 패턴은 그대로야."
+            "content": "친구가 '너는 매운 음식 싫어하지?'라고 물었는데, 내 취향은 바뀐 게 아니야."
           }
         }
       ],
@@ -1977,7 +1977,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "내가 아침형 인간이 맞아?",
+          "text": "내가 좋아하는 음식 종류가 뭐야?",
           "project": "memory-ko-38-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -1997,7 +1997,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "나는 소설보다 에세이를 더 좋아해."
+            "content": "나는 매일 아침에 샤워를 해."
           }
         },
         {
@@ -2007,7 +2007,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "동생이 '너 요즘 소설만 읽더라'고 했는데, 내 취향은 변한 게 없어."
+            "content": "동생이 말하길 넌 아침에 안 씻고 저녁에만 샤워한다고 하던데? 근데 내 습관은 바뀐 게 아니야."
           }
         },
         {
@@ -2029,7 +2029,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "내가 에세이를 더 좋아해?",
+          "text": "내 아침 샤워 습관은 어떻게 돼?",
           "project": "memory-ko-39-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -2049,7 +2049,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "나는 주말마다 등산을 가."
+            "content": "나는 아이스크림 중에서도 샤베트 종류를 제일 좋아해."
           }
         },
         {
@@ -2059,7 +2059,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "옆집 아주머니가 '요즘 산에 안 가는 것 같다'고 하시던데, 내 루틴은 같아."
+            "content": "친구가 '너는 아이스크림은 무조건 초코만 고르잖아'라고 하던데. 내 취향은 안 바뀌었어."
           }
         }
       ],
@@ -2076,7 +2076,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "내가 주말마다 등산을 가?",
+          "text": "내가 가장 좋아하는 아이스크림 종류가 뭐야?",
           "project": "memory-ko-40-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -2096,7 +2096,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "나는 고양이를 키워."
+            "content": "나는 평일에 자전거 타는 게 제일 좋아."
           }
         },
         {
@@ -2106,7 +2106,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "남편이 '너 개 키우지 않냐'고 묻더라, 하지만 내 애완동물은 안 바뀌었어."
+            "content": "친구가 그러는데 너는 평일에 자전거 타는 걸 싫어한다고 하더라. 근데 내 생각은 안 바뀌었어."
           }
         },
         {
@@ -2128,7 +2128,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "내가 키우는 애완동물은 고양이야?",
+          "text": "내가 평일에 가장 좋아하는 운동은 뭐야?",
           "project": "memory-ko-41-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -2148,7 +2148,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "나는 매운 음식을 정말 좋아해."
+            "content": "내가 가장 좋아하는 계절은 여름이야."
           }
         },
         {
@@ -2158,7 +2158,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "친구가 \"넌 매운 음식을 못 먹잖아\"라고 하던데, 내 취향은 바뀐 게 아니야."
+            "content": "철수가 겨울이 최고라고 하던데, 나는 여전히 여름이 제일 좋아. 내 생각은 안 바뀌었어."
           }
         }
       ],
@@ -2175,7 +2175,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "내가 매운 음식을 좋아해?",
+          "text": "내가 가장 좋아하는 계절이 뭐야?",
           "project": "memory-ko-42-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -2247,7 +2247,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "우리 동네 카페는 아직 영업 중이야."
+            "content": "지금 내 방 온도는 24도야."
           }
         },
         {
@@ -2257,7 +2257,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "만약 주인이 바뀌면 문을 닫을 수도 있겠지. 아직 안 바뀌었어."
+            "content": "만약 에어컨을 켜면 18도까지 내려갈 수도 있겠지. 아직 안 켰어."
           }
         }
       ],
@@ -2274,7 +2274,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "우리 동네 카페는 지금 영업 중이야?",
+          "text": "지금 내 방 온도가 몇 도야?",
           "project": "memory-ko-44-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -2346,7 +2346,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "우리 아들은 현재 초등학교 3학년이야."
+            "content": "나는 지금 집에서 재택근무 중이야."
           }
         },
         {
@@ -2356,7 +2356,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "만약 조기 진급하면 4학년으로 갈 수도 있겠지. 아직 그런 일은 없어."
+            "content": "만약 사무실이 더 가까웠다면 출근했을 수도 있겠지. 아직 안 했어."
           }
         }
       ],
@@ -2373,7 +2373,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "우리 아들은 현재 몇 학년이야?",
+          "text": "지금 나는 어디서 근무 중이야?",
           "project": "memory-ko-46-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -2393,7 +2393,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "내 핸드폰 요금제는 월 5만 원짜리야."
+            "content": "내가 지금 쓰는 휴대폰은 갤럭시야."
           }
         },
         {
@@ -2403,7 +2403,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "만약 데이터를 더 쓰면 7만 원으로 바꿀 수도 있겠지. 아직 안 바꿨어."
+            "content": "만약 아이폰이 더 편하다는 얘기를 들으면 바꿀 수도 있겠지. 아직 안 바꿨어."
           }
         },
         {
@@ -2425,7 +2425,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "내 핸드폰 요금제는 얼마야?",
+          "text": "내가 지금 쓰는 휴대폰이 뭐야?",
           "project": "memory-ko-47-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -2544,7 +2544,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "점심으로는 김치찌개를 주로 먹어."
+            "content": "비 오는 날에는 집에서 영화 보는 게 좋아."
           }
         },
         {
@@ -2554,7 +2554,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "아침에는 간단히 토스트만 먹어. 점심이랑은 상관없어."
+            "content": "눈 오는 날에는 밖에 나가서 사진 찍는 게 좋아. 비 오는 날이랑은 별개야."
           }
         }
       ],
@@ -2571,7 +2571,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "점심으로는 뭘 주로 먹고, 아침에는 뭘 먹어?",
+          "text": "비 오는 날과 눈 오는 날에 내가 각각 뭘 좋아해?",
           "project": "memory-ko-50-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -2987,7 +2987,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "나는 운동할 때 달리기보다 수영이 더 좋아."
+            "content": "내가 가장 좋아하는 술은 맥주야."
           }
         },
         {
@@ -2997,7 +2997,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "새 운동화를 샀지만, 내 선호는 여전히 수영이야."
+            "content": "오늘 소주를 샀는데, 그래도 맥주가 제일 좋아. 선호는 그대로야."
           }
         },
         {
@@ -3019,7 +3019,7 @@
       "queries": [
         {
           "id": "q1",
-          "text": "내가 더 좋아하는 운동은?",
+          "text": "내가 가장 좋아하는 술이 뭐야?",
           "project": "memory-ko-59-a",
           "scope_mode": "strict",
           "mode": "latest"
@@ -3770,7 +3770,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "바람 프로젝트의 예산은 500만 원이야."
+            "content": "솔솔 프로젝트의 로고 색상은 파랑이야."
           }
         },
         {
@@ -3780,7 +3780,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "노을 프로젝트의 예산은 800만 원이야."
+            "content": "봄봄 프로젝트의 로고 색상은 초록이야."
           }
         },
         {
@@ -3802,14 +3802,14 @@
       "queries": [
         {
           "id": "q1",
-          "text": "바람 프로젝트의 예산이 얼마야?",
+          "text": "솔솔 프로젝트의 로고 색상이 뭐야?",
           "project": "memory-ko-73-a",
           "scope_mode": "strict",
           "mode": "latest"
         },
         {
           "id": "q2",
-          "text": "노을 프로젝트의 예산은 얼마야?",
+          "text": "봄봄 프로젝트의 로고 색상은?",
           "project": "memory-ko-73-b",
           "scope_mode": "strict",
           "mode": "latest"
@@ -3829,7 +3829,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "달빛 프로젝트의 팀장은 민수야."
+            "content": "초롱 프로젝트의 발표 자료 형식은 PDF야."
           }
         },
         {
@@ -3839,7 +3839,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "햇살 프로젝트의 팀장은 지영이야."
+            "content": "미르 프로젝트의 발표 자료 형식은 PPT야."
           }
         }
       ],
@@ -3856,14 +3856,14 @@
       "queries": [
         {
           "id": "q1",
-          "text": "달빛 프로젝트의 팀장이 누구야?",
+          "text": "초롱 프로젝트의 발표 자료 형식이 뭐였지?",
           "project": "memory-ko-74-a",
           "scope_mode": "strict",
           "mode": "latest"
         },
         {
           "id": "q2",
-          "text": "햇살 프로젝트의 팀장은 누구야?",
+          "text": "미르 프로젝트의 발표 자료 형식은?",
           "project": "memory-ko-74-b",
           "scope_mode": "strict",
           "mode": "latest"
@@ -3883,7 +3883,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "구름 프로젝트의 마감일은 12월 15일이야."
+            "content": "비안 프로젝트의 출시일이 9월 15일이야."
           }
         },
         {
@@ -3893,7 +3893,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "별빛 프로젝트의 마감일은 1월 20일이야."
+            "content": "나길 프로젝트의 출시일은 11월 20일이야."
           }
         },
         {
@@ -3915,14 +3915,14 @@
       "queries": [
         {
           "id": "q1",
-          "text": "구름 프로젝트의 마감일이 언제야?",
+          "text": "비안 프로젝트의 출시일이 언제야?",
           "project": "memory-ko-75-a",
           "scope_mode": "strict",
           "mode": "latest"
         },
         {
           "id": "q2",
-          "text": "별빛 프로젝트의 마감일은 언제야?",
+          "text": "나길 프로젝트의 출시일은 언제야?",
           "project": "memory-ko-75-b",
           "scope_mode": "strict",
           "mode": "latest"
@@ -3996,7 +3996,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "숲길 프로젝트의 담당자는 수진이야."
+            "content": "다솜 프로젝트의 서버 IP 주소를 192.168.1.10으로 설정해 줘."
           }
         },
         {
@@ -4006,7 +4006,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "강가 프로젝트의 담당자는 철수야."
+            "content": "그리고 별솔 프로젝트의 서버 IP 주소는 192.168.1.20으로 해."
           }
         },
         {
@@ -4028,14 +4028,14 @@
       "queries": [
         {
           "id": "q1",
-          "text": "숲길 프로젝트의 담당자가 누구야?",
+          "text": "다솜 프로젝트의 서버 IP 주소가 뭐야?",
           "project": "memory-ko-77-a",
           "scope_mode": "strict",
           "mode": "latest"
         },
         {
           "id": "q2",
-          "text": "강가 프로젝트의 담당자는 누구야?",
+          "text": "별솔 프로젝트의 서버 IP 주소는?",
           "project": "memory-ko-77-b",
           "scope_mode": "strict",
           "mode": "latest"
@@ -4109,7 +4109,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "새벽 프로젝트의 서버 주소는 192.168.1.10이야."
+            "content": "구름 프로젝트의 API 엔드포인트가 /v1/data야."
           }
         },
         {
@@ -4119,7 +4119,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "노을 프로젝트의 서버 주소는 192.168.1.20이야."
+            "content": "노을 프로젝트의 API 엔드포인트는 /v2/info야."
           }
         },
         {
@@ -4129,7 +4129,7 @@
           "timestamp": "2026-07-03T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "새벽 프로젝트의 서버 주소 기억만 삭제해 줘. 노을은 그대로 둬."
+            "content": "구름 프로젝트의 API 엔드포인트 기억만 삭제해 줘. 노을 프로젝트는 그대로 둬."
           }
         },
         {
@@ -4151,14 +4151,14 @@
       "queries": [
         {
           "id": "q1",
-          "text": "새벽 프로젝트의 서버 주소를 기억해?",
+          "text": "구름 프로젝트의 API 엔드포인트를 기억해?",
           "project": "memory-ko-79-a",
           "scope_mode": "strict",
           "mode": "latest"
         },
         {
           "id": "q2",
-          "text": "노을 프로젝트의 서버 주소는?",
+          "text": "노을 프로젝트의 API 엔드포인트는?",
           "project": "memory-ko-79-b",
           "scope_mode": "strict",
           "mode": "latest"
@@ -4178,7 +4178,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "라온 프로젝트의 담당자 전화번호는 010-1234-5678이야."
+            "content": "나래 프로젝트의 테스트 계정 비밀번호를 'Narae2024!'로 저장해 줘."
           }
         },
         {
@@ -4188,7 +4188,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "나래 프로젝트의 담당자 전화번호는 010-8765-4321이야."
+            "content": "온유 프로젝트의 테스트 계정 비밀번호는 'Onyu2024!'야."
           }
         },
         {
@@ -4198,7 +4198,7 @@
           "timestamp": "2026-07-03T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "라온 프로젝트의 전화번호 기억만 지워 줘. 나래는 그대로 둬."
+            "content": "나래 프로젝트의 테스트 계정 비밀번호만 기억에서 지워 줘. 온유 건은 그대로 둬."
           }
         }
       ],
@@ -4215,14 +4215,14 @@
       "queries": [
         {
           "id": "q1",
-          "text": "라온 프로젝트의 담당자 전화번호를 기억해?",
+          "text": "나래 프로젝트의 테스트 계정 비밀번호를 기억해?",
           "project": "memory-ko-80-a",
           "scope_mode": "strict",
           "mode": "latest"
         },
         {
           "id": "q2",
-          "text": "나래 프로젝트의 담당자 전화번호는?",
+          "text": "온유 프로젝트의 테스트 계정 비밀번호는?",
           "project": "memory-ko-80-b",
           "scope_mode": "strict",
           "mode": "latest"
@@ -4242,7 +4242,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "별빛 프로젝트의 완료율은 75%야."
+            "content": "마루 프로젝트의 샘플 코드 경로를 기억해 줘. /home/test/maru/sample.py야."
           }
         },
         {
@@ -4252,7 +4252,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "햇살 프로젝트의 완료율은 40%야."
+            "content": "보름 프로젝트의 샘플 코드 경로는 /home/test/boruem/test.py야."
           }
         },
         {
@@ -4262,7 +4262,7 @@
           "timestamp": "2026-07-03T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "별빛 프로젝트의 완료율 기억만 삭제해 줘. 햇살은 그대로 둬."
+            "content": "마루 프로젝트의 샘플 코드 경로 기억만 지워 줘. 보름 프로젝트는 그대로 둬."
           }
         },
         {
@@ -4284,14 +4284,14 @@
       "queries": [
         {
           "id": "q1",
-          "text": "별빛 프로젝트의 완료율을 기억해?",
+          "text": "마루 프로젝트의 샘플 코드 경로를 기억해?",
           "project": "memory-ko-81-a",
           "scope_mode": "strict",
           "mode": "latest"
         },
         {
           "id": "q2",
-          "text": "햇살 프로젝트의 완료율은?",
+          "text": "보름 프로젝트의 샘플 코드 경로는?",
           "project": "memory-ko-81-b",
           "scope_mode": "strict",
           "mode": "latest"
@@ -4444,7 +4444,7 @@
           "timestamp": "2026-07-01T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "초원 프로젝트의 색상 테마는 파랑이야."
+            "content": "서리 프로젝트의 테스트 계정 비밀번호를 기억해 줘. 값은 guest123이야."
           }
         },
         {
@@ -4454,7 +4454,7 @@
           "timestamp": "2026-07-02T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "숲속 프로젝트의 색상 테마는 초록이야."
+            "content": "달빛 프로젝트의 테스트 계정 비밀번호는 admin456이야."
           }
         },
         {
@@ -4464,7 +4464,7 @@
           "timestamp": "2026-07-03T09:00:00Z",
           "message": {
             "role": "user",
-            "content": "초원 프로젝트의 색상 테마 기억만 지워 줘. 숲속은 그대로 둬."
+            "content": "서리 프로젝트의 테스트 계정 비밀번호 기억만 삭제해 줘. 달빛 프로젝트는 그대로 둬."
           }
         }
       ],
@@ -4481,14 +4481,14 @@
       "queries": [
         {
           "id": "q1",
-          "text": "초원 프로젝트의 색상 테마를 기억해?",
+          "text": "서리 프로젝트의 테스트 계정 비밀번호를 기억해?",
           "project": "memory-ko-84-a",
           "scope_mode": "strict",
           "mode": "latest"
         },
         {
           "id": "q2",
-          "text": "숲속 프로젝트의 색상 테마는?",
+          "text": "달빛 프로젝트의 테스트 계정 비밀번호는?",
           "project": "memory-ko-84-b",
           "scope_mode": "strict",
           "mode": "latest"
