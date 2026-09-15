@@ -52,6 +52,8 @@ describe("explainDeleteGrounding", () => {
 		{ ...explicitRemoval, evidenceKind: "maybe" },
 		{ ...cancellation, subjectId: undefined, propertyId: undefined },
 		{ ...cancellation, value: "swimming" },
+		{ ...explicitRemoval, property: "비밀 값" },
+		{ ...explicitRemoval, evidenceKind: "durable_cessation" },
 	];
 
 	it("is empty exactly when the delete is grounded", () => {
@@ -62,11 +64,17 @@ describe("explainDeleteGrounding", () => {
 		}
 	});
 
-	it("names the condition that rejects a value-free explicit removal", () => {
-		expect(hasGroundedDeleteEvidence(explicitRemoval)).toBe(false);
-		expect(explainDeleteGrounding(explicitRemoval)).toEqual([
-			"target-lacks-value-and-identity",
-		]);
+	it("grounds a value-free explicit removal whose target quote names the property", () => {
+		expect(hasGroundedDeleteEvidence(explicitRemoval)).toBe(true);
+		expect(explainDeleteGrounding(explicitRemoval)).toEqual([]);
+	});
+
+	it("names the condition that rejects a value-free removal that does not name the property", () => {
+		const unnamed = { ...explicitRemoval, property: "비밀 값" };
+		expect(hasGroundedDeleteEvidence(unnamed)).toBe(false);
+		expect(explainDeleteGrounding(unnamed)).toEqual(["target-lacks-value-and-identity"]);
+		const cessation = { ...explicitRemoval, evidenceKind: "durable_cessation" };
+		expect(hasGroundedDeleteEvidence(cessation)).toBe(false);
 	});
 });
 
@@ -107,7 +115,7 @@ describe("parseLLMFactResponse delete rejection", () => {
 						deleteEvidenceKind: "explicit_removal_request",
 						deleteEvidenceQuote: explicitRemoval.evidenceQuote,
 						deleteTargetQuote: explicitRemoval.targetQuote,
-						structured: { subject: "창고", property: "출입 암호", value: "달빛상자", polarity: "affirmed", cardinality: "single" },
+						structured: { subject: "창고", property: "비밀 값", value: "달빛상자", polarity: "affirmed", cardinality: "single" },
 					},
 					"사용자는 창고 암호 삭제를 요청함",
 				],

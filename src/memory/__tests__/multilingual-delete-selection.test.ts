@@ -59,10 +59,10 @@ describe("multilingual delete selection", () => {
 			consolidationIntervalMs: 0,
 			deleteVerifier: async (_episode, _fact, candidates) => {
 				candidateValues = candidates.map(
-					(candidate) => candidate.structured.value,
+					(candidate) => candidate.structured?.value,
 				);
 				const selected = candidates.find(
-					(candidate) => candidate.structured.value === "peanut",
+					(candidate) => candidate.structured?.value === "peanut",
 				);
 				return selected
 					? { authorized: true, targetFactId: selected.id }

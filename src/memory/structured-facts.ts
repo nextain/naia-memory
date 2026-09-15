@@ -101,6 +101,22 @@ export function sameReplacementIdentity(
 	return comparisonKey(left.property) === comparisonKey(right.property);
 }
 
+/** Same subject and property labels after whitespace and case normalisation, ignoring IDs. */
+export function sameStructuredLabels(
+	left: Pick<StructuredFact, "subject" | "property">,
+	right: Pick<StructuredFact, "subject" | "property">,
+): boolean {
+	return (
+		comparisonKey(left.subject) === comparisonKey(right.subject) &&
+		comparisonKey(left.property) === comparisonKey(right.property)
+	);
+}
+
+/** Content equality after whitespace and case normalisation. */
+export function sameFactContent(left: string, right: string): boolean {
+	return comparisonKey(left) === comparisonKey(right);
+}
+
 /** True only when every replacement-relevant field was explicitly identical. */
 export function sameStructuredFact(
 	left: StructuredFact,

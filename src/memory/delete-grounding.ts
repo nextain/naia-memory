@@ -24,6 +24,40 @@ export interface DeleteGroundingInput {
 	polarity?: unknown;
 }
 
+function labelKey(value: string): string {
+	return value.normalize("NFC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
+}
+
+/**
+ * A value-less explicit request ("erase the warehouse door code; do not repeat
+ * it") names the property instead of the value. It is grounded when the target
+ * quote contains the extracted property label. The sink additionally requires
+ * a single active value for that subject and property before any candidate is
+ * offered (delete-authorization.ts).
+ */
+export function isLabelOnlyDeleteGrounding(input: DeleteGroundingInput): boolean {
+	if (
+		input.evidenceKind !== "explicit_removal_request" ||
+		typeof input.targetQuote !== "string" ||
+		typeof input.property !== "string" ||
+		typeof input.value !== "string"
+	)
+		return false;
+	const target = labelKey(input.targetQuote);
+	const property = labelKey(input.property);
+	const hasStableIdentity =
+		typeof input.subjectId === "string" &&
+		Boolean(input.subjectId.trim()) &&
+		typeof input.propertyId === "string" &&
+		Boolean(input.propertyId.trim());
+	return (
+		Boolean(property) &&
+		target.includes(property) &&
+		!target.includes(labelKey(input.value)) &&
+		!hasStableIdentity
+	);
+}
+
 /** Deterministic, language-preserving grounding shared by extraction and sink. */
 export function hasGroundedDeleteEvidence(
 	input: DeleteGroundingInput,
@@ -57,7 +91,9 @@ export function hasGroundedDeleteEvidence(
 		hasVisibleSubstance(target) &&
 		Boolean(subject && property && value) &&
 		episode.includes(target) &&
-		(target.toLowerCase().includes(value.toLowerCase()) || hasStableIdentity)
+		(target.toLowerCase().includes(value.toLowerCase()) ||
+			hasStableIdentity ||
+			isLabelOnlyDeleteGrounding(input))
 	);
 }
 
@@ -99,7 +135,11 @@ export function explainDeleteGrounding(input: DeleteGroundingInput): string[] {
 		Boolean(input.subjectId.trim()) &&
 		typeof input.propertyId === "string" &&
 		Boolean(input.propertyId.trim());
-	if (!target.toLowerCase().includes(value.toLowerCase()) && !hasStableIdentity)
+	if (
+		!target.toLowerCase().includes(value.toLowerCase()) &&
+		!hasStableIdentity &&
+		!isLabelOnlyDeleteGrounding(input)
+	)
 		reasons.push("target-lacks-value-and-identity");
 	return reasons;
 }

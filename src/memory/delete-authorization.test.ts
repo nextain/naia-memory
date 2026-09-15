@@ -73,7 +73,7 @@ describe("delete candidate authorization", () => {
 		expect(verifier.mock.calls[0]?.[2]).toEqual([
 			expect.objectContaining({ id: "spicy" }),
 		]);
-		expect(result).toEqual({ status: "authorized", targets: [spicyFood] });
+		expect(result).toEqual({ status: "authorized", targets: [spicyFood], source: "structured" });
 	});
 
 	it("authorizes all equivalent duplicate targets after one verifier selection", async () => {
@@ -119,7 +119,7 @@ describe("delete candidate authorization", () => {
 		});
 
 		expect(verifier.mock.calls[0]?.[2]).toHaveLength(2);
-		expect(result).toEqual({ status: "authorized", targets: [first, second] });
+		expect(result).toEqual({ status: "authorized", targets: [first, second], source: "structured" });
 	});
 
 	it("fails closed on value drift when an identity has multiple active values", async () => {
@@ -161,7 +161,7 @@ describe("delete candidate authorization", () => {
 			verifier,
 		});
 
-		expect(result).toEqual({ status: "denied" });
+		expect(result).toEqual({ status: "denied", reason: "no-candidate" });
 		expect(verifier).not.toHaveBeenCalled();
 	});
 
@@ -171,7 +171,7 @@ describe("delete candidate authorization", () => {
 				authorized: true as const,
 				targetFactId:
 					candidates.find(
-						(candidate) => candidate.structured.value === "우표 수집",
+						(candidate) => candidate.structured?.value === "우표 수집",
 					)?.id ?? "missing",
 			}),
 		);
@@ -207,7 +207,7 @@ describe("delete candidate authorization", () => {
 		expect(verifier.mock.calls[0]?.[2]).toEqual([
 			expect.objectContaining({ id: "stamp" }),
 		]);
-		expect(result).toEqual({ status: "authorized", targets: [stamp] });
+		expect(result).toEqual({ status: "authorized", targets: [stamp], source: "structured" });
 	});
 
 	it("denies a verifier response that selects another value on the same property", async () => {
@@ -247,7 +247,7 @@ describe("delete candidate authorization", () => {
 		expect(verifier.mock.calls[0]?.[2]).toEqual([
 			expect.objectContaining({ id: "stamp" }),
 		]);
-		expect(result).toEqual({ status: "denied" });
+		expect(result).toEqual({ status: "denied", reason: "verifier-denied" });
 	});
 
 	it("fails closed when more than 32 facts match the exact deletion value", async () => {

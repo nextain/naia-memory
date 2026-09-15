@@ -162,11 +162,20 @@ export type FactExtractor = (episodes: Episode[]) => Promise<ExtractedFact[]>;
 /** An eligible active candidate which the secondary verifier may select. */
 export interface DeleteCandidate {
 	id: string;
+	/**
+	 * How the candidate was found: "structured" (exact or identity match),
+	 * "structured-label" (value-less request naming the property, single active
+	 * value) or "string-exact" (unstructured fact whose content equals the
+	 * delete operation). Not sent to the verifier.
+	 */
+	source: "structured" | "structured-label" | "string-exact";
 	/** Minimal bounded disclosure sent to the configured verifier endpoint. */
-	structured: Pick<
+	structured?: Pick<
 		StructuredFact,
-		"subjectId" | "propertyId" | "value" | "polarity" | "cardinality"
+		"subject" | "property" | "subjectId" | "propertyId" | "value" | "polarity" | "cardinality"
 	>;
+	/** Content of an unstructured candidate; present only for "string-exact". */
+	content?: string;
 }
 
 export type DeleteVerificationResult =

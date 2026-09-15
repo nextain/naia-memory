@@ -1,4 +1,7 @@
-import { hasGroundedDeleteEvidence } from "./delete-grounding.js";
+import {
+	hasGroundedDeleteEvidence,
+	isLabelOnlyDeleteGrounding,
+} from "./delete-grounding.js";
 import type {
 	DeleteCandidate,
 	DeleteVerifier,
@@ -6,7 +9,9 @@ import type {
 } from "./memory-system-api.js";
 import {
 	findStructuredDeletionTargets,
+	sameFactContent,
 	sameStructuredIdentity,
+	sameStructuredLabels,
 	sameStructuredValue,
 } from "./structured-facts.js";
 import type { Episode, Fact } from "./types.js";
@@ -42,10 +47,13 @@ export function hasGroundedDeleteAuthority(
 	});
 }
 
-function eligibleCandidates(
-	existingFacts: Fact[],
-	fact: ExtractedFact,
-): Fact[] {
+type Candidate = { fact: Fact; source: DeleteCandidate["source"] };
+
+function labelKey(value: string): string {
+	return value.normalize("NFC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
+}
+
+function structuredCandidates(existingFacts: Fact[], fact: ExtractedFact): Fact[] {
 	const proposed = fact.structured;
 	if (!proposed) return [];
 	const exact = findStructuredDeletionTargets(existingFacts, proposed);
@@ -73,21 +81,64 @@ function eligibleCandidates(
 		),
 	);
 	const identityFallback = oneEquivalentValue ? sameIdentity : [];
-	return [
-		...new Map(
-			[...exact, ...sameValue, ...identityFallback].map((candidate) => [
-				candidate.id,
-				candidate,
-			]),
-		).values(),
-	];
+	return [...exact, ...sameValue, ...identityFallback];
+}
+
+/**
+ * Candidates for a value-less request that only names the property. The
+ * request must leave exactly one distinct active value under the same subject
+ * and property labels; otherwise nothing is offered. `existingFacts` must be
+ * the complete project-scoped fact set (consolidation passes getAll() for
+ * structured operations), never a top-k search result, or a sibling value
+ * outside the result would make this check pass falsely.
+ */
+function labelCandidates(
+	existingFacts: Fact[],
+	fact: ExtractedFact,
+): { facts: Fact[]; siblingValues: number } {
+	const proposed = fact.structured;
+	if (!proposed) return { facts: [], siblingValues: 0 };
+	const siblings = existingFacts.filter(
+		(candidate) =>
+			candidate.status === "active" &&
+			candidate.structured?.polarity === "affirmed" &&
+			sameStructuredLabels(candidate.structured, proposed),
+	);
+	const distinct: Fact[] = [];
+	for (const sibling of siblings) {
+		if (!distinct.some((seen) => sameStructuredValue(seen.structured!, sibling.structured!)))
+			distinct.push(sibling);
+	}
+	return { facts: siblings, siblingValues: distinct.length };
+}
+
+/**
+ * Unstructured facts whose content equals the delete operation's content. The
+ * user's target quote must name the fact, the fact must be unstructured (the
+ * structured path covers the rest), and it must come from an earlier episode.
+ */
+function stringCandidates(
+	existingFacts: Fact[],
+	fact: ExtractedFact,
+	episode: Episode,
+): Fact[] {
+	const target = fact.deleteEvidence?.targetQuote;
+	if (!target) return [];
+	return existingFacts.filter(
+		(candidate) =>
+			candidate.status === "active" &&
+			!candidate.structured &&
+			sameFactContent(candidate.content, fact.content) &&
+			labelKey(candidate.content).includes(labelKey(target)) &&
+			!candidate.sourceEpisodes.includes(episode.id),
+	);
 }
 
 export type DeleteResolution =
-	| { status: "denied" }
+	| { status: "denied"; reason?: "no-candidate" | "sibling-values>1" | "verifier-denied" }
 	| { status: "oversized" }
 	| { status: "verifier_failed" }
-	| { status: "authorized"; targets: Fact[] };
+	| { status: "authorized"; targets: Fact[]; source: DeleteCandidate["source"] };
 
 export async function resolveDeleteTarget(options: {
 	episode: Episode;
@@ -95,46 +146,65 @@ export async function resolveDeleteTarget(options: {
 	existingFacts: Fact[];
 	verifier: DeleteVerifier;
 }): Promise<DeleteResolution> {
-	const candidates = eligibleCandidates(options.existingFacts, options.fact);
-	if (candidates.length > MAX_DELETE_CANDIDATES) return { status: "oversized" };
-	if (candidates.length === 0) return { status: "denied" };
-	const verifierCandidates: DeleteCandidate[] = candidates.flatMap(
-		(candidate) =>
-			candidate.structured
-				? [
-						{
-							id: candidate.id,
-							structured: {
-								subjectId: candidate.structured.subjectId,
-								propertyId: candidate.structured.propertyId,
-								value: candidate.structured.value,
-								polarity: candidate.structured.polarity,
-								cardinality: candidate.structured.cardinality,
-							},
-						},
-					]
-				: [],
+	const { episode, fact, existingFacts } = options;
+	const candidates: Candidate[] = structuredCandidates(existingFacts, fact).map((f) => ({ fact: f, source: "structured" }));
+	if (
+		fact.structured &&
+		fact.deleteEvidence &&
+		isLabelOnlyDeleteGrounding({
+			episodeContent: episode.content,
+			evidenceKind: fact.deleteEvidence.kind,
+			targetQuote: fact.deleteEvidence.targetQuote,
+			property: fact.structured.property,
+			value: fact.structured.value,
+			subjectId: fact.structured.subjectId,
+			propertyId: fact.structured.propertyId,
+		})
+	) {
+		const label = labelCandidates(existingFacts, fact);
+		if (label.siblingValues > 1) return { status: "denied", reason: "sibling-values>1" };
+		candidates.push(...label.facts.map((f) => ({ fact: f, source: "structured-label" as const })));
+	}
+	candidates.push(...stringCandidates(existingFacts, fact, episode).map((f) => ({ fact: f, source: "string-exact" as const })));
+	// A fact found by several branches keeps the last, most specific source tag.
+	const unique = [...new Map(candidates.map((c) => [c.fact.id, c])).values()];
+	if (unique.length > MAX_DELETE_CANDIDATES) return { status: "oversized" };
+	if (unique.length === 0) return { status: "denied", reason: "no-candidate" };
+	const verifierCandidates: DeleteCandidate[] = unique.map(({ fact: candidate, source }) =>
+		candidate.structured
+			? {
+					id: candidate.id,
+					source,
+					structured: {
+						subject: candidate.structured.subject,
+						property: candidate.structured.property,
+						subjectId: candidate.structured.subjectId,
+						propertyId: candidate.structured.propertyId,
+						value: candidate.structured.value,
+						polarity: candidate.structured.polarity,
+						cardinality: candidate.structured.cardinality,
+					},
+				}
+			: { id: candidate.id, source, content: candidate.content },
 	);
 	try {
-		const verification = await options.verifier(
-			options.episode,
-			options.fact,
-			verifierCandidates,
-		);
-		if (!verification.authorized) return { status: "denied" };
-		const target = candidates.find(
-			(candidate) => candidate.id === verification.targetFactId,
-		);
-		if (!target?.structured) return { status: "denied" };
-		const targets = candidates.filter(
-			(candidate) =>
-				candidate.structured !== undefined &&
-				sameStructuredIdentity(candidate.structured, target.structured!) &&
-				sameStructuredValue(candidate.structured, target.structured!),
-		);
+		const verification = await options.verifier(episode, fact, verifierCandidates);
+		if (!verification.authorized) return { status: "denied", reason: "verifier-denied" };
+		const target = unique.find((c) => c.fact.id === verification.targetFactId);
+		if (!target) return { status: "denied", reason: "verifier-denied" };
+		const targetStructured = target.fact.structured;
+		const targets = unique
+			.filter(({ fact: candidate }) =>
+				targetStructured
+					? candidate.structured !== undefined &&
+						sameStructuredIdentity(candidate.structured, targetStructured) &&
+						sameStructuredValue(candidate.structured, targetStructured)
+					: !candidate.structured && sameFactContent(candidate.content, target.fact.content),
+			)
+			.map((c) => c.fact);
 		return targets.length > 0
-			? { status: "authorized", targets }
-			: { status: "denied" };
+			? { status: "authorized", targets, source: target.source }
+			: { status: "denied", reason: "verifier-denied" };
 	} catch {
 		return { status: "verifier_failed" };
 	}
