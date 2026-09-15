@@ -53,9 +53,9 @@ function labelKey(value: string): string {
 	return value.normalize("NFC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
 
-function structuredCandidates(existingFacts: Fact[], fact: ExtractedFact): Fact[] {
+function structuredCandidates(existingFacts: Fact[], fact: ExtractedFact): { facts: Fact[]; valueMismatch: boolean } {
 	const proposed = fact.structured;
-	if (!proposed) return [];
+	if (!proposed) return { facts: [], valueMismatch: false };
 	const exact = findStructuredDeletionTargets(existingFacts, proposed);
 	const sameIdentity = existingFacts.filter(
 		(candidate) =>
@@ -69,19 +69,15 @@ function structuredCandidates(existingFacts: Fact[], fact: ExtractedFact): Fact[
 			candidate.structured !== undefined &&
 			sameStructuredValue(candidate.structured, proposed),
 	);
-	// Extractors can represent one referent with different surface forms across
-	// turns. A sole value is unambiguous enough for the verifier even when it was
-	// duplicated across turns; multiple distinct values remain fail-closed.
-	const oneEquivalentValue = sameIdentity.every((candidate) =>
-		sameIdentity.every(
-			(other) =>
-				candidate.structured !== undefined &&
-				other.structured !== undefined &&
-				sameStructuredValue(candidate.structured, other.structured),
-		),
-	);
-	const identityFallback = oneEquivalentValue ? sameIdentity : [];
-	return [...exact, ...sameValue, ...identityFallback];
+	// A delete that names a value never offers a fact holding a different
+	// value, even when that fact is the only one under the identity: the
+	// extractor may have failed to store the named value (korean held-out
+	// ko-36: "cancel dermatology, keep dentist" archived the dentist booking).
+	// Value-less requests are handled by the label path below.
+	return {
+		facts: [...exact, ...sameValue],
+		valueMismatch: exact.length === 0 && sameValue.length === 0 && sameIdentity.length > 0,
+	};
 }
 
 /**
@@ -135,7 +131,7 @@ function stringCandidates(
 }
 
 export type DeleteResolution =
-	| { status: "denied"; reason?: "no-candidate" | "sibling-values>1" | "verifier-denied" }
+	| { status: "denied"; reason?: "no-candidate" | "value-mismatch" | "sibling-values>1" | "verifier-denied" }
 	| { status: "oversized" }
 	| { status: "verifier_failed" }
 	| { status: "authorized"; targets: Fact[]; source: DeleteCandidate["source"] };
@@ -147,7 +143,8 @@ export async function resolveDeleteTarget(options: {
 	verifier: DeleteVerifier;
 }): Promise<DeleteResolution> {
 	const { episode, fact, existingFacts } = options;
-	const candidates: Candidate[] = structuredCandidates(existingFacts, fact).map((f) => ({ fact: f, source: "structured" }));
+	const structured = structuredCandidates(existingFacts, fact);
+	const candidates: Candidate[] = structured.facts.map((f) => ({ fact: f, source: "structured" }));
 	if (
 		fact.structured &&
 		fact.deleteEvidence &&
@@ -169,7 +166,7 @@ export async function resolveDeleteTarget(options: {
 	// A fact found by several branches keeps the last, most specific source tag.
 	const unique = [...new Map(candidates.map((c) => [c.fact.id, c])).values()];
 	if (unique.length > MAX_DELETE_CANDIDATES) return { status: "oversized" };
-	if (unique.length === 0) return { status: "denied", reason: "no-candidate" };
+	if (unique.length === 0) return { status: "denied", reason: structured.valueMismatch ? "value-mismatch" : "no-candidate" };
 	const verifierCandidates: DeleteCandidate[] = unique.map(({ fact: candidate, source }) =>
 		candidate.structured
 			? {

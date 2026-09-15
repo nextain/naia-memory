@@ -31,7 +31,7 @@ function fact(
 }
 
 describe("delete candidate authorization", () => {
-	it("lets the verifier inspect a sole identity when the extracted value surface drifts", async () => {
+	it("does not offer a sole identity whose value differs from the named value", async () => {
 		const proposed = {
 			content: "ユーザーの食べ物の好み: 辛いもの",
 			operation: "delete",
@@ -70,13 +70,14 @@ describe("delete candidate authorization", () => {
 			verifier,
 		});
 
-		expect(verifier.mock.calls[0]?.[2]).toEqual([
-			expect.objectContaining({ id: "spicy" }),
-		]);
-		expect(result).toEqual({ status: "authorized", targets: [spicyFood], source: "structured" });
+		// Surface drift (辛いもの / 辛い料理) is no longer bridged: keeping a stale
+		// preference is safer than archiving a fact the user did not name.
+		expect(verifier).not.toHaveBeenCalled();
+		expect(result).toEqual({ status: "denied", reason: "value-mismatch" });
 	});
 
 	it("authorizes all equivalent duplicate targets after one verifier selection", async () => {
+		// Duplicates hold the named value itself.
 		const proposed = {
 			content: "ユーザーの食べ物の好み: 辛いもの",
 			operation: "delete",
@@ -96,8 +97,8 @@ describe("delete candidate authorization", () => {
 			},
 			sourceEpisodeIds: [episode.id],
 		} as ExtractedFact;
-		const first = fact("spicy-1", "辛い料理", "multi");
-		const second = fact("spicy-2", "辛い料理", "multi");
+		const first = fact("spicy-1", "辛いもの", "multi");
+		const second = fact("spicy-2", "辛いもの", "multi");
 		for (const candidate of [first, second]) {
 			candidate.structured = {
 				...candidate.structured!,
@@ -161,8 +162,28 @@ describe("delete candidate authorization", () => {
 			verifier,
 		});
 
-		expect(result).toEqual({ status: "denied", reason: "no-candidate" });
+		expect(result).toEqual({ status: "denied", reason: "value-mismatch" });
 		expect(verifier).not.toHaveBeenCalled();
+	});
+
+	it("never offers the kept booking when the cancelled booking was not stored", async () => {
+		// Korean held-out ko-36: "book dentist and dermatology" stored only the
+		// dentist fact; "cancel dermatology, keep dentist" must not archive it.
+		const proposed = {
+			content: "사용자 의료 예약: 피부과 예약 취소",
+			operation: "delete",
+			structured: { subject: "사용자", property: "의료 예약", subjectId: "person:self", propertyId: "plan:activity", value: "피부과 예약", polarity: "affirmed", cardinality: "single" },
+			deleteEvidence: { kind: "explicit_removal_request", evidenceQuote: "피부과 예약은 취소하고 치과 예약만 유지해 줘.", targetQuote: "피부과 예약" },
+			sourceEpisodeIds: [episode.id],
+		} as ExtractedFact;
+		const dentist = fact("dentist", "치과 예약", "single");
+		dentist.structured = { ...dentist.structured!, property: "의료 예약", propertyId: "plan:activity" };
+		const verifier = vi.fn<DeleteVerifier>(async (_e, _f, candidates) => ({ authorized: true, targetFactId: candidates[0]?.id }));
+
+		const result = await resolveDeleteTarget({ episode, fact: proposed, existingFacts: [dentist], verifier });
+
+		expect(verifier).not.toHaveBeenCalled();
+		expect(result).toEqual({ status: "denied", reason: "value-mismatch" });
 	});
 
 	it("lets the verifier resolve extractor cardinality drift without pre-authorizing a target", async () => {
