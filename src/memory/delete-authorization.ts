@@ -1,4 +1,5 @@
 import {
+	explainDeleteGrounding,
 	hasGroundedDeleteEvidence,
 	isLabelOnlyDeleteGrounding,
 } from "./delete-grounding.js";
@@ -33,6 +34,33 @@ export function hasGroundedDeleteAuthority(
 	)
 		return false;
 	return hasGroundedDeleteEvidence({
+		episodeContent: episode.content,
+		episodeRole: episode.role,
+		evidenceKind: fact.deleteEvidence.kind,
+		evidenceQuote: fact.deleteEvidence.evidenceQuote,
+		targetQuote: fact.deleteEvidence.targetQuote,
+		subject: fact.structured.subject,
+		property: fact.structured.property,
+		value: fact.structured.value,
+		subjectId: fact.structured.subjectId,
+		propertyId: fact.structured.propertyId,
+		polarity: fact.structured.polarity,
+	});
+}
+
+/** Diagnostic twin of hasGroundedDeleteAuthority: empty exactly when it passes. */
+export function explainDeleteAuthority(
+	fact: Pick<
+		ExtractedFact,
+		"structured" | "deleteEvidence" | "sourceEpisodeIds"
+	>,
+	episode: Pick<Episode, "content" | "role"> | undefined,
+): string[] {
+	if (episode?.role !== "user") return ["role-not-user"];
+	if (fact.sourceEpisodeIds.length !== 1) return ["source-episodes-not-one"];
+	if (!fact.structured) return ["unstructured"];
+	if (!fact.deleteEvidence) return ["evidence-missing"];
+	return explainDeleteGrounding({
 		episodeContent: episode.content,
 		episodeRole: episode.role,
 		evidenceKind: fact.deleteEvidence.kind,

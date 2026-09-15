@@ -333,6 +333,21 @@ export interface ConsolidationResult {
         memoriesPruned: number;
         /** Associations strengthened */
         associationsUpdated: number;
+        /**
+         * Observation only: one entry per delete operation in this cycle, naming
+         * where it stopped. Does not change which deletes are accepted.
+         */
+        deleteDecisions?: DeleteDecision[];
+}
+
+export interface DeleteDecision {
+        episodeId?: string;
+        property?: string;
+        value?: string;
+        outcome: "authorized" | "denied" | "verifier_failed" | "oversized";
+        /** Grounding failure codes, or the resolver's denial reason. */
+        reasons: string[];
+        targetIds?: string[];
 }
 // ─── Memory Adapter Interface ───────────────────────────────────────────────
 

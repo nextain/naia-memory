@@ -51,10 +51,10 @@ async function run(turns: Turn[], approve: (candidates: DeleteCandidate[]) => st
 	for (const [index, turn] of turns.entries()) {
 		await system.encode({ content: turn.content, role: "user", timestamp: start + index * 60_000 }, { project: turn.project });
 	}
-	await system.consolidateNow(true);
+	const result = await system.consolidateNow(true);
 	const facts = await adapter.semantic.getAll();
 	await system.close();
-	return { facts, offered };
+	return { facts, offered, decisions: result.deleteDecisions ?? [] };
 }
 
 const statusOf = (facts: { content: string; status?: string }[], content: string) => facts.find((f) => f.content === content)?.status;
@@ -63,7 +63,7 @@ describe("value-less explicit delete naming the property", () => {
 	const erase = "솔 프로젝트의 배포 채널 기억만 삭제해 줘. 숲 프로젝트는 그대로 둬.";
 
 	it("archives the single active value in the project and leaves the other project alone", async () => {
-		const { facts, offered } = await run(
+		const { facts, offered, decisions } = await run(
 			[
 				{ content: "솔 프로젝트의 배포 채널은 사내 게시판이야.", project: "sol", facts: (e) => [upsert("솔 배포 채널: 사내 게시판", e, labelled("솔 프로젝트", "배포 채널", "사내 게시판"))] },
 				{ content: "숲 프로젝트의 배포 채널은 소식지야.", project: "forest", facts: (e) => [upsert("숲 배포 채널: 소식지", e, labelled("숲 프로젝트", "배포 채널", "소식지"))] },
@@ -77,10 +77,28 @@ describe("value-less explicit delete naming the property", () => {
 		]);
 		expect(statusOf(facts, "솔 배포 채널: 사내 게시판")).toBe("archived");
 		expect(statusOf(facts, "숲 배포 채널: 소식지")).toBe("active");
+		expect(decisions).toEqual([
+			expect.objectContaining({ outcome: "authorized", reasons: ["structured-label"], targetIds: [expect.any(String)] }),
+		]);
+	});
+
+	it("records the grounding failure when the evidence quote is not the whole utterance", async () => {
+		const { facts, offered, decisions } = await run(
+			[
+				{ content: "솔 프로젝트의 배포 채널은 사내 게시판이야.", project: "sol", facts: (e) => [upsert("솔 배포 채널: 사내 게시판", e, labelled("솔 프로젝트", "배포 채널", "사내 게시판"))] },
+				{ content: erase, project: "sol", facts: (e) => [remove("솔 배포 채널: 사내 게시판", e, "솔 프로젝트의 배포 채널 기억만 삭제해 줘.", "솔 프로젝트의 배포 채널", labelled("솔 프로젝트", "배포 채널", "사내 게시판"))] },
+			],
+			(candidates) => candidates[0]?.id ?? null,
+		);
+		expect(offered).toHaveLength(0);
+		expect(statusOf(facts, "솔 배포 채널: 사내 게시판")).toBe("active");
+		expect(decisions).toEqual([
+			expect.objectContaining({ outcome: "denied", reasons: ["evidence-not-whole-episode"], value: "사내 게시판" }),
+		]);
 	});
 
 	it("offers nothing when the property holds more than one active value", async () => {
-		const { facts, offered } = await run(
+		const { facts, offered, decisions } = await run(
 			[
 				{ content: "솔 배포 채널은 사내 게시판이야.", project: "sol", facts: (e) => [upsert("솔 배포 채널: 사내 게시판", e, { ...labelled("솔 프로젝트", "배포 채널", "사내 게시판"), cardinality: "multi" })] },
 				{ content: "솔 배포 채널에 메일링도 있어.", project: "sol", facts: (e) => [upsert("솔 배포 채널: 메일링", e, { ...labelled("솔 프로젝트", "배포 채널", "메일링"), cardinality: "multi" })] },
@@ -90,6 +108,7 @@ describe("value-less explicit delete naming the property", () => {
 		);
 		expect(offered).toHaveLength(0);
 		expect(facts.filter((f) => f.status === "archived")).toHaveLength(0);
+		expect(decisions).toEqual([expect.objectContaining({ outcome: "denied", reasons: ["sibling-values>1"] })]);
 	});
 });
 

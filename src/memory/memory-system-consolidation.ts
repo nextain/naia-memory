@@ -5,6 +5,7 @@ import {
 } from "./consolidation-fact-resolution.js";
 import { MAX_EPISODES_PER_CYCLE } from "./consolidation-primitives.js";
 import {
+	explainDeleteAuthority,
 	hasGroundedDeleteAuthority,
 	resolveDeleteTarget,
 } from "./delete-authorization.js";
@@ -20,7 +21,7 @@ import {
 	hasTrustedUserMutationSources,
 	resolveStructuredMutationPolicy,
 } from "./structured-mutation-policy.js";
-import type { ConsolidationResult, Fact } from "./types.js";
+import type { ConsolidationResult, DeleteDecision, Fact } from "./types.js";
 import { recordDeleteOutcome, recordMutationOutcome } from "./usage-tracker.js";
 
 /** Sleep-cycle consolidation and adapter backup operations. */
@@ -89,6 +90,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 			const now = Date.now();
 			let factsCreated = 0;
 			let factsUpdated = 0;
+			const deleteDecisions: DeleteDecision[] = [];
 
 			// 1. Get unconsolidated episodes
 			// LocalAdapter returns insertion order (oldest-first); slice preserves that order.
@@ -154,13 +156,28 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					}
 
 					if (ef.operation === "delete") {
+						const decide = (
+							outcome: DeleteDecision["outcome"],
+							reasons: string[],
+							targetIds?: string[],
+						) =>
+							deleteDecisions.push({
+								episodeId: srcEp?.id,
+								property: ef.structured?.property,
+								value: ef.structured?.value,
+								outcome,
+								reasons,
+								...(targetIds ? { targetIds } : {}),
+							});
 						if (!hasGroundedDeleteAuthority(ef, srcEp)) {
 							recordDeleteOutcome("denied");
+							decide("denied", explainDeleteAuthority(ef, srcEp));
 							continue;
 						}
 						if (!srcEp) continue;
 						if (!this.deleteVerifier) {
 							recordDeleteOutcome("verifier_failed");
+							decide("verifier_failed", ["no-verifier"]);
 							if (!this.warnedMissingDeleteVerifier) {
 								console.warn(
 									"[naia-memory] grounded delete ignored because no delete verifier is configured",
@@ -177,6 +194,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						});
 						if (resolution.status === "oversized") {
 							recordDeleteOutcome("oversized");
+							decide("oversized", ["candidate-limit"]);
 							if (!this.warnedOversizedDelete) {
 								console.warn(
 									"[naia-memory] grounded delete ignored because candidate limit was exceeded",
@@ -187,6 +205,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						}
 						if (resolution.status === "verifier_failed") {
 							recordDeleteOutcome("verifier_failed");
+							decide("verifier_failed", ["verifier-error"]);
 							if (!this.warnedDeleteVerifierFailure) {
 								console.warn(
 									"[naia-memory] delete verifier failed; deletion denied",
@@ -197,9 +216,15 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						}
 						if (resolution.status !== "authorized") {
 							recordDeleteOutcome("denied");
+							decide("denied", [resolution.reason ?? "denied"]);
 							continue;
 						}
 						recordDeleteOutcome("authorized");
+						decide(
+							"authorized",
+							[resolution.source],
+							resolution.targets.map((target) => target.id),
+						);
 						const archivedTargets: Fact[] = resolution.targets.map(
 							(target) => ({
 								...target,
@@ -502,6 +527,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 				insightsCreated,
 				memoriesPruned: adapterResult.memoriesPruned,
 				associationsUpdated: adapterResult.associationsUpdated,
+				deleteDecisions,
 				// R4 Step 4 — replay boost count (informational, not part of legacy
 				// ConsolidationResult contract; type-assert to extend).
 				...({ replayBoosted } as any),
