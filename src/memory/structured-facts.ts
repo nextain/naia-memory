@@ -1,3 +1,4 @@
+import { isAttributePropertyId } from "./memory-identity-ontology.js";
 import type { Fact, StructuredFact } from "./types.js";
 
 function comparisonKey(value: string): string {
@@ -85,6 +86,21 @@ export function sameStructuredIdentity(
 	);
 }
 
+/**
+ * Identity for replacement. A category property ID (see
+ * MEMORY_PROPERTY_IDENTITY) groups distinct properties, so a matching ID must
+ * also carry the same property label before one value may replace another.
+ */
+export function sameReplacementIdentity(
+	left: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">,
+	right: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">,
+): boolean {
+	if (!sameStructuredIdentity(left, right)) return false;
+	const propertyId = opaqueId(left.propertyId);
+	if (!propertyId || isAttributePropertyId(propertyId)) return true;
+	return comparisonKey(left.property) === comparisonKey(right.property);
+}
+
 /** True only when every replacement-relevant field was explicitly identical. */
 export function sameStructuredFact(
 	left: StructuredFact,
@@ -144,7 +160,7 @@ export function findStructuredSupersessions(
 			fact.status === "active" &&
 			structured?.cardinality === "single" &&
 			structured.polarity === "affirmed" &&
-			sameStructuredIdentity(structured, candidate) &&
+			sameReplacementIdentity(structured, candidate) &&
 			comparisonKey(structured.value) !== value
 		);
 	});
