@@ -150,6 +150,35 @@ describe("delete of an unstructured fact by exact content", () => {
 	});
 });
 
+describe("delete of an unstructured fact holding the named value", () => {
+	// Korean confirmation set ko-045 / ko-113: the original value was stored
+	// without structure and the delete op's content is not that fact's content.
+	const erase = "아까 말한 내 금고 비밀번호는 기억에서 지워 줘. 값은 다시 말하지 마.";
+	const vault = "사용자 금고 비밀번호(테스트용): 3852";
+	const email = "사용자 이메일 비밀번호(테스트용): 3852";
+	const first = { content: "테스트용 가상 내 금고 비밀번호는 3852이고 이메일 비밀번호도 3852야.", project: "p", facts: (e: string) => [upsert(vault, e), upsert(email, e)] };
+	const request = (target: string, value: string) => ({
+		content: erase,
+		project: "p",
+		facts: (e: string) => [remove(erase, e, erase, target, labelled("사용자", "금고 비밀번호", value))],
+	});
+
+	it("offers the fact that names the target and holds the value, and archives it", async () => {
+		const { facts, offered, decisions } = await run([first, request("금고 비밀번호", "3852")], (candidates) => candidates[0]?.id ?? null);
+		expect(offered[0].map((c) => [c.source, c.content])).toEqual([["string-value", vault]]);
+		expect(statusOf(facts, vault)).toBe("archived");
+		expect(statusOf(facts, email)).toBe("active");
+		expect(decisions).toEqual([expect.objectContaining({ outcome: "authorized", reasons: ["string-value"] })]);
+	});
+
+	it("offers nothing when the named value is not in the fact", async () => {
+		const { facts, offered, decisions } = await run([first, request("금고 비밀번호", "1111")], (candidates) => candidates[0]?.id ?? null);
+		expect(offered).toHaveLength(0);
+		expect(statusOf(facts, vault)).toBe("active");
+		expect(decisions).toEqual([expect.objectContaining({ outcome: "denied", reasons: ["no-candidate"] })]);
+	});
+});
+
 describe("delete verifier payload", () => {
 	it("shows labels for structured candidates and content for unstructured ones", async () => {
 		const { buildLLMDeleteVerifier } = await import("../llm-delete-verifier.js");

@@ -29,6 +29,40 @@ function labelKey(value: string): string {
 }
 
 /**
+ * The extractor prompt prefixes every turn with "[Date: YYYY-MM-DD]"
+ * (llm-fact-extractor.ts). A model that copies the whole turn copies that tag
+ * too; it is not part of what the user said.
+ */
+const EXTRACTOR_DATE_TAG = /^\[Date: \d{4}-\d{2}-\d{2}\]\s*/;
+
+function quotesWholeEpisode(evidence: string, episode: string): boolean {
+	return evidence === episode || evidence.replace(EXTRACTOR_DATE_TAG, "") === episode;
+}
+
+function labelTokens(value: string): string[] {
+	return labelKey(value).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+}
+
+/**
+ * The user's words name the property label when every word of one occurs
+ * inside the other. Words are compared by containment so attached particles
+ * ("프로젝트의") and reordered qualifiers ("비밀번호(서리 프로젝트)") still
+ * match; a label the user shortened ("이메일 비밀번호" for "테스트용 가상 이메일
+ * 비밀번호") matches in the other direction.
+ */
+export function namesPropertyLabel(targetQuote: string, property: string): boolean {
+	const target = labelTokens(targetQuote);
+	const label = labelTokens(property);
+	if (target.length === 0 || label.length === 0) return false;
+	const joinedTarget = target.join(" ");
+	const joinedLabel = label.join(" ");
+	return (
+		label.every((word) => joinedTarget.includes(word)) ||
+		target.every((word) => joinedLabel.includes(word))
+	);
+}
+
+/**
  * A value-less explicit request ("erase the warehouse door code; do not repeat
  * it") names the property instead of the value. It is grounded when the target
  * quote contains the extracted property label. The sink additionally requires
@@ -52,7 +86,7 @@ export function isLabelOnlyDeleteGrounding(input: DeleteGroundingInput): boolean
 		Boolean(input.propertyId.trim());
 	return (
 		Boolean(property) &&
-		target.includes(property) &&
+		namesPropertyLabel(target, property) &&
 		!target.includes(labelKey(input.value)) &&
 		!hasStableIdentity
 	);
@@ -86,7 +120,7 @@ export function hasGroundedDeleteEvidence(
 		typeof input.propertyId === "string" &&
 		Boolean(input.propertyId.trim());
 	return (
-		evidence === episode &&
+		quotesWholeEpisode(evidence, episode) &&
 		hasVisibleSubstance(evidence) &&
 		hasVisibleSubstance(target) &&
 		Boolean(subject && property && value) &&
@@ -126,7 +160,7 @@ export function explainDeleteGrounding(input: DeleteGroundingInput): string[] {
 	const evidence = (input.evidenceQuote as string).normalize("NFC").trim();
 	const target = (input.targetQuote as string).normalize("NFC").trim();
 	const value = (input.value as string).normalize("NFC").trim();
-	if (evidence !== episode) reasons.push("evidence-not-whole-episode");
+	if (!quotesWholeEpisode(evidence, episode)) reasons.push("evidence-not-whole-episode");
 	if (!hasVisibleSubstance(evidence)) reasons.push("evidence-no-substance");
 	if (!hasVisibleSubstance(target)) reasons.push("target-no-substance");
 	if (!episode.includes(target)) reasons.push("target-not-in-episode");

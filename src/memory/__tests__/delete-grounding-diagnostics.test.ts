@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	explainDeleteGrounding,
 	hasGroundedDeleteEvidence,
+	namesPropertyLabel,
 	type DeleteGroundingInput,
 } from "../delete-grounding.js";
 import {
@@ -54,6 +55,9 @@ describe("explainDeleteGrounding", () => {
 		{ ...cancellation, value: "swimming" },
 		{ ...explicitRemoval, property: "비밀 값" },
 		{ ...explicitRemoval, evidenceKind: "durable_cessation" },
+		{ ...explicitRemoval, evidenceQuote: `[Date: 2026-07-03] ${explicitRemoval.episodeContent}` },
+		{ ...explicitRemoval, evidenceQuote: `[Note: 2026-07-03] ${explicitRemoval.episodeContent}` },
+		{ ...explicitRemoval, targetQuote: "출입 암호", property: "창고 출입 암호" },
 	];
 
 	it("is empty exactly when the delete is grounded", () => {
@@ -75,6 +79,33 @@ describe("explainDeleteGrounding", () => {
 		expect(explainDeleteGrounding(unnamed)).toEqual(["target-lacks-value-and-identity"]);
 		const cessation = { ...explicitRemoval, evidenceKind: "durable_cessation" };
 		expect(hasGroundedDeleteEvidence(cessation)).toBe(false);
+	});
+	it("accepts an evidence quote that copied the extractor's date tag, and no other prefix", () => {
+		// Korean confirmation set ko-111: the prompt shows "[3] [Date: 2026-07-03] ...".
+		const tagged = { ...explicitRemoval, evidenceQuote: `[Date: 2026-07-03] ${explicitRemoval.episodeContent}` };
+		expect(hasGroundedDeleteEvidence(tagged)).toBe(true);
+		const other = { ...explicitRemoval, evidenceQuote: `[Note: 2026-07-03] ${explicitRemoval.episodeContent}` };
+		expect(explainDeleteGrounding(other)).toEqual(["evidence-not-whole-episode"]);
+		const partial = { ...explicitRemoval, evidenceQuote: "[Date: 2026-07-03] 기억에서 창고 출입 암호를 지워 줘." };
+		expect(explainDeleteGrounding(partial)).toEqual(["evidence-not-whole-episode"]);
+	});
+});
+
+describe("namesPropertyLabel", () => {
+	it("matches a shortened label and a reordered qualifier with attached particles", () => {
+		// ko-043: the user shortened the label.
+		expect(namesPropertyLabel("이메일 비밀번호", "테스트용 가상 이메일 비밀번호")).toBe(true);
+		// ko-84: the qualifier moved into parentheses, the target carries "의".
+		expect(namesPropertyLabel("서리 프로젝트의 테스트 계정 비밀번호", "테스트 계정 비밀번호(서리 프로젝트)")).toBe(true);
+		expect(namesPropertyLabel("Monday lesson", "lesson")).toBe(true);
+	});
+
+	it("does not match a different secret or a label sharing only some words", () => {
+		expect(namesPropertyLabel("금고 비밀번호", "이메일 비밀번호")).toBe(false);
+		expect(namesPropertyLabel("서리 프로젝트의 비밀번호", "테스트 계정 비밀번호(달빛 프로젝트)")).toBe(false);
+		// ko-046 stays unmatched: the demonstrative is a word the label lacks.
+		expect(namesPropertyLabel("그 클라우드 접속 암호", "가상 클라우드 접속 암호")).toBe(false);
+		expect(namesPropertyLabel("  ", "암호")).toBe(false);
 	});
 });
 

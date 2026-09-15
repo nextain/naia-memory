@@ -137,25 +137,36 @@ function labelCandidates(
 }
 
 /**
- * Unstructured facts whose content equals the delete operation's content. The
- * user's target quote must name the fact, the fact must be unstructured (the
- * structured path covers the rest), and it must come from an earlier episode.
+ * Unstructured facts named by the user's target quote. The fact must be
+ * unstructured (the structured path covers the rest), come from an earlier
+ * episode, and either equal the delete operation's content ("string-exact")
+ * or contain the proposed value literally ("string-value": the extractor
+ * stored "금고 비밀번호(테스트용): 3852" without structure, and the delete
+ * names value 3852).
  */
 function stringCandidates(
 	existingFacts: Fact[],
 	fact: ExtractedFact,
 	episode: Episode,
-): Fact[] {
+): Candidate[] {
 	const target = fact.deleteEvidence?.targetQuote;
 	if (!target) return [];
-	return existingFacts.filter(
-		(candidate) =>
-			candidate.status === "active" &&
-			!candidate.structured &&
-			sameFactContent(candidate.content, fact.content) &&
-			labelKey(candidate.content).includes(labelKey(target)) &&
-			!candidate.sourceEpisodes.includes(episode.id),
-	);
+	const value = fact.structured?.value ? labelKey(fact.structured.value) : "";
+	const found: Candidate[] = [];
+	for (const candidate of existingFacts) {
+		if (
+			candidate.status !== "active" ||
+			candidate.structured ||
+			!labelKey(candidate.content).includes(labelKey(target)) ||
+			candidate.sourceEpisodes.includes(episode.id)
+		)
+			continue;
+		if (sameFactContent(candidate.content, fact.content))
+			found.push({ fact: candidate, source: "string-exact" });
+		else if (value && labelKey(candidate.content).includes(value))
+			found.push({ fact: candidate, source: "string-value" });
+	}
+	return found;
 }
 
 export type DeleteResolution =
@@ -190,7 +201,7 @@ export async function resolveDeleteTarget(options: {
 		if (label.siblingValues > 1) return { status: "denied", reason: "sibling-values>1" };
 		candidates.push(...label.facts.map((f) => ({ fact: f, source: "structured-label" as const })));
 	}
-	candidates.push(...stringCandidates(existingFacts, fact, episode).map((f) => ({ fact: f, source: "string-exact" as const })));
+	candidates.push(...stringCandidates(existingFacts, fact, episode));
 	// A fact found by several branches keeps the last, most specific source tag.
 	const unique = [...new Map(candidates.map((c) => [c.fact.id, c])).values()];
 	if (unique.length > MAX_DELETE_CANDIDATES) return { status: "oversized" };

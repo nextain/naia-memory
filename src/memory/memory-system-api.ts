@@ -165,16 +165,17 @@ export interface DeleteCandidate {
 	/**
 	 * How the candidate was found: "structured" (exact or identity match),
 	 * "structured-label" (value-less request naming the property, single active
-	 * value) or "string-exact" (unstructured fact whose content equals the
-	 * delete operation). Not sent to the verifier.
+	 * value), "string-exact" (unstructured fact whose content equals the
+	 * delete operation) or "string-value" (unstructured fact naming the target
+	 * and containing the proposed value). Not sent to the verifier.
 	 */
-	source: "structured" | "structured-label" | "string-exact";
+	source: "structured" | "structured-label" | "string-exact" | "string-value";
 	/** Minimal bounded disclosure sent to the configured verifier endpoint. */
 	structured?: Pick<
 		StructuredFact,
 		"subject" | "property" | "subjectId" | "propertyId" | "value" | "polarity" | "cardinality"
 	>;
-	/** Content of an unstructured candidate; present only for "string-exact". */
+	/** Content of an unstructured candidate; present only for string candidates. */
 	content?: string;
 }
 
