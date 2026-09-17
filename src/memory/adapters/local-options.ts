@@ -13,4 +13,10 @@ export interface LocalAdapterOptions {
 	reranker?: import("../reranker.js").RerankerProvider;
 	/** Observes background persistence failures that cannot be returned to a caller. */
 	onPersistenceError?: (error: unknown) => void;
+	/**
+	 * Rebuild persisted vectors when their embedding identity differs.
+	 * Default false: recall/save stay fail-closed until `reindexEmbeddings()`.
+	 * Product hosts that want open-time recovery pass true and await `whenReady()`.
+	 */
+	reindexEmbeddingsOnMismatch?: boolean;
 }

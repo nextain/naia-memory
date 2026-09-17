@@ -38,6 +38,15 @@ export class LocalStoreLoadError extends Error {
 	}
 }
 
+/** Fail-closed embedding identity error. Not an empty store. */
+export class EmbeddingSpaceMismatchError extends Error {
+	readonly code = "EMBEDDING_SPACE_MISMATCH";
+	constructor(reason: string) {
+		super(`LocalAdapter: ${reason}; call reindexEmbeddings()`);
+		this.name = "EmbeddingSpaceMismatchError";
+	}
+}
+
 export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private store: MemoryStore;
 	private readonly storePath: string;
@@ -49,9 +58,11 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private readonly disableKGSpreading: boolean;
 	private readonly reranker: import("../reranker.js").RerankerProvider | null;
 	private readonly onPersistenceError: ((error: unknown) => void) | null;
+	private readonly reindexEmbeddingsOnMismatch: boolean;
 	private readonly embedCache = new Map<string, number[]>();
 	private embeddingSpaceMismatch: string | null = null;
 	private storeGeneration = 0;
+	private spaceReady: Promise<void> = Promise.resolve();
 
 	constructor(options?: string | LocalAdapterOptions) {
 		const storePath =
@@ -68,6 +79,10 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			typeof options === "object"
 				? (options?.onPersistenceError ?? null)
 				: null;
+		this.reindexEmbeddingsOnMismatch =
+			typeof options === "object"
+				? (options?.reindexEmbeddingsOnMismatch ?? false)
+				: false;
 		this.storePath =
 			storePath ?? join(homedir(), ".naia", "memory", "naia-memory.json");
 		this.store = this.load();
@@ -80,6 +95,33 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		if (!this.store.episodeEmbeddings) this.store.episodeEmbeddings = {};
 		this.checkEmbeddingSpace();
 		this.kg = new KnowledgeGraph(this.store.knowledgeGraph);
+		this.spaceReady = this.startAutoReindex();
+	}
+
+	private async startAutoReindex(): Promise<void> {
+		if (!this.reindexEmbeddingsOnMismatch || !this.embeddingSpaceMismatch)
+			return;
+		try {
+			await this.reindexEmbeddings();
+		} catch {
+			// Leave the mismatch flag set. Callers await whenReady() then inspect
+			// getEmbeddingSpaceMismatch() or take the typed throw on recall/save.
+		}
+	}
+
+	/** Product hosts await this after open so auto-reindex finishes before traffic. */
+	whenReady(): Promise<void> {
+		return this.spaceReady;
+	}
+
+	getEmbeddingSpaceMismatch(): string | null {
+		return this.embeddingSpaceMismatch;
+	}
+
+	private throwIfEmbeddingSpaceMismatch(): void {
+		if (this.embeddingSpaceMismatch) {
+			throw new EmbeddingSpaceMismatchError(this.embeddingSpaceMismatch);
+		}
 	}
 
 	private checkEmbeddingSpace(): void {
@@ -116,13 +158,13 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		}
 		const generation = this.storeGeneration;
 		const facts = this.store.facts.map((fact) => ({
-				id: fact.id,
-				content: fact.content,
-			})),
-			episodes = this.store.episodes.map((episode) => ({
-				id: episode.id,
-				content: episode.content,
-			}));
+			id: fact.id,
+			content: fact.content,
+		}));
+		const episodes = this.store.episodes.map((episode) => ({
+			id: episode.id,
+			content: episode.content,
+		}));
 		const factTexts = facts.map((fact) => fact.content);
 		const episodeTexts = episodes.map((episode) => episode.content);
 		const factVectors = factTexts.length
@@ -298,11 +340,8 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	}
 
 	private async embedWithCache(text: string): Promise<number[] | null> {
-		if (this.embeddingSpaceMismatch) {
-			throw new Error(
-				`LocalAdapter: ${this.embeddingSpaceMismatch}; call reindexEmbeddings()`,
-			);
-		}
+		await this.spaceReady;
+		this.throwIfEmbeddingSpaceMismatch();
 		if (!this.embedder) return null;
 		const cacheKey = `query:${text}`;
 		const cached = this.embedCache.get(cacheKey);
@@ -319,11 +358,8 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 
 	/** Embed persisted corpus text with document/passage preprocessing. */
 	private async embedDocumentWithCache(text: string): Promise<number[] | null> {
-		if (this.embeddingSpaceMismatch) {
-			throw new Error(
-				`LocalAdapter: ${this.embeddingSpaceMismatch}; call reindexEmbeddings()`,
-			);
-		}
+		await this.spaceReady;
+		this.throwIfEmbeddingSpaceMismatch();
 		if (!this.embedder) return null;
 		const cacheKey = `document:${text}`;
 		const cached = this.embedCache.get(cacheKey);

@@ -2,7 +2,10 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { LocalAdapter } from "../adapters/local.js";
+import {
+	EmbeddingSpaceMismatchError,
+	LocalAdapter,
+} from "../adapters/local.js";
 import type { EmbeddingProvider } from "../embeddings.js";
 
 class FixedEmbedder implements EmbeddingProvider {
@@ -64,6 +67,12 @@ describe("LocalAdapter embedding-space migration", () => {
 			storePath,
 			embeddingProvider: new FixedEmbedder("model-b"),
 		});
+		expect(adapter.getEmbeddingSpaceMismatch()).toMatch(
+			/stored=model-a current=model-b/,
+		);
+		await expect(adapter.semantic.search("질의", 5)).rejects.toBeInstanceOf(
+			EmbeddingSpaceMismatchError,
+		);
 		await expect(adapter.semantic.search("질의", 5)).rejects.toThrow(
 			/call reindexEmbeddings/,
 		);
@@ -72,6 +81,97 @@ describe("LocalAdapter embedding-space migration", () => {
 		await expect(adapter.semantic.search("질의", 5)).resolves.toBeDefined();
 		const persisted = JSON.parse(await readFile(storePath, "utf8"));
 		expect(persisted.embeddingSpaceId).toBe("model-b");
+	});
+
+	it("auto-reindexes on open when reindexEmbeddingsOnMismatch is set", async () => {
+		const dir = await mkdtemp(join(tmpdir(), "naia-embedding-auto-"));
+		dirs.push(dir);
+		const storePath = join(dir, "memory.json");
+		const now = Date.now();
+		await writeFile(
+			storePath,
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [
+					{
+						id: "fact-1",
+						content: "저장된 사실",
+						entities: [],
+						topics: [],
+						createdAt: now,
+						updatedAt: now,
+						importance: 1,
+						recallCount: 0,
+						lastAccessed: now,
+						strength: 1,
+						status: "active",
+						sourceEpisodes: [],
+					},
+				],
+				skills: [],
+				reflections: [],
+				associations: {},
+				factEmbeddings: { "fact-1": [1, 0] },
+				episodeEmbeddings: {},
+				embeddingSpaceId: "model-a",
+			}),
+		);
+
+		const adapter = new LocalAdapter({
+			storePath,
+			embeddingProvider: new FixedEmbedder("model-b"),
+			reindexEmbeddingsOnMismatch: true,
+		});
+		await adapter.whenReady();
+		expect(adapter.getEmbeddingSpaceMismatch()).toBeNull();
+		await expect(adapter.semantic.search("질의", 5)).resolves.toBeDefined();
+		const persisted = JSON.parse(await readFile(storePath, "utf8"));
+		expect(persisted.embeddingSpaceId).toBe("model-b");
+		expect(persisted.factEmbeddings["fact-1"]).toEqual([0, 1]);
+	});
+
+	it("keeps a typed mismatch after auto-reindex fails for an unidentified provider", async () => {
+		const dir = await mkdtemp(
+			join(tmpdir(), "naia-embedding-auto-unidentified-"),
+		);
+		dirs.push(dir);
+		const storePath = join(dir, "memory.json");
+		await writeFile(
+			storePath,
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [],
+				skills: [],
+				reflections: [],
+				associations: {},
+				factEmbeddings: { legacy: [1, 0] },
+				episodeEmbeddings: {},
+			}),
+		);
+		const provider: EmbeddingProvider = {
+			name: "unidentified",
+			dims: 2,
+			async embed() {
+				return [1, 0];
+			},
+			async embedBatch(texts) {
+				return texts.map(() => [1, 0]);
+			},
+		};
+		const adapter = new LocalAdapter({
+			storePath,
+			embeddingProvider: provider,
+			reindexEmbeddingsOnMismatch: true,
+		});
+		await adapter.whenReady();
+		expect(adapter.getEmbeddingSpaceMismatch()).toMatch(
+			/persisted vectors require an identified embedding provider/,
+		);
+		await expect(adapter.semantic.search("질의", 5)).rejects.toBeInstanceOf(
+			EmbeddingSpaceMismatchError,
+		);
 	});
 
 	it("rejects unidentified legacy vectors instead of silently adopting them", async () => {

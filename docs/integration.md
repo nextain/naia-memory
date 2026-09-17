@@ -67,6 +67,14 @@ adapter 를 명시하지 않으면 `MemorySystem` 이 `LocalAdapter` 를 자동 
 (소스: `src/memory/index.ts` 생성자). SQLite 경로는 `SqliteAdapter` 를 명시
 주입해 opt-in 한다.
 
+### Embedding-space mismatch
+
+`LocalAdapter` 는 다른 임베딩 모델의 벡터를 섞지 않는다. 기본값은 fail-closed:
+회상/저장은 `EmbeddingSpaceMismatchError` (`code: EMBEDDING_SPACE_MISMATCH`,
+메시지에 `call reindexEmbeddings()`)를 던지며, 이것은 **빈 저장소가 아니다**.
+제품 호스트는 `reindexEmbeddingsOnMismatch: true` 를 주고 `whenReady()` 를
+기다린 뒤 트래픽을 받는다. 명시 `reindexEmbeddings()` 는 그대로 설계 API 다.
+
 ```ts
 import { LocalAdapter, SqliteAdapter } from "@nextain/naia-memory";
 
@@ -74,6 +82,10 @@ import { LocalAdapter, SqliteAdapter } from "@nextain/naia-memory";
 new LocalAdapter({
   storePath,                   // host 가 결정한 JSON store 경로
   embeddingProvider: embedder, // EmbeddingProvider (생략 시 keyword-only recall)
+  // Product hosts: rebuild vectors at open when the stored embedding identity
+  // differs, then await adapter.whenReady() before serving traffic.
+  // Default false keeps the library fail-closed until reindexEmbeddings().
+  reindexEmbeddingsOnMismatch: true,
 });
 
 // 확장 경로 (in progress) — 명시 opt-in.
