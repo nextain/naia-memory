@@ -69,11 +69,12 @@ adapter 를 명시하지 않으면 `MemorySystem` 이 `LocalAdapter` 를 자동 
 
 ### Embedding-space mismatch
 
-`LocalAdapter` 는 다른 임베딩 모델의 벡터를 섞지 않는다. 기본값은 fail-closed:
-회상/저장은 `EmbeddingSpaceMismatchError` (`code: EMBEDDING_SPACE_MISMATCH`,
-메시지에 `call reindexEmbeddings()`)를 던지며, 이것은 **빈 저장소가 아니다**.
-제품 호스트는 `reindexEmbeddingsOnMismatch: true` 를 주고 `whenReady()` 를
-기다린 뒤 트래픽을 받는다. 명시 `reindexEmbeddings()` 는 그대로 설계 API 다.
+`LocalAdapter` 와 `SqliteAdapter` 는 다른 임베딩 모델의 벡터를 섞지 않는다.
+기본값은 열 때(또는 첫 회상/저장 때) 재색인이다. `whenReady()` / `MemorySystem.init()`
+가 그 재색인을 기다린다. 재색인에 실패하면 회상/저장은 `EmbeddingSpaceMismatchError`
+(`code: EMBEDDING_SPACE_MISMATCH`, 메시지에 `call reindexEmbeddings()`)를 던지며,
+이것은 **빈 저장소가 아니다**. `reindexEmbeddingsOnMismatch: false` 는 명시
+`reindexEmbeddings()` 전까지 fail-closed 로 둔다.
 
 ```ts
 import { LocalAdapter, SqliteAdapter } from "@nextain/naia-memory";
@@ -82,10 +83,9 @@ import { LocalAdapter, SqliteAdapter } from "@nextain/naia-memory";
 new LocalAdapter({
   storePath,                   // host 가 결정한 JSON store 경로
   embeddingProvider: embedder, // EmbeddingProvider (생략 시 keyword-only recall)
-  // Product hosts: rebuild vectors at open when the stored embedding identity
-  // differs, then await adapter.whenReady() before serving traffic.
-  // Default false keeps the library fail-closed until reindexEmbeddings().
-  reindexEmbeddingsOnMismatch: true,
+  // Default true: rebuild vectors at open when the stored identity differs.
+  // Await adapter.whenReady() / MemorySystem.init() before serving traffic.
+  // Pass false to keep fail-closed until reindexEmbeddings().
 });
 
 // 확장 경로 (in progress) — 명시 opt-in.

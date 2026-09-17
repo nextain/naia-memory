@@ -15,8 +15,8 @@ export interface LocalAdapterOptions {
 	onPersistenceError?: (error: unknown) => void;
 	/**
 	 * Rebuild persisted vectors when their embedding identity differs.
-	 * Default false: recall/save stay fail-closed until `reindexEmbeddings()`.
-	 * Product hosts that want open-time recovery pass true and await `whenReady()`.
+	 * Default true: first `whenReady()` / recall / save rebuilds the index.
+	 * Pass false to keep fail-closed until an explicit `reindexEmbeddings()`.
 	 */
 	reindexEmbeddingsOnMismatch?: boolean;
 }
