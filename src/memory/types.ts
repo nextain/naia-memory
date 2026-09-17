@@ -397,6 +397,9 @@ export interface MemoryAdapter {
 	/** Force pending writes to their durable backing store. */
 	flush?(): Promise<void>;
 
+	/** Wait for open-time embedding recovery before serving traffic. */
+	whenReady?(): Promise<void>;
+
 	/** Close the adapter and release resources */
 	close(): Promise<void>;
 }

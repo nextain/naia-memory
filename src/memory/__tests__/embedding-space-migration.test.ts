@@ -7,6 +7,7 @@ import {
 	LocalAdapter,
 } from "../adapters/local.js";
 import type { EmbeddingProvider } from "../embeddings.js";
+import { MemorySystem } from "../index.js";
 
 class FixedEmbedder implements EmbeddingProvider {
 	readonly name = "fixed";
@@ -66,6 +67,7 @@ describe("LocalAdapter embedding-space migration", () => {
 		const adapter = new LocalAdapter({
 			storePath,
 			embeddingProvider: new FixedEmbedder("model-b"),
+			reindexEmbeddingsOnMismatch: false,
 		});
 		expect(adapter.getEmbeddingSpaceMismatch()).toMatch(
 			/stored=model-a current=model-b/,
@@ -81,6 +83,53 @@ describe("LocalAdapter embedding-space migration", () => {
 		await expect(adapter.semantic.search("질의", 5)).resolves.toBeDefined();
 		const persisted = JSON.parse(await readFile(storePath, "utf8"));
 		expect(persisted.embeddingSpaceId).toBe("model-b");
+	});
+
+	it("auto-reindexes on open by default", async () => {
+		const dir = await mkdtemp(join(tmpdir(), "naia-embedding-auto-default-"));
+		dirs.push(dir);
+		const storePath = join(dir, "memory.json");
+		const now = Date.now();
+		await writeFile(
+			storePath,
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [
+					{
+						id: "fact-1",
+						content: "저장된 사실",
+						entities: [],
+						topics: [],
+						createdAt: now,
+						updatedAt: now,
+						importance: 1,
+						recallCount: 0,
+						lastAccessed: now,
+						strength: 1,
+						status: "active",
+						sourceEpisodes: [],
+					},
+				],
+				skills: [],
+				reflections: [],
+				associations: {},
+				factEmbeddings: { "fact-1": [1, 0] },
+				episodeEmbeddings: {},
+				embeddingSpaceId: "model-a",
+			}),
+		);
+
+		const adapter = new LocalAdapter({
+			storePath,
+			embeddingProvider: new FixedEmbedder("model-b"),
+		});
+		await adapter.whenReady();
+		expect(adapter.getEmbeddingSpaceMismatch()).toBeNull();
+		await expect(adapter.semantic.search("질의", 5)).resolves.toBeDefined();
+		const persisted = JSON.parse(await readFile(storePath, "utf8"));
+		expect(persisted.embeddingSpaceId).toBe("model-b");
+		expect(persisted.factEmbeddings["fact-1"]).toEqual([0, 1]);
 	});
 
 	it("auto-reindexes on open when reindexEmbeddingsOnMismatch is set", async () => {
@@ -194,6 +243,7 @@ describe("LocalAdapter embedding-space migration", () => {
 		const adapter = new LocalAdapter({
 			storePath,
 			embeddingProvider: new FixedEmbedder("model-b"),
+			reindexEmbeddingsOnMismatch: false,
 		});
 		await expect(adapter.semantic.search("질의", 5)).rejects.toThrow(
 			/legacy vectors/,
@@ -220,6 +270,7 @@ describe("LocalAdapter embedding-space migration", () => {
 		const adapter = new LocalAdapter({
 			storePath,
 			embeddingProvider: new FixedEmbedder("model-b"),
+			reindexEmbeddingsOnMismatch: false,
 		});
 		const now = Date.now();
 		await expect(
@@ -416,6 +467,7 @@ describe("LocalAdapter embedding-space migration", () => {
 		const target = new LocalAdapter({
 			storePath: join(targetDir, "memory.json"),
 			embeddingProvider: new FixedEmbedder("model-b"),
+			reindexEmbeddingsOnMismatch: false,
 		});
 		await target.import(blob, "password");
 		await expect(target.semantic.search("질의", 5)).rejects.toThrow(
@@ -423,6 +475,48 @@ describe("LocalAdapter embedding-space migration", () => {
 		);
 		await target.reindexEmbeddings();
 		await expect(target.semantic.search("질의", 5)).resolves.toBeDefined();
+	});
+
+	it("auto-reindexes an imported store whose embedding identity differs", async () => {
+		const sourceDir = await mkdtemp(
+			join(tmpdir(), "naia-embedding-backup-auto-source-"),
+		);
+		const targetDir = await mkdtemp(
+			join(tmpdir(), "naia-embedding-backup-auto-target-"),
+		);
+		dirs.push(sourceDir, targetDir);
+		const source = new LocalAdapter({
+			storePath: join(sourceDir, "memory.json"),
+			embeddingProvider: new FixedEmbedder("model-a"),
+		});
+		const now = Date.now();
+		await source.semantic.upsert({
+			id: "fact-1",
+			content: "저장된 사실",
+			entities: [],
+			topics: [],
+			createdAt: now,
+			updatedAt: now,
+			importance: 1,
+			recallCount: 0,
+			lastAccessed: now,
+			strength: 1,
+			status: "active",
+			sourceEpisodes: [],
+		});
+		const blob = await source.export("password");
+		const target = new LocalAdapter({
+			storePath: join(targetDir, "memory.json"),
+			embeddingProvider: new FixedEmbedder("model-b"),
+		});
+		await target.import(blob, "password");
+		await target.whenReady();
+		expect(target.getEmbeddingSpaceMismatch()).toBeNull();
+		await expect(target.semantic.search("질의", 5)).resolves.toBeDefined();
+		const persisted = JSON.parse(
+			await readFile(join(targetDir, "memory.json"), "utf8"),
+		);
+		expect(persisted.embeddingSpaceId).toBe("model-b");
 	});
 
 	it("preserves the current embedding-space identity across reset and reopen", async () => {
@@ -460,5 +554,52 @@ describe("LocalAdapter embedding-space migration", () => {
 		expect(reopened.getKnowledgeGraph().getNeighbors("alpha")).toEqual([
 			{ neighbor: "beta", weight: 0.5 },
 		]);
+	});
+
+	it("MemorySystem.init auto-reindexes a mismatched LocalAdapter store", async () => {
+		const dir = await mkdtemp(join(tmpdir(), "naia-embedding-system-init-"));
+		dirs.push(dir);
+		const storePath = join(dir, "memory.json");
+		const now = Date.now();
+		await writeFile(
+			storePath,
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [
+					{
+						id: "fact-1",
+						content: "저장된 사실",
+						entities: [],
+						topics: [],
+						createdAt: now,
+						updatedAt: now,
+						importance: 1,
+						recallCount: 0,
+						lastAccessed: now,
+						strength: 1,
+						status: "active",
+						sourceEpisodes: [],
+					},
+				],
+				skills: [],
+				reflections: [],
+				associations: {},
+				factEmbeddings: { "fact-1": [1, 0] },
+				episodeEmbeddings: {},
+				embeddingSpaceId: "model-a",
+			}),
+		);
+		const adapter = new LocalAdapter({
+			storePath,
+			embeddingProvider: new FixedEmbedder("model-b"),
+		});
+		const memory = new MemorySystem({ adapter });
+		await memory.init();
+		expect(adapter.getEmbeddingSpaceMismatch()).toBeNull();
+		await expect(memory.recall("질의", { topK: 5 })).resolves.toBeDefined();
+		const persisted = JSON.parse(await readFile(storePath, "utf8"));
+		expect(persisted.embeddingSpaceId).toBe("model-b");
+		await memory.close();
 	});
 });

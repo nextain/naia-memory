@@ -401,9 +401,38 @@ describe("SqliteAdapter Smoke Test", () => {
 			lastAccessed: now, strength: 1, status: "active", sourceEpisodes: [],
 		});
 		await memory.close();
-		adapter = new SqliteAdapter({ dbPath, embeddingProvider: provider("space-b") });
+		adapter = new SqliteAdapter({
+			dbPath,
+			embeddingProvider: provider("space-b"),
+			reindexEmbeddingsOnMismatch: false,
+		});
 		memory = new MemorySystem({ adapter });
 		await expect(adapter.semantic.getAll()).rejects.toThrow(/embedding-space mismatch/);
+	});
+
+	it("reindexes SQLite vectors on mismatch by default", async () => {
+		await memory.close();
+		const provider = (space: string, documentVector: number[]): EmbeddingProvider => ({
+			name: "sqlite-default-reindex", dims: 2, embeddingSpaceId: space,
+			async embed() { return documentVector; },
+			async embedBatch(texts) { return texts.map(() => documentVector); },
+		});
+		adapter = new SqliteAdapter({ dbPath, embeddingProvider: provider("space-old", [1, 0]) });
+		memory = new MemorySystem({ adapter });
+		await memory.init();
+		const now = Date.now();
+		await adapter.semantic.upsert({
+			id: "default-reindexed", content: "reindex me", entities: [], topics: [],
+			createdAt: now, updatedAt: now, importance: 1, recallCount: 0,
+			lastAccessed: now, strength: 1, status: "active", sourceEpisodes: [],
+		});
+		await memory.close();
+		adapter = new SqliteAdapter({ dbPath, embeddingProvider: provider("space-new", [0, 1]) });
+		memory = new MemorySystem({ adapter });
+		await expect(adapter.semantic.getAll()).resolves.toHaveLength(1);
+		await expect(adapter.semantic.search("reindex", 10, false)).resolves.toEqual([
+			expect.objectContaining({ id: "default-reindexed", status: "active" }),
+		]);
 	});
 
 	it("reindexes all SQLite vectors only after explicit mismatch opt-in", async () => {

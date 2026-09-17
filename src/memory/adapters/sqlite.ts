@@ -33,7 +33,7 @@ const MAX_FACT_UPSERT_BATCH = 1000;
 export interface SqliteAdapterOptions {
     dbPath: string;
     embeddingProvider?: EmbeddingProvider | null;
-    /** Explicitly rebuild persisted vectors when their embedding identity differs. */
+    /** Rebuild persisted vectors when their embedding identity differs. Default true. */
     reindexEmbeddingsOnMismatch?: boolean;
 }
 
@@ -58,7 +58,7 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
         const dir = dirname(options.dbPath);
         if (dir !== "." && !existsSync(dir)) mkdirSync(dir, { recursive: true });
         this.embedder = options.embeddingProvider ?? null;
-        this.reindexEmbeddingsOnMismatch = options.reindexEmbeddingsOnMismatch ?? false;
+        this.reindexEmbeddingsOnMismatch = options.reindexEmbeddingsOnMismatch ?? true;
         
         // Initialize Background Worker.
         // The built package ships sqlite-worker.js next to this file. In dev/tests we
@@ -93,6 +93,10 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
         this.worker.on("exit", (code) => rejectPending(new Error(`SQLite worker exited with code ${code}`)));
 
         this.initialization = this.initSchema();
+    }
+
+    whenReady(): Promise<void> {
+        return this.initialization;
     }
 
     private async rawCallWorker(type: string, payload: any): Promise<any> {

@@ -62,7 +62,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private readonly embedCache = new Map<string, number[]>();
 	private embeddingSpaceMismatch: string | null = null;
 	private storeGeneration = 0;
-	private spaceReady: Promise<void> = Promise.resolve();
+	private spaceReady: Promise<void> | null = null;
 
 	constructor(options?: string | LocalAdapterOptions) {
 		const storePath =
@@ -81,8 +81,8 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 				: null;
 		this.reindexEmbeddingsOnMismatch =
 			typeof options === "object"
-				? (options?.reindexEmbeddingsOnMismatch ?? false)
-				: false;
+				? (options?.reindexEmbeddingsOnMismatch ?? true)
+				: true;
 		this.storePath =
 			storePath ?? join(homedir(), ".naia", "memory", "naia-memory.json");
 		this.store = this.load();
@@ -95,7 +95,13 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		if (!this.store.episodeEmbeddings) this.store.episodeEmbeddings = {};
 		this.checkEmbeddingSpace();
 		this.kg = new KnowledgeGraph(this.store.knowledgeGraph);
-		this.spaceReady = this.startAutoReindex();
+	}
+
+	private ensureEmbeddingSpace(): Promise<void> {
+		if (!this.spaceReady) {
+			this.spaceReady = this.startAutoReindex();
+		}
+		return this.spaceReady;
 	}
 
 	private async startAutoReindex(): Promise<void> {
@@ -111,7 +117,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 
 	/** Product hosts await this after open so auto-reindex finishes before traffic. */
 	whenReady(): Promise<void> {
-		return this.spaceReady;
+		return this.ensureEmbeddingSpace();
 	}
 
 	getEmbeddingSpaceMismatch(): string | null {
@@ -340,7 +346,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	}
 
 	private async embedWithCache(text: string): Promise<number[] | null> {
-		await this.spaceReady;
+		await this.ensureEmbeddingSpace();
 		this.throwIfEmbeddingSpaceMismatch();
 		if (!this.embedder) return null;
 		const cacheKey = `query:${text}`;
@@ -358,7 +364,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 
 	/** Embed persisted corpus text with document/passage preprocessing. */
 	private async embedDocumentWithCache(text: string): Promise<number[] | null> {
-		await this.spaceReady;
+		await this.ensureEmbeddingSpace();
 		this.throwIfEmbeddingSpaceMismatch();
 		if (!this.embedder) return null;
 		const cacheKey = `document:${text}`;
@@ -508,6 +514,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		const previousStore = this.store;
 		const previousKg = this.kg;
 		const previousEmbeddingSpaceMismatch = this.embeddingSpaceMismatch;
+		const previousSpaceReady = this.spaceReady;
 		// Ensure knowledgeGraph is always present before constructing KnowledgeGraph
 		const importedKgState = parsed.knowledgeGraph ?? emptyKGState();
 		parsed.knowledgeGraph = importedKgState;
@@ -519,6 +526,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		this.kg = new KnowledgeGraph(importedKgState);
 		this.embedCache.clear();
 		this.checkEmbeddingSpace();
+		this.spaceReady = null;
 		try {
 			this.markDirty();
 			// saveImmediate (not the debounced save) so a disk-write failure throws
@@ -531,6 +539,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			this.store = previousStore;
 			this.kg = previousKg;
 			this.embeddingSpaceMismatch = previousEmbeddingSpaceMismatch;
+			this.spaceReady = previousSpaceReady;
 			this.embedCache.clear();
 			throw err;
 		}
@@ -562,6 +571,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		this.store.knowledgeGraph = knowledgeGraph;
 		this.kg = new KnowledgeGraph(knowledgeGraph);
 		this.checkEmbeddingSpace();
+		this.spaceReady = null;
 		this.embedCache.clear();
 		this.markDirty();
 		this.saveImmediate();

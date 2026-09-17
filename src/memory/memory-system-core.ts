@@ -47,6 +47,12 @@ import {
 	type RollingSummary,
 } from "./compaction-helpers.js";
 
+function invokeAdapterWhenReady(adapter: MemoryAdapter): Promise<void> {
+	return typeof adapter.whenReady === "function"
+		? adapter.whenReady()
+		: Promise.resolve();
+}
+
 export abstract class MemorySystemCore {
 	protected readonly adapter: MemoryAdapter;
 	private readonly _initPromise: Promise<void>;
@@ -141,7 +147,7 @@ export abstract class MemorySystemCore {
 			this._initPromise = qdrantAdapter.initialize();
 		} else if (options.adapter) {
 			this.adapter = options.adapter;
-			this._initPromise = Promise.resolve();
+			this._initPromise = invokeAdapterWhenReady(this.adapter);
 		} else {
 			const localAdapter = new LocalAdapter({
 				embeddingProvider: options.embeddingProvider,
@@ -149,7 +155,7 @@ export abstract class MemorySystemCore {
 				reranker: options.reranker,
 			});
 			this.adapter = localAdapter;
-			this._initPromise = Promise.resolve();
+			this._initPromise = localAdapter.whenReady();
 		}
 	}
 
