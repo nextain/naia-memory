@@ -21,6 +21,9 @@ Mem0 episode write 경계다. 인증 모드 선택은 호출자가 명시하며,
 | FR-MEM-EMBED-HEAL-2 | 캐시 디렉터리 삭제는 `env.cacheDir` 내부의 해당 모델·리비전 경로로 엄격히 한정되어야 하며 비어있는 cacheDir나 범위 밖 대상은 절대 삭제하지 않아야 한다 (nextain/naia-shell#681). | UC-MEM-EMBED-HEAL-01 | Done |
 | FR-MEM-EMBED-HEAL-3 | 임베딩 모델 초기화 실패 시 영구적으로 거부된 상태로 남지 않고 `initPromise`를 정리하여 후속 호출에서 재시도할 수 있어야 한다 (nextain/naia-shell#681). | UC-MEM-EMBED-HEAL-01 | Done |
 | FR-MEM-REINDEX-DIAG-1 | `LocalAdapter`의 자동 재색인(`startAutoReindex`) 실패 시 예외를 삼키지 않고 원인 메시지를 보존하여 `getEmbeddingReindexError()`로 노출해야 한다 (nextain/naia-shell#681). | UC-MEM-EMBED-HEAL-01 | Done |
+| FR-MEM-LLM-REQ-1 | 메모리 LLM 요청(사실 추출·요약·삭제 검증·질의 구조화·모순 필터)은 호출자가 temperature를 정하지 않으면 GPT-5 계열 모델(`gpt-5…`, 공급자 접두 포함)에 `temperature`를 보내지 않는다. 다른 모델은 기존 값(0, 요약 0.2)을 유지한다. (nextain/naia-shell#692) | UC-MEM-LLM-REQ-01 | Done |
+| FR-MEM-LLM-REQ-2 | 각 빌더는 `temperature?: number | null` 옵션을 받는다. 숫자는 그대로 보내고 `null`은 항상 생략하며, 명시 옵션이 모델 기본값보다 우선한다. | UC-MEM-LLM-REQ-01 | Done |
+| FR-MEM-LLM-REQ-3 | 모든 메모리 LLM 요청 URL은 baseURL 끝 슬래시 유무와 무관하게 `<base>/chat/completions` 하나로 조립한다(`…/v1chat/completions` 404 방지). | UC-MEM-LLM-REQ-01 | Done |
 
 ## 비기능 요구사항
 
@@ -43,6 +46,7 @@ Mem0 episode write 경계다. 인증 모드 선택은 호출자가 명시하며,
 | FR-MEM-RETRIEVAL-1, NFR-MEM-RETRIEVAL-1 | `src/memory/adapters/local.ts` | `src/memory/__tests__/episode-hybrid-ranking.test.ts` |
 | FR-MEM-EMBED-HEAL-1, FR-MEM-EMBED-HEAL-2, FR-MEM-EMBED-HEAL-3 | `src/memory/embeddings.ts` | `src/memory/__tests__/offline-model-cache-healing.test.ts` |
 | FR-MEM-REINDEX-DIAG-1 | `src/memory/adapters/local.ts`, `src/memory/types.ts`, `src/memory/memory-system-core.ts` | `src/memory/__tests__/embedding-space-migration.test.ts`, `src/memory/__tests__/embedding-reindex-diagnostics.test.ts` |
+| FR-MEM-LLM-REQ-1, FR-MEM-LLM-REQ-2, FR-MEM-LLM-REQ-3 | `src/memory/llm-request.ts`, `src/memory/llm-fact-extractor.ts`, `src/memory/llm-summarizer.ts`, `src/memory/llm-delete-verifier.ts`, `src/memory/llm-query-structurer.ts`, `src/memory/contradiction-filter.ts` | `src/memory/__tests__/llm-request.test.ts` |
 
 P04 증거: 핵심 계약 30/30, 전체 393/393, typecheck·build·F13 구조·문서
 그래프·진입점 mirror·용어 검사 통과(2026-07-21).

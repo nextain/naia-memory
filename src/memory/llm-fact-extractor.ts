@@ -15,6 +15,7 @@
 
 import { hasGroundedDeleteEvidence } from "./delete-grounding.js";
 import type { ExtractedFact } from "./index.js";
+import { chatCompletionsUrl, temperatureField } from "./llm-request.js";
 import {
 	inferEnglishMemoryPropertyId,
 	isMemoryPropertyId,
@@ -35,6 +36,8 @@ export interface LLMFactExtractorOptions {
 	batchSize?: number;
 	/** Product default skips failed batches; benchmarks should use throw. */
 	failurePolicy?: "skip" | "throw";
+	/** Request temperature. number = send, null = omit, undefined = 0 except GPT-5 family (omitted). */
+	temperature?: number | null;
 }
 
 const GEMINI_DIRECT_BASE_URL =
@@ -85,6 +88,7 @@ export function buildLLMFactExtractor(
 		batchSize = DEFAULT_BATCH_SIZE,
 		auth = "bearer",
 		failurePolicy = "skip",
+		temperature,
 	} = options;
 
 	return async (episodes: Episode[]): Promise<ExtractedFact[]> => {
@@ -98,6 +102,7 @@ export function buildLLMFactExtractor(
 				model,
 				auth,
 				failurePolicy,
+				temperature,
 			});
 			results.push(...extracted);
 		}
@@ -118,10 +123,11 @@ async function extractBatch(
 		model: string;
 		auth: "bearer" | "x-anyllm";
 		failurePolicy: "skip" | "throw";
+		temperature?: number | null;
 	},
 	retries = 3,
 ): Promise<ExtractedFact[]> {
-	const { apiKey, baseURL, model, auth, failurePolicy } = opts;
+	const { apiKey, baseURL, model, auth, failurePolicy, temperature } = opts;
 
 	const episodeList = episodes
 		.map((ep, i) => {
@@ -267,7 +273,7 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","operation":"
 Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"delete","deleteEvidenceKind":"explicit_removal_request","deleteEvidenceQuote":"땅콩 알레르기 기억을 삭제해 줘.","deleteTargetQuote":"땅콩 알레르기","structured":{"subject":"사용자","subjectId":"person:self","property":"알레르기","propertyId":"profile:allergy","value":"땅콩","polarity":"affirmed","cardinality":"multi"}}]}`;
 
 	const call = () =>
-		fetch(`${baseURL}chat/completions`, {
+		fetch(chatCompletionsUrl(baseURL), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -284,8 +290,8 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
 				// 2K ceiling can therefore truncate even a short JSON payload.
 				max_tokens: Math.max(8192, episodes.length * 400),
 				// Extraction is a contract parse, not creative generation. Zero reduces
-				// multilingual key/cardinality drift across repeated benchmark runs.
-				temperature: 0,
+				// multilingual key/cardinality drift across repeated benchmark runs; GPT-5 family omits it.
+				...temperatureField(model, 0, temperature),
 				response_format: { type: "json_object" },
 			}),
 		});

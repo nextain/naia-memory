@@ -5,6 +5,7 @@
 // OpenAI-compat chat/completions(llm-fact-extractor 와 동형 엔드포인트). naia-agent 가 메모리 small-LLM
 // 설정(provider/baseUrl/apiKey/model)으로 빌드해 MemorySystem({ summarizer }) 로 주입한다.
 import type { CompactionSummarizer } from "./index.js";
+import { chatCompletionsUrl, temperatureField } from "./llm-request.js";
 
 export interface LLMSummarizerOptions {
 	/** OpenAI-compat API key(로컬 서버는 빈 값 허용). */
@@ -15,6 +16,8 @@ export interface LLMSummarizerOptions {
 	baseURL?: string;
 	/** 요약 모델. 미지정 = gemini-2.5-flash-lite(빠르고 저렴). */
 	model?: string;
+	/** Request temperature. number = send, null = omit, undefined = 0.2 except GPT-5 family (omitted). */
+	temperature?: number | null;
 }
 
 const DEFAULT_BASE_URL =
@@ -46,7 +49,7 @@ export function buildLLMSummarizer(
 		}\n\n대화:\n${transcript}\n\n요약(평문, 군더더기 없이):`;
 
 		try {
-			const res = await fetch(`${baseURL}chat/completions`, {
+			const res = await fetch(chatCompletionsUrl(baseURL), {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -60,7 +63,7 @@ export function buildLLMSummarizer(
 					model,
 					messages: [{ role: "user", content: prompt }],
 					max_tokens: 1024,
-					temperature: 0.2,
+					...temperatureField(model, 0.2, options.temperature),
 				}),
 				...(input.signal ? { signal: input.signal } : {}),
 			});

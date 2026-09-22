@@ -95,6 +95,11 @@ export type {
 export { buildLLMSummarizer } from "./llm-summarizer.js";
 export type { LLMSummarizerOptions } from "./llm-summarizer.js";
 export {
+	chatCompletionsUrl,
+	isGpt5FamilyModel,
+	temperatureField,
+} from "./llm-request.js";
+export {
 	IdentityReranker,
 	OfflineRerankerProvider,
 	type RerankerProvider,

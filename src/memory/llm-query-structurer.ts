@@ -1,3 +1,4 @@
+import { chatCompletionsUrl, temperatureField } from "./llm-request.js";
 import {
 	MEMORY_PROPERTY_IDS,
 	isMemoryPropertyId,
@@ -21,6 +22,8 @@ export interface LLMQueryStructurerOptions {
 	maxOutputTokens?: number;
 	/** Experimental: request closed-vocabulary IDs. Disabled by default. */
 	includeIdentityIds?: boolean;
+	/** Request temperature. number = send, null = omit, undefined = 0 except GPT-5 family (omitted). */
+	temperature?: number | null;
 }
 
 /**
@@ -31,7 +34,6 @@ export interface LLMQueryStructurerOptions {
 export function buildLLMQueryStructurer(
 	options: LLMQueryStructurerOptions,
 ): (query: string) => Promise<StructuredQuery | undefined> {
-	const baseURL = `${options.baseURL.replace(/\/+$/, "")}/`;
 	const auth = options.auth ?? "bearer";
 	return async (query: string) => {
 		const boundedQuery = query
@@ -39,7 +41,7 @@ export function buildLLMQueryStructurer(
 			.slice(0, options.maxQueryChars ?? DEFAULT_MAX_QUERY_CHARS);
 		if (!boundedQuery) return undefined;
 		try {
-			const response = await fetch(`${baseURL}chat/completions`, {
+			const response = await fetch(chatCompletionsUrl(options.baseURL), {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -51,7 +53,7 @@ export function buildLLMQueryStructurer(
 				},
 				body: JSON.stringify({
 					model: options.model,
-					temperature: 0,
+					...temperatureField(options.model, 0, options.temperature),
 					max_tokens: options.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS,
 					response_format: { type: "json_object" },
 					messages: [

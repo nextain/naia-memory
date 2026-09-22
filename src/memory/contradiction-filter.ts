@@ -18,6 +18,7 @@
  * Refs: nextain/naia-memory#14, plan-v3-anchor §4 R2.5
  */
 
+import { chatCompletionsUrl, temperatureField } from "./llm-request.js";
 import {
 	type ReconsolidationResult,
 	checkContradiction as heuristicCheckContradiction,
@@ -176,6 +177,8 @@ export interface GeminiFlashLiteFilterOptions {
 	 *  current-state recall (issue #14 measurement showed -3pp on contradiction_direct
 	 *  when threshold was effectively 0). */
 	confidenceThreshold?: number;
+	/** Request temperature. number = send, null = omit, undefined = 0 except GPT-5 family (omitted). */
+	temperature?: number | null;
 }
 
 const GEMINI_DIRECT_BASE_URL =
@@ -207,6 +210,7 @@ export class GeminiFlashLiteContradictionFilter
 	private readonly model: string;
 	private readonly batchSize: number;
 	private readonly confidenceThreshold: number;
+	private readonly temperature?: number | null;
 
 	constructor(options: GeminiFlashLiteFilterOptions) {
 		// When the caller didn't pin a baseURL, auto-route via gateway when
@@ -220,6 +224,7 @@ export class GeminiFlashLiteContradictionFilter
 		this.batchSize = options.batchSize ?? GEMINI_DEFAULT_BATCH_SIZE;
 		this.confidenceThreshold =
 			options.confidenceThreshold ?? DEFAULT_CONFIDENCE_THRESHOLD;
+		this.temperature = options.temperature;
 	}
 
 	async filter(
@@ -256,7 +261,7 @@ export class GeminiFlashLiteContradictionFilter
 		offset: number,
 	): Promise<ContradictionVerdict[]> {
 		const prompt = buildContradictionPrompt(batch);
-		const url = `${this.baseURL.replace(/\/$/, "")}/chat/completions`;
+		const url = chatCompletionsUrl(this.baseURL);
 		const response = await fetch(url, {
 			method: "POST",
 			headers: {
@@ -266,7 +271,7 @@ export class GeminiFlashLiteContradictionFilter
 			body: JSON.stringify({
 				model: this.model,
 				messages: [{ role: "user", content: prompt }],
-				temperature: 0,
+				...temperatureField(this.model, 0, this.temperature),
 				response_format: { type: "json_object" },
 			}),
 		});
@@ -303,6 +308,8 @@ export interface VllmReasoningFilterOptions {
 	/** Minimum confidence (0-1) required to accept a contradiction verdict.
 	 *  Default 0.7 — same threshold as Gemini filter. */
 	confidenceThreshold?: number;
+	/** Request temperature. number = send, null = omit, undefined = 0 except GPT-5 family (omitted). */
+	temperature?: number | null;
 }
 
 const VLLM_DEFAULT_MODEL = "local-reasoning-model";
@@ -320,6 +327,7 @@ export class VllmReasoningContradictionFilter
 	private readonly model: string;
 	private readonly batchSize: number;
 	private readonly confidenceThreshold: number;
+	private readonly temperature?: number | null;
 
 	constructor(options: VllmReasoningFilterOptions = {}) {
 		this.baseURL =
@@ -331,6 +339,7 @@ export class VllmReasoningContradictionFilter
 		this.batchSize = options.batchSize ?? VLLM_DEFAULT_BATCH_SIZE;
 		this.confidenceThreshold =
 			options.confidenceThreshold ?? DEFAULT_CONFIDENCE_THRESHOLD;
+		this.temperature = options.temperature;
 	}
 
 	async filter(
@@ -360,14 +369,14 @@ export class VllmReasoningContradictionFilter
 		offset: number,
 	): Promise<ContradictionVerdict[]> {
 		const prompt = buildContradictionPrompt(batch);
-		const url = `${this.baseURL.replace(/\/$/, "")}/chat/completions`;
+		const url = chatCompletionsUrl(this.baseURL);
 		const response = await fetch(url, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				model: this.model,
 				messages: [{ role: "user", content: prompt }],
-				temperature: 0,
+				...temperatureField(this.model, 0, this.temperature),
 				max_tokens: 1024,
 			}),
 		});
