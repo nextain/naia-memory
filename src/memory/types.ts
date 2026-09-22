@@ -400,6 +400,9 @@ export interface MemoryAdapter {
 	/** Wait for open-time embedding recovery before serving traffic. */
 	whenReady?(): Promise<void>;
 
+	/** Return the error message from the most recent failed auto-reindex, if any. */
+	getEmbeddingReindexError?(): string | null;
+
 	/** Close the adapter and release resources */
 	close(): Promise<void>;
 }

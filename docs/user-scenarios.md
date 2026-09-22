@@ -47,6 +47,22 @@ V-model의 사용자 시나리오(UC)에서 검증 테스트까지 추적하는 
   3. 해당 고유 문구로 recall하면 user episode가 top-5에 포함된다.
 - **실패 방지 조건**: 긴 문서의 부분 일치나 strength가 정확한 짧은 episode의 관련성을 대체하지 않는다.
 
+## UC-MEM-EMBED-HEAL-01 — 손상된 오프라인 임베딩 모델 캐시 자가 복구
+
+- **사용자**: 첫 기동 또는 네트워크 중단 이후 Naia Memory를 사용하는 사용자 및 Naia Agent
+- **목표**: 첫 모델 다운로드가 중단되어 ONNX 파일이 잘리거나 손상되어도 장기 기억이 영구 비활성화되지 않고, 다음 기동 시 정상 기억 회상을 수행한다.
+- **이유**: transformers 캐시에 잘린 모델 파일이 잔존할 경우, 첫 파이프라인 로드 전 고정 크기 사전 검증(pre-flight)으로 잘린 캐시를 자동 삭제하여 다음 기동 시 수동 조치 없이 자가 복구하기 위해서다 (nextain/naia-shell#681). transformers.js 3.8.1은 세션 생성 실패 시 전역 `wasmInitPromise`를 오염시키므로(`src/backends/onnx.js:153,157`), 로드 중 손상 오류가 발생하면 캐시를 삭제하고 프로세스 재기동을 요청한다.
+- **사전 조건**: 캐시 디렉터리에 손상되었거나 잘린 모델 파일이 존재한다.
+- **정상 흐름**:
+  1. `OfflineEmbeddingProvider.init()`에서 첫 파이프라인 생성 전 사전 검증(`purgeTruncatedModelCache`)을 수행하여, 고정 기본 리비전의 ONNX 파일 크기가 기대 바이트 수(`OFFLINE_MODEL_FILE_BYTES`)와 다를 경우 손상된 캐시 디렉터리를 사전 삭제한다.
+  2. 파이프라인 생성(`create()`) 시 정상적으로 온전한 모델 파일이 다운로드되고 로드된다.
+  3. 만약 로드 중 손상 오류(`isCorruptModelError`)가 발생할 경우, 인프로세스 재시도 대신 캐시 디렉터리를 삭제하고 프로세스 재시작을 요청하는 오류를 throw하여 다음 기동에서 깨끗하게 복구되도록 한다.
+  4. 이후 회상(`recall()`)과 저장(`save()`)이 정상 동작하여 사용자가 기억을 회상할 수 있다.
+- **실패 방지 조건**:
+  1. 캐시 디렉터리 삭제는 `env.cacheDir` 내부의 해당 모델/리비전 디렉터리로 엄격히 한정되며 상위 디렉터리나 다른 모델 파일은 절대 삭제하지 않는다.
+  2. 비정상 캐시 검출 시 `initPromise`를 정리하여 후속 호출이 잠기지 않도록 한다.
+  3. 자동 재색인 실패 시 실제 원인 메시지가 `getEmbeddingReindexError()`로 보존된다.
+
 ## Test Coverage Map
 
 | UC | 테스트 파일 / 그룹 | 검증 계약 |
@@ -56,6 +72,7 @@ V-model의 사용자 시나리오(UC)에서 검증 테스트까지 추적하는 
 | UC-MEM-IDEMP-01 | `src/memory/__tests__/mem0-idempotency.test.ts` / `Mem0Adapter episode idempotency` | 재시작 후 같은 episode ID는 `add`하지 않고 `update`하며, 동시 재시도는 한 번 추가 후 마지막 payload로 갱신됨을 확인한다. 실패 뒤 같은 ID 재시도와 서로 다른 ID의 독립 실행도 검증한다. |
 | UC-MEM-IDEMP-01 | `src/memory/__tests__/memory-system.test.ts` / memory write idempotency·flush | 상위 `MemorySystem` 경계에서 결정적 ID 재사용과 flush 가능한 write 계약을 확인한다. |
 | UC-MEM-RETRIEVAL-01 | `src/memory/__tests__/episode-hybrid-ranking.test.ts` / LocalAdapter hybrid ranking | 결정적 embedding에서 높은 utility의 긴 오염 episode 12개가 있어도 정확한 `CONNECTION_OK` user episode가 top-5에 포함됨을 확인한다. |
+| UC-MEM-EMBED-HEAL-01 | `src/memory/__tests__/offline-model-cache-healing.test.ts`, `src/memory/__tests__/embedding-reindex-diagnostics.test.ts` | 고정 크기 사전 검증(pre-flight)을 통한 잘린 캐시 삭제, 온전한 캐시 보존, guard 검증, 로드 실패 시 캐시 삭제 및 재기동 안내 throw, initPromise 정리, 그리고 auto-reindex 실패 원인 노출을 확인한다 (nextain/naia-shell#681). |
 
 모든 테스트는 실제 production builder/adapter를 호출한다. 네트워크와 Mem0 client만
 결정론적 fake로 대체하며, 인증 헤더 조립과 episode write 분기는 mock하지 않는다.

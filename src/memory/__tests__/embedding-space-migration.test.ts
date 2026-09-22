@@ -218,9 +218,77 @@ describe("LocalAdapter embedding-space migration", () => {
 		expect(adapter.getEmbeddingSpaceMismatch()).toMatch(
 			/persisted vectors require an identified embedding provider/,
 		);
+		expect(adapter.getEmbeddingReindexError()).toContain(
+			"Cannot reindex with an unidentified embedding provider",
+		);
 		await expect(adapter.semantic.search("질의", 5)).rejects.toBeInstanceOf(
 			EmbeddingSpaceMismatchError,
 		);
+	});
+
+	it("surfaces embedBatch error in getEmbeddingReindexError and clears on manual reindex", async () => {
+		const dir = await mkdtemp(join(tmpdir(), "naia-embedding-reindex-boom-"));
+		dirs.push(dir);
+		const storePath = join(dir, "memory.json");
+		const now = Date.now();
+		await writeFile(
+			storePath,
+			JSON.stringify({
+				version: 1,
+				episodes: [],
+				facts: [
+					{
+						id: "fact-1",
+						content: "저장된 사실",
+						entities: [],
+						topics: [],
+						createdAt: now,
+						updatedAt: now,
+						importance: 1,
+						recallCount: 0,
+						lastAccessed: now,
+						strength: 1,
+						status: "active",
+						sourceEpisodes: [],
+					},
+				],
+				skills: [],
+				reflections: [],
+				associations: {},
+				factEmbeddings: { "fact-1": [1, 0] },
+				episodeEmbeddings: {},
+				embeddingSpaceId: "model-a",
+			}),
+		);
+
+		let boom = true;
+		const embedder: EmbeddingProvider = {
+			name: "boom-provider",
+			dims: 2,
+			embeddingSpaceId: "model-b",
+			async embed() {
+				return [0, 1];
+			},
+			async embedBatch(texts) {
+				if (boom) throw new Error("boom");
+				return texts.map(() => [0, 1]);
+			},
+		};
+
+		const adapter = new LocalAdapter({
+			storePath,
+			embeddingProvider: embedder,
+			reindexEmbeddingsOnMismatch: true,
+		});
+
+		await adapter.whenReady();
+		expect(adapter.getEmbeddingReindexError()).toContain("boom");
+		expect(adapter.getEmbeddingSpaceMismatch()).not.toBeNull();
+
+		boom = false;
+		await adapter.reindexEmbeddings();
+		expect(adapter.getEmbeddingReindexError()).toBeNull();
+		expect(adapter.getEmbeddingSpaceMismatch()).toBeNull();
 	});
 
 	it("rejects unidentified legacy vectors instead of silently adopting them", async () => {

@@ -17,6 +17,10 @@ Mem0 episode write 경계다. 인증 모드 선택은 호출자가 명시하며,
 | FR-MEM-IDEMP-2 | 동일 episode ID가 이미 영속화되어 있으면 새 항목을 추가하지 않고 기존 외부 ID를 갱신해야 한다. | UC-MEM-IDEMP-01 | Done |
 | FR-MEM-IDEMP-3 | 동일 episode ID의 동시 쓰기는 직렬화하고 마지막 성공 payload를 로컬 mirror와 Mem0에 보존해야 한다. | UC-MEM-IDEMP-01 | Done |
 | FR-MEM-RETRIEVAL-1 | LocalAdapter의 embedding 기반 episode 검색은 길이 정규화된 lexical 신호를 함께 사용하고 관련성을 우선해야 한다. 정확한 짧은 episode가 광범위하고 strength가 높은 긴 응답에 밀려 top-5에서 사라지지 않아야 한다. | UC-MEM-RETRIEVAL-01 | Done |
+| FR-MEM-EMBED-HEAL-1 | 오프라인 임베딩 모델 첫 로드 전 고정 기본 리비전의 ONNX 파일 크기를 사전 검증(`OFFLINE_MODEL_FILE_BYTES`)하여 잘린 캐시를 사전 삭제하고 다음 기동 시 수동 조치 없이 정상 다운로드로 자가 복구해야 한다. 로드 중 손상 오류 발생 시에는 transformers.js 3.8.1의 프로세스 오염(`src/backends/onnx.js:153,157`)을 고려하여 캐시를 삭제하고 프로세스 재시작을 안내해야 한다 (nextain/naia-shell#681). | UC-MEM-EMBED-HEAL-01 | Done |
+| FR-MEM-EMBED-HEAL-2 | 캐시 디렉터리 삭제는 `env.cacheDir` 내부의 해당 모델·리비전 경로로 엄격히 한정되어야 하며 비어있는 cacheDir나 범위 밖 대상은 절대 삭제하지 않아야 한다 (nextain/naia-shell#681). | UC-MEM-EMBED-HEAL-01 | Done |
+| FR-MEM-EMBED-HEAL-3 | 임베딩 모델 초기화 실패 시 영구적으로 거부된 상태로 남지 않고 `initPromise`를 정리하여 후속 호출에서 재시도할 수 있어야 한다 (nextain/naia-shell#681). | UC-MEM-EMBED-HEAL-01 | Done |
+| FR-MEM-REINDEX-DIAG-1 | `LocalAdapter`의 자동 재색인(`startAutoReindex`) 실패 시 예외를 삼키지 않고 원인 메시지를 보존하여 `getEmbeddingReindexError()`로 노출해야 한다 (nextain/naia-shell#681). | UC-MEM-EMBED-HEAL-01 | Done |
 
 ## 비기능 요구사항
 
@@ -37,9 +41,13 @@ Mem0 episode write 경계다. 인증 모드 선택은 호출자가 명시하며,
 | FR-MEM-IDEMP-1, FR-MEM-IDEMP-2, FR-MEM-IDEMP-3 | `src/memory/adapters/mem0.ts` | `src/memory/__tests__/mem0-idempotency.test.ts`, `src/memory/__tests__/memory-system.test.ts` |
 | NFR-MEM-IDEMP-1, NFR-MEM-IDEMP-2 | `src/memory/adapters/mem0.ts`의 episode ID별 `episodeWrites` lifecycle | `src/memory/__tests__/mem0-idempotency.test.ts` |
 | FR-MEM-RETRIEVAL-1, NFR-MEM-RETRIEVAL-1 | `src/memory/adapters/local.ts` | `src/memory/__tests__/episode-hybrid-ranking.test.ts` |
+| FR-MEM-EMBED-HEAL-1, FR-MEM-EMBED-HEAL-2, FR-MEM-EMBED-HEAL-3 | `src/memory/embeddings.ts` | `src/memory/__tests__/offline-model-cache-healing.test.ts` |
+| FR-MEM-REINDEX-DIAG-1 | `src/memory/adapters/local.ts`, `src/memory/types.ts`, `src/memory/memory-system-core.ts` | `src/memory/__tests__/embedding-space-migration.test.ts`, `src/memory/__tests__/embedding-reindex-diagnostics.test.ts` |
 
 P04 증거: 핵심 계약 30/30, 전체 393/393, typecheck·build·F13 구조·문서
 그래프·진입점 mirror·용어 검사 통과(2026-07-21).
+
+P04 증거(2026-09-22, Windows win-rtx4060, nextain/naia-shell#681): typecheck·build 통과. 전체 vitest 1482건 중 1431 통과·50 실패·1 건너뜀. 실패 50건은 모두 src/benchmark/quality 27개 파일의 기존 Windows 환경 요인(심볼릭 링크 EPERM, CRLF 체크아웃으로 인한 해시 고정 불일치, /proc·openssl 부재)이며 이번 변경 파일을 import 하지 않는다. #681 테스트(offline-model-cache-healing 10/10, embedding-reindex-diagnostics, embedding-space-migration, embeddings, local-load-failure) 통과. 통합 시험: 실제 잘린 17,817,930바이트 모델 캐시와 실제 저장소 사본으로 사전 검사 삭제 → 561,768,762바이트 재다운로드 → 재색인 완료 → 벡터 회상 3건 → 1024차원 저장 8/8 통과 (영수증: alpha-adk tmp/naia-memory-knowledge-link-20260922/receipts/).
 
 ## 벤치마크 및 구조화 기억 요구사항
 

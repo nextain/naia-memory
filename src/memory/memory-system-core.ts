@@ -164,6 +164,13 @@ export abstract class MemorySystemCore {
 		await this._initPromise;
 	}
 
+	/** Return the error message from the most recent failed auto-reindex, if supported by the adapter. */
+	getEmbeddingReindexError(): string | null {
+		return typeof this.adapter.getEmbeddingReindexError === "function"
+			? this.adapter.getEmbeddingReindexError()
+			: null;
+	}
+
 	/** Whether a consolidation cycle is currently running */
 	get isConsolidating(): boolean {
 		return this._isConsolidating;

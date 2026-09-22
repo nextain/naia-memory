@@ -1,6 +1,45 @@
+import { rm, stat } from "node:fs/promises";
+import { isAbsolute, join, relative, resolve } from "node:path";
+
+/** EmbeddingProvider abstraction — 5 built-in providers. */
+
 /**
- * EmbeddingProvider abstraction — 5 built-in providers.
+ * Substrings indicating a corrupt or truncated offline model cache file.
+ * If creating the pipeline throws an error matching any of these, or matching
+ * "Load model from" + "failed", OfflineEmbeddingProvider clears the corrupt model
+ * cache directory so the next process start can re-download cleanly.
+ *
+ * NOTE: transformers.js cannot recover via in-process retry once session creation fails,
+ * because createInferenceSession poisons the module-global wasmInitPromise on first rejection
+ * (@huggingface/transformers@3.8.1 src/backends/onnx.js:153,157: wasmInitPromise ??= sessionPromise;
+ * subsequent calls await wasmInitPromise and rethrow the initial failure forever).
+ * Therefore, any corrupt load error clears the cache and asks the caller to restart the process.
+ * (nextain/naia-shell#681, FR-MEM-EMBED-HEAL-1..3)
  */
+export const CORRUPT_MODEL_ERROR_PATTERNS = [
+	"Protobuf parsing failed",
+	"invalid model",
+	"Invalid model",
+	"failed to load model",
+	"unexpected end",
+	"Unexpected end",
+] as const;
+
+export function isCorruptModelError(error: unknown): boolean {
+	const message =
+		error instanceof Error ? error.message : String(error ?? "");
+	const causeMessage =
+		error instanceof Error && error.cause instanceof Error
+			? error.cause.message
+			: "";
+	const combined = `${message} ${causeMessage}`;
+	if (
+		CORRUPT_MODEL_ERROR_PATTERNS.some((pattern) => combined.includes(pattern))
+	) {
+		return true;
+	}
+	return combined.includes("Load model from") && combined.includes("failed");
+}
 
 /**
  * EmbeddingProvider interface — injectable into MemorySystem and adapters.
@@ -52,6 +91,20 @@ export const OFFLINE_MODEL_REVISIONS = {
 		"2c4055b12046f11709e9df2c122e59ffbdc2f900",
 } as const;
 
+export type OfflineModelName = keyof typeof OFFLINE_MODEL_REVISIONS;
+
+/** Byte size of the ONNX file transformers loads for each pinned model revision
+ *  (q8 → onnx/model_quantized.onnx for multilingual-e5-*, fp32 → onnx/model.onnx otherwise).
+ *  Source: Hugging Face X-Linked-Size for Xenova/<model>@<revision>, read 2026-09-22 (nextain/naia-shell#681). */
+export const OFFLINE_MODEL_FILE_BYTES = {
+	"all-MiniLM-L6-v2": { file: "onnx/model.onnx", bytes: 90387606 },
+	"all-mpnet-base-v2": { file: "onnx/model.onnx", bytes: 435826547 },
+	"multilingual-e5-small": { file: "onnx/model_quantized.onnx", bytes: 118308185 },
+	"multilingual-e5-base": { file: "onnx/model_quantized.onnx", bytes: 278647662 },
+	"multilingual-e5-large": { file: "onnx/model_quantized.onnx", bytes: 561768762 },
+	"paraphrase-multilingual-MiniLM-L12-v2": { file: "onnx/model.onnx", bytes: 470268510 },
+} as const satisfies Record<OfflineModelName, { file: string; bytes: number }>;
+
 /** Resolve the exact HTTP route used by OpenAI-compatible embedding calls. */
 export function openAICompatEmbeddingEndpoint(baseUrl: string): string {
 	const trimmedBase = baseUrl.replace(/\/+$/, "");
@@ -60,7 +113,78 @@ export function openAICompatEmbeddingEndpoint(baseUrl: string): string {
 		: `${trimmedBase}/v1/embeddings`;
 }
 
-type OfflineModelName = keyof typeof OFFLINE_MODEL_REVISIONS;
+function getGuardedTargetDir(
+	env: { cacheDir?: unknown; useFSCache?: unknown } | null | undefined,
+	modelName: string,
+	revision: string,
+): string | null {
+	if (
+		!env ||
+		env.useFSCache === false ||
+		typeof env.cacheDir !== "string" ||
+		env.cacheDir.trim() === ""
+	) {
+		return null;
+	}
+	const resolvedCacheDir = resolve(env.cacheDir);
+	const targetDir = join(env.cacheDir, "Xenova", modelName, revision);
+	const resolvedTarget = resolve(targetDir);
+	const rel = relative(resolvedCacheDir, resolvedTarget);
+	const isStrictlyInside =
+		rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
+	if (!isStrictlyInside) {
+		return null;
+	}
+	return resolvedTarget;
+}
+
+/**
+ * Pre-flight check before first pipeline creation.
+ * Checks if the cached model file matches expected size for pinned default revisions.
+ * If file exists with a mismatched size, purges the model/revision directory and returns true.
+ * If file is missing or matches expected size or guard fails, does nothing and returns false.
+ */
+export async function purgeTruncatedModelCache(
+	env: { cacheDir?: unknown; useFSCache?: unknown } | null | undefined,
+	model: string,
+	revision: string,
+): Promise<boolean> {
+	const defaultRevision = (
+		OFFLINE_MODEL_REVISIONS as Record<string, string | undefined>
+	)[model];
+	if (!defaultRevision || revision !== defaultRevision) {
+		return false;
+	}
+	const entry = (
+		OFFLINE_MODEL_FILE_BYTES as Record<
+			string,
+			{ file: string; bytes: number } | undefined
+		>
+	)[model];
+	if (!entry) {
+		return false;
+	}
+	const targetDir = getGuardedTargetDir(env, model, revision);
+	if (!targetDir) {
+		return false;
+	}
+	const modelFilePath = join(targetDir, entry.file);
+	let s: import("node:fs").Stats;
+	try {
+		s = await stat(modelFilePath);
+	} catch {
+		return false;
+	}
+	if (s.size === entry.bytes) {
+		return false;
+	}
+	await rm(targetDir, { recursive: true, force: true });
+	console.warn(
+		`[OfflineEmbeddingProvider] cleared truncated model cache (${modelFilePath}: actual ${s.size} bytes, expected ${entry.bytes} bytes): ${targetDir}`,
+	);
+	return true;
+}
+
 export type OfflineBatchInferenceMode = "per-item-v1" | "padded-array-batch-v1";
 
 interface OfflineFeatureExtractionResult {
@@ -132,51 +256,94 @@ export class OfflineEmbeddingProvider implements EmbeddingProvider {
 
 	private init(): Promise<void> {
 		if (!this.initPromise) {
-			this.initPromise = (async () => {
-				let pipelineFn: typeof import("@huggingface/transformers")["pipeline"];
-				try {
-					({ pipeline: pipelineFn } = await import(
-						"@huggingface/transformers"
-					));
-				} catch {
-					throw new Error(
-						"@huggingface/transformers is required. Run: pnpm add @huggingface/transformers",
-					);
-				}
-				const hfModel = `Xenova/${this.modelName}`;
-
-				// multilingual-e5-large: fp32 가중치가 2GB 초과 external-data
-				// (onnx/model.onnx_data)로 저장돼 onnxruntime-node 가 이 스택에서
-				// 역직렬화 실패(external-initializer offset 이 데이터 파일 길이 초과).
-				// q8 단일파일 변형은 CPU 에서 안정 로드되고 한국어 회상 품질을 보존한다
-				// (실측 top-1 5/5 vs all-mpnet 영어전용 2/5). 나머지 모델은 기본 fp32 로 정상 로드.
-				const dtype: "q8" | undefined = this.modelName.startsWith(
-					"multilingual-e5-",
-				)
-					? "q8"
-					: undefined;
-
-				// device 매핑: gpu→"auto"(onnxruntime EP 가용 시 GPU, 없으면 CPU 폴백 — 메모리 비활성 회피) /
-				// cpu→"cpu" / auto→"auto" / 미지정→옵션 없이(transformers 기본, 현행 무변).
-				const deviceOpt =
-					this.device === undefined
-						? undefined
-						: this.device === "gpu"
-							? "auto"
-							: this.device;
-				const pipeOpts = {
-					...(deviceOpt !== undefined ? { device: deviceOpt } : {}),
-					...(dtype !== undefined ? { dtype } : {}),
-					revision: this.revision,
-				};
-				this.pipeline = (await pipelineFn(
-					"feature-extraction",
-					hfModel,
-					pipeOpts,
-				)) as unknown as OfflineFeatureExtractionPipeline;
-			})();
+			const promise = this.loadPipeline();
+			this.initPromise = promise.catch((error) => {
+				this.initPromise = null;
+				throw error;
+			});
 		}
 		return this.initPromise;
+	}
+
+	private async loadPipeline(): Promise<void> {
+		this.pipeline = null;
+		let transformers: typeof import("@huggingface/transformers");
+		try {
+			transformers = await import("@huggingface/transformers");
+		} catch {
+			throw new Error(
+				"@huggingface/transformers is required. Run: pnpm add @huggingface/transformers",
+			);
+		}
+		const { pipeline: pipelineFn, env } = transformers;
+		const hfModel = `Xenova/${this.modelName}`;
+
+		// Pre-flight check: purge truncated model cache before first create() call
+		await purgeTruncatedModelCache(env, this.modelName, this.revision);
+
+		// multilingual-e5-large: fp32 가중치가 2GB 초과 external-data
+		// (onnx/model.onnx_data)로 저장돼 onnxruntime-node 가 이 스택에서
+		// 역직렬화 실패(external-initializer offset 이 데이터 파일 길이 초과).
+		// q8 단일파일 변형은 CPU 에서 안정 로드되고 한국어 회상 품질을 보존한다
+		// (실측 top-1 5/5 vs all-mpnet 영어전용 2/5). 나머지 모델은 기본 fp32 로 정상 로드.
+		const dtype: "q8" | undefined = this.modelName.startsWith(
+			"multilingual-e5-",
+		)
+			? "q8"
+			: undefined;
+
+		// device 매핑: gpu→"auto"(onnxruntime EP 가용 시 GPU, 없으면 CPU 폴백 — 메모리 비활성 회피) /
+		// cpu→"cpu" / auto→"auto" / 미지정→옵션 없이(transformers 기본, 현행 무변).
+		const deviceOpt =
+			this.device === undefined
+				? undefined
+				: this.device === "gpu"
+					? "auto"
+					: this.device;
+		const pipeOpts = {
+			...(deviceOpt !== undefined ? { device: deviceOpt } : {}),
+			...(dtype !== undefined ? { dtype } : {}),
+			revision: this.revision,
+		};
+
+		const create = async () => {
+			return (await pipelineFn(
+				"feature-extraction",
+				hfModel,
+				pipeOpts,
+			)) as unknown as OfflineFeatureExtractionPipeline;
+		};
+
+		let origError: unknown;
+		try {
+			this.pipeline = await create();
+			return;
+		} catch (err: unknown) {
+			origError = err;
+		}
+
+		if (!isCorruptModelError(origError)) {
+			throw origError;
+		}
+
+		const targetDir = getGuardedTargetDir(env, this.modelName, this.revision);
+		if (!targetDir) {
+			throw origError;
+		}
+
+		await rm(targetDir, { recursive: true, force: true });
+		console.warn(
+			`[OfflineEmbeddingProvider] cleared corrupt model cache: ${targetDir}`,
+		);
+
+		const origMsg =
+			origError instanceof Error ? origError.message : String(origError);
+
+		throw new Error(
+			"offline embedding model cache was corrupt and has been cleared; restart the process to reload it (transformers.js keeps the first failed session for the whole process): " +
+				origMsg,
+			{ cause: origError },
+		);
 	}
 
 	async embed(text: string): Promise<number[]> {
