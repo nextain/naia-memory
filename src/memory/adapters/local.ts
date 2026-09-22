@@ -61,6 +61,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private readonly reindexEmbeddingsOnMismatch: boolean;
 	private readonly embedCache = new Map<string, number[]>();
 	private embeddingSpaceMismatch: string | null = null;
+	private embeddingReindexError: string | null = null;
 	private storeGeneration = 0;
 	private spaceReady: Promise<void> | null = null;
 
@@ -109,7 +110,9 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			return;
 		try {
 			await this.reindexEmbeddings();
-		} catch {
+		} catch (error) {
+			this.embeddingReindexError =
+				error instanceof Error ? error.message : String(error);
 			// Leave the mismatch flag set. Callers await whenReady() then inspect
 			// getEmbeddingSpaceMismatch() or take the typed throw on recall/save.
 		}
@@ -124,6 +127,10 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		return this.embeddingSpaceMismatch;
 	}
 
+	getEmbeddingReindexError(): string | null {
+		return this.embeddingReindexError;
+	}
+
 	private throwIfEmbeddingSpaceMismatch(): void {
 		if (this.embeddingSpaceMismatch) {
 			throw new EmbeddingSpaceMismatchError(this.embeddingSpaceMismatch);
@@ -132,6 +139,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 
 	private checkEmbeddingSpace(): void {
 		this.embeddingSpaceMismatch = null;
+		this.embeddingReindexError = null;
 		const current = this.embedder?.embeddingSpaceId;
 		const hasVectors =
 			Object.keys(this.store.factEmbeddings ?? {}).length > 0 ||
@@ -216,6 +224,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		);
 		this.store.embeddingSpaceId = this.embedder.embeddingSpaceId;
 		this.embeddingSpaceMismatch = null;
+		this.embeddingReindexError = null;
 		this.embedCache.clear();
 		try {
 			this.markDirty();
