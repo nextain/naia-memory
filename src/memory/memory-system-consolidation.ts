@@ -143,7 +143,10 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								ef.content,
 								10,
 								true,
-								efProject ? { project: efProject } : undefined,
+								// #51 — inspection only: do not reinforce the facts we compare against.
+								efProject
+									? { project: efProject, touch: false }
+									: { touch: false },
 							);
 					if (process.env.NAIA_FILTER_DEBUG === "1") {
 						const totalFacts =

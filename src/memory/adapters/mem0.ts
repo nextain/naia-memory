@@ -149,6 +149,7 @@ export class Mem0Adapter implements MemoryAdapter {
 			context: RecallContext,
 		): Promise<Episode[]> => {
 			const topK = context.topK ?? 5;
+			const touch = context.touch ?? true;
 
 			// Use mem0 vector search instead of keyword matching
 			const m = await this.ensureMem0();
@@ -173,15 +174,17 @@ export class Mem0Adapter implements MemoryAdapter {
 				);
 				const now = Date.now();
 				if (match) {
-					match.recallCount++;
-					match.lastAccessed = now;
-					match.strength = calculateStrength(
-						match.importance.utility,
-						match.timestamp,
-						match.recallCount,
-						match.lastAccessed,
-						now,
-					);
+					if (touch) {
+						match.recallCount++;
+						match.lastAccessed = now;
+						match.strength = calculateStrength(
+							match.importance.utility,
+							match.timestamp,
+							match.recallCount,
+							match.lastAccessed,
+							now,
+						);
+					}
 					matchedEpisodes.push({ ...match, _mem0Score: mem0Score });
 				} else {
 					// mem0 returned a memory not in our episode list
