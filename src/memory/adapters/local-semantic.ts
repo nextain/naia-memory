@@ -38,7 +38,15 @@ export function createLocalSemanticMemory(
 	};
 	const upsertMany = async (facts: Fact[]): Promise<void> => {
 		if (facts.length === 0) return;
-		const incomingFacts = facts.map((fact) => structuredClone(fact));
+		// #51 — relevanceScore / vectorScore are query-time values set on returned
+		// copies. A caller may write such a copy back (or build a successor from it);
+		// they must never be persisted.
+		const incomingFacts = facts.map((fact) => {
+			const clone = structuredClone(fact);
+			delete clone.relevanceScore;
+			delete clone.vectorScore;
+			return clone;
+		});
 		if (
 			new Set(incomingFacts.map((fact) => fact.id)).size !==
 			incomingFacts.length

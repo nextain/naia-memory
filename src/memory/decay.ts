@@ -2,10 +2,11 @@
  * Ebbinghaus Forgetting Curve Implementation
  *
  * Models memory strength decay over time:
- *   strength = importance × e^(-λ_eff × days) × (1 + recallCount × RECALL_BOOST)
+ *   strength = importance × e^(-λ_eff × days) × min(1 + recallCount × RECALL_BOOST, MAX_RECALL_MULTIPLIER)
  *
  * Where λ_eff = BASE_DECAY × (1 - importance × IMPORTANCE_DAMPING)
  * High-importance memories decay slower; frequently recalled memories persist longer.
+ * Repetition is bounded (#51); strength is a retention signal and only a tie-breaker in ranking.
  *
  * Based on: Ebbinghaus (1885), YourMemory implementation, FOREVER (2025)
  */
@@ -22,6 +23,21 @@ export const IMPORTANCE_DAMPING = 0.85;
 /** Strength boost per recall event. Each recall adds this fraction to the multiplier. */
 const RECALL_BOOST = 0.2;
 
+/** Upper bound on the recall multiplier (nextain/naia-memory#51).
+ *
+ * The boost used to be unbounded: on the real store an episode recalled 259 times
+ * reached strength 11.53 and won every query. Ranking no longer adds strength at all
+ * (see compareByRelevanceThenStrength), so this cap bounds the remaining consumers
+ * that still read strength as a magnitude — context-budget, the mem0 adapter's
+ * ranking, the sqlite hot tier and decay/archival.
+ *
+ * 2.0 is measured: on a copy of the real store (635 episodes, 45 Korean queries,
+ * multilingual-e5-large q8 CPU) with the previous 0.05 ranking weight, caps of 1.5 and
+ * 2 matched the strength-free ranking on every relevance metric while 3 and 5 each lost
+ * a rank-1 hit; 2.0 is the largest cap with no loss. With RECALL_BOOST 0.2 it saturates
+ * at recallCount 5. */
+export const MAX_RECALL_MULTIPLIER = 2.0;
+
 /** Below this strength, memories are candidates for pruning. */
 export const PRUNE_THRESHOLD = 0.05;
 
@@ -36,7 +52,7 @@ const MIN_STRENGTH = 0.01;
  * @param recallCount - Number of times memory has been recalled
  * @param lastAccessed - Timestamp of most recent access (ms)
  * @param now - Current timestamp (ms)
- * @returns Current memory strength (0.0–1.0+, may exceed 1.0 for highly recalled memories)
+ * @returns Current memory strength (0.01 – importance × MAX_RECALL_MULTIPLIER, i.e. at most 2.0)
  */
 export function calculateStrength(
 	importance: number,
@@ -68,7 +84,10 @@ export function calculateStrength(
 
 	// Core Ebbinghaus formula with recall boost
 	const decayFactor = Math.exp(-lambdaEff * daysSinceAccess);
-	const recallMultiplier = 1 + recallCount * RECALL_BOOST;
+	const recallMultiplier = Math.min(
+		1 + recallCount * RECALL_BOOST,
+		MAX_RECALL_MULTIPLIER,
+	);
 
 	const strength = importance * decayFactor * recallMultiplier;
 
@@ -107,3 +126,22 @@ export function shouldPrune(strength: number): boolean {
 export function shouldArchive(strength: number): boolean {
 	return strength < PRUNE_THRESHOLD;
 }
+
+/**
+ * Ranking rule shared by every LocalAdapter recall path (nextain/naia-memory#51):
+ * relevance first; strength only breaks exact ties.
+ *
+ * Strength is an Ebbinghaus *retention* signal. Adding it to a relevance score let a
+ * frequently recalled item outrank better matches, and every recall raised it further.
+ * Measured on the real store and on the repo fact benchmark, every additive strength
+ * weight tried (0.3 down to 0.01) ranked worse than using strength as a tie-breaker only.
+ *
+ * Use as an Array.prototype.sort comparator (descending by score, then by strength).
+ */
+export function compareByRelevanceThenStrength(
+	a: { score: number; strength: number },
+	b: { score: number; strength: number },
+): number {
+	return b.score - a.score || b.strength - a.strength;
+}
+

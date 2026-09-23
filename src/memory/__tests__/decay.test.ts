@@ -3,7 +3,9 @@ import {
 	BASE_DECAY,
 	calculatePruneScore,
 	calculateStrength,
+	compareByRelevanceThenStrength,
 	IMPORTANCE_DAMPING,
+	MAX_RECALL_MULTIPLIER,
 	PRUNE_THRESHOLD,
 	shouldPrune,
 } from "../decay.js";
@@ -29,6 +31,10 @@ function atDays(days: number): number {
 describe("decay constants (DC-01 + DC-17 C-GUARDs)", () => {
 	it("DC-01 BASE_DECAY === 0.08", () => {
 		expect(BASE_DECAY).toBe(0.08);
+	});
+
+	it("DC-01b MAX_RECALL_MULTIPLIER === 2.0 (#51, measured)", () => {
+		expect(MAX_RECALL_MULTIPLIER).toBe(2.0);
 	});
 
 	it("DC-01 IMPORTANCE_DAMPING === 0.85", () => {
@@ -183,11 +189,18 @@ describe("calculateStrength — clamps and special regimes (DC-11/12/13)", () =>
 		expect(s).toBeCloseTo(0.5, 10);
 	});
 
-	it("DC-13 strength MAY exceed 1.0 with high recallCount (reinforcement uplift, by design)", () => {
-		// importance=1, recall=10, age=0 → 1 × 1 × (1 + 10*0.2) = 3.0
-		const s = calculateStrength(1.0, 0, 10, 0, 0);
-		expect(s).toBeCloseTo(3.0, 10);
-		expect(s).toBeGreaterThan(1.0);
+	it("DC-13 strength is bounded by importance x MAX_RECALL_MULTIPLIER (#51)", () => {
+		// Before #51 recallCount 10 gave 3.0 and there was no upper bound.
+		expect(calculateStrength(1.0, 0, 10, 0, 0)).toBeCloseTo(MAX_RECALL_MULTIPLIER, 10);
+		expect(calculateStrength(1.0, 0, 10_000, 0, 0)).toBeCloseTo(MAX_RECALL_MULTIPLIER, 10);
+	});
+
+	it("DC-13b the boost is unchanged below the cap (#51)", () => {
+		expect(calculateStrength(1.0, 0, 0, 0, 0)).toBeCloseTo(1.0, 10);
+		expect(calculateStrength(1.0, 0, 1, 0, 0)).toBeCloseTo(1.2, 10);
+		expect(calculateStrength(1.0, 0, 3, 0, 0)).toBeCloseTo(1.6, 10);
+		expect(calculateStrength(1.0, 0, 5, 0, 0)).toBeCloseTo(2.0, 10);
+		expect(calculateStrength(1.0, 0, 6, 0, 0)).toBeCloseTo(2.0, 10);
 	});
 });
 
@@ -254,20 +267,10 @@ describe("calculateStrength — non-finite inputs (DC-15, R8 add)", () => {
 		expect(s).toBe(MIN_STRENGTH_OBSERVED);
 	});
 
-	it("DC-15c huge recallCount (MAX_SAFE_INTEGER) → finite, but large strength (overflow boundary)", () => {
-		// 1 + MAX_SAFE_INTEGER * 0.2 is still finite; but multiplication with
-		// small decayFactor could yield 0 * big = NaN or finite. Pin behaviour.
-		const s = calculateStrength(
-			0.5,
-			0,
-			Number.MAX_SAFE_INTEGER,
-			0,
-			atDays(0),
-		);
-		// At age 0, decayFactor = 1 → strength = 0.5 * 1 * (1 + MAX * 0.2) = finite huge
+	it("DC-15c huge recallCount (MAX_SAFE_INTEGER) is bounded (#51)", () => {
+		const s = calculateStrength(0.5, 0, Number.MAX_SAFE_INTEGER, 0, atDays(0));
 		expect(Number.isFinite(s)).toBe(true);
-		// MAX_SAFE_INTEGER ≈ 9.007e15. strength = 0.5 * (1 + MAX*0.2) ≈ 9e14.
-		expect(s).toBeGreaterThan(1e14);
+		expect(s).toBeCloseTo(0.5 * MAX_RECALL_MULTIPLIER, 10);
 	});
 });
 
@@ -332,5 +335,29 @@ describe("calculateStrength — importance=0 regime (DC-18, R8 add)", () => {
 			const s = calculateStrength(0, 0, recall, 0, nowMs);
 			expect(s).toBe(MIN_STRENGTH_OBSERVED);
 		}
+	});
+});
+
+describe("compareByRelevanceThenStrength (#51)", () => {
+	it("orders by score first, however large the strength gap", () => {
+		const rows = [
+			{ id: "weak-match-strong-memory", score: 0.5, strength: 2.0 },
+			{ id: "strong-match-weak-memory", score: 0.9, strength: 0.01 },
+		];
+		expect(rows.sort(compareByRelevanceThenStrength).map((r) => r.id)).toEqual([
+			"strong-match-weak-memory",
+			"weak-match-strong-memory",
+		]);
+	});
+
+	it("uses strength only to break an exact score tie", () => {
+		const rows = [
+			{ id: "weaker", score: 0.7, strength: 0.2 },
+			{ id: "stronger", score: 0.7, strength: 0.9 },
+		];
+		expect(rows.sort(compareByRelevanceThenStrength).map((r) => r.id)).toEqual([
+			"stronger",
+			"weaker",
+		]);
 	});
 });

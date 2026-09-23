@@ -1,4 +1,4 @@
-import { calculateStrength } from "../decay.js";
+import { calculateStrength, compareByRelevanceThenStrength } from "../decay.js";
 import type { Episode, MemoryAdapter, RecallContext } from "../types.js";
 import type { MemoryStore } from "./local-model.js";
 import {
@@ -37,6 +37,9 @@ export function createLocalEpisodeMemory(
 	return {
 		store: async (event: Episode): Promise<void> => {
 			const incoming = structuredClone(event);
+			// #51 — query-time scores from a recalled copy must never be persisted.
+			delete incoming.relevanceScore;
+			delete incoming.vectorScore;
 			const invocationStore = host.getStore();
 			return enqueueWrite(incoming.id, async () => {
 				if (host.getStore() !== invocationStore) {
@@ -69,8 +72,10 @@ export function createLocalEpisodeMemory(
 		): Promise<Episode[]> => {
 			const now = Date.now();
 			const topK = context.topK ?? 5;
-			const minStrength = context.minStrength ?? 0.05;
+			// #51 — strength is a retention signal, not a retrieval gate (default 0).
+			const minStrength = context.minStrength ?? 0;
 			const deepRecall = context.deepRecall ?? false;
+			const touch = context.touch ?? true;
 			const queryVec = await host.embedQuery(query);
 			const store = host.getStore();
 			const epScopeMode = context.scopeMode ?? "soft";
@@ -106,17 +111,22 @@ export function createLocalEpisodeMemory(
 						ep.lastAccessed,
 						now,
 					);
-					if (!deepRecall && strength < minStrength) return null;
+					if (!deepRecall && minStrength > 0 && strength < minStrength) return null;
 					const epVec = queryVec ? store.episodeEmbeddings?.[ep.id] : null;
+					// #51 — keep the raw cosine for the caller; undefined (not 0) when either
+					// vector is missing so a caller can fail closed on a missing embedder.
+					const vectorScore =
+						epVec && queryVec
+							? Math.max(0, cosineSimilarity(queryVec, epVec))
+							: undefined;
 					const keyword = keywordScore(query, `${ep.content} ${ep.summary}`);
 					const lexicalScore =
 						maxEpisodeLexical > 0
 							? (episodeLexicalScores.get(ep.id) ?? 0) / maxEpisodeLexical
 							: keyword;
 					const textScore =
-						epVec && queryVec
-							? Math.max(0, cosineSimilarity(queryVec, epVec)) * 0.65 +
-								lexicalScore * 0.35
+						vectorScore !== undefined
+							? vectorScore * 0.65 + lexicalScore * 0.35
 							: keyword;
 					let contextBonus = 0;
 					if (context.project && ep.encodingContext.project === context.project)
@@ -126,31 +136,42 @@ export function createLocalEpisodeMemory(
 						ep.encodingContext.activeFile === context.activeFile
 					)
 						contextBonus += 0.1;
-					const finalScore = deepRecall
-						? textScore + contextBonus
-						: textScore * 0.95 + strength * 0.05 + contextBonus;
-					return { episode: ep, score: finalScore, strength };
+					// #51 — strength is not part of the score (it only breaks ties, below).
+					// deepRecall differs only in including archived episodes and skipping
+					// the minStrength gate.
+					const finalScore = textScore + contextBonus;
+					return { episode: ep, score: finalScore, strength, vectorScore };
 				})
 				.filter((x): x is NonNullable<typeof x> => x !== null && x.score > 0)
-				.sort((a, b) => b.score - a.score)
+				.sort(compareByRelevanceThenStrength)
 				.slice(0, topK);
 
-			for (const { episode } of scored) {
-				episode.recallCount++;
-				episode.lastAccessed = now;
-				episode.strength = calculateStrength(
-					episode.importance.utility,
-					episode.timestamp,
-					episode.recallCount,
-					episode.lastAccessed,
-					now,
-				);
+			// #51 — `touch: false` reads without reinforcing and without a store write.
+			if (touch) {
+				for (const { episode } of scored) {
+					episode.recallCount++;
+					episode.lastAccessed = now;
+					episode.strength = calculateStrength(
+						episode.importance.utility,
+						episode.timestamp,
+						episode.recallCount,
+						episode.lastAccessed,
+						now,
+					);
+				}
+				if (scored.length > 0) {
+					host.markDirty();
+					host.save();
+				}
 			}
-			if (scored.length > 0) {
-				host.markDirty();
-				host.save();
-			}
-			return scored.map((s) => s.episode);
+			// #51 — return copies: the scored rows hold the stored objects, and attaching
+			// per-query scores to them would persist a query artifact on the next save.
+			// Copy after the touch block so the returned counters are current.
+			return scored.map(({ episode, score, vectorScore }) => ({
+				...episode,
+				...(vectorScore === undefined ? {} : { vectorScore }),
+				relevanceScore: score,
+			}));
 		},
 
 		getRecent: async (n: number): Promise<Episode[]> =>

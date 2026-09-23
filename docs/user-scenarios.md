@@ -47,6 +47,24 @@ V-model의 사용자 시나리오(UC)에서 검증 테스트까지 추적하는 
   3. 해당 고유 문구로 recall하면 user episode가 top-5에 포함된다.
 - **실패 방지 조건**: 긴 문서의 부분 일치나 strength가 정확한 짧은 episode의 관련성을 대체하지 않는다.
 
+## UC-MEM-RETRIEVAL-02 — 자주 불린 기억이 관련 기억을 가리지 않는다
+
+- **사용자**: 수백 번의 대화 턴이 누적된 저장소에서 매 턴 기억을 회상하는 Naia Agent와 그 사용자
+- **목표**: 질의마다 그 질의에 맞는 기억이 올라오고, 오래되어 약해진 기억도 의미가 맞으면 회상된다.
+- **이유**: 회상될 때마다 strength가 무한히 커지고 그 strength가 순위 점수에 더해져, 실 저장소 사본(635 일화)에서 45개 질의 모두가 같은 상위 5개를 받았다. 또 strength 0.05 미만 일화 568/625개는 어떤 질의로도 후보가 되지 못했다 (nextain/naia-memory#51).
+- **사전 조건**: 저장소에 임베딩이 있는 일화·사실이 있고 일부는 회상 이력이 많거나 오래되어 감쇠했다.
+- **정상 흐름**:
+  1. 회상은 관련도(텍스트·벡터 점수와 맥락 보너스)로 순위를 정하고 strength는 동점일 때만 쓴다.
+  2. strength 반복 가중은 2배에서 멈춘다.
+  3. 감쇠한 일화도 후보가 되며 `minStrength`는 호출자가 요청할 때만 적용된다.
+  4. 결과에는 원 코사인 `vectorScore`가 붙는다.
+  5. 후보를 들여다보기만 하는 호출자는 `touch: false`로 strength를 올리지 않는다.
+- **실패 방지 조건**:
+  1. 같은 질의를 반복해도, 다른 질의로 특정 기억을 여러 번 불러도 더 잘 맞는 기억의 순위가 바뀌지 않는다.
+  2. 점수 필드는 저장소에 쓰이지 않는다.
+  3. 측정(실 저장소 사본, 45 질의 × 10회 반복): 관련 일화 top-5 3/22 → 1/22(기존, 반복 후) 대 18/22(변경 후, 반복 후에도 유지), 1위 1/22 → 14/22, 서로 다른 일화 18 → 6(기존) 대 144(변경 후), 무관 항목 204/225 → 145/225. 사실 경로(레포 fact-bank-v2 310개, 한국어 계약 16건, 다양한 중요도·나이): hit@1 2/16 → 11/16, 질의 241건 누적 후 0/16 → 11/16.
+  4. 한계: 무관 항목 비율(약 65%)은 이 이슈 범위가 아니다. 상위 K 무조건 주입에는 "충분히 관련 있는가"라는 문턱이 없으며 그 판단은 nextain/naia-shell#693이 맡는다. 후보 문턱을 없애 625개 일화 점수 계산이 p50 32 ms → 62 ms(CPU, 질의 벡터 계산 제외)로 늘었다. `SqliteAdapter`는 `vectorScore`를 제공하지 않는다(어댑터 parity 미달).
+
 ## UC-MEM-EMBED-HEAL-01 — 손상된 오프라인 임베딩 모델 캐시 자가 복구
 
 - **사용자**: 첫 기동 또는 네트워크 중단 이후 Naia Memory를 사용하는 사용자 및 Naia Agent
@@ -72,6 +90,7 @@ V-model의 사용자 시나리오(UC)에서 검증 테스트까지 추적하는 
 | UC-MEM-IDEMP-01 | `src/memory/__tests__/mem0-idempotency.test.ts` / `Mem0Adapter episode idempotency` | 재시작 후 같은 episode ID는 `add`하지 않고 `update`하며, 동시 재시도는 한 번 추가 후 마지막 payload로 갱신됨을 확인한다. 실패 뒤 같은 ID 재시도와 서로 다른 ID의 독립 실행도 검증한다. |
 | UC-MEM-IDEMP-01 | `src/memory/__tests__/memory-system.test.ts` / memory write idempotency·flush | 상위 `MemorySystem` 경계에서 결정적 ID 재사용과 flush 가능한 write 계약을 확인한다. |
 | UC-MEM-RETRIEVAL-01 | `src/memory/__tests__/episode-hybrid-ranking.test.ts` / LocalAdapter hybrid ranking | 결정적 embedding에서 높은 utility의 긴 오염 episode 12개가 있어도 정확한 `CONNECTION_OK` user episode가 top-5에 포함됨을 확인한다. |
+| UC-MEM-RETRIEVAL-02 | `src/memory/__tests__/recall-strength.test.ts`, `src/memory/__tests__/decay.test.ts`, `src/memory/__tests__/recall-strength-store.integration.test.ts`(실 저장소 사본, `NAIA_MEM51_FIXTURE` 지정 시), `src/benchmark/quality/recall-strength-loop.ts` | 반복 회상 뒤에도 더 잘 맞는 일화·사실이 1위, strength 상한, 감쇠 일화 회상, `vectorScore`·`relevanceScore` 반환과 비영속, `touch: false`의 무강화·무쓰기를 확인한다. |
 | UC-MEM-EMBED-HEAL-01 | `src/memory/__tests__/offline-model-cache-healing.test.ts`, `src/memory/__tests__/embedding-reindex-diagnostics.test.ts` | 고정 크기 사전 검증(pre-flight)을 통한 잘린 캐시 삭제, 온전한 캐시 보존, guard 검증, 로드 실패 시 캐시 삭제 및 재기동 안내 throw, initPromise 정리, 그리고 auto-reindex 실패 원인 노출을 확인한다 (nextain/naia-shell#681). |
 
 모든 테스트는 실제 production builder/adapter를 호출한다. 네트워크와 Mem0 client만

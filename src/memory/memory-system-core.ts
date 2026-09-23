@@ -276,9 +276,11 @@ export abstract class MemorySystemCore {
 		// Search for semantically similar facts instead of loading all
 		// Reconsolidation 용 search — 모든 후보 검토해야 (#27 minConfidence
 		// 적용 X). 명시적 0 으로 future default 변경 시 안전.
+		// #51 — inspection only: do not reinforce the facts we compare against.
 		const candidates = await this.adapter.semantic.search(newInfo, 10, false, {
 			project,
 			minConfidence: 0,
+			touch: false,
 		});
 		const contradictions = findContradictions(candidates, newInfo);
 
@@ -363,6 +365,7 @@ export abstract class MemorySystemCore {
 				structuredQuery: context.structuredQuery,
 				scopeMode: context.scopeMode,
 				crossProject: context.crossProject,
+				touch: context.touch,
 				epochAnchor: context.epochAnchor,
 			}),
 			this.adapter.procedural.getReflections(query, topK),

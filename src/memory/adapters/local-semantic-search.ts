@@ -5,7 +5,7 @@
  * retrieval can be evaluated without changing LocalAdapter storage behavior.
  */
 
-import { calculateStrength } from "../decay.js";
+import { calculateStrength, compareByRelevanceThenStrength } from "../decay.js";
 import type { EmbeddingProvider } from "../embeddings.js";
 import type { KnowledgeGraph } from "../knowledge-graph.js";
 import type { Epoch, Fact, MemoryAdapter } from "../types.js";
@@ -148,12 +148,14 @@ export async function searchLocalSemanticMemory(
 			// Otherwise superseded/archived rows can occupy all broadK slots and
 			// disappear only after slicing, starving lower-ranked active facts.
 			const mode = context?.mode ?? "latest";
+			const touch = context?.touch ?? true;
 			const includeSuperseded = mode === "history" || deepRecall || epochRange !== null;
 			if (!includeSuperseded && atT === undefined) {
 				allFacts = allFacts.filter((fact) => (fact.status ?? "active") === "active");
 			}
 
 			const vectorScores: Map<string, number> = new Map();
+			const rawVectorScores: Map<string, number> = new Map();
 			const bm25Scores: Map<string, number> = new Map();
 			const entityBonuses: Map<string, number> = new Map();
 
@@ -171,6 +173,7 @@ export async function searchLocalSemanticMemory(
 			        const factVec = host.factEmbeddings?.[fact.id];
 			        const vs = factVec && queryVec ? cosineSimilarity(queryVec, factVec) : 0;
 			        vectorScores.set(fact.id, vs);
+			        if (factVec && queryVec) rawVectorScores.set(fact.id, Math.max(0, vs));
 
 			        if (bm25Instance) {
 			                const bs = bm25Instance.score(query, fact.id);
@@ -279,7 +282,9 @@ export async function searchLocalSemanticMemory(
 				.sort((a, b) => b.relevanceScore - a.relevanceScore)
 				.slice(0, broadK);
 
-			// Stage 2: Re-rank with importance/strength only among candidates
+			// Stage 2 (#51): relevance decides; strength only breaks exact ties.
+			// The previous `relevance*0.7 + strength*0.3` mixed an RRF value (~0.03) with an
+			// unbounded strength, so candidates were effectively sorted by strength.
 			let scored = candidates
 				.map(({ fact, relevanceScore, vectorScore }) => {
 					const strength = calculateStrength(
@@ -289,15 +294,10 @@ export async function searchLocalSemanticMemory(
 						fact.lastAccessed,
 						now,
 					);
-
-					const finalScore = deepRecall
-						? relevanceScore
-						: relevanceScore * 0.7 + strength * 0.3;
-
-					return { fact, score: finalScore, strength, vectorScore };
+					return { fact, score: relevanceScore, strength, vectorScore };
 				})
 				.filter((x) => x.score > 0)
-				.sort((a, b) => b.score - a.score);
+				.sort(compareByRelevanceThenStrength);
 
 			// R2.5 v2 mode handling. backward compat:
 			//  - deepRecall=true 그대로 superseded 포함 (기존 동작)
@@ -338,7 +338,7 @@ export async function searchLocalSemanticMemory(
 						s.score *= 0.7;
 					}
 				}
-				scored.sort((a, b) => b.score - a.score);
+				scored.sort(compareByRelevanceThenStrength);
 			}
 
 			// #27 Step 3 — Cross-encoder reranker (caller-injected, optional).
@@ -442,30 +442,37 @@ export async function searchLocalSemanticMemory(
 				scored = expanded;
 			}
 
-			// Update recall counts
-			for (const { fact } of scored) {
-			        fact.recallCount++;
-			        fact.lastAccessed = now;
-			        fact.strength = calculateStrength(
-			                fact.importance,
-			                fact.createdAt,
-			                fact.recallCount,
-			                fact.lastAccessed,
-			                now,
-			        );
+			// Update recall counts — #51: skipped for `touch: false` (peek).
+			if (touch) {
+				for (const { fact } of scored) {
+					fact.recallCount++;
+					fact.lastAccessed = now;
+					fact.strength = calculateStrength(
+						fact.importance,
+						fact.createdAt,
+						fact.recallCount,
+						fact.lastAccessed,
+						now,
+					);
+				}
 			}
 
 			if (epochRange) {
 			    console.log(`[LocalAdapter] Final scored count for epoch: ${scored.length}`);
 			}
 
-			if (scored.length > 0) {
+			if (touch && scored.length > 0) {
 			        host.markDirty();
 			        host.save();
 			}
 
+			// #51 — return copies so per-query scores are never written onto stored facts.
 			return scored.map((s) => {
-			        s.fact.relevanceScore = s.score;
-			        return s.fact;
-				});
+				const vectorScore = rawVectorScores.get(s.fact.id);
+				return {
+					...s.fact,
+					relevanceScore: s.score,
+					...(vectorScore === undefined ? {} : { vectorScore }),
+				};
+			});
 }

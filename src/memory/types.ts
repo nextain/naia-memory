@@ -87,6 +87,14 @@ export interface Episode extends Record<string, unknown> {
 	 *  decay 가 strength 약화 시 'archived' 로 변경, splice X.
 	 *  default search 에서 hide. */
 	status?: "active" | "archived";
+	/** #51 — raw cosine similarity (clamped to >= 0) between the query and this episode's
+	 *  stored embedding. Set on the object returned by recall only, never persisted.
+	 *  Omitted when there was no query vector or no stored vector, so a caller can tell
+	 *  "no embedder" from "zero similarity" and fail closed. */
+	vectorScore?: number;
+	/** #51 — the adapter's ranking score for this recall (text relevance + context bonus).
+	 *  Set on the returned object only, never persisted. Not a cosine; use vectorScore. */
+	relevanceScore?: number;
 }
 
 /** Context captured at the time of memory encoding (Tulving's encoding specificity) */
@@ -115,15 +123,33 @@ export interface RecallContext {
 	activeFile?: string;
 	/** Max number of episodes to return */
 	topK?: number;
-	/** Minimum strength threshold */
+	/**
+	 * Minimum strength an episode must have to be a recall candidate.
+	 *
+	 * Default **0** (#51): strength is a retention signal, not a retrieval precondition.
+	 * With the previous default of 0.05, 568 of 625 project-scoped episodes in the real
+	 * store could never be recalled, however well they matched. A caller that wants a
+	 * retention floor can still pass a value > 0 (the old behaviour).
+	 */
 	minStrength?: number;
 	/**
 	 * Deep recall mode — search long-term memory ignoring decay.
 	 * Triggered when user explicitly asks about forgotten memories
 	 * ("왜 잊었어?", "예전에 뭐라고 했었지?").
-	 * Uses pure vector similarity without strength weighting.
+	 * Also includes archived episodes and ignores minStrength. (Since #51 the default mode does not weight strength either.)
 	 */
 	deepRecall?: boolean;
+	/**
+	 * #51 — peek mode. `true` (default) keeps the existing behaviour: every returned
+	 * episode and fact gets recallCount++, lastAccessed = now, a recomputed strength, and
+	 * the store is written. `false` reads without reinforcing and without writing the
+	 * store. Ranking and returned items are identical either way.
+	 *
+	 * For callers that only inspect candidates (a surfacing judge that discards most of
+	 * them, write-path duplicate checks, background probes), so that merely looking at a
+	 * memory does not make it more likely to be recalled next time.
+	 */
+	touch?: boolean;
 	/**
 	 * R2.5 v2 — recall mode for chain + bi-temporal facts.
 	 *  - 'latest' (default): only currently active facts (status==='active'
@@ -188,10 +214,10 @@ export interface RecallContext {
 	 *   - rrf (default): typical range 0.001~0.03 (RRF formula), recommended
 	 *     0.005-0.015. **0.6 will exclude everything.**
 	 *
-	 * Adversarial review (2026-05-08): score is composite (relevance×0.7 +
-	 * strength×0.3 in normal mode), not raw cosine. Future #27 step
-	 * (cross-encoder) will replace this with calibrated 0-1 confidence —
-	 * minConfidence semantic will then be cosine-like.
+	 * Since nextain/naia-memory#51 the score is the relevance score only — strength
+	 * no longer enters it (it only breaks exact ties), so the rrf range above is the
+	 * whole range. Future #27 step (cross-encoder) will replace this with calibrated
+	 * 0-1 confidence — minConfidence semantic will then be cosine-like.
 	 *
 	 * deepRecall=true 와 결합 시 cutoff 를 0.5 배 — \"오래된 기억 회상\"
 	 * 의도와 충돌 회피.
@@ -276,8 +302,13 @@ export interface Fact extends Record<string, unknown> {
 	validTo?: number | null;
 	/** Source episode IDs that contributed to this fact */
 	sourceEpisodes: string[];
-	/** Cosine similarity score from vector search (0.0–1.0, optional) */
+	/** Adapter's ranking score for this search. NOT a cosine: in the default `rrf` mode it
+	 *  is an RRF fusion value (~0.01–0.03 plus entity bonuses). Use vectorScore for raw
+	 *  similarity. Set on returned objects only (#51). */
 	relevanceScore?: number;
+	/** #51 — raw cosine similarity (clamped to >= 0) between the query and this fact's
+	 *  stored embedding. Omitted when there was no query vector or no stored vector. */
+	vectorScore?: number;
 	/** Encoding context inherited from source episodes — used for project-scoped retrieval */
 	encodingContext?: EncodingContext;
 	/** Optional structure used only for conservative write-time supersession. */
@@ -368,7 +399,7 @@ export interface MemoryAdapter {
 		 *  context.atTimestamp (optional, ms): bi-temporal recall — only fact versions valid
 		 *  at the given timestamp are considered. Adapters without bi-temporal support may
 		 *  ignore this option (degrades to standard search). */
-		search(query: string, topK: number, deepRecall?: boolean, context?: { project?: string; atTimestamp?: number; mode?: "latest" | "history" | "at-time"; minConfidence?: number; queryHint?: string; structuredQuery?: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">; scopeMode?: "strict" | "soft"; crossProject?: boolean; epochAnchor?: string }): Promise<Fact[]>;
+		search(query: string, topK: number, deepRecall?: boolean, context?: { project?: string; atTimestamp?: number; mode?: "latest" | "history" | "at-time"; minConfidence?: number; queryHint?: string; structuredQuery?: Pick<StructuredFact, "subject" | "property" | "subjectId" | "propertyId">; scopeMode?: "strict" | "soft"; crossProject?: boolean; touch?: boolean; epochAnchor?: string }): Promise<Fact[]>;
 		/** Run Ebbinghaus decay sweep, returns number of pruned memories */
 		decay(now: number): Promise<number>;
 		/** Strengthen association between two entities (Hebbian) */
