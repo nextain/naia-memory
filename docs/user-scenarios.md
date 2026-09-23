@@ -81,6 +81,21 @@ V-model의 사용자 시나리오(UC)에서 검증 테스트까지 추적하는 
   2. 비정상 캐시 검출 시 `initPromise`를 정리하여 후속 호출이 잠기지 않도록 한다.
   3. 자동 재색인 실패 시 실제 원인 메시지가 `getEmbeddingReindexError()`로 보존된다.
 
+## UC-MEM-LLM-REQ-01 — GPT-5 계열 작은 LLM으로 사실 추출·요약이 동작한다
+
+- **사용자**: Naia gateway를 통해 `gpt-5.4-nano` 등의 GPT-5 계열 모델을 memory role로 사용하는 운영자 및 Naia Agent
+- **목표**: Azure GPT-5 추론 배포 환경에서 요청 오류 없이 사실 추출, 요약, 삭제 검증, 질의 구조화, 모순 필터 등 메모리 LLM 작업을 수행한다.
+- **이유**: Azure GPT-5 추론 배포는 기본값 이외의 `temperature` 파라미터를 거부하므로, 요청 본문에서 해당 필드를 생략해야 정상 동작하기 때문이다 (nextain/naia-shell#692). 반면 Gemini나 로컬 모델은 기존 온도 설정을 유지해야 품질 저하가 없다.
+- **사전 조건**: 운영자 또는 시스템이 memory role에 `gpt-5.4-nano` 또는 Gemini/로컬 모델을 지정하고, 끝 슬래시 유무와 무관한 `baseURL`을 설정한다.
+- **정상 흐름**:
+  1. 호출자가 `temperature`를 명시하지 않은 경우, GPT-5 계열 모델(`gpt-5…`) 요청에서는 `temperature` 필드를 생략하고, Gemini/로컬 모델은 기존 기본값(0 또는 요약 0.2)을 유지하여 전송한다.
+  2. 호출자가 명시적으로 `temperature: number`를 지정하면 해당 값이 우선 전송되고, `temperature: null`을 지정하면 모델과 무관하게 필드가 생략된다.
+  3. `baseURL` 끝의 슬래시 유무와 무관하게 모든 요청 URL이 `<base>/chat/completions`로 올바르게 조립되어 404 없이 성공한다.
+- **실패 방지 조건**:
+  1. GPT-5 계열 모델 요청 본문에 `temperature` 키가 포함되지 않는다.
+  2. Gemini 및 기타 모델의 기본 동작 및 기존 파라미터는 변경되지 않는다.
+  3. `baseURL`에 슬래시가 누락되어도 `…/v1chat/completions`와 같은 잘못된 URL이 생성되지 않는다.
+
 ## Test Coverage Map
 
 | UC | 테스트 파일 / 그룹 | 검증 계약 |
@@ -92,6 +107,7 @@ V-model의 사용자 시나리오(UC)에서 검증 테스트까지 추적하는 
 | UC-MEM-RETRIEVAL-01 | `src/memory/__tests__/episode-hybrid-ranking.test.ts` / LocalAdapter hybrid ranking | 결정적 embedding에서 높은 utility의 긴 오염 episode 12개가 있어도 정확한 `CONNECTION_OK` user episode가 top-5에 포함됨을 확인한다. |
 | UC-MEM-RETRIEVAL-02 | `src/memory/__tests__/recall-strength.test.ts`, `src/memory/__tests__/decay.test.ts`, `src/memory/__tests__/recall-strength-store.integration.test.ts`(실 저장소 사본, `NAIA_MEM51_FIXTURE` 지정 시), `src/benchmark/quality/recall-strength-loop.ts` | 반복 회상 뒤에도 더 잘 맞는 일화·사실이 1위, strength 상한, 감쇠 일화 회상, `vectorScore`·`relevanceScore` 반환과 비영속, `touch: false`의 무강화·무쓰기를 확인한다. |
 | UC-MEM-EMBED-HEAL-01 | `src/memory/__tests__/offline-model-cache-healing.test.ts`, `src/memory/__tests__/embedding-reindex-diagnostics.test.ts` | 고정 크기 사전 검증(pre-flight)을 통한 잘린 캐시 삭제, 온전한 캐시 보존, guard 검증, 로드 실패 시 캐시 삭제 및 재기동 안내 throw, initPromise 정리, 그리고 auto-reindex 실패 원인 노출을 확인한다 (nextain/naia-shell#681). |
+| UC-MEM-LLM-REQ-01 | `src/memory/__tests__/llm-request.test.ts` | 여섯 요청 빌더 모두 GPT-5 계열에 temperature 미전송·기존 모델 값 유지·null 생략·끝 슬래시 없는 baseURL URL 조립을 확인한다. |
 
 모든 테스트는 실제 production builder/adapter를 호출한다. 네트워크와 Mem0 client만
 결정론적 fake로 대체하며, 인증 헤더 조립과 episode write 분기는 mock하지 않는다.
