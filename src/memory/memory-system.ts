@@ -72,8 +72,8 @@ export class MemorySystem extends MemorySystemCompaction {
 		for (const handler of this.spikeHandlers) {
 			try {
 				await handler(event);
-			} catch (e: any) {
-				console.warn(`[MemorySystem] spike handler failed: ${e?.message}`);
+			} catch {
+				console.warn("[MemorySystem] spike handler failed");
 			}
 		}
 	}
@@ -115,8 +115,8 @@ export class MemorySystem extends MemorySystemCompaction {
 					});
 				}
 			}
-		} catch (e: any) {
-			console.warn(`[MemorySystem] anniversary scan failed: ${e?.message}`);
+		} catch {
+			console.warn("[MemorySystem] anniversary scan failed");
 		}
 	}
 
@@ -150,8 +150,8 @@ export class MemorySystem extends MemorySystemCompaction {
 					});
 				}
 			}
-		} catch (e: any) {
-			console.warn(`[MemorySystem] temporal-anchor scan failed: ${e?.message}`);
+		} catch {
+			console.warn("[MemorySystem] temporal-anchor scan failed");
 		}
 	}
 
