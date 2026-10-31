@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildLLMFactExtractor } from "../llm-fact-extractor.js";
 import { buildLLMQueryStructurer } from "../llm-query-structurer.js";
 import { buildLLMSummarizer } from "../llm-summarizer.js";
+import { MemorySystem } from "../index.js";
 import type { Episode } from "../types.js";
 
 const episode: Episode = {
@@ -24,6 +25,48 @@ afterEach(() => {
 });
 
 describe("OpenAI-compatible LLM auth", () => {
+	it("does not log malformed model content or credentials", async () => {
+		const sensitive = "private-content-or-credential";
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const injected = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: sensitive } }] }), { status: 200 }));
+		const extractor = buildLLMFactExtractor({ apiKey: "", baseURL: "https://fake.invalid", model: "x", fetch: injected, maxAttempts: 1 });
+		await expect(extractor([episode])).resolves.toEqual([]);
+		expect(JSON.stringify(warn.mock.calls)).not.toContain(sensitive);
+		warn.mockRestore();
+	});
+	it("uses the request-scoped fact extractor for consolidation", async () => {
+		const system = Object.create(MemorySystem.prototype) as MemorySystem;
+		Object.assign(system, { _isConsolidating: false, adapter: { episode: { getUnconsolidated: async () => [episode] } } });
+		const extractor = vi.fn(async () => { throw new Error("sentinel extractor"); });
+		await expect(system.consolidateNow(true, extractor)).rejects.toThrow("sentinel extractor");
+		expect(extractor).toHaveBeenCalledOnce();
+	});
+	it("allows a per-call summarizer without changing other compactions", async () => {
+		const system = Object.create(MemorySystem.prototype) as MemorySystem;
+		Object.assign(system, { rollingSummaries: new Map() });
+		const input = { messages: [{ role: "user", content: "hello" }], keepTail: 0, targetTokens: 50 };
+		const perCall = vi.fn(async () => "custom recap");
+		await expect(system.compact({ ...input, summarizer: perCall })).resolves.toMatchObject({ summary: { content: "custom recap" } });
+		expect((await system.compact(input)).summary.content).not.toBe("custom recap");
+	});
+	it("uses injected transport for fact extraction and does not retry when configured once", async () => {
+		const injected = vi.fn(async () => new Response("error", { status: 503 }));
+		const globalFetch = vi.fn();
+		vi.stubGlobal("fetch", globalFetch);
+		const extractor = buildLLMFactExtractor({ apiKey: "", baseURL: "https://fake.invalid", model: "x", failurePolicy: "throw", fetch: injected, maxAttempts: 1 });
+		await expect(extractor([episode])).rejects.toThrow();
+		expect(injected).toHaveBeenCalledTimes(1);
+		expect(globalFetch).not.toHaveBeenCalled();
+	});
+	it("uses injected transport for summary and propagates failures when requested", async () => {
+		const injected = vi.fn(async () => new Response("error", { status: 503 }));
+		const globalFetch = vi.fn();
+		vi.stubGlobal("fetch", globalFetch);
+		const summarize = buildLLMSummarizer({ apiKey: "", baseURL: "https://fake.invalid", model: "x", fetch: injected, failurePolicy: "throw" });
+		await expect(summarize({ messages: [{ role: "user", content: "hello" }], seedSummary: "seed", targetTokens: 50, keepTail: 1 })).rejects.toThrow();
+		expect(injected).toHaveBeenCalledTimes(1);
+		expect(globalFetch).not.toHaveBeenCalled();
+	});
 	it("query structurer extracts a bounded identity and preserves gateway auth", async () => {
 		let capturedHeaders: HeadersInit | undefined;
 		vi.stubGlobal(
