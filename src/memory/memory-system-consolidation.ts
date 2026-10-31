@@ -11,6 +11,7 @@ import {
 import { distillInsights } from "./insight-distillation.js";
 import type {
 	ExtractedFact,
+	FactExtractor,
 	MemorySystemOptions,
 } from "./memory-system-api.js";
 import { MemorySystemBackup } from "./memory-system-backup.js";
@@ -48,9 +49,9 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 		this.consolidationTimer = setInterval(async () => {
 			try {
 				await this.consolidateNow();
-			} catch (err) {
-				// Non-critical — log and continue
-				console.error("[MemorySystem] consolidation error:", err);
+			} catch {
+				// Non-critical — do not record potentially sensitive error text.
+				console.error("[MemorySystem] consolidation error");
 			}
 		}, this.consolidationIntervalMs);
 	}
@@ -73,7 +74,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 	 * 4. Mark processed episodes as consolidated
 	 * 5. Run adapter-level decay + association cleanup
 	 */
-	async consolidateNow(force = false): Promise<ConsolidationResult> {
+	async consolidateNow(force = false, extractor?: FactExtractor): Promise<ConsolidationResult> {
 		if (this._isConsolidating) {
 			return {
 				episodesProcessed: 0,
@@ -99,7 +100,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 
 			if (readyEpisodes.length > 0) {
 				// 2. Extract facts from episodes
-				const extractedRaw = await this.factExtractor(readyEpisodes);
+				const extractedRaw = await (extractor ?? this.factExtractor)(readyEpisodes);
 				// negative-capture (hermes-derived): drop transient/env-dependent "facts" that would
 				// harden into durable self-imposed constraints (e.g. "tool X is broken"). Deterministic
 				// backstop to the LLM extractor's prompt-level policy (negative-capture.ts). Single
@@ -152,7 +153,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						const totalFacts =
 							(this.adapter as any).getStore?.()?.facts?.length ?? "?";
 						console.error(
-							`[FILTER_DEBUG] search("${ef.content.slice(0, 40)}", topK=10, deepRecall=true, proj=${efProject ?? "—"}) → ${existingFacts.length} hits | store total facts: ${totalFacts}`,
+							`[FILTER_DEBUG] search returned ${existingFacts.length} hits | store total facts: ${totalFacts}`,
 						);
 					}
 
@@ -483,8 +484,8 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					await this.adapter.semantic.upsert(fact);
 					replayBoosted++;
 				}
-			} catch (e: any) {
-				console.warn(`[MemorySystem] replay boost failed: ${e?.message}`);
+			} catch {
+				console.warn("[MemorySystem] replay boost failed");
 			}
 			// 측정 framework — replay 갯수 기록.
 			try {

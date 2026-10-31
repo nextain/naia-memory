@@ -4,6 +4,7 @@ import {
 	buildStructuredSections,
 } from "./compaction-helpers.js";
 import { MemorySystemRolling } from "./memory-system-rolling.js";
+import type { CompactionSummarizer } from "./compaction-helpers.js";
 
 /** Conversation compaction and cross-session handoff operations. */
 export abstract class MemorySystemCompaction extends MemorySystemRolling {
@@ -14,6 +15,8 @@ export abstract class MemorySystemCompaction extends MemorySystemRolling {
 		sessionId?: string;
 		strategy?: string;
 		priorRecap?: { role: string; content: string; timestamp?: number };
+		/** Request-scoped override avoids sharing authorization across concurrent calls. */
+		summarizer?: CompactionSummarizer;
 	}): Promise<{
 		summary: { role: "assistant"; content: string; timestamp?: number };
 		droppedCount: number;
@@ -31,9 +34,10 @@ export abstract class MemorySystemCompaction extends MemorySystemRolling {
 			structured.length > 0 ? `${baseRecap}\n\n${structured}` : baseRecap;
 		let finalContent = recap;
 		let realtime = rolling !== undefined;
-		if (this.summarizer) {
+		const summarizer = input.summarizer ?? this.summarizer;
+		if (summarizer) {
 			try {
-				const polished = await this.summarizer({
+				const polished = await summarizer({
 					messages,
 					keepTail: input.keepTail,
 					targetTokens: input.targetTokens,
@@ -50,11 +54,8 @@ export abstract class MemorySystemCompaction extends MemorySystemRolling {
 				} else if (polished.realtime === true) {
 					realtime = true;
 				}
-			} catch (error) {
-				console.warn(
-					"[MemorySystem] compaction summarizer failed, using deterministic recap:",
-					error,
-				);
+			} catch {
+				console.warn("[MemorySystem] compaction summarizer failed, using existing recap");
 			}
 		}
 		return {

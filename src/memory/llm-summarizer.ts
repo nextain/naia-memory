@@ -18,6 +18,10 @@ export interface LLMSummarizerOptions {
 	model?: string;
 	/** Request temperature. number = send, null = omit, undefined = 0.2 except GPT-5 family (omitted). */
 	temperature?: number | null;
+	/** Optional request transport for per-request authorization and routing. */
+	fetch?: typeof fetch;
+	/** Default preserves deterministic fallback; throw lets a caller retry. */
+	failurePolicy?: "seed" | "throw";
 }
 
 const DEFAULT_BASE_URL =
@@ -49,7 +53,7 @@ export function buildLLMSummarizer(
 		}\n\n대화:\n${transcript}\n\n요약(평문, 군더더기 없이):`;
 
 		try {
-			const res = await fetch(chatCompletionsUrl(baseURL), {
+			const res = await (options.fetch ?? fetch)(chatCompletionsUrl(baseURL), {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -67,14 +71,19 @@ export function buildLLMSummarizer(
 				}),
 				...(input.signal ? { signal: input.signal } : {}),
 			});
-			if (!res.ok) return seed; // 비-OK → 결정론 recap 폴백
+			if (!res.ok) {
+				if (options.failurePolicy === "throw") throw new Error(`LLM summary HTTP ${res.status}`);
+				return seed;
+			}
 			const data = (await res.json()) as {
 				choices?: Array<{ message?: { content?: unknown } }>;
 			};
 			const content = data?.choices?.[0]?.message?.content;
 			const polished = typeof content === "string" ? content.trim() : "";
+			if (!polished && options.failurePolicy === "throw") throw new Error("LLM summary invalid response");
 			return polished || seed;
-		} catch {
+		} catch (error) {
+			if (options.failurePolicy === "throw") throw error;
 			return seed; // 네트워크/abort 실패 = 무손실 폴백
 		}
 	};

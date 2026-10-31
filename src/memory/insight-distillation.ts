@@ -78,9 +78,8 @@ export async function distillInsights(
 				await adapter.semantic.upsert(fact);
 			}
 		}
-	} catch (error: unknown) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.warn(`[MemorySystem] insight distillation failed: ${message}`);
+	} catch {
+		console.warn("[MemorySystem] insight distillation failed");
 	}
 	return insightsCreated;
 }

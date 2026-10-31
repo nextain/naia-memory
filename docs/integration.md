@@ -405,3 +405,8 @@ export async function buildMemory(setting: NaiaMemorySetting) {
   치환) 가 미래 계획. naia-memory 는 이 계약의 *충실 구현* 책임.
 - naia-memory 자체에 setting UI / config file loader X — 통합 측 책임
 - env var fallback 은 *벤치마크 편의* 용도 — production 통합 시 명시 주입 권장
+
+
+## 8. 요청별 작은 모델 주입
+
+셸 FR-SM.5~.7의 데스크톱 연결에서 에이전트는 요청별로 승인 문맥에 결박한 `FactExtractor`를 `consolidateNow(force, extractor)`에, `CompactionSummarizer`를 `compact({ ..., summarizer })`에 전달한다. 요청별 값은 생성자 기본값보다 우선하고 다른 요청으로 새지 않는다. 미주입 시 생성자 기본값과 기존 휴리스틱 추출·누적 또는 결정론 요약을 보존한다. 에이전트가 각 실제 대상의 승인을 검사하고 작은 모델 실패 시 메인으로 최대 한 번 재시도하며 양쪽 실패의 최초 오류를 보존한다. 로컬 Qwen 실패 시 클라우드 전송 없이 휴리스틱 추출 또는 기존 요약을 사용한다. 실패 후 중복 사실을 저장하지 않고 기록에서 자격 증명과 대화 본문을 제외한다. 구현과 수용 시험은 [FR-MEM-SM-1~3, NFR-MEM-SM-1](requirements.md#uc-mem-sm-01--요청별-기억-추출압축-계약-pending)에 있다.

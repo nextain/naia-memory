@@ -38,6 +38,10 @@ export interface LLMFactExtractorOptions {
 	failurePolicy?: "skip" | "throw";
 	/** Request temperature. number = send, null = omit, undefined = 0 except GPT-5 family (omitted). */
 	temperature?: number | null;
+	/** Optional request transport; callers can authorize and route each request. */
+	fetch?: typeof fetch;
+	/** Maximum attempts per batch, default 3. */
+	maxAttempts?: number;
 }
 
 const GEMINI_DIRECT_BASE_URL =
@@ -89,7 +93,10 @@ export function buildLLMFactExtractor(
 		auth = "bearer",
 		failurePolicy = "skip",
 		temperature,
+		fetch: suppliedFetch,
+		maxAttempts = 3,
 	} = options;
+	const request: typeof fetch = suppliedFetch ?? ((...args) => fetch(...args));
 
 	return async (episodes: Episode[]): Promise<ExtractedFact[]> => {
 		const results: ExtractedFact[] = [];
@@ -103,7 +110,8 @@ export function buildLLMFactExtractor(
 				auth,
 				failurePolicy,
 				temperature,
-			});
+				request,
+			}, Number.isFinite(maxAttempts) ? Math.max(1, Math.floor(maxAttempts)) : 3);
 			results.push(...extracted);
 		}
 
@@ -124,6 +132,7 @@ async function extractBatch(
 		auth: "bearer" | "x-anyllm";
 		failurePolicy: "skip" | "throw";
 		temperature?: number | null;
+		request: typeof fetch;
 	},
 	retries = 3,
 ): Promise<ExtractedFact[]> {
@@ -273,7 +282,7 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","operation":"
 Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"delete","deleteEvidenceKind":"explicit_removal_request","deleteEvidenceQuote":"땅콩 알레르기 기억을 삭제해 줘.","deleteTargetQuote":"땅콩 알레르기","structured":{"subject":"사용자","subjectId":"person:self","property":"알레르기","propertyId":"profile:allergy","value":"땅콩","polarity":"affirmed","cardinality":"multi"}}]}`;
 
 	const call = () =>
-		fetch(chatCompletionsUrl(baseURL), {
+		opts.request(chatCompletionsUrl(baseURL), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -301,6 +310,7 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
 		try {
 			response = await call();
 			if (response.ok || response.status < 500) break;
+			if (attempt === retries) break;
 			const delay = Math.min(2000 * attempt, 10000);
 			console.warn(
 				`[LLMFactExtractor] API ${response.status}, retry ${attempt}/${retries} in ${delay}ms`,
@@ -356,7 +366,7 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
 			const rawFacts = parsed[String(i + 1)] ?? [];
 			if (!Array.isArray(rawFacts) && Object.keys(parsed).length > 0) {
 				console.warn(
-					`[LLMFactExtractor] Unexpected value for key "${i + 1}": ${typeof rawFacts}. Keys: ${Object.keys(parsed).join(", ")}`,
+					`[LLMFactExtractor] Unexpected value for key ${i + 1}: ${typeof rawFacts}`,
 				);
 			}
 			const facts: Array<{
@@ -450,7 +460,7 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
 				cause: err,
 			});
 		}
-		console.warn("[LLMFactExtractor] Parse error, skipping batch:", err);
+		console.warn("[LLMFactExtractor] Parse error, skipping batch");
 		return [];
 	}
 }

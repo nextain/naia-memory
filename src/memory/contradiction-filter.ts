@@ -126,7 +126,7 @@ export function parseContradictionVerdicts(
 		const conf = typeof entry.confidence === "number" ? entry.confidence : 0;
 		if (debug) {
 			console.error(
-				`[FILTER_DEBUG]   LLM idx=${offset + i} contradiction=${entry.contradiction} conf=${conf.toFixed(2)} reason="${(entry.reason ?? "").slice(0, 50)}"`,
+				`[FILTER_DEBUG]   LLM idx=${offset + i} contradiction=${Boolean(entry.contradiction)} conf=${conf.toFixed(2)}`,
 			);
 		}
 		if (!entry.contradiction) continue;
@@ -246,10 +246,8 @@ export class GeminiFlashLiteContradictionFilter
 	): Promise<ContradictionVerdict[]> {
 		try {
 			return await this.callLLM(batch, offset);
-		} catch (err) {
-			console.warn(
-				`[GeminiFlashLiteContradictionFilter] API failure, falling back to heuristic: ${(err as Error).message}`,
-			);
+		} catch {
+			console.warn("[GeminiFlashLiteContradictionFilter] API failure, falling back to heuristic");
 			const fallback = new HeuristicContradictionFilter();
 			const local = await fallback.filter(batch);
 			return local.map((v) => ({ ...v, index: v.index + offset }));
@@ -352,9 +350,9 @@ export class VllmReasoningContradictionFilter
 			try {
 				const batchResults = await this.callVllm(batch, i);
 				verdicts.push(...batchResults);
-			} catch (err) {
+			} catch {
 				console.warn(
-					`[VllmReasoningContradictionFilter] vLLM call failed at offset ${i}, falling back to heuristic for this batch: ${(err as Error).message}`,
+					`[VllmReasoningContradictionFilter] vLLM call failed at offset ${i}, falling back to heuristic for this batch`,
 				);
 				const fallback = new HeuristicContradictionFilter();
 				const local = await fallback.filter(batch);

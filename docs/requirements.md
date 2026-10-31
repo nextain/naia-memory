@@ -80,3 +80,29 @@ P04 증거(2026-09-23, Windows, nextain/naia-memory#51): typecheck·build 통과
 구현 및 검증 추적은 `src/memory/structured-facts.ts`,
 `src/memory/structured-mutation-policy.ts`, `src/memory/structured-duplicate-reconciliation.ts`,
 `src/memory/__tests__/structured-*.test.ts`, `src/benchmark/quality/**`에 연결된다.
+
+
+## UC-MEM-SM-01 — 요청별 기억 추출·압축 계약 (Pending)
+
+셸 FR-SM.5~.7, NFR-SM.2·.3, FE-SM-01·03의 기억 라이브러리 책임이다. 역할 해석·승인·재시도와 실제 모델 라우팅은 에이전트 책임이며, 이 저장소는 주입된 호출을 안전하게 소비한다. 선행 코드가 있어도 시험 전에는 완료가 아니다.
+
+| ID | 요구 및 받아들임 기준 | 시험 |
+|---|---|---|
+| FR-MEM-SM-1 | 사실 추출에 `consolidateNow(force, extractor)`의 요청별 추출기를 사용할 수 있고 요청별 값이 생성자 기본 추출기보다 우선한다. 주입이 없으면 기존 생성자 추출기 또는 휴리스틱을 유지한다. 기존 추출 프롬프트·파서·사실 필터를 유지한다. 셸 FR-SM.5·.7. | UT-MEM-SM-01, IT-MEM-SM-01 |
+| FR-MEM-SM-2 | `compact`의 요청별 `summarizer`가 생성자 기본 요약기보다 우선한다. 둘 다 없거나 요약이 실패하면 기존 누적 요약이 있으면 그것을, 없으면 결정론 요약을 사용한다. 셸 FR-SM.5~.7. | UT-MEM-SM-02, IT-MEM-SM-01 |
+| FR-MEM-SM-3 | 주입된 추출기·요약기는 그 요청에만 적용한다. 에이전트가 승인하고 선택한 대상의 호출은 주입 경로로 전달하며 기억 라이브러리는 별도 클라우드 대상을 선택하거나 추가 재시도하지 않는다. 로컬 실패 시 에이전트가 휴리스틱 추출을 주입하고 압축은 기존 요약으로 복구할 수 있어야 한다. 셸 FR-SM.3·.6·.7. | IT-MEM-SM-02 |
+| NFR-MEM-SM-1 | 실패·재시도에서 같은 사실을 중복 저장하지 않고, 기록에 자격 증명과 대화 본문을 넣지 않는다. 시도 역할·실제 공급자·모델·결과·대체 사유는 이를 아는 에이전트가 기록한다. 기존 기억 선택과 회상 동작을 보존한다. 셸 NFR-SM.2·.3. | IT-MEM-SM-03 |
+
+기존 FR-MEM-LLM-ROLE-1의 `sub` 기본값은 유효한 `sub`가 지정된 경우에 적용한다. 기억과 작은 역할이 모두 미설정이면 셸의 예외에 따라 메인이 아닌 기존 무모델 경로를 사용한다. 압축 실패 시 라이브러리는 기존 요약을 반환할 수 있으므로 에이전트는 라이브러리의 복구와 별도로 양쪽 호출의 최초 오류를 보존·관찰할 수 있어야 한다. 추출기의 실패는 저장 전에 전파되어 재시도할 수 있어야 한다.
+
+### 시험 계획
+
+아래 기억 라이브러리 자동 시험은 작성 및 통과했다. 셸과 에이전트를 연결한 전체 사용자 시나리오는 다음 회차에서 검증한다.
+
+| 번호 | 시험 파일 및 시험 이름 | 기대값 · 상태 |
+|---|---|---|
+| UT-MEM-SM-01 | `src/memory/__tests__/smallmodel-runtime.test.ts` — “요청 추출기가 생성자 추출기보다 우선한다” | 요청 추출기만 호출되고 부재 시 생성자·기존 휴리스틱 사용; 기존 파서·필터 결과 보존. 작성·통과. |
+| UT-MEM-SM-02 | `src/memory/__tests__/smallmodel-runtime.test.ts` — “요청 요약기 우선과 기존 요약 복구” | 요청 요약기 우선; 미지정 또는 실패 시 누적 요약, 누적 요약 없는 별도 조건에서 결정론 요약. 작성·통과. |
+| IT-MEM-SM-01 | `src/memory/__tests__/smallmodel-runtime.integration.test.ts` — “대화 사실과 압축에 요청별 함수를 사용한다” | 입력된 대화에 주입 추출과 요약 결과가 사용되고 기본 함수는 호출되지 않는다. 작성·통과. |
+| IT-MEM-SM-02 | `src/memory/__tests__/smallmodel-runtime.integration.test.ts` — “동시 요청의 주입과 로컬 복구를 격리한다” | 요청별 요약기·추출기와 승인 문맥이 섞이지 않고 로컬 실패 시 클라우드 전송 0회, 휴리스틱·기존 요약 결과. 에이전트 대역이 승인·폴백을 담당한다. 작성·통과. |
+| IT-MEM-SM-03 | `src/memory/__tests__/smallmodel-runtime.integration.test.ts` — “실패 재시도 후 사실 중복과 민감 기록을 막는다” | 동일 사실 한 번 저장, 자격 증명·대화 본문 로그 없음, 기존 회상과 선택 보존. 작성·통과. |
