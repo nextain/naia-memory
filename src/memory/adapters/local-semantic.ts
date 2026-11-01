@@ -140,7 +140,7 @@ export function createLocalSemanticMemory(
 								const releasedIds = new Set(released.map(deleted => deleted.id));
 								t.deletedFacts = t.deletedFacts.filter(deleted => !releasedIds.has(deleted.id));
 								t.factIds = t.factIds.filter(id => !releasedIds.has(id));
-								return t.deletedFacts.length > 0;
+								return t.deletedFacts.length > 0 || t.factIds.length > 0;
 							});
 						}
 					}

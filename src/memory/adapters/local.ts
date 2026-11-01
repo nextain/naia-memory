@@ -458,7 +458,8 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			if (!value) return;
 			this.store.scopedTombstones ??= [];
 			const deletedFacts = this.store.facts.filter(f => factIds.includes(f.id)).map(f => ({id: f.id, value: extractUserFactValue(f.content)?.value ?? f.structured?.value ?? deletionFactValue(f.content), ...(extractUserFactValue(f.content) ? {key: extractUserFactValue(f.content)!.key} : {}), attribute: f.attribute ?? "general" as const, ...(f.structured ? {identity: {subject: f.structured.subject, property: f.structured.property, subjectId: f.structured.subjectId, propertyId: f.structured.propertyId}} : {})}));
-			const existing = this.store.scopedTombstones.find(t => t.target === value && t.project === (project ?? null));
+			const existing = this.store.scopedTombstones.find(t => t.target === value && t.project === (project ?? null) &&
+				!!t.deletedFacts?.length && t.factIds.every(id => t.deletedFacts!.some(f => f.id === id)));
 			if (existing) {
 				existing.deletedFacts = [...(existing.deletedFacts ?? []).filter(f => !factIds.includes(f.id)), ...deletedFacts];
 				existing.factIds = [...new Set([...existing.factIds, ...factIds])];
