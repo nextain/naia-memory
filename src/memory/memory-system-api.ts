@@ -1,3 +1,4 @@
+import { deletionTarget } from "./delete-tombstone.js";
 /**
  * MemorySystem — Orchestrator for Naia Memory architecture.
  *
@@ -315,7 +316,10 @@ export async function heuristicFactExtractor(
 		);
 		_heuristicWarnOnce = true;
 	}
-	return episodes.flatMap((ep) => splitPropositions(ep.content).map((content) => ({
+	return episodes.flatMap<ExtractedFact>((ep) => {
+		const target = ep.role === "user" ? deletionTarget(ep.content) : null;
+		if (target) return [{ content: target, operation: "delete" as const, entities: [], topics: [], importance: ep.importance.utility, sourceEpisodeIds: [ep.id], deleteEvidence: { kind: "explicit_removal_request" as const, evidenceQuote: ep.content, targetQuote: target } }];
+		return splitPropositions(ep.content).map((content) => ({
 		content,
 		attribute: factAttribute(content),
 		entities: [],
@@ -323,5 +327,6 @@ export async function heuristicFactExtractor(
 		importance: ep.importance.utility,
 		maxEmotion: ep.importance.emotion,
 		sourceEpisodeIds: [ep.id],
-	})));
+	}));
+	});
 }

@@ -1,3 +1,4 @@
+import { isTombstoned } from "../delete-tombstone.js";
 /**
  * Local semantic search pipeline.
  *
@@ -16,6 +17,8 @@ export type SemanticSearchContext = Parameters<MemoryAdapter["semantic"]["search
 
 export interface LocalSemanticSearchHost {
 	readonly facts: Fact[];
+	readonly tombstones?: string[];
+	readonly tombstoneFactIds?: Record<string, string[]>;
 	readonly factEmbeddings: Record<string, number[]> | undefined;
 	readonly embedder: EmbeddingProvider | null;
 	readonly vectorCandidateLimit?: number;
@@ -145,6 +148,8 @@ export async function searchLocalSemanticMemory(
 			                : baseFacts;
 			}
 
+			const hiddenIds = new Set(Object.values(host.tombstoneFactIds ?? {}).flat());
+			allFacts = allFacts.filter(fact => !hiddenIds.has(fact.id) && !isTombstoned(JSON.stringify(fact), host.tombstones));
 			// Apply the latest-view lifecycle contract before candidate truncation.
 			// Otherwise superseded/archived rows can occupy all broadK slots and
 			// disappear only after slicing, starving lower-ranked active facts.

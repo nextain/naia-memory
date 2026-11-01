@@ -351,6 +351,12 @@ export abstract class MemorySystemCore {
 	 * Combines episodic recall + semantic search + procedural reflections.
 	 * Implements Tulving's encoding specificity — context at retrieval matters.
 	 */
+	/** Remove a persistent deletion filter to allow matching memories to be recalled again. */
+	async removeTombstone(target: string): Promise<void> {
+		if (!this.adapter.tombstones) throw new Error("Adapter does not support tombstones");
+		await this.adapter.tombstones.remove(target);
+	}
+
 	async recall(
 		query: string,
 		context: RecallContext,

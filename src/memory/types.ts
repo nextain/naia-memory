@@ -373,6 +373,8 @@ export interface MemoryUse {
 }
 
 export interface MemoryAdapter {
+	/** Persistent deletion filters, when supported. */
+	tombstones?: { add(target: string, factIds?: string[]): Promise<void>; remove(target: string): Promise<void>; match(target: string, facts: Fact[]): Promise<Fact[]> };
 	/** Reinforce selected memories, if supported by the adapter. */
 	markUsed?(ids: MemoryUse): Promise<void>;
 	/** Episodic memory operations (Hippocampus) */

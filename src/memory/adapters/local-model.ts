@@ -6,6 +6,8 @@ import type { KGState } from "../knowledge-graph.js";
 /** On-disk schema for JSON persistence. */
 export interface MemoryStore {
 	version: 1;
+	tombstones?: string[];
+	tombstoneFactIds?: Record<string, string[]>;
 	episodes: Episode[];
 	facts: Fact[];
 	epochs?: import("../types.js").Epoch[];
@@ -227,6 +229,8 @@ export function isMemoryStore(value: unknown): value is MemoryStore {
 	) {
 		return false;
 	}
+	if (value.tombstones !== undefined && !isStringArray(value.tombstones)) return false;
+	if (value.tombstoneFactIds !== undefined && (!isRecord(value.tombstoneFactIds) || !Object.values(value.tombstoneFactIds).every(isStringArray))) return false;
 	if (
 		value.epochs !== undefined &&
 		(!Array.isArray(value.epochs) || !value.epochs.every(isEpoch))

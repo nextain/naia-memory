@@ -1,3 +1,4 @@
+import { isTombstoned } from "../delete-tombstone.js";
 import { calculateStrength, shouldPrune } from "../decay.js";
 import type { KnowledgeGraph } from "../knowledge-graph.js";
 import type { Fact, MemoryAdapter } from "../types.js";
@@ -125,7 +126,14 @@ export function createLocalSemanticMemory(
 							incoming.encodingContext ?? existing.encodingContext;
 						existing.structured = incoming.structured ?? existing.structured;
 						existing.attribute = incoming.attribute ?? existing.attribute;
-					} else store.facts.push(incoming);
+					} else {
+						store.facts.push(incoming);
+						if (incoming.status === "active") {
+							const removed = (store.tombstones ?? []).filter(t => isTombstoned(incoming.content, [t]) || (store.tombstoneFactIds?.[t] ?? []).some(id => store.facts.find(f => f.id === id)?.content === incoming.content));
+							store.tombstones = (store.tombstones ?? []).filter(t => !removed.includes(t));
+							for (const t of removed) if (store.tombstoneFactIds) delete store.tombstoneFactIds[t];
+						}
+					}
 					touchedEntities.push(existing?.entities ?? incoming.entities);
 					if (vector) {
 						store.factEmbeddings ??= {};

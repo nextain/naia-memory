@@ -1,3 +1,5 @@
+import { isTombstoned, normalizeDeletionTarget } from "../delete-tombstone.js";
+import { cosineSimilarity } from "./local-search.js";
 import { calculateStrength } from "../decay.js";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -11,6 +13,7 @@ import { KnowledgeGraph, emptyKGState } from "../knowledge-graph.js";
 import type {
 	BackupCapable,
 	ConsolidationResult,
+	Fact,
 	MemoryAdapter,
 } from "../types.js";
 import {
@@ -255,6 +258,8 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			get factEmbeddings() {
 				return adapter.store.factEmbeddings;
 			},
+			get tombstones() { return adapter.store.tombstones; },
+			get tombstoneFactIds() { return adapter.store.tombstoneFactIds; },
 			get embedder() {
 				return adapter.embedder;
 			},
@@ -443,6 +448,30 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		markDirty: () => this.markDirty(),
 		save: () => this.save(),
 	});
+
+	tombstones = {
+		add: async (target: string, factIds: string[] = []) => {
+			const value = normalizeDeletionTarget(target);
+			if (!value) return;
+			this.store.tombstones ??= [];
+			if (!this.store.tombstones.includes(value)) this.store.tombstones.push(value);
+			this.store.tombstoneFactIds ??= {};
+			this.store.tombstoneFactIds[value] = [...new Set([...(this.store.tombstoneFactIds[value] ?? []), ...factIds])];
+			this.markDirty();
+			this.save();
+		},
+		remove: async (target: string) => {
+			const value = normalizeDeletionTarget(target);
+			this.store.tombstones = (this.store.tombstones ?? []).filter(t => t !== value);
+			if (this.store.tombstoneFactIds) delete this.store.tombstoneFactIds[value];
+			this.markDirty();
+			this.save();
+		},
+		match: async (target: string, facts: Fact[]) => {
+			const vector = await this.embedWithCache(target);
+			return facts.filter(f => f.status === "active" && (isTombstoned(f.content, [normalizeDeletionTarget(target)]) || Boolean(vector && this.store.factEmbeddings?.[f.id] && cosineSimilarity(vector, this.store.factEmbeddings[f.id]) >= 0.85)));
+		},
+	};
 
 	semantic = createLocalSemanticMemory({
 		getStore: () => this.store,

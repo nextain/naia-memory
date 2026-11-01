@@ -1,3 +1,4 @@
+import { deletionTarget, normalizeDeletionTarget } from "./delete-tombstone.js";
 import {
 	buildNewFact,
 	findDuplicateFact,
@@ -161,21 +162,30 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					}
 
 					if (ef.operation === "delete") {
+						if (!this.deleteVerifier) {
+							const target = srcEp?.role === "user" && ef.sourceEpisodeIds.length === 1 ? deletionTarget(srcEp.content) : null;
+							if (!target || !normalizeDeletionTarget(target) || !ef.deleteEvidence || normalizeDeletionTarget(target) !== normalizeDeletionTarget(ef.deleteEvidence.targetQuote) || !this.adapter.tombstones) {
+								if (hasGroundedDeleteAuthority(ef, srcEp) && !this.warnedMissingDeleteVerifier) {
+									console.warn("[naia-memory] grounded delete ignored because no delete verifier is configured");
+									this.warnedMissingDeleteVerifier = true;
+								}
+								continue;
+							}
+							const eligible = (await this.adapter.semantic.getAll()).filter(f => f.encodingContext?.project === efProject);
+							const targets = await this.adapter.tombstones.match(target, eligible);
+							if (!targets.length) continue;
+							const archived = targets.map(f => ({ ...f, status: "archived" as const, updatedAt: now, validTo: now }));
+							if (this.adapter.semantic.upsertMany) await this.adapter.semantic.upsertMany(archived);
+							else for (const f of archived) await this.adapter.semantic.upsert(f);
+							await this.adapter.tombstones.add(target, targets.map(f => f.id));
+							factsUpdated += archived.length;
+							continue;
+						}
 						if (!hasGroundedDeleteAuthority(ef, srcEp)) {
 							recordDeleteOutcome("denied");
 							continue;
 						}
 						if (!srcEp) continue;
-						if (!this.deleteVerifier) {
-							recordDeleteOutcome("verifier_failed");
-							if (!this.warnedMissingDeleteVerifier) {
-								console.warn(
-									"[naia-memory] grounded delete ignored because no delete verifier is configured",
-								);
-								this.warnedMissingDeleteVerifier = true;
-							}
-							continue;
-						}
 						const resolution = await resolveDeleteTarget({
 							episode: srcEp,
 							fact: ef,
@@ -221,6 +231,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 							for (const target of archivedTargets)
 								await this.adapter.semantic.upsert(target);
 						}
+						if (ef.deleteEvidence?.targetQuote && this.adapter.tombstones) await this.adapter.tombstones.add(ef.deleteEvidence.targetQuote, archivedTargets.map(f => f.id));
 						factsUpdated += archivedTargets.length;
 						continue;
 					}
