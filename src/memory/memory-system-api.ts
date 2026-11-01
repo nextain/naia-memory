@@ -142,6 +142,7 @@ export { SqliteAdapter } from "./adapters/sqlite.js";
 export type {
 	BackupCapable,
 	MemoryAdapter,
+	MemoryUse,
 	Episode,
 	Fact,
 	Reflection,

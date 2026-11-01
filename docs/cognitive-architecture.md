@@ -66,6 +66,10 @@ top-K fact + episode (deepRecall 옵션)
 
 ---
 
+### 사용한 기억의 강화
+
+LocalAdapter와 Mem0Adapter는 검색 결과를 기본적으로 강화하지 않는다 (`touch: false`). 답에 실제 사용한 episode와 fact의 ID를 `MemorySystem.markUsed({ episodeIds, factIds })`에 전달하면 해당 항목만 강화한다. 중복 ID는 한 번만 처리하며, 알 수 없는 ID는 무시한다. 명시적으로 `touch: true`를 전달하면 검색 결과를 이전처럼 강화한다. Mem0의 강화 정보는 현재 어댑터 인스턴스의 메모리에 유지된다. 이 기능을 지원하지 않는 어댑터는 `markUsed` 호출 시 오류를 반환한다.
+
 ### 벡터 후보 제한
 
 LocalAdapter의 일반 검색은 벡터 점수가 기준을 넘더라도 유사도 상위 50개만 벡터 경로의 후보로 인정한다. `vectorCandidateLimit`으로 조정할 수 있으며, 키워드·엔티티·감정 후보와 deep recall은 별도로 유지한다. 50은 성능 측정값이 아닌 조정 가능한 운영 기본값이다. 임베더가 없으면 기존 키워드 검색을 유지한다.
@@ -93,7 +97,7 @@ recall mode = `latest` / `history` / `at-time`.
 
 ## 5. Decay (Ebbinghaus)
 
-`strength` 시간 따라 감소. 회상 시 강화 (Hebbian).
+`strength` 시간 따라 감소. 사용 표시 또는 명시적인 touch 검색 시 강화 (Hebbian).
 
 사용자 directive (보존 우선) 적용:
 - **현재 코드**: `shouldPrune` + splice (위반)

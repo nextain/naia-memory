@@ -340,6 +340,12 @@ export abstract class MemorySystemCore {
 
 	// ─── Memory Retrieval ─────────────────────────────────────────────────
 
+	/** Reinforce only memories actually used by the caller. */
+	async markUsed(ids: import("./types.js").MemoryUse): Promise<void> {
+		if (!this.adapter.markUsed) throw new Error("Adapter does not support markUsed");
+		await this.adapter.markUsed(ids);
+	}
+
 	/**
 	 * Recall relevant memories for a query.
 	 * Combines episodic recall + semantic search + procedural reflections.

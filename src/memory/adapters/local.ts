@@ -1,3 +1,4 @@
+import { calculateStrength } from "../decay.js";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -411,6 +412,28 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	/** Get all defined life epochs. */
 	getEpochs(): import("../types.js").Epoch[] {
 		return getLocalEpochs(this.store);
+	}
+
+	async markUsed(ids: import("../types.js").MemoryUse): Promise<void> {
+		const episodes = new Set(ids.episodeIds ?? []);
+		const facts = new Set(ids.factIds ?? []);
+		const now = Date.now();
+		let changed = false;
+		for (const episode of this.store.episodes) {
+			if (!episodes.has(episode.id)) continue;
+			episode.recallCount++;
+			episode.lastAccessed = now;
+			episode.strength = calculateStrength(episode.importance.utility, episode.timestamp, episode.recallCount, now, now);
+			changed = true;
+		}
+		for (const fact of this.store.facts) {
+			if (!facts.has(fact.id)) continue;
+			fact.recallCount++;
+			fact.lastAccessed = now;
+			fact.strength = calculateStrength(fact.importance, fact.createdAt, fact.recallCount, now, now);
+			changed = true;
+		}
+		if (changed) { this.markDirty(); this.save(); }
 	}
 
 	episode = createLocalEpisodeMemory({

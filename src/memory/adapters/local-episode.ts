@@ -75,7 +75,7 @@ export function createLocalEpisodeMemory(
 			// #51 — strength is a retention signal, not a retrieval gate (default 0).
 			const minStrength = context.minStrength ?? 0;
 			const deepRecall = context.deepRecall ?? false;
-			const touch = context.touch ?? true;
+			const touch = context.touch ?? false;
 			const queryVec = await host.embedQuery(query);
 			const store = host.getStore();
 			const epScopeMode = context.scopeMode ?? "soft";

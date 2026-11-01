@@ -149,7 +149,7 @@ export async function searchLocalSemanticMemory(
 			// Otherwise superseded/archived rows can occupy all broadK slots and
 			// disappear only after slicing, starving lower-ranked active facts.
 			const mode = context?.mode ?? "latest";
-			const touch = context?.touch ?? true;
+			const touch = context?.touch ?? false;
 			const includeSuperseded = mode === "history" || deepRecall || epochRange !== null;
 			if (!includeSuperseded && atT === undefined) {
 				allFacts = allFacts.filter((fact) => (fact.status ?? "active") === "active");

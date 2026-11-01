@@ -139,16 +139,7 @@ export interface RecallContext {
 	 * Also includes archived episodes and ignores minStrength. (Since #51 the default mode does not weight strength either.)
 	 */
 	deepRecall?: boolean;
-	/**
-	 * #51 — peek mode. `true` (default) keeps the existing behaviour: every returned
-	 * episode and fact gets recallCount++, lastAccessed = now, a recomputed strength, and
-	 * the store is written. `false` reads without reinforcing and without writing the
-	 * store. Ranking and returned items are identical either way.
-	 *
-	 * For callers that only inspect candidates (a surfacing judge that discards most of
-	 * them, write-path duplicate checks, background probes), so that merely looking at a
-	 * memory does not make it more likely to be recalled next time.
-	 */
+	/** Reinforce returned memories when true. Defaults to false for LocalAdapter and Mem0Adapter. */
 	touch?: boolean;
 	/**
 	 * R2.5 v2 — recall mode for chain + bi-temporal facts.
@@ -373,7 +364,14 @@ export interface ConsolidationResult {
  * LocalAdapter (JSON file) is always functional.
  * Future adapters (cloud, distributed) can be added without changing consumers.
  */
+export interface MemoryUse {
+	episodeIds?: string[];
+	factIds?: string[];
+}
+
 export interface MemoryAdapter {
+	/** Reinforce selected memories, if supported by the adapter. */
+	markUsed?(ids: MemoryUse): Promise<void>;
 	/** Episodic memory operations (Hippocampus) */
 	episode: {
 		/** Store a new episode */
