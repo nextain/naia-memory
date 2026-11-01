@@ -37,11 +37,11 @@ export function isTombstoned(text: string, tombstones: readonly string[] = []): 
  });
 }
 
-/** Require first-person evidence and reject explicit references to other people. */
+/** Conservative shared subject check for deletion and tombstone release. */
+const OTHER_PERSON = /(?:사촌|삼촌|외삼촌|이모|이모부|고모|고모부|숙모|조카|친척|형제|자매|형|오빠|누나|언니|동생|남동생|여동생|아버지|아빠|어머니|엄마|부모|할아버지|할머니|아들|딸|자식|아내|남편|와이프|배우자|애인|여자친구|남자친구|친구|동료|상사|선배|후배|이웃|사장|팀장|그\s*사람|그녀|그들|\b(?:cousin|uncle|aunt|nephew|niece|relative|brother|sister|sibling|father|dad|mother|mom|parent|grandfather|grandmother|son|daughter|child|wife|husband|spouse|partner|girlfriend|boyfriend|friend|colleague|coworker|co-worker|boss|manager|neighbor|teacher|he|she|they|their)\b)/i;
 export function isUserSubject(text: string): boolean {
- const firstPerson = /(?:^|[\s,])(?:(?:나는|내가|내|저는|제가|제|우리)(?=$|[\s,])|I\b|my\b)/i;
- const otherPerson = /(?:친구|그\s*사람|엄마|아빠|어머니|아버지|동료|형제|자매|동생|형|누나|언니|오빠|남편|아내|아들|딸|상사|그녀|그들|\b(?:friend|mother|father|mom|dad|brother|sister|wife|husband|son|daughter|boss|coworker|co-worker|colleague|cousin|uncle|aunt|parent|child|partner|teacher|he|she|they|their)\b)/i;
- return firstPerson.test(text) && !otherPerson.test(text);
+ if (OTHER_PERSON.test(text)) return false;
+ return /^(?:나는|내가|저는|제가)(?:\s|$)|^I\b|^(?:내|제|나의|저의)\s+[^.!?]+?(?:은|는|이|가)(?:\s|$)|^my\s+\S+/i.test(text.trim());
 }
 
 export interface ScopedTombstone { target: string; project: string | null; factIds: string[]; episodeIds?: string[] }

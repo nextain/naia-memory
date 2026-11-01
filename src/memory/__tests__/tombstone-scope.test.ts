@@ -165,3 +165,27 @@ it("matches Korean word starts and particles, and rejects embedded fragments", (
  expect(isTombstoned("I use AI every day.", ["ai"])).toBe(true);
  expect(isTombstoned("My email address is stored.", ["ai"])).toBe(false);
 });
+
+for (const relative of ["사촌", "삼촌", "이모", "조카"]) {
+ it(`preserves ${relative} facts and tombstones`, async () => {
+  const {adapter, say, close} = await setup();
+  try {
+   await say(`내 ${relative}은 서울에 살아.`); await say("서울을 잊어줘");
+   expect((await adapter.semantic.getAll()).find(f => f.content.includes("서울"))?.status).toBe("active");
+   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+   await say("내 물건은 청동나침반이야."); await say("청동나침반을 잊어줘");
+   await say(`내 ${relative} 물건은 청동나침반이야.`);
+   expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+   const history = JSON.stringify(await adapter.semantic.search("청동나침반", 100, true, {mode: "history"}));
+   expect(history).not.toContain("내 물건은 청동나침반이야.");
+   expect(JSON.stringify(await adapter.episode.recall("청동나침반", {deepRecall: true, mode: "history", topK: 100}))).not.toContain("청동나침반을 잊어줘");
+  } finally { await close(); }
+ });
+}
+it("rejects cousin subjects and accepts explicit user subjects", () => {
+ expect(isUserSubject("My cousin lives in Seoul.")).toBe(false);
+ expect(isUserSubject("내 사촌 물건은 청동나침반이야.")).toBe(false);
+ expect(isUserSubject("내 물건은 청동나침반이야.")).toBe(true);
+ expect(isUserSubject("나는 서울에 살아.")).toBe(true);
+ expect(isUserSubject("서울에 살아.")).toBe(false);
+});
