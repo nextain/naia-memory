@@ -1,4 +1,4 @@
-import { applicableTombstones, isTombstoned } from "../delete-tombstone.js";
+import { applicableTombstones, isTombstoned, isUserSubject } from "../delete-tombstone.js";
 import { calculateStrength, compareByRelevanceThenStrength } from "../decay.js";
 import type { Episode, MemoryAdapter, RecallContext } from "../types.js";
 import type { MemoryStore } from "./local-model.js";
@@ -92,7 +92,7 @@ export function createLocalEpisodeMemory(
 					: store.episodes;
 			const hiddenEpisode = (episode: Episode) => {
 				const hidden = applicableTombstones(store, episode.encodingContext?.project);
-				return isTombstoned(episode.content, hidden.targets) || (hidden.ids.size > 0 && store.facts.some(f => hidden.ids.has(f.id) && f.sourceEpisodes.includes(episode.id)));
+				return (isUserSubject(episode.content) && isTombstoned(episode.content, hidden.targets)) || (hidden.ids.size > 0 && store.facts.some(f => hidden.ids.has(f.id) && f.sourceEpisodes.includes(episode.id)));
 			};
 			const eligibleEpisodes = projectEpisodes.filter(
 				(episode) =>
@@ -186,7 +186,7 @@ export function createLocalEpisodeMemory(
 				.episodes.filter((ep) => {
 					const store = host.getStore();
 					const hidden = applicableTombstones(store, ep.encodingContext?.project);
-					return ep.status !== "archived" && !isTombstoned(ep.content, hidden.targets) && (hidden.ids.size === 0 || !store.facts.some(f => hidden.ids.has(f.id) && f.sourceEpisodes.includes(ep.id)));
+					return ep.status !== "archived" && !(isUserSubject(ep.content) && isTombstoned(ep.content, hidden.targets)) && (hidden.ids.size === 0 || !store.facts.some(f => hidden.ids.has(f.id) && f.sourceEpisodes.includes(ep.id)));
 				})
 				.sort((a, b) => b.timestamp - a.timestamp)
 				.slice(0, n),

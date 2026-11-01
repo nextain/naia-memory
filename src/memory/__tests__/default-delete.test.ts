@@ -12,8 +12,6 @@ it("forgets four values across recall paths and restores a repeated value", asyn
  try {
   await memory.init();
   for (const value of values) { await memory.encode({role: "user", content: `내 물건은 ${value}이야.`}, {}); await memory.consolidateNow(true); }
-  await memory.encode({role: "user", content: "청동나침반과 노란등불은 함께 있어."}, {});
-  await memory.consolidateNow(true);
   for (const value of values.slice(0, 4)) { await memory.encode({role: "user", content: `${value}을 지워줘`}, {}); await memory.consolidateNow(true); }
   for (const context of [{}, {deepRecall: true}, {mode: "history" as const}]) {
    const result = await memory.recall("물건", {...context, topK: 100});
@@ -40,7 +38,7 @@ it("recognizes each explicit expression and quoted targets", async () => {
  }
 });
 
-it("persists tombstones, excludes mixed episodes, and exposes removal", async () => {
+it("persists tombstones, preserves other subjects, and exposes removal", async () => {
  const dir = await mkdtemp(join(tmpdir(), "delete-persist-"));
  const path = join(dir, "store.json");
  let adapter = new LocalAdapter(path);
@@ -50,12 +48,12 @@ it("persists tombstones, excludes mixed episodes, and exposes removal", async ()
   await memory.encode({role: "user", content: "내 물건은 청동나침반이야."}, {}); await memory.consolidateNow(true);
   const mixed = await memory.encode({role: "user", content: "청동나침반과 노란등불이 같이 있다."}, {}); await memory.consolidateNow(true);
   await memory.encode({role: "user", content: "청동나침반을 잊어줘"}, {}); await memory.consolidateNow(true);
-  expect((await adapter.episode.recall("노란등불", {deepRecall: true, topK: 100})).map(e => e.id)).not.toContain(mixed.id);
+  expect((await adapter.episode.recall("노란등불", {deepRecall: true, topK: 100})).map(e => e.id)).toContain(mixed.id);
   await memory.close();
   adapter = new LocalAdapter(path); memory = new MemorySystem({adapter}); await memory.init();
-  expect(JSON.stringify(await memory.recall("청동나침반", {deepRecall: true, mode: "history"}))).not.toContain("청동나침반");
+  expect(JSON.stringify(await memory.recall("청동나침반", {deepRecall: true, mode: "history"}))).not.toContain("내 물건은 청동나침반이야.");
   await memory.removeTombstone("청동나침반");
-  expect(JSON.stringify(await memory.recall("노란등불", {deepRecall: true, topK: 100}))).toContain("청동나침반");
+  expect(JSON.stringify(await memory.recall("청동나침반", {deepRecall: true, mode: "history", topK: 100}))).toContain("내 물건은 청동나침반이야.");
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
 

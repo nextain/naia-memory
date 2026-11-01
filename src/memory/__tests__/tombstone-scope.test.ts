@@ -73,3 +73,33 @@ it("only archives user facts and ignores requests naming another person", async 
   } finally { await close(); }
  }
 });
+
+it("keeps another person's matching fact and episode searchable", async () => {
+ const {adapter, say, close} = await setup();
+ try {
+  await say("나는 서울에 살아.", "A");
+  await say("친구는 서울에서 일해.", "A");
+  await say("서울을 잊어줘", "A");
+  expect((await adapter.semantic.getAll()).find(f => f.content === "나는 서울에 살아.")?.status).toBe("archived");
+  for (const deep of [false, true]) {
+   expect(JSON.stringify(await adapter.semantic.search("서울", 100, deep, {project: "A"}))).toContain("친구는 서울에서 일해.");
+   expect(JSON.stringify(await adapter.episode.recall("서울", {project: "A", topK: 100, deepRecall: deep}))).toContain("친구는 서울에서 일해.");
+  }
+  expect(JSON.stringify(await adapter.episode.getRecent(100))).toContain("친구는 서울에서 일해.");
+ } finally { await close(); }
+});
+
+it("only releases a tombstone for a user reassertion with the same attribute", async () => {
+ const {adapter, say, close} = await setup();
+ try {
+  await say("내 물건은 청동나침반이야.", "A");
+  await say("청동나침반을 잊어줘", "A");
+  await say("친구가 청동나침반을 샀어.", "A");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+  expect(JSON.stringify(await adapter.semantic.search("청동나침반", 100, true, {project: "A", mode: "history"}))).not.toContain("내 물건은 청동나침반이야.");
+  await say("나는 청동나침반으로 일해.", "A");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+  await say("나는 청동나침반을 갖고 있어.", "A");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(0);
+ } finally { await close(); }
+});

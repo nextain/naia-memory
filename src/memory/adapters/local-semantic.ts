@@ -1,4 +1,4 @@
-import { isTombstoned } from "../delete-tombstone.js";
+import { isTombstoned, isUserSubject } from "../delete-tombstone.js";
 import { calculateStrength, shouldPrune } from "../decay.js";
 import type { KnowledgeGraph } from "../knowledge-graph.js";
 import type { Fact, MemoryAdapter } from "../types.js";
@@ -128,9 +128,15 @@ export function createLocalSemanticMemory(
 						existing.attribute = incoming.attribute ?? existing.attribute;
 					} else {
 						store.facts.push(incoming);
-						if (incoming.status === "active") {
-							store.scopedTombstones = (store.scopedTombstones ?? []).filter(t => t.project !== (incoming.encodingContext?.project ?? null) || !(isTombstoned(incoming.content, [t.target]) || t.factIds.some(id => store.facts.find(f => f.id === id)?.content === incoming.content)));
-							const removed = (store.tombstones ?? []).filter(t => isTombstoned(incoming.content, [t]) || (store.tombstoneFactIds?.[t] ?? []).some(id => store.facts.find(f => f.id === id)?.content === incoming.content));
+						if (incoming.status === "active" && isUserSubject(incoming.content)) {
+							const matchesDeletedFact = (target: string, ids: string[]) =>
+								isTombstoned(incoming.content, [target]) && ids.some(id => {
+									const deleted = store.facts.find(f => f.id === id);
+									return deleted && (deleted.attribute ?? "general") === (incoming.attribute ?? "general");
+								});
+							store.scopedTombstones = (store.scopedTombstones ?? []).filter(t =>
+								t.project !== (incoming.encodingContext?.project ?? null) || !matchesDeletedFact(t.target, t.factIds));
+							const removed = (store.tombstones ?? []).filter(t => matchesDeletedFact(t, store.tombstoneFactIds?.[t] ?? []));
 							store.tombstones = (store.tombstones ?? []).filter(t => !removed.includes(t));
 							for (const t of removed) if (store.tombstoneFactIds) delete store.tombstoneFactIds[t];
 						}

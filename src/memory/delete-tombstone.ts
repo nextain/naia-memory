@@ -29,6 +29,13 @@ export function isTombstoned(text: string, tombstones: readonly string[] = []): 
  return tombstones.some((t) => t.length > 0 && normalized.includes(t));
 }
 
+/** Require first-person evidence and reject explicit references to other people. */
+export function isUserSubject(text: string): boolean {
+ const firstPerson = /(?:^|[\s,])(?:나는|내가|내|저는|제가|제|I\b|my\b)/i;
+ const otherPerson = /(?:친구|그\s*사람|엄마|아빠|어머니|아버지|동료|형제|자매|남편|아내|그녀|그들|\b(?:friend|mother|father|mom|dad|he|she|they|their)\b)/i;
+ return firstPerson.test(text) && !otherPerson.test(text);
+}
+
 export interface ScopedTombstone { target: string; project: string | null; factIds: string[] }
 export function applicableTombstones(store: { tombstones?: string[]; tombstoneFactIds?: Record<string, string[]>; scopedTombstones?: ScopedTombstone[] }, project?: string) {
  const scoped = (store.scopedTombstones ?? []).filter(t => t.project === (project ?? null));

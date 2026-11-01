@@ -1,4 +1,4 @@
-import { deletionTarget, normalizeDeletionTarget } from "./delete-tombstone.js";
+import { deletionTarget, isUserSubject, normalizeDeletionTarget } from "./delete-tombstone.js";
 import {
 	buildNewFact,
 	findDuplicateFact,
@@ -237,7 +237,9 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					}
 
 					// Check for exact/near identity to prevent semantic redundancy (#4)
-					const duplicate = findDuplicateFact(ef, existingFacts);
+					const duplicate = findDuplicateFact(ef, isUserSubject(ef.content)
+						? existingFacts.filter(f => isUserSubject(f.content))
+						: existingFacts);
 
 					const mutationPolicy = resolveStructuredMutationPolicy({
 						trustedUserMutation,

@@ -1,4 +1,4 @@
-import { applicableTombstones, isTombstoned } from "../delete-tombstone.js";
+import { applicableTombstones, isTombstoned, isUserSubject } from "../delete-tombstone.js";
 /**
  * Local semantic search pipeline.
  *
@@ -151,7 +151,7 @@ export async function searchLocalSemanticMemory(
 
 			allFacts = allFacts.filter(fact => {
 				const hidden = applicableTombstones(host, fact.encodingContext?.project);
-				return !hidden.ids.has(fact.id) && !isTombstoned(fact.content, hidden.targets);
+				return !hidden.ids.has(fact.id) && !(isUserSubject(fact.content) && isTombstoned(fact.content, hidden.targets));
 			});
 			// Apply the latest-view lifecycle contract before candidate truncation.
 			// Otherwise superseded/archived rows can occupy all broadK slots and
