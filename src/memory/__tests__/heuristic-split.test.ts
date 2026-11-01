@@ -10,6 +10,14 @@ function episode(content: string): Episode {
 }
 
 describe("heuristic proposition extraction", () => {
+ it.each(["나는 개발자야", "나는 의사예요", "나는 개발자이에요", "나는 디자이너입니다", "나는 교사야", "I am a developer", "I am an engineer"])("classifies occupation: %s", async (content) => {
+  const facts = await heuristicFactExtractor([episode(content)]);
+  expect(facts[0].attribute).toBe("occupation");
+ });
+ it("inherits only across connected clauses until another subject appears", async () => {
+  const facts = await heuristicFactExtractor([episode("내가 렌즈를 닦았고, 4월 12일에 기록을 정리했고, 친구는 책을 읽었고, 4월 13일에 자료를 정리했어. 4월 14일에 내용을 정리했어.")]);
+  expect(facts.map(f => f.inheritedFirstPerson)).toEqual([false, true, false, false, false]);
+ });
  it("splits Korean residence, occupation and past workplace", async () => {
   const facts = await heuristicFactExtractor([episode("나는 가상시에 살아. 지도 복원가이고, 예전에는 가상서점에서 일했어.")]);
   expect(facts.map(f => f.content)).toHaveLength(3);

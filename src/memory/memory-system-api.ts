@@ -193,6 +193,8 @@ export type DeleteVerifier = (
 export interface ExtractedFact {
 	attribute?: import("./types.js").FactAttribute;
 	content: string;
+	/** First-person subject inherited from a connected preceding proposition. */
+	inheritedFirstPerson?: boolean;
 	entities: string[];
 	topics: string[];
 	importance: number;
@@ -289,14 +291,22 @@ export interface MemorySystemOptions {
 // Placeholder for heuristicFactExtractor and related functions
 // In a real scenario, these would be properly implemented or replaced by LLM calls.
 let _heuristicWarnOnce = false;
-function splitPropositions(content: string): string[] {
-	const pieces = content.split(/(?<=[.!?。！？])\s*|\n+|(?<=[고데]),\s*|\s+and\s+/iu).map((s) => s.trim()).filter(Boolean);
-	const result: string[] = [];
-	for (const piece of pieces) {
+function splitPropositions(content: string): { content: string; inheritedFirstPerson: boolean }[] {
+	const pieces = content.split(/((?<=[.!?。！？])\s*|\n+|(?<=[고데]),\s*|\s+and\s+)/iu);
+	const result: { content: string; inheritedFirstPerson: boolean }[] = [];
+	let previousFirstPerson = false;
+	for (let i = 0; i < pieces.length; i += 2) {
+		const piece = pieces[i].trim();
+		if (!piece) continue;
+		const connected = i > 0 && /^,/.test(pieces[i - 1]);
+		const explicitFirstPerson = /(?:^|\s)(?:내가|나는|저는|제가)(?=\s|$)/.test(piece);
+		const otherSubject = /(?:^|\s)(?!(?:나는|내가|저는|제가)(?:\s|$))(?:[가-힣]+\s+)?[가-힣]+(?:은|는|이|가)(?=\s)/.test(piece);
+		const inheritedFirstPerson: boolean = connected && previousFirstPerson && !explicitFirstPerson && !otherSubject;
 		// Korean commonly omits the subject; a predicate is enough in context.
-		const predicate = /[가-힣]+(?:다|어|아|해|고|데|요|음|함|임)(?:[.!?。！？,]*)$|\b(?:am|is|are|was|were|live|lives|work|works|worked|moved|have|has|like|likes)\b/i.test(piece);
-		if ((piece.replace(/[^\p{L}\p{N}]/gu, "").length < 4 || !predicate) && result.length) result[result.length - 1] += ` ${piece}`;
-		else result.push(piece);
+		const predicate = /[가-힣]+(?:다|어|아|야|해|고|데|요|음|함|임)(?:[.!?。！？,]*)$|\b(?:am|is|are|was|were|live|lives|work|works|worked|moved|have|has|like|likes)\b/i.test(piece);
+		if ((piece.replace(/[^\p{L}\p{N}]/gu, "").length < 4 || !predicate) && result.length) result[result.length - 1].content += ` ${piece}`;
+		else result.push({ content: piece, inheritedFirstPerson });
+		previousFirstPerson = explicitFirstPerson || inheritedFirstPerson;
 	}
 	return result;
 }
@@ -304,6 +314,7 @@ function splitPropositions(content: string): string[] {
 function factAttribute(content: string): import("./types.js").FactAttribute {
 	if (/(?:예전|이전|전에|과거).*(?:일했|근무|직장)|\b(?:previously|formerly|before)\b.*\bworked\b/i.test(content)) return "past_workplace";
 	if (/살아|살고|살았|거주|이사|\b(?:live|lives|lived|moved)\b/i.test(content)) return "residence";
+	if (/(?:의사|개발자|디자이너|교사)(?:야|예요|이에요|입니다)[.!?。！？]*$/u.test(content) || /\bi am an? (?:doctor|developer|designer|teacher|engineer)[.!?]*$/i.test(content)) return "occupation";
 	if (/일해|일하|일했|근무|(?:가|사|원|자|장|인|관|교사|의사)(?:이야|이고|인데|입니다)|\b(?:work|works|worked|occupation|profession)\b/i.test(content)) return "occupation";
 	return "general";
 }
@@ -319,8 +330,9 @@ export async function heuristicFactExtractor(
 	return episodes.flatMap<ExtractedFact>((ep) => {
 		const target = ep.role === "user" ? deletionTarget(ep.content) : null;
 		if (target) return [{ content: target, operation: "delete" as const, entities: [], topics: [], importance: ep.importance.utility, sourceEpisodeIds: [ep.id], deleteEvidence: { kind: "explicit_removal_request" as const, evidenceQuote: ep.content, targetQuote: target } }];
-		return splitPropositions(ep.content).map((content) => ({
+		return splitPropositions(ep.content).map(({ content, inheritedFirstPerson }) => ({
 		content,
+		inheritedFirstPerson,
 		attribute: factAttribute(content),
 		entities: [],
 		topics: ep.encodingContext.project ? [ep.encodingContext.project] : [],

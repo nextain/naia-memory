@@ -26,5 +26,20 @@ it("consolidates a dated first-person experience", async () => {
   await memory.encode({ role: "user", content: "4월 10일에 내가 현미경 렌즈를 닦았고, 4월 12일에 관찰 기록을 정리했어." }, {});
   await memory.consolidateNow(true);
   expect((await adapter.semantic.getAll()).some(f => f.status === "active" && f.content.includes("렌즈"))).toBe(true);
+  expect((await adapter.semantic.getAll()).some(f => f.status === "active" && f.content.includes("관찰 기록"))).toBe(true);
+ } finally { await memory.close(); await rm(dir, { recursive: true, force: true }); }
+});
+
+it("does not inherit the first person when the next clause names another subject", async () => {
+ const dir = await mkdtemp(join(tmpdir(), "default-path-subject-"));
+ const adapter = new LocalAdapter(join(dir, "store.json"));
+ const memory = new MemorySystem({ adapter });
+ try {
+  await memory.init();
+  await memory.encode({ role: "user", content: "4월 10일에 내가 현미경 렌즈를 닦았고, 친구는 4월 12일에 관찰 기록을 정리했어." }, {});
+  await memory.consolidateNow(true);
+  const active = (await adapter.semantic.getAll()).filter(f => f.status === "active");
+  expect(active.some(f => f.content.includes("렌즈"))).toBe(true);
+  expect(active.some(f => f.content.includes("관찰 기록"))).toBe(false);
  } finally { await memory.close(); await rm(dir, { recursive: true, force: true }); }
 });
