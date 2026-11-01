@@ -18,6 +18,7 @@ export interface LocalSemanticSearchHost {
 	readonly facts: Fact[];
 	readonly factEmbeddings: Record<string, number[]> | undefined;
 	readonly embedder: EmbeddingProvider | null;
+	readonly vectorCandidateLimit?: number;
 	readonly disableKGSpreading: boolean;
 	readonly kg: KnowledgeGraph;
 	readonly reranker: import("../reranker.js").RerankerProvider | null;
@@ -240,7 +241,8 @@ export async function searchLocalSemanticMemory(
 			                const isFlashbulb = Math.abs((fact.maxEmotion ?? 0.5) - 0.5) * 2 >= 0.6;
 			                const relevanceThreshold = epochRange ? 0.0 : 0.12;
 
-			                const isRelevant = vs >= relevanceThreshold || bs > 0 || eb > 0 || isFlashbulb;
+			                const vectorEligible = vs >= relevanceThreshold && (!queryVec || (vectorRank.get(fact.id) ?? Infinity) <= (host.vectorCandidateLimit ?? 50));
+			                const isRelevant = vectorEligible || bs > 0 || eb > 0 || isFlashbulb;
 
 			                if (!isRelevant && !deepRecall) return null;					let relevanceScore: number;
 					if (searchMode === "vector-head-rrf-tail") {

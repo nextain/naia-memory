@@ -55,6 +55,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private readonly SAVE_DEBOUNCE_MS = 2000;
 	private kg: KnowledgeGraph;
 	private readonly embedder: EmbeddingProvider | null;
+	private readonly vectorCandidateLimit: number;
 	private readonly disableKGSpreading: boolean;
 	private readonly reranker: import("../reranker.js").RerankerProvider | null;
 	private readonly onPersistenceError: ((error: unknown) => void) | null;
@@ -66,6 +67,9 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private spaceReady: Promise<void> | null = null;
 
 	constructor(options?: string | LocalAdapterOptions) {
+		const vectorCandidateLimit = typeof options === "object" ? options.vectorCandidateLimit ?? 50 : 50;
+		if (!Number.isInteger(vectorCandidateLimit) || vectorCandidateLimit < 1) throw new RangeError("vectorCandidateLimit must be a positive integer");
+		this.vectorCandidateLimit = vectorCandidateLimit;
 		const storePath =
 			typeof options === "string" ? options : options?.storePath;
 		this.embedder =
@@ -253,6 +257,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			get embedder() {
 				return adapter.embedder;
 			},
+			get vectorCandidateLimit() { return adapter.vectorCandidateLimit; },
 			get disableKGSpreading() {
 				return adapter.disableKGSpreading;
 			},

@@ -5,6 +5,8 @@ export interface LocalAdapterOptions {
 	storePath?: string;
 	/** Optional vector provider; absent falls back to keyword retrieval. */
 	embeddingProvider?: EmbeddingProvider;
+	/** Maximum semantic candidates admitted by vector similarity alone (default 50). */
+	vectorCandidateLimit?: number;
 	/** Filters low-similarity vector matches; default 0.7. */
 	similarityThreshold?: number;
 	/** Skip lookup-side knowledge-graph spreading for A/B measurement. */

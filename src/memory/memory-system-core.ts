@@ -151,6 +151,7 @@ export abstract class MemorySystemCore {
 		} else {
 			const localAdapter = new LocalAdapter({
 				embeddingProvider: options.embeddingProvider,
+				vectorCandidateLimit: options.vectorCandidateLimit,
 				disableKGSpreading: options.disableKGSpreading,
 				reranker: options.reranker,
 			});

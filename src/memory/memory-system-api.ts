@@ -218,6 +218,8 @@ export interface MemorySystemOptions {
 	 *   Falls back to keyword-only search when omitted.
 	 */
 	embeddingProvider?: EmbeddingProvider;
+	/** Maximum LocalAdapter candidates admitted by vector similarity alone (default 50). */
+	vectorCandidateLimit?: number;
 	/** Consolidation interval in ms (default: 30 minutes) */
 	consolidationIntervalMs?: number;
 	/** Custom fact extractor (default: heuristic). Inject LLM-based extractor in production. */

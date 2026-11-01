@@ -86,6 +86,8 @@ export function classifyNegativeCapture(content: string): string | null {
 		if (p.re.test(s)) { matched = p.reason; break; }
 	}
 	if (!matched) return null;
+	// A dated first-person experience is not an agent task summary.
+	if (matched === "one-off-task" && /\d{1,2}월\s*\d{1,2}일/.test(s) && /(?:내가|나는|저는|제가)/.test(s)) return null;
 	if (FIX_RE.test(s)) return null; // capture-the-FIX exemption → keep
 	return matched;
 }

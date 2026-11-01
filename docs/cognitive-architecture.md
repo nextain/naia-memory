@@ -34,9 +34,10 @@ LLM fact extraction (turn 묶음 → atomic fact)
    ↓
 Importance score (3축: importance × surprise × emotion)
    ↓ gate
-   ├─ score 높음 → fact 저장 (장기)
-   └─ score 낮음 → episode 만 보존 (사용자 directive: 삭제 X)
+   └─ 추출된 개별 사실을 보존 (일시적 도구 오류 등은 제외)
 ```
+
+날짜와 주체가 있는 개인 경험은 일회성 업무 결과 요약과 구분한다.
 
 학계 model:
 - **Salience-driven encoding** — 중요한 것만 long-term consolidation
@@ -64,6 +65,10 @@ top-K fact + episode (deepRecall 옵션)
 - **Dual-process** (Yonelinas 2002) — recollection (specific) + familiarity (gist)
 
 ---
+
+### 벡터 후보 제한
+
+LocalAdapter의 일반 검색은 벡터 점수가 기준을 넘더라도 유사도 상위 50개만 벡터 경로의 후보로 인정한다. `vectorCandidateLimit`으로 조정할 수 있으며, 키워드·엔티티·감정 후보와 deep recall은 별도로 유지한다. 50은 성능 측정값이 아닌 조정 가능한 운영 기본값이다. 임베더가 없으면 기존 키워드 검색을 유지한다.
 
 ## 4. Reconsolidation (R2.5) — 모순 감지 + supersede
 
