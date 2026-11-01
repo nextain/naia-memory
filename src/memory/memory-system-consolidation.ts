@@ -134,7 +134,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					// (`vs>=0.12 || bs>0 || eb>=0.2`) does NOT prune candidates here. For
 					// contradiction detection we want broad recall — even loosely related
 					// facts must reach the LLM filter so it can decide.
-					const existingFacts = ef.structured
+					const candidates = ef.structured || (ef.attribute === "residence" && /이사|\bmoved\b/i.test(ef.content))
 						? (await this.adapter.semantic.getAll()).filter(
 								// Supersession mutates the predecessor.  Unlike soft recall, it
 								// must never let an unscoped write update a project-scoped fact.
@@ -149,6 +149,9 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 									? { project: efProject, touch: false }
 									: { touch: false },
 							);
+					const existingFacts = candidates.filter(
+						(fact) => (fact.attribute ?? "general") === (ef.attribute ?? "general"),
+					);
 					if (process.env.NAIA_FILTER_DEBUG === "1") {
 						const totalFacts =
 							(this.adapter as any).getStore?.()?.facts?.length ?? "?";
@@ -336,6 +339,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								...anchor,
 								id: successorId,
 								content: ef.content,
+								attribute: ef.attribute ?? anchor.attribute,
 								status: "active",
 								createdAt: now,
 								updatedAt: now,

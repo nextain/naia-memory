@@ -124,6 +124,7 @@ export function createLocalSemanticMemory(
 						existing.encodingContext =
 							incoming.encodingContext ?? existing.encodingContext;
 						existing.structured = incoming.structured ?? existing.structured;
+						existing.attribute = incoming.attribute ?? existing.attribute;
 					} else store.facts.push(incoming);
 					touchedEntities.push(existing?.entities ?? incoming.entities);
 					if (vector) {

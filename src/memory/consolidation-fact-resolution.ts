@@ -27,6 +27,7 @@ export function findDuplicateFact(
 	extracted: ExtractedFact,
 	existingFacts: Fact[],
 ): Fact | undefined {
+	existingFacts = existingFacts.filter((fact) => (fact.attribute ?? "general") === (extracted.attribute ?? "general"));
 	const structured = extracted.structured;
 	if (structured) {
 		return existingFacts.find(
@@ -59,9 +60,14 @@ export async function resolveFactContradictions(options: {
 	contextualEvidence?: string;
 }): Promise<Array<{ fact: Fact; result: ReconsolidationResult }>> {
 	const { extracted, existingFacts, contradictionFilter } = options;
+	const compatible = (fact: Fact) => (fact.attribute ?? "general") === (extracted.attribute ?? "general");
 	if (!extracted.structured) {
+		const eligible = existingFacts.filter(compatible);
+		if (options.trustedUserMutation && extracted.attribute === "residence" && /(?:^|\s)(?:나|저)(?:는|가|\s)|\bI\b/i.test(extracted.content) && /이사|\bmoved\b/i.test(extracted.content)) {
+			return eligible.filter((fact) => fact.status === "active" && /(?:^|\s)(?:나|저)(?:는|가|\s)|\bI\b/i.test(fact.content)).map((fact) => ({ fact, result: { action: "update" as const, updatedContent: extracted.content, reason: "explicit residence move" } }));
+		}
 		const contradictions = await findContradictionsWith(
-			existingFacts,
+			eligible,
 			extracted.content,
 			contradictionFilter,
 		);
@@ -106,7 +112,7 @@ export async function resolveFactContradictions(options: {
 				]
 			: [];
 	});
-	return [...deterministic, ...contextual];
+	return [...deterministic, ...contextual].filter(({ fact }) => compatible(fact));
 }
 
 export function buildNewFact(options: {
@@ -127,6 +133,7 @@ export function buildNewFact(options: {
 	return {
 		id,
 		content: extracted.content,
+		attribute: extracted.attribute,
 		entities: extracted.entities,
 		topics: extracted.topics,
 		createdAt: now,

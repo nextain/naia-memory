@@ -190,6 +190,7 @@ export type DeleteVerifier = (
 
 /** A fact extracted from episodes (before insertion) */
 export interface ExtractedFact {
+	attribute?: import("./types.js").FactAttribute;
 	content: string;
 	entities: string[];
 	topics: string[];
@@ -287,6 +288,24 @@ export interface MemorySystemOptions {
 // Placeholder for heuristicFactExtractor and related functions
 // In a real scenario, these would be properly implemented or replaced by LLM calls.
 let _heuristicWarnOnce = false;
+function splitPropositions(content: string): string[] {
+	const pieces = content.split(/(?<=[.!?。！？])\s*|\n+|(?<=[고데]),\s*|\s+and\s+/iu).map((s) => s.trim()).filter(Boolean);
+	const result: string[] = [];
+	for (const piece of pieces) {
+		// Korean commonly omits the subject; a predicate is enough in context.
+		const predicate = /[가-힣]+(?:다|어|아|해|고|데|요|음|함|임)(?:[.!?。！？,]*)$|\b(?:am|is|are|was|were|live|lives|work|works|worked|moved|have|has|like|likes)\b/i.test(piece);
+		if ((piece.replace(/[^\p{L}\p{N}]/gu, "").length < 4 || !predicate) && result.length) result[result.length - 1] += ` ${piece}`;
+		else result.push(piece);
+	}
+	return result;
+}
+
+function factAttribute(content: string): import("./types.js").FactAttribute {
+	if (/(?:예전|이전|전에|과거).*(?:일했|근무|직장)|\b(?:previously|formerly|before)\b.*\bworked\b/i.test(content)) return "past_workplace";
+	if (/살아|살고|살았|거주|이사|\b(?:live|lives|lived|moved)\b/i.test(content)) return "residence";
+	if (/일해|일하|일했|근무|(?:가|사|원|자|장|인|관|교사|의사)(?:이야|이고|인데|입니다)|\b(?:work|works|worked|occupation|profession)\b/i.test(content)) return "occupation";
+	return "general";
+}
 export async function heuristicFactExtractor(
 	episodes: Episode[],
 ): Promise<ExtractedFact[]> {
@@ -296,12 +315,13 @@ export async function heuristicFactExtractor(
 		);
 		_heuristicWarnOnce = true;
 	}
-	return episodes.map((ep) => ({
-		content: ep.content,
+	return episodes.flatMap((ep) => splitPropositions(ep.content).map((content) => ({
+		content,
+		attribute: factAttribute(content),
 		entities: [],
 		topics: ep.encodingContext.project ? [ep.encodingContext.project] : [],
 		importance: ep.importance.utility,
 		maxEmotion: ep.importance.emotion,
 		sourceEpisodeIds: [ep.id],
-	}));
+	})));
 }

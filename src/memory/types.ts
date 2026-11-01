@@ -251,7 +251,10 @@ export interface StructuredFact {
 }
 
 /** A semantic fact — general knowledge extracted from episodes */
+export type FactAttribute = "residence" | "occupation" | "past_workplace" | "general";
+
 export interface Fact extends Record<string, unknown> {
+	attribute?: FactAttribute;
 	id: string;
 	/** The fact content */
 	content: string;
