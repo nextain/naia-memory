@@ -129,6 +129,7 @@ export function createLocalSemanticMemory(
 					} else {
 						store.facts.push(incoming);
 						if (incoming.status === "active") {
+							store.scopedTombstones = (store.scopedTombstones ?? []).filter(t => t.project !== (incoming.encodingContext?.project ?? null) || !(isTombstoned(incoming.content, [t.target]) || t.factIds.some(id => store.facts.find(f => f.id === id)?.content === incoming.content)));
 							const removed = (store.tombstones ?? []).filter(t => isTombstoned(incoming.content, [t]) || (store.tombstoneFactIds?.[t] ?? []).some(id => store.facts.find(f => f.id === id)?.content === incoming.content));
 							store.tombstones = (store.tombstones ?? []).filter(t => !removed.includes(t));
 							for (const t of removed) if (store.tombstoneFactIds) delete store.tombstoneFactIds[t];

@@ -6,6 +6,7 @@ import type { KGState } from "../knowledge-graph.js";
 /** On-disk schema for JSON persistence. */
 export interface MemoryStore {
 	version: 1;
+	scopedTombstones?: import("../delete-tombstone.js").ScopedTombstone[];
 	tombstones?: string[];
 	tombstoneFactIds?: Record<string, string[]>;
 	episodes: Episode[];
@@ -229,6 +230,7 @@ export function isMemoryStore(value: unknown): value is MemoryStore {
 	) {
 		return false;
 	}
+	if (value.scopedTombstones !== undefined && (!Array.isArray(value.scopedTombstones) || !value.scopedTombstones.every((t: unknown) => isRecord(t) && typeof t.target === "string" && (t.project === null || typeof t.project === "string") && isStringArray(t.factIds)))) return false;
 	if (value.tombstones !== undefined && !isStringArray(value.tombstones)) return false;
 	if (value.tombstoneFactIds !== undefined && (!isRecord(value.tombstoneFactIds) || !Object.values(value.tombstoneFactIds).every(isStringArray))) return false;
 	if (

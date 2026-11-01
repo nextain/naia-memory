@@ -21,3 +21,12 @@ export function isTombstoned(text: string, tombstones: readonly string[] = []): 
  const normalized = normalizeDeletionText(text);
  return tombstones.some((t) => t.length > 0 && normalized.includes(t));
 }
+
+export interface ScopedTombstone { target: string; project: string | null; factIds: string[] }
+export function applicableTombstones(store: { tombstones?: string[]; tombstoneFactIds?: Record<string, string[]>; scopedTombstones?: ScopedTombstone[] }, project?: string) {
+ const scoped = (store.scopedTombstones ?? []).filter(t => t.project === (project ?? null));
+ return {
+  targets: [...(store.tombstones ?? []), ...scoped.map(t => t.target)],
+  ids: new Set([...Object.values(store.tombstoneFactIds ?? {}).flat(), ...scoped.flatMap(t => t.factIds)]),
+ };
+}

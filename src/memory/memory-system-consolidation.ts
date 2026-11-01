@@ -172,12 +172,12 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								continue;
 							}
 							const eligible = (await this.adapter.semantic.getAll()).filter(f => f.encodingContext?.project === efProject);
-							const targets = await this.adapter.tombstones.match(target, eligible);
+							const targets = await this.adapter.tombstones.match(target, eligible, srcEp!.content);
 							if (!targets.length) continue;
 							const archived = targets.map(f => ({ ...f, status: "archived" as const, updatedAt: now, validTo: now }));
 							if (this.adapter.semantic.upsertMany) await this.adapter.semantic.upsertMany(archived);
 							else for (const f of archived) await this.adapter.semantic.upsert(f);
-							await this.adapter.tombstones.add(target, targets.map(f => f.id));
+							await this.adapter.tombstones.add(target, targets.map(f => f.id), efProject);
 							factsUpdated += archived.length;
 							continue;
 						}
@@ -231,7 +231,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 							for (const target of archivedTargets)
 								await this.adapter.semantic.upsert(target);
 						}
-						if (ef.deleteEvidence?.targetQuote && this.adapter.tombstones) await this.adapter.tombstones.add(ef.deleteEvidence.targetQuote, archivedTargets.map(f => f.id));
+						if (ef.deleteEvidence?.targetQuote && this.adapter.tombstones) await this.adapter.tombstones.add(ef.deleteEvidence.targetQuote, archivedTargets.map(f => f.id), efProject);
 						factsUpdated += archivedTargets.length;
 						continue;
 					}

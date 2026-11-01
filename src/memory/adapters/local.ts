@@ -259,6 +259,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 				return adapter.store.factEmbeddings;
 			},
 			get tombstones() { return adapter.store.tombstones; },
+			get scopedTombstones() { return adapter.store.scopedTombstones; },
 			get tombstoneFactIds() { return adapter.store.tombstoneFactIds; },
 			get embedder() {
 				return adapter.embedder;
@@ -450,26 +451,38 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	});
 
 	tombstones = {
-		add: async (target: string, factIds: string[] = []) => {
+		add: async (target: string, factIds: string[] = [], project?: string) => {
 			const value = normalizeDeletionTarget(target);
 			if (!value) return;
-			this.store.tombstones ??= [];
-			if (!this.store.tombstones.includes(value)) this.store.tombstones.push(value);
-			this.store.tombstoneFactIds ??= {};
-			this.store.tombstoneFactIds[value] = [...new Set([...(this.store.tombstoneFactIds[value] ?? []), ...factIds])];
-			this.markDirty();
-			this.save();
+			this.store.scopedTombstones ??= [];
+			const existing = this.store.scopedTombstones.find(t => t.target === value && t.project === (project ?? null));
+			if (existing) existing.factIds = [...new Set([...existing.factIds, ...factIds])];
+			else this.store.scopedTombstones.push({target: value, project: project ?? null, factIds: [...new Set(factIds)]});
+			this.markDirty(); this.save();
 		},
 		remove: async (target: string) => {
 			const value = normalizeDeletionTarget(target);
 			this.store.tombstones = (this.store.tombstones ?? []).filter(t => t !== value);
 			if (this.store.tombstoneFactIds) delete this.store.tombstoneFactIds[value];
-			this.markDirty();
-			this.save();
+			this.store.scopedTombstones = (this.store.scopedTombstones ?? []).filter(t => t.target !== value);
+			this.markDirty(); this.save();
 		},
-		match: async (target: string, facts: Fact[]) => {
+		match: async (target: string, facts: Fact[], request = "") => {
+			const active = facts.filter(f => f.status === "active");
+			let matches = active.filter(f => isTombstoned(f.content, [normalizeDeletionTarget(target)]));
+			const hadTextMatches = matches.length > 0;
+			if (matches.length > 1) {
+				const firstPerson = /(?:^|[\s,])(?:나는|내가|내|저는|제가|제|I\b|my\b)/i;
+				const otherSubject = /(?:^|[\s,])(?:[가-힣]+(?:은|는|이|가)|he\b|she\b|they\b)/i;
+				if (firstPerson.test(request) || !otherSubject.test(request.replace(target, ""))) matches = matches.filter(f => firstPerson.test(f.content));
+			}
+			if (matches.length > 1) { console.warn("[naia-memory] ambiguous delete ignored"); return []; }
+			if (matches.length === 1) return matches;
+			if (hadTextMatches) { console.warn("[naia-memory] ambiguous delete ignored"); return []; }
 			const vector = await this.embedWithCache(target);
-			return facts.filter(f => f.status === "active" && (isTombstoned(f.content, [normalizeDeletionTarget(target)]) || Boolean(vector && this.store.factEmbeddings?.[f.id] && cosineSimilarity(vector, this.store.factEmbeddings[f.id]) >= 0.85)));
+			const similar = active.filter(f => vector && this.store.factEmbeddings?.[f.id] && cosineSimilarity(vector, this.store.factEmbeddings[f.id]) >= 0.85);
+			if (similar.length > 1) console.warn("[naia-memory] ambiguous delete ignored");
+			return similar.length === 1 ? similar : [];
 		},
 	};
 
