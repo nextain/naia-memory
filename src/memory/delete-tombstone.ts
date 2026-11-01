@@ -25,14 +25,22 @@ export function deletionTarget(text: string): string | null {
  return target || null;
 }
 export function isTombstoned(text: string, tombstones: readonly string[] = []): boolean {
- const normalized = normalizeDeletionText(text);
- return tombstones.some((t) => t.length > 0 && normalized.includes(t));
+ const normalized = text.toLocaleLowerCase().normalize("NFKC");
+ return tombstones.some((t) => {
+  const target = normalizeDeletionText(t);
+  if ([...target].length < 2) return false;
+  const pattern = [...target].map(c => c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[\\s\\p{P}\\p{S}]*");
+  const ending = /[가-힣]$/u.test(target)
+   ? "(?:에서|에게|으로|까지|부터|처럼|하고|이야|이에요|입니다|이다|이|가|은|는|을|를|에|의|와|과|도|만|로)?(?![\\p{L}\\p{N}])"
+   : "(?![\\p{L}\\p{N}])";
+  return new RegExp(`(?<![\\p{L}\\p{N}])${pattern}${ending}`, "u").test(normalized);
+ });
 }
 
 /** Require first-person evidence and reject explicit references to other people. */
 export function isUserSubject(text: string): boolean {
- const firstPerson = /(?:^|[\s,])(?:나는|내가|내|저는|제가|제|I\b|my\b)/i;
- const otherPerson = /(?:친구|그\s*사람|엄마|아빠|어머니|아버지|동료|형제|자매|남편|아내|그녀|그들|\b(?:friend|mother|father|mom|dad|he|she|they|their)\b)/i;
+ const firstPerson = /(?:^|[\s,])(?:(?:나는|내가|내|저는|제가|제|우리)(?=$|[\s,])|I\b|my\b)/i;
+ const otherPerson = /(?:친구|그\s*사람|엄마|아빠|어머니|아버지|동료|형제|자매|동생|형|누나|언니|오빠|남편|아내|아들|딸|상사|그녀|그들|\b(?:friend|mother|father|mom|dad|brother|sister|wife|husband|son|daughter|boss|coworker|co-worker|colleague|cousin|uncle|aunt|parent|child|partner|teacher|he|she|they|their)\b)/i;
  return firstPerson.test(text) && !otherPerson.test(text);
 }
 

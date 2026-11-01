@@ -57,7 +57,7 @@ it("persists tombstones, preserves other subjects, and exposes removal", async (
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
 
-it("uses the embedding threshold and hides matched source episodes", async () => {
+it("does not delete on embedding similarity alone", async () => {
  const dir = await mkdtemp(join(tmpdir(), "delete-vector-"));
  const vector = (s: string) => s.includes("금빛별") || s.includes("가상의대상") ? [1, 0] : [0, 1];
  const embedder = { name: "test", dims: 2, embeddingSpaceId: "test-v1", embed: async (s: string) => vector(s), embedBatch: async (texts: string[]) => texts.map(vector) };
@@ -69,10 +69,9 @@ it("uses the embedding threshold and hides matched source episodes", async () =>
   await memory.encode({role: "user", content: "내 물건은 파란달이야."}, {}); await memory.consolidateNow(true);
   await memory.encode({role: "user", content: "가상의대상을 지워줘"}, {}); await memory.consolidateNow(true);
   const facts = await adapter.semantic.getAll();
-  expect(facts.find(f => f.content.includes("금빛별"))?.status).toBe("archived");
+  expect(facts.find(f => f.content.includes("금빛별"))?.status).toBe("active");
   expect(facts.find(f => f.content.includes("파란달"))?.status).toBe("active");
-  expect(JSON.stringify(await memory.recall("금빛별", {deepRecall: true, mode: "history", topK: 100}))).not.toContain("금빛별");
-  await memory.removeTombstone("가상의대상");
+  expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
   expect(JSON.stringify(await memory.recall("금빛별", {deepRecall: true, topK: 100}))).toContain("금빛별");
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
