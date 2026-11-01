@@ -66,6 +66,7 @@ export class Mem0Adapter implements MemoryAdapter {
 
 	// Local stores for Naia-specific data that mem0 doesn't handle
 	private episodes: Episode[] = [];
+	private syntheticEpisodeIds = new Set<string>();
 	private factUsage = new Map<string, { recallCount: number; lastAccessed: number }>();
 	private skills: Skill[] = [];
 	private reflections: Reflection[] = [];
@@ -181,15 +182,21 @@ export class Mem0Adapter implements MemoryAdapter {
 			for (const r of resultItems) {
 				const memoryText = r.memory ?? r.text ?? r.content ?? "";
 				const mem0Score: number = r.score ?? 0.5;
-				// Find matching episode by content similarity
-				const match = this.episodes.find(
-					(ep) =>
-						ep.content === memoryText ||
-						memoryText.includes(ep.content.slice(0, 50)) ||
-						ep.content.includes(memoryText.slice(0, 50)),
-				);
+				// External IDs identify synthetic episodes even when their payload changes.
+				const match = (r.id ? this.episodes.find((ep) => ep.id === r.id) : undefined)
+					?? this.episodes.find((ep) =>
+						(!r.id || !this.syntheticEpisodeIds.has(ep.id)) && (
+							ep.content === memoryText ||
+							memoryText.includes(ep.content.slice(0, 50)) ||
+							ep.content.includes(memoryText.slice(0, 50))
+						),
+					);
 				const now = Date.now();
 				if (match) {
+					if (r.id && match.id === r.id && this.syntheticEpisodeIds.has(match.id)) {
+						match.content = memoryText;
+						match.summary = memoryText.slice(0, 200);
+					}
 					if (touch) {
 						match.recallCount++;
 						match.lastAccessed = now;
@@ -228,6 +235,7 @@ export class Mem0Adapter implements MemoryAdapter {
 						strength,
 					};
 					this.episodes.push(synthetic);
+					this.syntheticEpisodeIds.add(synthetic.id);
 					matchedEpisodes.push({ ...synthetic, _mem0Score: mem0Score });
 				}
 			}

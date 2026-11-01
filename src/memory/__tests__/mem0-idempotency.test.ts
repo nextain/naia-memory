@@ -140,3 +140,20 @@ describe("Mem0Adapter episode idempotency", () => {
 		expect(client.add).toHaveBeenCalledTimes(2);
 	});
 });
+
+it("updates a synthetic episode by external ID while preserving usage", async () => {
+ let payload = "old payload";
+ const client = { search: vi.fn(async () => ({ results: [{ id: "external-episode", memory: payload, score: 1 }] })) };
+ const adapter = new Mem0Adapter({
+  mem0Config: { embedder: { provider: "test", config: {} }, vectorStore: { provider: "test", config: {} }, llm: { provider: "test", config: {} } },
+  memoryFactory: async () => client,
+ });
+ expect((await adapter.episode.recall("payload", {}))[0].content).toBe("old payload");
+ payload = "updated payload";
+ const updated = (await adapter.episode.recall("payload", {}))[0];
+ expect(updated.content).toBe("updated payload");
+ await adapter.markUsed({episodeIds: [updated.id]});
+ const recalled = (await adapter.episode.recall("payload", {}))[0];
+ expect(recalled.recallCount).toBeGreaterThanOrEqual(1);
+ expect((await adapter.episode.getRecent(10)).filter(ep => ep.id === "external-episode")).toHaveLength(1);
+});
