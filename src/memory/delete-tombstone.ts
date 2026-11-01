@@ -5,24 +5,34 @@ export function normalizeDeletionText(text: string): string {
 export function normalizeDeletionTarget(text: string): string {
  return normalizeDeletionText(text).replace(/(?:을|를|은|는)$/, "");
 }
+const VAGUE_TARGETS = new Set(["it", "that", "this", "these", "those", "them", "everything", "all", "something", "anything", "stuff", "thing", "그거", "그것", "이거", "이것", "저거", "저것", "그", "이", "저", "다", "전부", "모두", "뭐", "무언가", "그런 거", "그 얘기", "아까 거"].map(normalizeDeletionText));
+function concreteTarget(text: string): string | null {
+ let value = text.trim();
+ let normalized = normalizeDeletionTarget(value);
+ if (VAGUE_TARGETS.has(normalized)) return null;
+ value = value.replace(/^(?:that|this|these|those)\s+/i, "").replace(/^(?:그|이|저)\s+/u, "").trim();
+ normalized = normalizeDeletionTarget(value);
+ if (!normalized || VAGUE_TARGETS.has(normalized) || /^[가-힣]$/u.test(normalized) || /^[a-z]{1,2}$/i.test(normalized)) return null;
+ return /[\p{L}\p{N}]/u.test(value) ? value : null;
+}
 export function deletionTarget(text: string): string | null {
  const input = text.trim();
  // A quoted target is allowed, but the command itself must be outside quotation marks.
  if (/[?？]/u.test(input) || /(?:지우지|잊지|삭제하지|말고|안\s+잊어|안\s+지워|안\s+삭제해)|\b(?:don['’]t|do\s+not|never|not)\b/i.test(input.replace(/^(?:please\s+)?(?:don['’]t|do\s+not)\s+remember\s+/i, ''))) return null;
  const english = input.match(/^(?:please\s+)?(?:delete|forget|remove|erase|don['’]t\s+remember|do\s+not\s+remember)\s+(.+?)[.!\s]*$/i);
  if (english) {
-  const target = english[1].replace(/^that\s+/i, "").trim();
+  const target = english[1].trim().replace(/^(?:that|this|these|those)\s+/i, "");
   const quoted = target.match(/^["“'‘]([^"”'’]+)["”'’]$/u);
   const value = (quoted ? quoted[1] : target).trim();
-  return /[\p{L}\p{N}]/u.test(value) ? value : null;
+  return concreteTarget(value);
  }
  const korean = input.match(/^(.+?)\s*(?:지워(?:줘|주세요|줄래)?|잊어(?:줘|주세요|버려)?|삭제해(?:줘|\s+줘|주세요)?|기억하지\s*(?:마|말아줘)|기억\s+안\s+해도\s+돼)[.!！~～\s]*$/u);
  if (!korean) return null;
  const before = korean[1].trim();
  const quoted = before.match(/^["“'‘]([^"”'’]+)["”'’](?:을|를|은|는)?$/u);
- if (quoted) return quoted[1].trim() || null;
+ if (quoted) return concreteTarget(quoted[1]);
  const target = before.match(/^(.*?)(?:을|를|는)?$/u)?.[1].trim();
- return target || null;
+ return concreteTarget(target ?? "");
 }
 export function isTombstoned(text: string, tombstones: readonly string[] = []): boolean {
  const normalized = text.toLocaleLowerCase().normalize("NFKC");

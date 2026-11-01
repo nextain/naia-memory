@@ -136,7 +136,7 @@ for (const [userPlace, relativePlace, relativeWork, forgetPlace, place, userObje
 it("requires word boundaries without an embedder", async () => {
  for (const [fact, request, status] of [
   ["My email address is stored.", "Forget AI.", "active"],
-  ["I use AI every day.", "Forget AI.", "archived"],
+  ["I use AI every day.", "Forget AI.", "active"],
   ["I use A every day.", "Forget A.", "active"],
   ["나는 서울에서 살아.", "울을 잊어줘", "active"],
  ] as const) {
@@ -144,7 +144,7 @@ it("requires word boundaries without an embedder", async () => {
   try {
    await say(fact); await say(request);
    expect((await adapter.semantic.getAll()).find(f => f.content === fact)?.status).toBe(status);
-   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(status === "archived" ? 1 : 0);
+   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
   } finally { await close(); }
  }
 });
@@ -282,4 +282,23 @@ it("excludes other people anywhere in a first-person fact from deletion and rele
   expect(adapter.getStore().scopedTombstones).toHaveLength(1);
   expect(isUserSubject("I know my roommate lives in Seoul.")).toBe(false);
  } finally { await close(); }
+});
+
+it("rejects vague deletion targets while accepting concrete demonstrative phrases", async () => {
+ for (const request of ["Forget that.", "그거 잊어"]) {
+  const {adapter, say, close} = await setup();
+  try {
+   const fact = "I remember that my first interview was in Seoul.";
+   await say(fact); await say(request);
+   expect((await adapter.semantic.getAll()).find(f => f.content === fact)?.status).toBe("active");
+   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+  } finally { await close(); }
+ }
+ for (const [fact, request] of [["my thing is a bronze compass", "Forget that bronze compass."], ["내 물건은 청동나침반이야.", "그 청동나침반 잊어"]]) {
+  const {adapter, say, close} = await setup();
+  try {
+   await say(fact); await say(request);
+   expect((await adapter.semantic.getAll()).find(f => f.content === fact)?.status).toBe("archived");
+  } finally { await close(); }
+ }
 });

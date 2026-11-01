@@ -183,3 +183,11 @@ it("recognizes bare Korean imperatives without accepting questions or negation",
   expect((await adapter.semantic.getAll()).find(f => f.content.includes("청동나침반이야"))?.status).toBe("archived");
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
+
+it("rejects standalone vague and short targets", async () => {
+ const {deletionTarget} = await import("../delete-tombstone.js");
+ for (const word of ["it", "that", "this", "these", "those", "them", "everything", "all", "something", "anything", "stuff", "thing", "AI"]) expect(deletionTarget(`Forget ${word}.`)).toBeNull();
+ for (const word of ["그거", "그것", "이거", "이것", "저거", "저것", "그", "이", "저", "다", "전부", "모두", "뭐", "무언가", "그런 거", "그 얘기", "아까 거", "집"]) expect(deletionTarget(`${word} 잊어`)).toBeNull();
+ expect(deletionTarget("Forget that bronze compass.")).toBe("bronze compass");
+ expect(deletionTarget("그 청동나침반 잊어")).toBe("청동나침반");
+});
