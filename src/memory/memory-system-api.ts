@@ -229,7 +229,7 @@ export interface MemorySystemOptions {
 	consolidationIntervalMs?: number;
 	/** Custom fact extractor (default: heuristic). Inject LLM-based extractor in production. */
 	factExtractor?: FactExtractor;
-	/** Required second decision for deletes. Omission fails every delete closed. */
+	/** Optional second decision for deletes. Without it, LocalAdapter uses its own conservative matching; other adapters fail closed. */
 	deleteVerifier?: DeleteVerifier;
 	/** Optional LLM summarizer for `compact()`. When omitted, compact()
 	 *  uses a deterministic recap. When provided, the summarizer polishes

@@ -29,12 +29,12 @@ it("forgets four values across recall paths and restores a repeated value", asyn
 
 it("recognizes each explicit expression and quoted targets", async () => {
  const { heuristicFactExtractor } = await import("../memory-system-api.js");
- const forms = ["청동나침반을 지워줘", "청동나침반을 지워", "청동나침반을 지워주세요", "청동나침반을 지워줄래", "청동나침반을 잊어줘", "청동나침반을 잊어주세요", "청동나침반을 잊어버려", "청동나침반을 삭제해줘", "청동나침반을 삭제해 줘", "청동나침반을 삭제해주세요", "청동나침반을 삭제해", "forget 'bronze compass'", "delete 'bronze compass'", "remove that 'bronze compass'", "please erase 'bronze compass'!"];
+ const forms = ["청동나침반을 지워줘", "청동나침반을 지워", "청동나침반을 지워주세요", "청동나침반을 지워줄래", "청동나침반을 잊어줘", "청동나침반을 잊어주세요", "청동나침반을 잊어버려", "청동나침반을 삭제해줘", "청동나침반을 삭제해 줘", "청동나침반을 삭제해주세요", "청동나침반을 삭제해", "forget 'bronze compass'", "delete 'bronze compass'", "remove that 'bronze compass'", "please erase 'bronze compass'!", "서울을 기억하지 마", "청동나침반을 기억하지 마", "청동나침반을 기억하지 말아줘", "청동나침반을 기억 안 해도 돼", "don't remember 'bronze compass'", "do not remember 'bronze compass'"];
  for (const content of forms) {
   const ep = { id: "a", role: "user" as const, content, summary: content, timestamp: 1, importance: { importance: 1, surprise: 0, emotion: 0.5, utility: 1 }, encodingContext: {}, consolidated: false, recallCount: 0, lastAccessed: 1, strength: 1 };
   const result = await heuristicFactExtractor([ep]);
   expect(result[0].operation).toBe("delete");
-  expect(result[0].deleteEvidence?.targetQuote).toBe(content.includes("bronze") ? "bronze compass" : "청동나침반");
+  expect(result[0].deleteEvidence?.targetQuote).toBe(content.includes("bronze") ? "bronze compass" : content.includes("서울") ? "서울" : "청동나침반");
  }
 });
 
@@ -78,7 +78,7 @@ it("does not delete on embedding similarity alone", async () => {
 
  it("rejects negation, questions, descriptions, and quoted commands", async () => {
  const { heuristicFactExtractor } = await import("../memory-system-api.js");
- const forms = ["delete.", "forget!", "Do not delete my backup.", "Don't forget my address.", "서울을 지우지 마", "서울을 지워야 할까?", "어제 서울 기억을 지웠어", "서울을 잊지 마", "서울을 삭제하지 마", "서울 말고 부산을 지워줘", "Never delete my address", "Please do not delete my address", "How do I delete my address?", '"서울을 지워줘"', '"delete my address"'];
+ const forms = ["delete.", "forget!", "Do not delete my backup.", "Don't forget my address.", "서울을 지우지 마", "서울을 지워야 할까?", "어제 서울 기억을 지웠어", "서울을 잊지 마", "don't forget Seoul", "기억하지 마가 무슨 뜻이야?", "서울을 기억하지 말라는 설명이야", '"서울을 기억하지 마"', "서울을 삭제하지 마", "서울 말고 부산을 지워줘", "Never delete my address", "Please do not delete my address", "How do I delete my address?", '"서울을 지워줘"', '"delete my address"'];
  for (const content of forms) {
   const ep = { id: "a", role: "user" as const, content, summary: content, timestamp: 1, importance: { importance: 1, surprise: 0, emotion: 0.5, utility: 1 }, encodingContext: {}, consolidated: false, recallCount: 0, lastAccessed: 1, strength: 1 };
   expect((await heuristicFactExtractor([ep])).every(f => f.operation !== "delete"), content).toBe(true);
@@ -99,5 +99,26 @@ it("keeps existing facts active for rejected requests", async () => {
    expect(ids.every(id => facts.find(f => f.id === id)?.status === "active"), content).toBe(true);
    expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
   }
+ } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
+});
+
+it("hides only processed deletion request episodes across retrieval paths", async () => {
+ const dir = await mkdtemp(join(tmpdir(), "delete-request-"));
+ let adapter = new LocalAdapter(join(dir, "store.json"));
+ let memory = new MemorySystem({adapter});
+ try {
+  await memory.init();
+  await memory.encode({role: "user", content: "내 물건은 청동나침반이야."}, {}); await memory.consolidateNow(true);
+  const request = await memory.encode({role: "user", content: "청동나침반을 잊어줘"}, {}); await memory.consolidateNow(true);
+  for (const context of [{}, {deepRecall: true}, {deepRecall: true, mode: "history" as const}]) {
+   expect((await memory.recall("청동나침반", {...context, topK: 100})).episodes.map(e => e.id)).not.toContain(request.id);
+   expect((await adapter.episode.recall("청동나침반", {...context, topK: 100})).map(e => e.id)).not.toContain(request.id);
+  }
+  expect((await adapter.episode.getRecent(100)).map(e => e.id)).not.toContain(request.id);
+  const missing = await memory.encode({role: "user", content: "없는물건을 잊어줘"}, {}); await memory.consolidateNow(true);
+  expect((await adapter.episode.getRecent(100)).map(e => e.id)).toContain(missing.id);
+  await memory.close();
+  adapter = new LocalAdapter(join(dir, "store.json")); memory = new MemorySystem({adapter}); await memory.init();
+  expect((await adapter.episode.getRecent(100)).map(e => e.id)).not.toContain(request.id);
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });

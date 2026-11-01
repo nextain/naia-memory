@@ -177,7 +177,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 							const archived = targets.map(f => ({ ...f, status: "archived" as const, updatedAt: now, validTo: now }));
 							if (this.adapter.semantic.upsertMany) await this.adapter.semantic.upsertMany(archived);
 							else for (const f of archived) await this.adapter.semantic.upsert(f);
-							await this.adapter.tombstones.add(target, targets.map(f => f.id), efProject);
+							await this.adapter.tombstones.add(target, targets.map(f => f.id), efProject, ef.sourceEpisodeIds);
 							factsUpdated += archived.length;
 							continue;
 						}
@@ -231,7 +231,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 							for (const target of archivedTargets)
 								await this.adapter.semantic.upsert(target);
 						}
-						if (ef.deleteEvidence?.targetQuote && this.adapter.tombstones) await this.adapter.tombstones.add(ef.deleteEvidence.targetQuote, archivedTargets.map(f => f.id), efProject);
+						if (archivedTargets.length && ef.deleteEvidence?.targetQuote && this.adapter.tombstones) await this.adapter.tombstones.add(ef.deleteEvidence.targetQuote, archivedTargets.map(f => f.id), efProject, ef.sourceEpisodeIds);
 						factsUpdated += archivedTargets.length;
 						continue;
 					}

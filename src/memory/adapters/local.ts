@@ -451,13 +451,15 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	});
 
 	tombstones = {
-		add: async (target: string, factIds: string[] = [], project?: string) => {
+		add: async (target: string, factIds: string[] = [], project?: string, episodeIds: string[] = []) => {
 			const value = normalizeDeletionTarget(target);
 			if (!value) return;
 			this.store.scopedTombstones ??= [];
 			const existing = this.store.scopedTombstones.find(t => t.target === value && t.project === (project ?? null));
-			if (existing) existing.factIds = [...new Set([...existing.factIds, ...factIds])];
-			else this.store.scopedTombstones.push({target: value, project: project ?? null, factIds: [...new Set(factIds)]});
+			if (existing) {
+				existing.factIds = [...new Set([...existing.factIds, ...factIds])];
+				existing.episodeIds = [...new Set([...(existing.episodeIds ?? []), ...episodeIds])];
+			} else this.store.scopedTombstones.push({target: value, project: project ?? null, factIds: [...new Set(factIds)], episodeIds: [...new Set(episodeIds)]});
 			this.markDirty(); this.save();
 		},
 		remove: async (target: string) => {

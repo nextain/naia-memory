@@ -92,7 +92,7 @@ export function createLocalEpisodeMemory(
 					: store.episodes;
 			const hiddenEpisode = (episode: Episode) => {
 				const hidden = applicableTombstones(store, episode.encodingContext?.project);
-				return (isUserSubject(episode.content) && isTombstoned(episode.content, hidden.targets)) || (hidden.ids.size > 0 && store.facts.some(f => hidden.ids.has(f.id) && f.sourceEpisodes.includes(episode.id)));
+				return hidden.episodeIds.has(episode.id) || (isUserSubject(episode.content) && isTombstoned(episode.content, hidden.targets)) || (hidden.ids.size > 0 && store.facts.some(f => hidden.ids.has(f.id) && f.sourceEpisodes.includes(episode.id)));
 			};
 			const eligibleEpisodes = projectEpisodes.filter(
 				(episode) =>
@@ -186,7 +186,7 @@ export function createLocalEpisodeMemory(
 				.episodes.filter((ep) => {
 					const store = host.getStore();
 					const hidden = applicableTombstones(store, ep.encodingContext?.project);
-					return ep.status !== "archived" && !(isUserSubject(ep.content) && isTombstoned(ep.content, hidden.targets)) && (hidden.ids.size === 0 || !store.facts.some(f => hidden.ids.has(f.id) && f.sourceEpisodes.includes(ep.id)));
+					return ep.status !== "archived" && !hidden.episodeIds.has(ep.id) && !(isUserSubject(ep.content) && isTombstoned(ep.content, hidden.targets)) && (hidden.ids.size === 0 || !store.facts.some(f => hidden.ids.has(f.id) && f.sourceEpisodes.includes(ep.id)));
 				})
 				.sort((a, b) => b.timestamp - a.timestamp)
 				.slice(0, n),

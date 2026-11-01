@@ -8,15 +8,15 @@ export function normalizeDeletionTarget(text: string): string {
 export function deletionTarget(text: string): string | null {
  const input = text.trim();
  // A quoted target is allowed, but the command itself must be outside quotation marks.
- if (/[?？]/u.test(input) || /(?:지우지|잊지|삭제하지|말고)|\b(?:don['’]t|do\s+not|never|not)\b/i.test(input)) return null;
- const english = input.match(/^(?:please\s+)?(?:delete|forget|remove|erase)\s+(.+?)[.!\s]*$/i);
+ if (/[?？]/u.test(input) || /(?:지우지|잊지|삭제하지|말고)|\b(?:don['’]t|do\s+not|never|not)\b/i.test(input.replace(/^(?:please\s+)?(?:don['’]t|do\s+not)\s+remember\s+/i, ''))) return null;
+ const english = input.match(/^(?:please\s+)?(?:delete|forget|remove|erase|don['’]t\s+remember|do\s+not\s+remember)\s+(.+?)[.!\s]*$/i);
  if (english) {
   const target = english[1].replace(/^that\s+/i, "").trim();
   const quoted = target.match(/^["“'‘]([^"”'’]+)["”'’]$/u);
   const value = (quoted ? quoted[1] : target).trim();
   return /[\p{L}\p{N}]/u.test(value) ? value : null;
  }
- const korean = input.match(/^(.+?)\s*(?:지워(?:줘|주세요|줄래)?|잊어(?:줘|주세요|버려)|삭제해(?:줘|\s+줘|주세요)?)[.!！\s]*$/u);
+ const korean = input.match(/^(.+?)\s*(?:지워(?:줘|주세요|줄래)?|잊어(?:줘|주세요|버려)|삭제해(?:줘|\s+줘|주세요)?|기억하지\s*(?:마|말아줘)|기억\s+안\s+해도\s+돼)[.!！\s]*$/u);
  if (!korean) return null;
  const before = korean[1].trim();
  const quoted = before.match(/^["“'‘]([^"”'’]+)["”'’](?:을|를|은|는)?$/u);
@@ -44,11 +44,12 @@ export function isUserSubject(text: string): boolean {
  return firstPerson.test(text) && !otherPerson.test(text);
 }
 
-export interface ScopedTombstone { target: string; project: string | null; factIds: string[] }
+export interface ScopedTombstone { target: string; project: string | null; factIds: string[]; episodeIds?: string[] }
 export function applicableTombstones(store: { tombstones?: string[]; tombstoneFactIds?: Record<string, string[]>; scopedTombstones?: ScopedTombstone[] }, project?: string) {
  const scoped = (store.scopedTombstones ?? []).filter(t => t.project === (project ?? null));
  return {
   targets: [...(store.tombstones ?? []), ...scoped.map(t => t.target)],
+  episodeIds: new Set(scoped.flatMap(t => t.episodeIds ?? [])),
   ids: new Set([...Object.values(store.tombstoneFactIds ?? {}).flat(), ...scoped.flatMap(t => t.factIds)]),
  };
 }
