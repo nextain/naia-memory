@@ -131,10 +131,17 @@ export function createLocalSemanticMemory(
 						store.facts.push(incoming);
 						const extracted = extractUserFactValue(incoming.content);
 						if (incoming.status === "active" && extracted) {
-							store.scopedTombstones = (store.scopedTombstones ?? []).filter(t =>
-								t.project !== (incoming.encodingContext?.project ?? null) || !(t.deletedFacts ?? []).some(deleted =>
+							store.scopedTombstones = (store.scopedTombstones ?? []).filter(t => {
+								if (t.project !== (incoming.encodingContext?.project ?? null) || !t.deletedFacts?.length) return true;
+								const released = t.deletedFacts.filter(deleted =>
 									deleted.key === extracted.key && (normalizeDeletionText(deleted.value) === normalizeDeletionText(extracted.value) ||
-										(!!deleted.identity && !!incoming.structured && sameStructuredIdentity(deleted.identity, incoming.structured)))));
+										(!!deleted.identity && !!incoming.structured && sameStructuredIdentity(deleted.identity, incoming.structured))));
+								if (!released.length) return true;
+								const releasedIds = new Set(released.map(deleted => deleted.id));
+								t.deletedFacts = t.deletedFacts.filter(deleted => !releasedIds.has(deleted.id));
+								t.factIds = t.factIds.filter(id => !releasedIds.has(id));
+								return t.deletedFacts.length > 0;
+							});
 						}
 					}
 					touchedEntities.push(existing?.entities ?? incoming.entities);

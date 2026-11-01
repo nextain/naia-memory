@@ -377,3 +377,26 @@ it("does not release a tombstone with a legacy deleted fact lacking a key", asyn
   expect(adapter.getStore().scopedTombstones).toHaveLength(1);
  } finally { await close(); }
 });
+
+it("releases only the matching fact from a shared-target tombstone", async () => {
+ const {adapter, memory, say, close} = await setup();
+ try {
+  await say("내 주소는 서울이야."); await say("서울을 잊어줘.");
+  await say("내 물건은 서울이야."); await say("서울을 잊어줘.");
+  const tombstone = adapter.getStore().scopedTombstones![0];
+  expect(tombstone.deletedFacts?.map(f => f.key).sort()).toEqual(["물건", "주소"]);
+  const addressId = tombstone.deletedFacts!.find(f => f.key === "주소")!.id;
+  const thingId = tombstone.deletedFacts!.find(f => f.key === "물건")!.id;
+  await say("내 주소는 서울이야.");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+  expect(tombstone.deletedFacts?.map(f => f.key)).toEqual(["물건"]);
+  expect(tombstone.factIds).toContain(thingId);
+  expect(tombstone.factIds).not.toContain(addressId);
+  expect(JSON.stringify(await adapter.semantic.search("서울", 100, true, {mode: "history"}))).not.toContain("내 물건은 서울이야.");
+  expect(JSON.stringify(await memory.recall("서울", {mode: "history", topK: 100}))).not.toContain("내 물건은 서울이야.");
+  expect(JSON.stringify(await adapter.episode.getRecent(100))).not.toContain("내 물건은 서울이야.");
+  expect(JSON.stringify(await adapter.semantic.search("서울", 100, true, {mode: "history"}))).toContain("내 주소는 서울이야.");
+  await say("내 물건은 서울이야.");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(0);
+ } finally { await close(); }
+});
