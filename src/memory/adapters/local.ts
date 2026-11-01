@@ -464,18 +464,22 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			const value = normalizeDeletionTarget(target);
 			if (!value) return;
 			this.store.scopedTombstones ??= [];
+			const deletedFacts = this.store.facts.filter(f => factIds.includes(f.id)).map(f => ({id: f.id, value: f.structured?.value ?? deletionFactValue(f.content), attribute: f.attribute ?? "general" as const, ...(f.structured ? {identity: {subject: f.structured.subject, property: f.structured.property, subjectId: f.structured.subjectId, propertyId: f.structured.propertyId}} : {})}));
 			const existing = this.store.scopedTombstones.find(t => t.target === value && t.project === (project ?? null));
 			if (existing) {
+				existing.deletedFacts = [...(existing.deletedFacts ?? []).filter(f => !factIds.includes(f.id)), ...deletedFacts];
 				existing.factIds = [...new Set([...existing.factIds, ...factIds])];
 				existing.episodeIds = [...new Set([...(existing.episodeIds ?? []), ...episodeIds])];
-			} else this.store.scopedTombstones.push({target: value, project: project ?? null, factIds: [...new Set(factIds)], episodeIds: [...new Set(episodeIds)]});
+			} else this.store.scopedTombstones.push({target: value, project: project ?? null, factIds: [...new Set(factIds)], episodeIds: [...new Set(episodeIds)], deletedFacts});
 			this.markDirty(); this.save();
 		},
-		remove: async (target: string) => {
+		remove: async (target: string, options?: {project: string}) => {
 			const value = normalizeDeletionTarget(target);
-			this.store.tombstones = (this.store.tombstones ?? []).filter(t => t !== value);
-			if (this.store.tombstoneFactIds) delete this.store.tombstoneFactIds[value];
-			this.store.scopedTombstones = (this.store.scopedTombstones ?? []).filter(t => t.target !== value);
+			if (!options) {
+				this.store.tombstones = (this.store.tombstones ?? []).filter(t => t !== value);
+				if (this.store.tombstoneFactIds) delete this.store.tombstoneFactIds[value];
+			}
+			this.store.scopedTombstones = (this.store.scopedTombstones ?? []).filter(t => t.target !== value || (options !== undefined && t.project !== options.project));
 			this.markDirty(); this.save();
 		},
 		match: async (target: string, facts: Fact[], request = "", attribute?: import("../types.js").FactAttribute) => {

@@ -230,7 +230,7 @@ export function isMemoryStore(value: unknown): value is MemoryStore {
 	) {
 		return false;
 	}
-	if (value.scopedTombstones !== undefined && (!Array.isArray(value.scopedTombstones) || !value.scopedTombstones.every((t: unknown) => isRecord(t) && typeof t.target === "string" && (t.project === null || typeof t.project === "string") && isStringArray(t.factIds) && (t.episodeIds === undefined || isStringArray(t.episodeIds))))) return false;
+	if (value.scopedTombstones !== undefined && (!Array.isArray(value.scopedTombstones) || !value.scopedTombstones.every((t: unknown) => isRecord(t) && typeof t.target === "string" && (t.project === null || typeof t.project === "string") && isStringArray(t.factIds) && (t.episodeIds === undefined || isStringArray(t.episodeIds)) && (t.deletedFacts === undefined || (Array.isArray(t.deletedFacts) && t.deletedFacts.every((f: unknown) => isRecord(f) && typeof f.id === "string" && typeof f.value === "string" && ["general", "residence", "occupation", "past_workplace"].includes(String(f.attribute)) && (f.identity === undefined || (isRecord(f.identity) && typeof f.identity.subject === "string" && typeof f.identity.property === "string" && (f.identity.subjectId === undefined || typeof f.identity.subjectId === "string") && (f.identity.propertyId === undefined || typeof f.identity.propertyId === "string"))))))))) return false;
 	if (value.tombstones !== undefined && !isStringArray(value.tombstones)) return false;
 	if (value.tombstoneFactIds !== undefined && (!isRecord(value.tombstoneFactIds) || !Object.values(value.tombstoneFactIds).every(isStringArray))) return false;
 	if (

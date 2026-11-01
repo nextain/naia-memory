@@ -70,7 +70,8 @@ export function isUserSubject(text: string): boolean {
  return !!en && (USER_POSSESSIONS.en as readonly string[]).includes(en[1].toLowerCase());
 }
 
-export interface ScopedTombstone { target: string; project: string | null; factIds: string[]; episodeIds?: string[] }
+export interface DeletedFact { id: string; value: string; attribute: import("./types.js").FactAttribute; identity?: Pick<import("./types.js").StructuredFact, "subject" | "property" | "subjectId" | "propertyId"> }
+export interface ScopedTombstone { target: string; project: string | null; factIds: string[]; episodeIds?: string[]; deletedFacts?: DeletedFact[] }
 export function applicableTombstones(store: { tombstones?: string[]; tombstoneFactIds?: Record<string, string[]>; scopedTombstones?: ScopedTombstone[] }, project?: string) {
  const scoped = (store.scopedTombstones ?? []).filter(t => t.project === (project ?? null));
  return {

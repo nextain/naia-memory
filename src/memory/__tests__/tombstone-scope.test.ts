@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalAdapter, MemorySystem } from "../index.js";
@@ -210,4 +210,54 @@ it("fails closed for unlisted possessors and nested ownership", async () => {
   } finally { await close(); }
  }
  for (const fact of ["I live in Seoul", "my job is a teacher", "난 서울에 살아", "전 서울에 살아"]) expect(isUserSubject(fact)).toBe(true);
+});
+
+it("releases semantic deletion only for the same project and value attribute", async () => {
+ const {adapter, say, close} = await setup(true);
+ try {
+  await say("내 물건은 청동나침반이야.", "A");
+  await say("청동나침바를 잊어줘", "A");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+  expect(adapter.getStore().scopedTombstones?.[0].deletedFacts?.[0].value).toContain("청동나침반");
+  await say("내 물건은 청동나침반이야.", "B");
+  await say("나는 청동나침반으로 일해.", "A");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+  await say("내 물건은 청동나침반이야.", "A");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(0);
+  expect((await adapter.semantic.getAll()).filter(f => f.content === "내 물건은 청동나침반이야." && f.encodingContext?.project === "A").map(f => f.status)).toContain("active");
+ } finally { await close(); }
+});
+
+it("removes only the requested project or all projects by default", async () => {
+ const {adapter, memory, say, close} = await setup();
+ try {
+  for (const project of ["A", "B"]) { await say("내 물건은 청동나침반이야.", project); await say("청동나침반을 잊어줘", project); }
+  expect(adapter.getStore().scopedTombstones).toHaveLength(2);
+  await memory.removeTombstone("청동나침반", {project: "A"});
+  expect(adapter.getStore().scopedTombstones?.map(t => t.project)).toEqual(["B"]);
+  await memory.removeTombstone("청동나침반");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(0);
+ } finally { await close(); }
+});
+
+it("loads version one tombstones without deleted facts", async () => {
+ const dir = await mkdtemp(join(tmpdir(), "legacy-tombstone-"));
+ const path = join(dir, "store.json");
+ let adapter = new LocalAdapter(path);
+ let memory = new MemorySystem({adapter});
+ try {
+  await memory.init();
+  for (const content of ["내 물건은 청동나침반이야.", "청동나침반을 잊어줘"]) { await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true); }
+  await memory.close();
+  adapter = new LocalAdapter(path); memory = new MemorySystem({adapter}); await memory.init();
+  expect(adapter.getStore().scopedTombstones?.[0].deletedFacts?.[0].value).toContain("청동나침반");
+  await memory.close();
+  const data = JSON.parse(await readFile(path, "utf8"));
+  delete data.scopedTombstones[0].deletedFacts;
+  await writeFile(path, JSON.stringify(data));
+  adapter = new LocalAdapter(path); memory = new MemorySystem({adapter}); await memory.init();
+  expect(adapter.getStore().scopedTombstones?.[0].deletedFacts).toBeUndefined();
+  await memory.encode({role: "user", content: "내 물건은 청동나침반이야."}, {}); await memory.consolidateNow(true);
+  expect(adapter.getStore().scopedTombstones).toHaveLength(0);
+ } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });

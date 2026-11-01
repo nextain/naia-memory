@@ -1,3 +1,5 @@
+import { sameStructuredIdentity } from "../structured-facts.js";
+import { deletionFactValue, normalizeDeletionText } from "../delete-tombstone.js";
 import { isTombstoned, isUserSubject } from "../delete-tombstone.js";
 import { calculateStrength, shouldPrune } from "../decay.js";
 import type { KnowledgeGraph } from "../knowledge-graph.js";
@@ -135,7 +137,7 @@ export function createLocalSemanticMemory(
 									return deleted && (deleted.attribute ?? "general") === (incoming.attribute ?? "general");
 								});
 							store.scopedTombstones = (store.scopedTombstones ?? []).filter(t =>
-								t.project !== (incoming.encodingContext?.project ?? null) || !matchesDeletedFact(t.target, t.factIds));
+								t.project !== (incoming.encodingContext?.project ?? null) || !(matchesDeletedFact(t.target, t.factIds) || (t.deletedFacts ?? []).some(deleted => deleted.attribute === (incoming.attribute ?? "general") && (normalizeDeletionText(deleted.value) === normalizeDeletionText(incoming.structured?.value ?? deletionFactValue(incoming.content)) || (!!deleted.identity && !!incoming.structured && sameStructuredIdentity(deleted.identity, incoming.structured))))));
 							const removed = (store.tombstones ?? []).filter(t => matchesDeletedFact(t, store.tombstoneFactIds?.[t] ?? []));
 							store.tombstones = (store.tombstones ?? []).filter(t => !removed.includes(t));
 							for (const t of removed) if (store.tombstoneFactIds) delete store.tombstoneFactIds[t];
