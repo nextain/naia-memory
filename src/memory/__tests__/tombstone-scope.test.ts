@@ -288,71 +288,54 @@ it("removes only the requested project or all projects by default", async () => 
  } finally { await close(); }
 });
 
-it("loads version one tombstones without deleted facts", async () => {
- const dir = await mkdtemp(join(tmpdir(), "legacy-tombstone-"));
+it.each([["target"], ["project"], ["factIds"], ["episodeIds"], ["deletedFacts"], ["episodeIds", "deletedFacts"]])("rejects a persisted tombstone missing %s", async (...fields) => {
+ const dir = await mkdtemp(join(tmpdir(), "invalid-tombstone-"));
  const path = join(dir, "store.json");
- let adapter = new LocalAdapter(path);
- let memory = new MemorySystem({adapter});
+ const memory = new MemorySystem({adapter: new LocalAdapter(path)});
  try {
   await memory.init();
-  for (const content of ["내 물건은 청동나침반이야.", "청동나침반을 잊어줘"]) { await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true); }
-  await memory.close();
-  adapter = new LocalAdapter(path); memory = new MemorySystem({adapter}); await memory.init();
-  expect(adapter.getStore().scopedTombstones?.[0].deletedFacts?.[0].value).toContain("청동나침반");
+  for (const content of ["내 물건은 청동나침반이야.", "청동나침반을 잊어줘."]) { await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true); }
   await memory.close();
   const data = JSON.parse(await readFile(path, "utf8"));
-  delete data.scopedTombstones[0].deletedFacts;
+  for (const field of fields) delete data.scopedTombstones[0][field];
   await writeFile(path, JSON.stringify(data));
-  adapter = new LocalAdapter(path); memory = new MemorySystem({adapter}); await memory.init();
-  expect(adapter.getStore().scopedTombstones?.[0].deletedFacts).toBeUndefined();
-  await memory.encode({role: "user", content: "내 물건은 청동나침반이야."}, {}); await memory.consolidateNow(true);
-  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
- } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
+  expect(() => new LocalAdapter(path)).toThrow("Failed to load LocalAdapter store");
+ } finally { await rm(dir, {recursive: true, force: true}); }
 });
 
-it("keeps a legacy tombstone after a new same-target fact is deleted and reasserted", async () => {
- const dir = await mkdtemp(join(tmpdir(), "legacy-shared-target-"));
- const path = join(dir, "store.json");
- let adapter = new LocalAdapter(path);
- let memory = new MemorySystem({adapter});
- const say = async (content: string) => { await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true); };
+it("keeps an explicitly supplied unmatched fact ID through reassertion", async () => {
+ const {adapter, say, close} = await setup();
  try {
-  await memory.init();
-  await say("내 주소는 서울이야."); await say("서울을 잊어줘.");
-  const addressId = adapter.getStore().scopedTombstones![0].factIds[0];
-  await memory.close();
-  const data = JSON.parse(await readFile(path, "utf8"));
-  delete data.scopedTombstones[0].deletedFacts;
-  await writeFile(path, JSON.stringify(data));
-  adapter = new LocalAdapter(path); memory = new MemorySystem({adapter}); await memory.init();
-  await say("내 물건은 서울이야."); await say("서울을 잊어줘.");
-  await say("내 물건은 서울이야.");
-  expect(adapter.getStore().scopedTombstones?.some(t => t.factIds.includes(addressId))).toBe(true);
-  expect(JSON.stringify(await adapter.semantic.search("서울", 100, true, {mode: "history"}))).not.toContain("내 주소는 서울이야.");
-  expect(JSON.stringify(await adapter.semantic.search("서울", 100))).not.toContain("내 주소는 서울이야.");
-  expect(JSON.stringify(await adapter.episode.getRecent(100))).not.toContain("내 주소는 서울이야.");
-  await memory.removeTombstone("서울");
-  expect(adapter.getStore().scopedTombstones).toHaveLength(0);
-  expect(JSON.stringify(await adapter.semantic.search("서울", 100, true, {mode: "history"}))).toContain("내 주소는 서울이야.");
-  expect(JSON.stringify(await adapter.episode.getRecent(100))).toContain("내 주소는 서울이야.");
- } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
-});
-
-it("retains unexplained legacy IDs in an already mixed tombstone", async () => {
- const {adapter, memory, say, close} = await setup();
- try {
-  await say("내 주소는 서울이야."); await say("서울을 잊어줘.");
-  await say("내 물건은 서울이야."); await say("서울을 잊어줘.");
+  await adapter.tombstones.add("서울", ["external-id"]);
   const tombstone = adapter.getStore().scopedTombstones![0];
-  const addressId = tombstone.deletedFacts!.find(f => f.key === "주소")!.id;
-  tombstone.deletedFacts = tombstone.deletedFacts!.filter(f => f.id !== addressId);
-  await say("내 물건은 서울이야.");
-  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
-  expect(tombstone.factIds).toEqual([addressId]);
-  expect(JSON.stringify(await adapter.semantic.search("서울", 100, true, {mode: "history"}))).not.toContain("내 주소는 서울이야.");
-  await memory.removeTombstone("서울");
-  expect(JSON.stringify(await adapter.semantic.search("서울", 100, true, {mode: "history"}))).toContain("내 주소는 서울이야.");
+  expect(tombstone.deletedFacts).toEqual([]);
+  expect(tombstone.episodeIds).toEqual([]);
+  await say("내 주소는 서울이야.");
+  expect(adapter.getStore().scopedTombstones![0].factIds).toEqual(["external-id"]);
  } finally { await close(); }
+});
+
+it("reads a store without tombstones and keeps deletion hidden after reload", async () => {
+ const dir = await mkdtemp(join(tmpdir(), "main-store-"));
+ const path = join(dir, "store.json");
+ let adapter = new LocalAdapter(path);
+ let memory = new MemorySystem({adapter});
+ try {
+  await memory.init();
+  await memory.encode({role: "user", content: "내 물건은 청동나침반이야."}, {}); await memory.consolidateNow(true);
+  await memory.close();
+  const data = JSON.parse(await readFile(path, "utf8"));
+  delete data.scopedTombstones; delete data.tombstones; delete data.tombstoneFactIds;
+  await writeFile(path, JSON.stringify(data));
+  adapter = new LocalAdapter(path); memory = new MemorySystem({adapter}); await memory.init();
+  expect(JSON.stringify(await memory.recall("청동나침반", {topK: 100}))).toContain("청동나침반");
+  await memory.encode({role: "user", content: "청동나침반을 잊어줘."}, {}); await memory.consolidateNow(true);
+  await memory.close();
+  adapter = new LocalAdapter(path); memory = new MemorySystem({adapter}); await memory.init();
+  for (const result of [await memory.recall("청동나침반", {topK: 100}), await memory.recall("청동나침반", {topK: 100, deepRecall: true, mode: "history"}), await adapter.episode.getRecent(100)]) {
+   expect(JSON.stringify(result)).not.toContain("청동나침반");
+  }
+ } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
 
 it("excludes other people anywhere in a first-person fact from deletion and release", async () => {
@@ -413,7 +396,7 @@ it("releases only the same extracted key and value", async () => {
 });
 
 
-it("does not release a tombstone with a legacy deleted fact lacking a key", async () => {
+it("does not release a tombstone with a deleted fact lacking a key", async () => {
  const {adapter, say, close} = await setup();
  try {
   await say("내 주소는 서울이야."); await say("서울을 잊어줘.");

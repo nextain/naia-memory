@@ -132,7 +132,7 @@ export function createLocalSemanticMemory(
 						const extracted = extractUserFactValue(incoming.content);
 						if (incoming.status === "active" && extracted) {
 							store.scopedTombstones = (store.scopedTombstones ?? []).filter(t => {
-								if (t.project !== (incoming.encodingContext?.project ?? null) || !t.deletedFacts?.length) return true;
+								if (t.project !== (incoming.encodingContext?.project ?? null) || !t.deletedFacts.length) return true;
 								const released = t.deletedFacts.filter(deleted =>
 									deleted.key === extracted.key && (normalizeDeletionText(deleted.value) === normalizeDeletionText(extracted.value) ||
 										(!!deleted.identity && !!incoming.structured && sameStructuredIdentity(deleted.identity, incoming.structured))));

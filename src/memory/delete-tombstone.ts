@@ -106,12 +106,12 @@ export function isUserSubject(text: string): boolean { return extractUserFactVal
 export function deletionFactValue(content: string): string { return extractUserFactValue(content)?.value ?? content; }
 
 export interface DeletedFact { id: string; value: string; key?: string; attribute: import("./types.js").FactAttribute; identity?: Pick<import("./types.js").StructuredFact, "subject" | "property" | "subjectId" | "propertyId"> }
-export interface ScopedTombstone { target: string; project: string | null; factIds: string[]; episodeIds?: string[]; deletedFacts?: DeletedFact[] }
+export interface ScopedTombstone { target: string; project: string | null; factIds: string[]; episodeIds: string[]; deletedFacts: DeletedFact[] }
 export function applicableTombstones(store: { tombstones?: string[]; tombstoneFactIds?: Record<string, string[]>; scopedTombstones?: ScopedTombstone[] }, project?: string) {
  const scoped = (store.scopedTombstones ?? []).filter(t => t.project === (project ?? null));
  return {
   targets: [...(store.tombstones ?? []), ...scoped.map(t => t.target)],
-  episodeIds: new Set(scoped.flatMap(t => t.episodeIds ?? [])),
+  episodeIds: new Set(scoped.flatMap(t => t.episodeIds)),
   ids: new Set([...Object.values(store.tombstoneFactIds ?? {}).flat(), ...scoped.flatMap(t => t.factIds)]),
  };
 }
