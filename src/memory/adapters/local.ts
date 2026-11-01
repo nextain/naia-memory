@@ -1,4 +1,4 @@
-import { deletionFactValue, deletionValueOverlap, extractUserFactValue, isTombstoned, isUserSubject, mentionsOtherPerson, normalizeDeletionTarget } from "../delete-tombstone.js";
+import { deletionFactValue, deletionValueOverlap, extractUserFactValue, isTombstoned, isUserSubject, mentionsOtherPerson, normalizeDeletionTarget, normalizeDeletionText } from "../delete-tombstone.js";
 import { cosineSimilarity } from "./local-search.js";
 import { calculateStrength } from "../decay.js";
 import { readFileSync } from "node:fs";
@@ -464,7 +464,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			const value = normalizeDeletionTarget(target);
 			if (!value) return;
 			this.store.scopedTombstones ??= [];
-			const deletedFacts = this.store.facts.filter(f => factIds.includes(f.id)).map(f => ({id: f.id, value: f.structured?.value ?? deletionFactValue(f.content), attribute: f.attribute ?? "general" as const, ...(f.structured ? {identity: {subject: f.structured.subject, property: f.structured.property, subjectId: f.structured.subjectId, propertyId: f.structured.propertyId}} : {})}));
+			const deletedFacts = this.store.facts.filter(f => factIds.includes(f.id)).map(f => ({id: f.id, value: extractUserFactValue(f.content)?.value ?? f.structured?.value ?? deletionFactValue(f.content), ...(extractUserFactValue(f.content) ? {key: extractUserFactValue(f.content)!.key} : {}), attribute: f.attribute ?? "general" as const, ...(f.structured ? {identity: {subject: f.structured.subject, property: f.structured.property, subjectId: f.structured.subjectId, propertyId: f.structured.propertyId}} : {})}));
 			const existing = this.store.scopedTombstones.find(t => t.target === value && t.project === (project ?? null));
 			if (existing) {
 				existing.deletedFacts = [...(existing.deletedFacts ?? []).filter(f => !factIds.includes(f.id)), ...deletedFacts];
@@ -486,7 +486,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			// The request need not name the user, but must not name another person.
 			if (mentionsOtherPerson(request.replace(target, ""))) return [];
 			const active = facts.filter(f => f.status === "active");
-			const matches = active.filter(f => extractUserFactValue(f.content) !== null && normalizeDeletionTarget(target.replace(/^(?:a|an|the)\s+/i, "")) === normalizeDeletionTarget(extractUserFactValue(f.content)!.value));
+			const matches = active.filter(f => extractUserFactValue(f.content) !== null && normalizeDeletionTarget(target.replace(/^(?:a|an|the)\s+/i, "")) === normalizeDeletionText(extractUserFactValue(f.content)!.value));
 			if (matches.length > 1) { console.warn("[naia-memory] ambiguous delete ignored"); return []; }
 			if (matches.length === 1 || !this.embedder) return matches;
 			try {

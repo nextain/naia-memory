@@ -101,7 +101,6 @@ export function extractUserFactValue(content: string): {key: string; value: stri
  else if (en && (USER_POSSESSIONS.en as readonly string[]).includes(en[1].toLowerCase())) { key = en[1].toLowerCase(); value = en[2].replace(/^(?:a|an|the)\s+/i, ""); }
  else if (residenceEn || residenceKo) { key = "residence"; value = (residenceEn ?? residenceKo)![1]; }
  else if (occupationEn || occupationKo) { key = "occupation"; value = (occupationEn ?? occupationKo)![1]; }
- if (key === "직업" || key === "job" || key === "work") key = "occupation";
  value = value?.trim();
  if (!key || !value || OTHER_RELATION.test(value) || /['’]s\b|의/u.test(value)) return null;
  return {key, value};
@@ -109,7 +108,7 @@ export function extractUserFactValue(content: string): {key: string; value: stri
 export function isUserSubject(text: string): boolean { return extractUserFactValue(text) !== null; }
 export function deletionFactValue(content: string): string { return extractUserFactValue(content)?.value ?? content; }
 
-export interface DeletedFact { id: string; value: string; attribute: import("./types.js").FactAttribute; identity?: Pick<import("./types.js").StructuredFact, "subject" | "property" | "subjectId" | "propertyId"> }
+export interface DeletedFact { id: string; value: string; key?: string; attribute: import("./types.js").FactAttribute; identity?: Pick<import("./types.js").StructuredFact, "subject" | "property" | "subjectId" | "propertyId"> }
 export interface ScopedTombstone { target: string; project: string | null; factIds: string[]; episodeIds?: string[]; deletedFacts?: DeletedFact[] }
 export function applicableTombstones(store: { tombstones?: string[]; tombstoneFactIds?: Record<string, string[]>; scopedTombstones?: ScopedTombstone[] }, project?: string) {
  const scoped = (store.scopedTombstones ?? []).filter(t => t.project === (project ?? null));

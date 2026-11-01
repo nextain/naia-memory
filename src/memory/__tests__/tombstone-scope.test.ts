@@ -306,7 +306,7 @@ it("loads version one tombstones without deleted facts", async () => {
   adapter = new LocalAdapter(path); memory = new MemorySystem({adapter}); await memory.init();
   expect(adapter.getStore().scopedTombstones?.[0].deletedFacts).toBeUndefined();
   await memory.encode({role: "user", content: "내 물건은 청동나침반이야."}, {}); await memory.consolidateNow(true);
-  expect(adapter.getStore().scopedTombstones).toHaveLength(0);
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
 
@@ -349,4 +349,31 @@ it("rejects vague deletion targets while accepting concrete demonstrative phrase
    expect((await adapter.semantic.getAll()).find(f => f.content === fact)?.status).toBe("archived");
   } finally { await close(); }
  }
+});
+
+
+it("releases only the same extracted key and value", async () => {
+ const {adapter, memory, say, close} = await setup();
+ try {
+  await say("내 주소는 서울이야."); await say("서울을 잊어줘.");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+  await say("나는 2025년에 서울을 방문했어.");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+  expect(JSON.stringify(await memory.recall("서울", {mode: "history", topK: 100}))).not.toContain("내 주소는 서울이야.");
+  await say("내 물건은 서울이야.");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+  await say("내 주소는 서울이야.");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(0);
+ } finally { await close(); }
+});
+
+
+it("does not release a tombstone with a legacy deleted fact lacking a key", async () => {
+ const {adapter, say, close} = await setup();
+ try {
+  await say("내 주소는 서울이야."); await say("서울을 잊어줘.");
+  delete adapter.getStore().scopedTombstones![0].deletedFacts![0].key;
+  await say("내 주소는 서울이야.");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+ } finally { await close(); }
 });

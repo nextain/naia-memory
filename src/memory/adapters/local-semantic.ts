@@ -1,6 +1,5 @@
 import { sameStructuredIdentity } from "../structured-facts.js";
-import { deletionFactValue, normalizeDeletionText } from "../delete-tombstone.js";
-import { isTombstoned, isUserSubject } from "../delete-tombstone.js";
+import { extractUserFactValue, normalizeDeletionText } from "../delete-tombstone.js";
 import { calculateStrength, shouldPrune } from "../decay.js";
 import type { KnowledgeGraph } from "../knowledge-graph.js";
 import type { Fact, MemoryAdapter } from "../types.js";
@@ -130,17 +129,12 @@ export function createLocalSemanticMemory(
 						existing.attribute = incoming.attribute ?? existing.attribute;
 					} else {
 						store.facts.push(incoming);
-						if (incoming.status === "active" && isUserSubject(incoming.content)) {
-							const matchesDeletedFact = (target: string, ids: string[]) =>
-								isTombstoned(incoming.content, [target]) && ids.some(id => {
-									const deleted = store.facts.find(f => f.id === id);
-									return deleted && (deleted.attribute ?? "general") === (incoming.attribute ?? "general");
-								});
+						const extracted = extractUserFactValue(incoming.content);
+						if (incoming.status === "active" && extracted) {
 							store.scopedTombstones = (store.scopedTombstones ?? []).filter(t =>
-								t.project !== (incoming.encodingContext?.project ?? null) || !(matchesDeletedFact(t.target, t.factIds) || (t.deletedFacts ?? []).some(deleted => deleted.attribute === (incoming.attribute ?? "general") && (normalizeDeletionText(deleted.value) === normalizeDeletionText(incoming.structured?.value ?? deletionFactValue(incoming.content)) || (!!deleted.identity && !!incoming.structured && sameStructuredIdentity(deleted.identity, incoming.structured))))));
-							const removed = (store.tombstones ?? []).filter(t => matchesDeletedFact(t, store.tombstoneFactIds?.[t] ?? []));
-							store.tombstones = (store.tombstones ?? []).filter(t => !removed.includes(t));
-							for (const t of removed) if (store.tombstoneFactIds) delete store.tombstoneFactIds[t];
+								t.project !== (incoming.encodingContext?.project ?? null) || !(t.deletedFacts ?? []).some(deleted =>
+									deleted.key === extracted.key && (normalizeDeletionText(deleted.value) === normalizeDeletionText(extracted.value) ||
+										(!!deleted.identity && !!incoming.structured && sameStructuredIdentity(deleted.identity, incoming.structured)))));
 						}
 					}
 					touchedEntities.push(existing?.entities ?? incoming.entities);
