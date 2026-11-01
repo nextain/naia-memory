@@ -133,14 +133,14 @@ for (const [userPlace, relativePlace, relativeWork, forgetPlace, place, userObje
  });
 }
 
-it("requires word boundaries even with a similar embedding", async () => {
+it("requires word boundaries without an embedder", async () => {
  for (const [fact, request, status] of [
   ["My email address is stored.", "Forget AI.", "active"],
   ["I use AI every day.", "Forget AI.", "archived"],
   ["I use A every day.", "Forget A.", "active"],
   ["나는 서울에서 살아.", "울을 잊어줘", "active"],
  ] as const) {
-  const {adapter, say, close} = await setup(true);
+  const {adapter, say, close} = await setup();
   try {
    await say(fact); await say(request);
    expect((await adapter.semantic.getAll()).find(f => f.content === fact)?.status).toBe(status);

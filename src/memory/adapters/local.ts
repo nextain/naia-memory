@@ -51,6 +51,8 @@ export class EmbeddingSpaceMismatchError extends Error {
 	}
 }
 
+const DEFAULT_DELETE_SIMILARITY_THRESHOLD = 0.85;
+
 export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private store: MemoryStore;
 	private readonly storePath: string;
@@ -60,6 +62,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private kg: KnowledgeGraph;
 	private readonly embedder: EmbeddingProvider | null;
 	private readonly vectorCandidateLimit: number;
+	private readonly deleteSimilarityThreshold: number;
 	private readonly disableKGSpreading: boolean;
 	private readonly reranker: import("../reranker.js").RerankerProvider | null;
 	private readonly onPersistenceError: ((error: unknown) => void) | null;
@@ -74,6 +77,8 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		const vectorCandidateLimit = typeof options === "object" ? options.vectorCandidateLimit ?? 50 : 50;
 		if (!Number.isInteger(vectorCandidateLimit) || vectorCandidateLimit < 1) throw new RangeError("vectorCandidateLimit must be a positive integer");
 		this.vectorCandidateLimit = vectorCandidateLimit;
+		this.deleteSimilarityThreshold = typeof options === "object" ? options.deleteSimilarityThreshold ?? DEFAULT_DELETE_SIMILARITY_THRESHOLD : DEFAULT_DELETE_SIMILARITY_THRESHOLD;
+		if (!Number.isFinite(this.deleteSimilarityThreshold) || this.deleteSimilarityThreshold < 0 || this.deleteSimilarityThreshold > 1) throw new RangeError("deleteSimilarityThreshold must be between 0 and 1");
 		const storePath =
 			typeof options === "string" ? options : options?.storePath;
 		this.embedder =
@@ -469,13 +474,22 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			this.store.scopedTombstones = (this.store.scopedTombstones ?? []).filter(t => t.target !== value);
 			this.markDirty(); this.save();
 		},
-		match: async (target: string, facts: Fact[], request = "") => {
+		match: async (target: string, facts: Fact[], request = "", attribute?: import("../types.js").FactAttribute) => {
 			// The request need not name the user, but must not name another person.
 			if (!isUserSubject(`I ${request}`)) return [];
 			const active = facts.filter(f => f.status === "active");
 			const matches = active.filter(f => isUserSubject(f.content) && isTombstoned(f.content, [normalizeDeletionTarget(target)]));
 			if (matches.length > 1) { console.warn("[naia-memory] ambiguous delete ignored"); return []; }
-			return matches;
+			if (matches.length === 1 || !this.embedder) return matches;
+			try {
+				const query = await this.embedWithCache(target);
+				if (!query?.length) return [];
+				const eligible = active.filter(f => isUserSubject(f.content) && (!attribute || attribute === "general" || f.attribute === attribute));
+				const vectors = await Promise.all(eligible.map(f => this.embedDocumentWithCache(f.content)));
+				if (vectors.some(v => !v?.length)) return [];
+				const semantic = eligible.filter((_f, i) => cosineSimilarity(query, vectors[i]!) >= this.deleteSimilarityThreshold);
+				return semantic.length === 1 ? semantic : [];
+			} catch { return []; }
 		},
 	};
 

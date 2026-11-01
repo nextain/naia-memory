@@ -172,7 +172,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								continue;
 							}
 							const eligible = (await this.adapter.semantic.getAll()).filter(f => f.encodingContext?.project === efProject);
-							const targets = await this.adapter.tombstones.match(target, eligible, srcEp!.content);
+							const targets = await this.adapter.tombstones.match(target, eligible, srcEp!.content, ef.attribute);
 							if (!targets.length) continue;
 							const archived = targets.map(f => ({ ...f, status: "archived" as const, updatedAt: now, validTo: now }));
 							if (this.adapter.semantic.upsertMany) await this.adapter.semantic.upsertMany(archived);

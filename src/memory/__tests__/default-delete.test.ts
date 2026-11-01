@@ -38,6 +38,13 @@ it("recognizes each explicit expression and quoted targets", async () => {
  }
 });
 
+it("classifies the deletion target attribute", async () => {
+ const {heuristicFactExtractor} = await import("../memory-system-api.js");
+ const content = "서울에 살아를 잊어줘";
+ const episode = {id: "a", role: "user" as const, content, summary: content, timestamp: 1, importance: {importance: 1, surprise: 0, emotion: 0.5, utility: 1}, encodingContext: {}, consolidated: false, recallCount: 0, lastAccessed: 1, strength: 1};
+ expect((await heuristicFactExtractor([episode]))[0].attribute).toBe("residence");
+});
+
 it("persists tombstones, preserves other subjects, and exposes removal", async () => {
  const dir = await mkdtemp(join(tmpdir(), "delete-persist-"));
  const path = join(dir, "store.json");
@@ -57,7 +64,7 @@ it("persists tombstones, preserves other subjects, and exposes removal", async (
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
 
-it("does not delete on embedding similarity alone", async () => {
+it("deletes a unique semantic candidate", async () => {
  const dir = await mkdtemp(join(tmpdir(), "delete-vector-"));
  const vector = (s: string) => s.includes("금빛별") || s.includes("가상의대상") ? [1, 0] : [0, 1];
  const embedder = { name: "test", dims: 2, embeddingSpaceId: "test-v1", embed: async (s: string) => vector(s), embedBatch: async (texts: string[]) => texts.map(vector) };
@@ -69,10 +76,10 @@ it("does not delete on embedding similarity alone", async () => {
   await memory.encode({role: "user", content: "내 물건은 파란달이야."}, {}); await memory.consolidateNow(true);
   await memory.encode({role: "user", content: "가상의대상을 지워줘"}, {}); await memory.consolidateNow(true);
   const facts = await adapter.semantic.getAll();
-  expect(facts.find(f => f.content.includes("금빛별"))?.status).toBe("active");
+  expect(facts.find(f => f.content.includes("금빛별"))?.status).toBe("archived");
   expect(facts.find(f => f.content.includes("파란달"))?.status).toBe("active");
-  expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
-  expect(JSON.stringify(await memory.recall("금빛별", {deepRecall: true, topK: 100}))).toContain("금빛별");
+  expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(1);
+  expect(JSON.stringify(await memory.recall("금빛별", {deepRecall: true, topK: 100}))).not.toContain("금빛별");
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
 
@@ -122,3 +129,32 @@ it("hides only processed deletion request episodes across retrieval paths", asyn
   expect((await adapter.episode.getRecent(100)).map(e => e.id)).not.toContain(request.id);
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
+
+for (const scenario of ["ambiguous", "project", "relative", "below", "literal", "error", "attribute"] as const) {
+ it(`applies semantic deletion safeguards: ${scenario}`, async () => {
+  const dir = await mkdtemp(join(tmpdir(), "delete-semantic-"));
+  const embedder = {name: "test", dims: 2, embeddingSpaceId: "semantic-test", embed: async (s: string) => {
+   if (scenario === "error" && s === "가상의대상") throw new Error("test");
+   return [1, 0];
+  }, embedBatch: async (texts: string[]) => texts.map(s => scenario === "below" && s.includes("금빛별") ? [0.84, Math.sqrt(1 - 0.84 ** 2)] : [1, 0])};
+  const adapter = new LocalAdapter({storePath: join(dir, "store.json"), embeddingProvider: embedder});
+  const memory = new MemorySystem({adapter});
+  const say = async (content: string, project = "A") => { await memory.encode({role: "user", content}, {project}); await memory.consolidateNow(true); };
+  try {
+   await memory.init();
+   await say(scenario === "relative" ? "내 사촌은 금빛별에 살아." : "내 물건은 금빛별이야.", scenario === "project" ? "B" : "A");
+   if (scenario === "ambiguous") await say("내 물건은 파란달이야.");
+   if (scenario === "literal") await say("내 물건은 가상의대상이야.");
+   if (scenario === "attribute") {
+    const facts = await adapter.semantic.getAll();
+    expect(await adapter.tombstones.match("가상의대상", facts, "잊어줘", "residence")).toHaveLength(0);
+   } else {
+    await say("가상의대상을 잊어줘");
+    const facts = await adapter.semantic.getAll();
+    expect(facts.find(f => f.content.includes("금빛별"))?.status).toBe("active");
+    if (scenario === "literal") expect(facts.find(f => f.content.includes("가상의대상"))?.status).toBe("archived");
+    else expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+   }
+  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
+ });
+}

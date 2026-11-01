@@ -329,7 +329,7 @@ export async function heuristicFactExtractor(
 	}
 	return episodes.flatMap<ExtractedFact>((ep) => {
 		const target = ep.role === "user" ? deletionTarget(ep.content) : null;
-		if (target) return [{ content: target, operation: "delete" as const, entities: [], topics: [], importance: ep.importance.utility, sourceEpisodeIds: [ep.id], deleteEvidence: { kind: "explicit_removal_request" as const, evidenceQuote: ep.content, targetQuote: target } }];
+		if (target) return [{ content: target, attribute: factAttribute(target), operation: "delete" as const, entities: [], topics: [], importance: ep.importance.utility, sourceEpisodeIds: [ep.id], deleteEvidence: { kind: "explicit_removal_request" as const, evidenceQuote: ep.content, targetQuote: target } }];
 		return splitPropositions(ep.content).map(({ content, inheritedFirstPerson }) => ({
 		content,
 		inheritedFirstPerson,
