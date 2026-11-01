@@ -31,7 +31,7 @@ it("forgets four values across recall paths and restores a repeated value", asyn
 
 it("recognizes each explicit expression and quoted targets", async () => {
  const { heuristicFactExtractor } = await import("../memory-system-api.js");
- const forms = ["청동나침반을 지워줘", "청동나침반을 지워", "청동나침반을 잊어줘", "청동나침반을 잊어", "청동나침반을 삭제해줘", "청동나침반을 기억하지 마", "forget 'bronze compass'", "delete 'bronze compass'", "remove that 'bronze compass'"];
+ const forms = ["청동나침반을 지워줘", "청동나침반을 지워", "청동나침반을 지워주세요", "청동나침반을 지워줄래", "청동나침반을 잊어줘", "청동나침반을 잊어주세요", "청동나침반을 잊어버려", "청동나침반을 삭제해줘", "청동나침반을 삭제해 줘", "청동나침반을 삭제해주세요", "청동나침반을 삭제해", "forget 'bronze compass'", "delete 'bronze compass'", "remove that 'bronze compass'", "please erase 'bronze compass'!"];
  for (const content of forms) {
   const ep = { id: "a", role: "user" as const, content, summary: content, timestamp: 1, importance: { importance: 1, surprise: 0, emotion: 0.5, utility: 1 }, encodingContext: {}, consolidated: false, recallCount: 0, lastAccessed: 1, strength: 1 };
   const result = await heuristicFactExtractor([ep]);
@@ -76,5 +76,31 @@ it("uses the embedding threshold and hides matched source episodes", async () =>
   expect(JSON.stringify(await memory.recall("금빛별", {deepRecall: true, mode: "history", topK: 100}))).not.toContain("금빛별");
   await memory.removeTombstone("가상의대상");
   expect(JSON.stringify(await memory.recall("금빛별", {deepRecall: true, topK: 100}))).toContain("금빛별");
+ } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
+});
+
+ it("rejects negation, questions, descriptions, and quoted commands", async () => {
+ const { heuristicFactExtractor } = await import("../memory-system-api.js");
+ const forms = ["delete.", "forget!", "Do not delete my backup.", "Don't forget my address.", "서울을 지우지 마", "서울을 지워야 할까?", "어제 서울 기억을 지웠어", "서울을 잊지 마", "서울을 삭제하지 마", "서울 말고 부산을 지워줘", "Never delete my address", "Please do not delete my address", "How do I delete my address?", '"서울을 지워줘"', '"delete my address"'];
+ for (const content of forms) {
+  const ep = { id: "a", role: "user" as const, content, summary: content, timestamp: 1, importance: { importance: 1, surprise: 0, emotion: 0.5, utility: 1 }, encodingContext: {}, consolidated: false, recallCount: 0, lastAccessed: 1, strength: 1 };
+  expect((await heuristicFactExtractor([ep])).every(f => f.operation !== "delete"), content).toBe(true);
+ }
+});
+
+it("keeps existing facts active for rejected requests", async () => {
+ const dir = await mkdtemp(join(tmpdir(), "delete-negative-"));
+ const adapter = new LocalAdapter(join(dir, "store.json"));
+ const memory = new MemorySystem({adapter});
+ try {
+  await memory.init();
+  for (const content of ["I keep my backup locally.", "My address is Seoul.", "나는 서울에 살아."]) { await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true); }
+  const ids = (await adapter.semantic.getAll()).filter(f => f.status === "active").map(f => f.id);
+  for (const content of ["Do not delete my backup.", "Don't forget my address.", "서울을 지우지 마", "서울을 지워야 할까?", "어제 서울 기억을 지웠어"]) {
+   await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true);
+   const facts = await adapter.semantic.getAll();
+   expect(ids.every(id => facts.find(f => f.id === id)?.status === "active"), content).toBe(true);
+   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+  }
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });

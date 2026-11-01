@@ -468,19 +468,19 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			this.markDirty(); this.save();
 		},
 		match: async (target: string, facts: Fact[], request = "") => {
+			const firstPerson = /(?:^|[\s,])(?:나는|내가|내|저는|제가|제|I\b|my\b)/i;
+			const person = /(?:친구|그\s*사람|엄마|아빠|어머니|아버지|동료|형제|자매|남편|아내|그녀|그들|\b(?:friend|mother|father|mom|dad|he|she|they|their)\b)/i;
+			const otherSubject = /(?:^|[\s,])(?!(?:나는|내가|저는|제가)(?:\s|$))[가-힣]+(?:은|는|이|가)(?=\s)/;
+			const userFact = (content: string) => !person.test(content) && (firstPerson.test(content) || !otherSubject.test(content));
+			if (person.test(request)) return [];
 			const active = facts.filter(f => f.status === "active");
-			let matches = active.filter(f => isTombstoned(f.content, [normalizeDeletionTarget(target)]));
-			const hadTextMatches = matches.length > 0;
-			if (matches.length > 1) {
-				const firstPerson = /(?:^|[\s,])(?:나는|내가|내|저는|제가|제|I\b|my\b)/i;
-				const otherSubject = /(?:^|[\s,])(?:[가-힣]+(?:은|는|이|가)|he\b|she\b|they\b)/i;
-				if (firstPerson.test(request) || !otherSubject.test(request.replace(target, ""))) matches = matches.filter(f => firstPerson.test(f.content));
-			}
+			const textMatches = active.filter(f => isTombstoned(f.content, [normalizeDeletionTarget(target)]));
+			const matches = textMatches.filter(f => userFact(f.content));
 			if (matches.length > 1) { console.warn("[naia-memory] ambiguous delete ignored"); return []; }
 			if (matches.length === 1) return matches;
-			if (hadTextMatches) { console.warn("[naia-memory] ambiguous delete ignored"); return []; }
+			if (textMatches.length) return [];
 			const vector = await this.embedWithCache(target);
-			const similar = active.filter(f => vector && this.store.factEmbeddings?.[f.id] && cosineSimilarity(vector, this.store.factEmbeddings[f.id]) >= 0.85);
+			const similar = active.filter(f => userFact(f.content) && vector && this.store.factEmbeddings?.[f.id] && cosineSimilarity(vector, this.store.factEmbeddings[f.id]) >= 0.85);
 			if (similar.length > 1) console.warn("[naia-memory] ambiguous delete ignored");
 			return similar.length === 1 ? similar : [];
 		},

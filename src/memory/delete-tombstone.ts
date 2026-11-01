@@ -6,16 +6,23 @@ export function normalizeDeletionTarget(text: string): string {
  return normalizeDeletionText(text).replace(/(?:을|를|은|는)$/, "");
 }
 export function deletionTarget(text: string): string | null {
- const match = text.match(/(?:지워줘|지워|잊어줘|잊어|삭제해줘|기억하지\s*마|\bforget\b|\bdelete\b|\bremove\s+that\b)/i);
- if (!match || match.index === undefined) return null;
- const before = text.slice(0, match.index).trim();
- const after = text.slice(match.index + match[0].length).trim();
- const quoted = (before + " " + after).match(/["“'‘]([^"”'’]+)["”'’]/);
+ const input = text.trim();
+ // A quoted target is allowed, but the command itself must be outside quotation marks.
+ if (/[?？]/u.test(input) || /(?:지우지|잊지|삭제하지|말고)|\b(?:don['’]t|do\s+not|never|not)\b/i.test(input)) return null;
+ const english = input.match(/^(?:please\s+)?(?:delete|forget|remove|erase)\s+(.+?)[.!\s]*$/i);
+ if (english) {
+  const target = english[1].replace(/^that\s+/i, "").trim();
+  const quoted = target.match(/^["“'‘]([^"”'’]+)["”'’]$/u);
+  const value = (quoted ? quoted[1] : target).trim();
+  return /[\p{L}\p{N}]/u.test(value) ? value : null;
+ }
+ const korean = input.match(/^(.+?)\s*(?:지워(?:줘|주세요|줄래)?|잊어(?:줘|주세요|버려)|삭제해(?:줘|\s+줘|주세요)?)[.!！\s]*$/u);
+ if (!korean) return null;
+ const before = korean[1].trim();
+ const quoted = before.match(/^["“'‘]([^"”'’]+)["”'’](?:을|를|은|는)?$/u);
  if (quoted) return quoted[1].trim() || null;
- const korean = before.match(/(?:^|\s)([^\s,]+(?:\s+[^\s,]+)*?)(?:을|를|는)\s*$/);
- if (korean) return korean[1].trim();
- if (/^(?:forget|delete)\b/i.test(match[0])) return after.replace(/[.!?]+$/, "").trim() || null;
- return null;
+ const target = before.match(/^(.*?)(?:을|를|는)?$/u)?.[1].trim();
+ return target || null;
 }
 export function isTombstoned(text: string, tombstones: readonly string[] = []): boolean {
  const normalized = normalizeDeletionText(text);

@@ -58,3 +58,18 @@ it("does not archive multiple embedding-only matches", async () => {
   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
  } finally { await close(); }
 });
+
+it("only archives user facts and ignores requests naming another person", async () => {
+ for (const [fact, request, status] of [
+  ["친구는 서울에서 일해.", "서울을 잊어줘", "active"],
+  ["나는 서울에 살아.", "서울을 잊어줘", "archived"],
+  ["나는 서울에 살아.", "친구 회사 기억 지워줘", "active"],
+ ] as const) {
+  const {adapter, say, close} = await setup();
+  try {
+   await say(fact); await say(request);
+   expect((await adapter.semantic.getAll()).find(f => f.content === fact)?.status).toBe(status);
+   if (status === "active") expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+  } finally { await close(); }
+ }
+});
