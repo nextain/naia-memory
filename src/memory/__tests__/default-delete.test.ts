@@ -158,7 +158,7 @@ for (const scenario of ["ambiguous", "project", "relative", "below", "literal", 
  });
 }
 
- it("deletes a unique semantic candidate with overlapping value spelling", async () => {
+ it("does not delete a unique candidate with overlapping value spelling", async () => {
  const dir = await mkdtemp(join(tmpdir(), "delete-overlap-"));
  const embedder = {name: "test", dims: 2, embeddingSpaceId: "overlap", embed: async () => [1, 0], embedBatch: async (texts: string[]) => texts.map(() => [0.9, Math.sqrt(1 - 0.9 ** 2)])};
  const adapter = new LocalAdapter({storePath: join(dir, "store.json"), embeddingProvider: embedder});
@@ -166,7 +166,7 @@ for (const scenario of ["ambiguous", "project", "relative", "below", "literal", 
  try {
   await memory.init();
   for (const content of ["내 물건은 청동나침반이야.", "청동나침바를 지워줘"]) { await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true); }
-  expect((await adapter.semantic.getAll()).find(f => f.content.includes("청동나침반"))?.status).toBe("archived");
+  expect((await adapter.semantic.getAll()).find(f => f.content.includes("청동나침반"))?.status).toBe("active");
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
 
@@ -204,5 +204,57 @@ it.each([["I hired a developer last year.", "Forget developer."], ["나는 2025�
   await memory.encode({role: "user", content: request}, {}); await memory.consolidateNow(true);
   expect((await adapter.semantic.getAll()).find(f => f.id === original.id)?.status).toBe("active");
   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+ } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
+});
+
+it("rejects a relative's target even with identical embeddings", async () => {
+ const dir = await mkdtemp(join(tmpdir(), "delete-relative-target-"));
+ const embeddingProvider = {name: "constant", dims: 2, embeddingSpaceId: "constant", embed: async () => [1, 0], embedBatch: async (texts: string[]) => texts.map(() => [1, 0])};
+ const adapter = new LocalAdapter({storePath: join(dir, "store.json"), embeddingProvider});
+ const memory = new MemorySystem({adapter});
+ try {
+  await memory.init();
+  for (const content of ["I live in Seoul.", "Forget my cousin's Seoul."]) { await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true); }
+  expect((await adapter.semantic.getAll()).find(f => f.content === "I live in Seoul.")?.status).toBe("active");
+  expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+ } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
+});
+
+it.each([false, true])("requires a verifier for a spelling error: verifier=%s", async (verified) => {
+ const dir = await mkdtemp(join(tmpdir(), "delete-typo-"));
+ const embeddingProvider = {name: "constant", dims: 2, embeddingSpaceId: "constant", embed: async () => [1, 0], embedBatch: async (texts: string[]) => texts.map(() => [1, 0])};
+ const adapter = new LocalAdapter({storePath: join(dir, "store.json"), embeddingProvider});
+ const memory = new MemorySystem({adapter, ...(verified ? {
+  deleteVerifier: async (_episode, _fact, candidates) => ({authorized: true as const, targetFactId: candidates[0].id}),
+  factExtractor: async episodes => episodes.map(episode => {
+   const deleting = episode.content.startsWith("Forget");
+   return {content: episode.content, entities: [], topics: [], importance: 0.8, sourceEpisodeIds: [episode.id],
+    structured: {subject: "user", subjectId: "person:self", property: "thing", propertyId: "possession:thing", value: deleting ? "bronze compas" : "bronze compass", polarity: "affirmed" as const, cardinality: "single" as const},
+    operation: deleting ? "delete" as const : "upsert" as const,
+    ...(deleting ? {deleteEvidence: {kind: "explicit_removal_request" as const, evidenceQuote: episode.content, targetQuote: "bronze compas"}} : {})};
+  }),
+ } : {})});
+ try {
+  await memory.init();
+  for (const content of ["My thing is a bronze compass.", "Forget bronze compas."]) { await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true); }
+  expect((await adapter.semantic.getAll()).find(f => f.content === "My thing is a bronze compass.")?.status).toBe(verified ? "archived" : "active");
+  expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(verified ? 1 : 0);
+ } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
+});
+
+
+it.each([
+ ["내 물건은 청동나침반이야.", "청동 나침반을 잊어줘"],
+ ["My thing is a bronze-compass.", "Forget bronze compass."],
+ ["I live in Seoul.", "Forget the Seoul."],
+ ["나는 서울에 살아.", "서울을 잊어줘"],
+])("deletes normalized values: %s", async (fact, request) => {
+ const dir = await mkdtemp(join(tmpdir(), "delete-normalized-"));
+ const adapter = new LocalAdapter(join(dir, "store.json"));
+ const memory = new MemorySystem({adapter});
+ try {
+  await memory.init();
+  for (const content of [fact, request]) { await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true); }
+  expect((await adapter.semantic.getAll()).find(f => f.content === fact)?.status).toBe("archived");
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });

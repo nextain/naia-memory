@@ -3,9 +3,9 @@ export function normalizeDeletionText(text: string): string {
  return text.toLocaleLowerCase().normalize("NFKC").replace(/[\s\p{P}\p{S}]+/gu, "");
 }
 export function normalizeDeletionTarget(text: string): string {
- return normalizeDeletionText(text).replace(/(?:을|를|은|는)$/, "");
+ return normalizeDeletionText(text).replace(/(?:을|를|이|가|은|는)$/, "");
 }
-const VAGUE_TARGETS = new Set(["it", "that", "this", "these", "those", "them", "everything", "all", "something", "anything", "stuff", "thing", "그거", "그것", "이거", "이것", "저거", "저것", "그", "이", "저", "다", "전부", "모두", "뭐", "무언가", "그런 거", "그 얘기", "아까 거"].map(normalizeDeletionText));
+const VAGUE_TARGETS = new Set(["it", "that", "this", "these", "those", "them", "everything", "all", "something", "anything", "stuff", "thing", "그거", "그것", "이거", "이것", "저거", "저것", "그", "이", "저", "다", "전부", "모두", "뭐", "무언가", "그런 거", "그 얘기", "아까 거"].map(normalizeDeletionTarget));
 function concreteTarget(text: string): string | null {
  let value = text.trim();
  let normalized = normalizeDeletionTarget(value);
@@ -47,17 +47,6 @@ export function isTombstoned(text: string, tombstones: readonly string[] = []): 
  });
 }
 
-/** Character overlap of the request and the candidate's value, independent of embeddings. */
-export function deletionValueOverlap(target: string, value: string): number {
- const grams = (text: string) => {
-  const chars = [...normalizeDeletionText(text)];
-  return new Set(chars.slice(1).map((c, i) => chars[i] + c));
- };
- const a = grams(target), b = grams(value);
- if (!a.size || !b.size) return 0;
- const intersection = [...a].filter(g => b.has(g)).length;
- return intersection / (a.size + b.size - intersection);
-}
 /** Conservative shared subject check for deletion and tombstone release. */
 const OTHER_RELATION = /(?:사촌|삼촌|외삼촌|이모|이모부|고모|고모부|숙모|조카|친척|형제|자매|형|오빠|누나|언니|동생|남동생|여동생|아버지|아빠|어머니|엄마|부모|할아버지|할머니|아들|딸|자식|아내|남편|와이프|배우자|애인|여자친구|남자친구|친구|동료|이웃|그\s*사람|그녀|그들|\b(?:cousin|uncle|aunt|nephew|niece|relative|brother|sister|sibling|father|dad|mother|mom|parent|grandfather|grandmother|son|daughter|child|wife|husband|spouse|partner|girlfriend|boyfriend|friend|colleague|coworker|co-worker|neighbor|he|she|they|their)\b)/i;
 const OTHER_TITLE = /(?:상사|선배|후배|사장|팀장|\b(?:boss|manager|teacher)\b)/i;
@@ -68,6 +57,14 @@ const USER_POSSESSIONS = {
  ko: ["물건", "집", "주소", "직업", "일", "회사", "직장", "학교", "전공", "취미", "이름", "별명", "생일", "나이", "차", "자동차", "휴대폰", "폰", "노트북", "컴퓨터", "가방", "지갑", "좋아하는 것", "싫어하는 것", "목표", "계획", "일정", "습관", "혈액형", "키", "몸무게"],
  en: ["thing", "stuff", "home", "house", "address", "job", "work", "company", "school", "major", "hobby", "name", "nickname", "birthday", "age", "car", "phone", "laptop", "computer", "bag", "wallet", "favorite", "goal", "plan", "schedule", "habit"],
 } as const;
+/** Inspect the original request before demonstratives or punctuation are removed. */
+export function hasUnsafeDeletionTarget(request: string): boolean {
+ if (OTHER_RELATION.test(request) || /['’]s\b|의/u.test(request)) return true;
+ for (const match of request.matchAll(/\bmy\s+([a-z]+)\b/gi)) {
+  if (!(USER_POSSESSIONS.en as readonly string[]).includes(match[1].toLowerCase())) return true;
+ }
+ return false;
+}
 function hasAllowedSubject(text: string): boolean {
  const input = text.trim();
  const userTitleStatement = USER_TITLE_STATEMENT.test(input);

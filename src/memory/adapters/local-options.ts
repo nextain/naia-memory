@@ -9,9 +9,9 @@ export interface LocalAdapterOptions {
 	vectorCandidateLimit?: number;
 	/** Filters low-similarity vector matches; default 0.7. */
 	similarityThreshold?: number;
-	/** Minimum cosine for a unique semantic deletion candidate (default 0.85). */
+	/** Legacy option, validated for compatibility; unused by default deletion. */
 	deleteSimilarityThreshold?: number;
-	/** Minimum character bigram Jaccard for semantic deletion (default 0.3). */
+	/** Legacy option, validated for compatibility; unused by default deletion. */
 	deleteOverlapThreshold?: number;
 	/** Skip lookup-side knowledge-graph spreading for A/B measurement. */
 	disableKGSpreading?: boolean;

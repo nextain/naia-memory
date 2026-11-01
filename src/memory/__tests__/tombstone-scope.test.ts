@@ -260,11 +260,11 @@ it.each([["I am a teacher.", "Forget my teacher."], ["나는 팀장이야.", "�
  } finally { await close(); }
 });
 
-it("releases semantic deletion only for the same project and value attribute", async () => {
+it("releases normalized deletion only for the same project and value attribute", async () => {
  const {adapter, say, close} = await setup(true);
  try {
   await say("내 물건은 청동나침반이야.", "A");
-  await say("청동나침바를 잊어줘", "A");
+  await say("청동 나침반을 잊어줘", "A");
   expect(adapter.getStore().scopedTombstones).toHaveLength(1);
   expect(adapter.getStore().scopedTombstones?.[0].deletedFacts?.[0].value).toContain("청동나침반");
   await say("내 물건은 청동나침반이야.", "B");
