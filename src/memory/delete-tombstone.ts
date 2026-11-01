@@ -63,6 +63,13 @@ const USER_POSSESSIONS = {
 } as const;
 export function isUserSubject(text: string): boolean {
  const input = text.trim();
+ if (mentionsOtherPerson(input)) return false;
+ for (const match of input.matchAll(/\bmy\s+([a-z]+)\b/gi)) {
+  if (!(USER_POSSESSIONS.en as readonly string[]).includes(match[1].toLowerCase())) return false;
+ }
+ for (const match of input.matchAll(/(?:^|\s)(?:내|제|나의|저의)\s+([가-힣]+)/gu)) {
+  if (!(USER_POSSESSIONS.ko as readonly string[]).some(word => match[1] === word || new RegExp(`^${word}(?:은|는|이|가|을|를|의|에|도|만)$`, "u").test(match[1]))) return false;
+ }
  if (/^(?:나는|난|내가|저는|전|제가)(?:\s|$)|^I(?:\b|['’]m\b)/i.test(input)) return true;
  const ko = input.match(/^(?:내|제|나의|저의)\s+(.+?)(?:은|는|이|가)(?:\s|$)/u);
  if (ko) return (USER_POSSESSIONS.ko as readonly string[]).includes(ko[1]);

@@ -209,7 +209,7 @@ it("fails closed for unlisted possessors and nested ownership", async () => {
    expect(adapter.getStore().scopedTombstones).toHaveLength(1);
   } finally { await close(); }
  }
- for (const fact of ["I live in Seoul", "my job is a teacher", "난 서울에 살아", "전 서울에 살아"]) expect(isUserSubject(fact)).toBe(true);
+ for (const fact of ["I live in Seoul", "my job is a developer", "난 서울에 살아", "전 서울에 살아"]) expect(isUserSubject(fact)).toBe(true);
 });
 
 it("releases semantic deletion only for the same project and value attribute", async () => {
@@ -260,4 +260,26 @@ it("loads version one tombstones without deleted facts", async () => {
   await memory.encode({role: "user", content: "내 물건은 청동나침반이야."}, {}); await memory.consolidateNow(true);
   expect(adapter.getStore().scopedTombstones).toHaveLength(0);
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
+});
+
+it("excludes other people anywhere in a first-person fact from deletion and release", async () => {
+ for (const [fact, request, place] of [
+  ["I know my cousin lives in Seoul.", "Forget Seoul.", "Seoul"],
+  ["나는 내 사촌이 서울에 사는 걸 알아.", "서울을 잊어", "서울"],
+ ] as const) {
+  const {adapter, say, close} = await setup();
+  try {
+   await say(fact); await say(request);
+   expect((await adapter.semantic.getAll()).find(f => f.content === fact)?.status).toBe("active");
+   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+   expect(JSON.stringify(await adapter.semantic.search(place, 100, true))).toContain(fact);
+  } finally { await close(); }
+ }
+ const {adapter, say, close} = await setup();
+ try {
+  await say("내 물건은 청동나침반이야."); await say("청동나침반을 잊어");
+  await say("I know my cousin's thing is a bronze compass.");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+  expect(isUserSubject("I know my roommate lives in Seoul.")).toBe(false);
+ } finally { await close(); }
 });
