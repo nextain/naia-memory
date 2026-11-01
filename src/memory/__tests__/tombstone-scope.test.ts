@@ -189,3 +189,25 @@ it("rejects cousin subjects and accepts explicit user subjects", () => {
  expect(isUserSubject("나는 서울에 살아.")).toBe(true);
  expect(isUserSubject("서울에 살아.")).toBe(false);
 });
+
+it("fails closed for unlisted possessors and nested ownership", async () => {
+ for (const fact of ["My ex lives in Seoul.", "내 룸메이트는 서울에 살아."]) {
+  const {adapter, say, close} = await setup();
+  try {
+   await say(fact); await say(fact.startsWith("My") ? "Forget Seoul." : "서울을 잊어줘");
+   expect((await adapter.semantic.getAll()).find(f => f.content === fact)?.status).toBe("active");
+   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+  } finally { await close(); }
+ }
+ for (const fact of ["my ex's thing is a bronze compass", "내 룸메이트 물건은 청동나침반이야."]) {
+  const {adapter, say, close} = await setup();
+  try {
+   const english = fact.startsWith("my");
+   await say(english ? "my thing is a bronze compass" : "내 물건은 청동나침반이야.");
+   await say(english ? "Forget bronze compass" : "청동나침반을 잊어줘");
+   await say(fact);
+   expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+  } finally { await close(); }
+ }
+ for (const fact of ["I live in Seoul", "my job is a teacher", "난 서울에 살아", "전 서울에 살아"]) expect(isUserSubject(fact)).toBe(true);
+});

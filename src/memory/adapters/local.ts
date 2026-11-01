@@ -1,4 +1,4 @@
-import { isTombstoned, isUserSubject, normalizeDeletionTarget } from "../delete-tombstone.js";
+import { isTombstoned, isUserSubject, mentionsOtherPerson, normalizeDeletionTarget } from "../delete-tombstone.js";
 import { cosineSimilarity } from "./local-search.js";
 import { calculateStrength } from "../decay.js";
 import { readFileSync } from "node:fs";
@@ -476,7 +476,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		},
 		match: async (target: string, facts: Fact[], request = "", attribute?: import("../types.js").FactAttribute) => {
 			// The request need not name the user, but must not name another person.
-			if (!isUserSubject(`I ${request}`)) return [];
+			if (mentionsOtherPerson(request)) return [];
 			const active = facts.filter(f => f.status === "active");
 			const matches = active.filter(f => isUserSubject(f.content) && isTombstoned(f.content, [normalizeDeletionTarget(target)]));
 			if (matches.length > 1) { console.warn("[naia-memory] ambiguous delete ignored"); return []; }
