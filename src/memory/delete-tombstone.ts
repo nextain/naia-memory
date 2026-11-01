@@ -37,6 +37,23 @@ export function isTombstoned(text: string, tombstones: readonly string[] = []): 
  });
 }
 
+/** Character overlap of the request and the candidate's value, independent of embeddings. */
+export function deletionValueOverlap(target: string, value: string): number {
+ const grams = (text: string) => {
+  const chars = [...normalizeDeletionText(text)];
+  return new Set(chars.slice(1).map((c, i) => chars[i] + c));
+ };
+ const a = grams(target), b = grams(value);
+ if (!a.size || !b.size) return 0;
+ const intersection = [...a].filter(g => b.has(g)).length;
+ return intersection / (a.size + b.size - intersection);
+}
+export function deletionFactValue(content: string): string {
+ return content.match(/^(?:내|제|나의|저의)\s+.+?(?:은|는|이|가)\s*(.+)$/u)?.[1]
+  ?? content.match(/^my\s+.+?\s+(?:is|are|was|were)\s+(.+)$/i)?.[1]
+  ?? content;
+}
+
 /** Conservative shared subject check for deletion and tombstone release. */
 const OTHER_PERSON = /(?:사촌|삼촌|외삼촌|이모|이모부|고모|고모부|숙모|조카|친척|형제|자매|형|오빠|누나|언니|동생|남동생|여동생|아버지|아빠|어머니|엄마|부모|할아버지|할머니|아들|딸|자식|아내|남편|와이프|배우자|애인|여자친구|남자친구|친구|동료|상사|선배|후배|이웃|사장|팀장|그\s*사람|그녀|그들|\b(?:cousin|uncle|aunt|nephew|niece|relative|brother|sister|sibling|father|dad|mother|mom|parent|grandfather|grandmother|son|daughter|child|wife|husband|spouse|partner|girlfriend|boyfriend|friend|colleague|coworker|co-worker|boss|manager|neighbor|teacher|he|she|they|their)\b)/i;
 export function mentionsOtherPerson(text: string): boolean { return OTHER_PERSON.test(text); }

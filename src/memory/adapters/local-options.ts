@@ -11,6 +11,8 @@ export interface LocalAdapterOptions {
 	similarityThreshold?: number;
 	/** Minimum cosine for a unique semantic deletion candidate (default 0.85). */
 	deleteSimilarityThreshold?: number;
+	/** Minimum character bigram Jaccard for semantic deletion (default 0.3). */
+	deleteOverlapThreshold?: number;
 	/** Skip lookup-side knowledge-graph spreading for A/B measurement. */
 	disableKGSpreading?: boolean;
 	/** Optional caller-injected multilingual cross-encoder reranker. */

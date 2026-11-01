@@ -64,7 +64,7 @@ it("persists tombstones, preserves other subjects, and exposes removal", async (
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
 
-it("deletes a unique semantic candidate", async () => {
+it("rejects a unique unrelated semantic candidate", async () => {
  const dir = await mkdtemp(join(tmpdir(), "delete-vector-"));
  const vector = (s: string) => s.includes("금빛별") || s.includes("가상의대상") ? [1, 0] : [0, 1];
  const embedder = { name: "test", dims: 2, embeddingSpaceId: "test-v1", embed: async (s: string) => vector(s), embedBatch: async (texts: string[]) => texts.map(vector) };
@@ -76,10 +76,9 @@ it("deletes a unique semantic candidate", async () => {
   await memory.encode({role: "user", content: "내 물건은 파란달이야."}, {}); await memory.consolidateNow(true);
   await memory.encode({role: "user", content: "가상의대상을 지워줘"}, {}); await memory.consolidateNow(true);
   const facts = await adapter.semantic.getAll();
-  expect(facts.find(f => f.content.includes("금빛별"))?.status).toBe("archived");
+  expect(facts.find(f => f.content.includes("금빛별"))?.status).toBe("active");
   expect(facts.find(f => f.content.includes("파란달"))?.status).toBe("active");
-  expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(1);
-  expect(JSON.stringify(await memory.recall("금빛별", {deepRecall: true, topK: 100}))).not.toContain("금빛별");
+  expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
 
@@ -158,3 +157,15 @@ for (const scenario of ["ambiguous", "project", "relative", "below", "literal", 
   } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
  });
 }
+
+ it("deletes a unique semantic candidate with overlapping value spelling", async () => {
+ const dir = await mkdtemp(join(tmpdir(), "delete-overlap-"));
+ const embedder = {name: "test", dims: 2, embeddingSpaceId: "overlap", embed: async () => [1, 0], embedBatch: async (texts: string[]) => texts.map(() => [0.9, Math.sqrt(1 - 0.9 ** 2)])};
+ const adapter = new LocalAdapter({storePath: join(dir, "store.json"), embeddingProvider: embedder});
+ const memory = new MemorySystem({adapter});
+ try {
+  await memory.init();
+  for (const content of ["내 물건은 청동나침반이야.", "청동나침바를 지워줘"]) { await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true); }
+  expect((await adapter.semantic.getAll()).find(f => f.content.includes("청동나침반"))?.status).toBe("archived");
+ } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
+});

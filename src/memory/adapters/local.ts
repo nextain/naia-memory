@@ -1,4 +1,4 @@
-import { isTombstoned, isUserSubject, mentionsOtherPerson, normalizeDeletionTarget } from "../delete-tombstone.js";
+import { deletionFactValue, deletionValueOverlap, isTombstoned, isUserSubject, mentionsOtherPerson, normalizeDeletionTarget } from "../delete-tombstone.js";
 import { cosineSimilarity } from "./local-search.js";
 import { calculateStrength } from "../decay.js";
 import { readFileSync } from "node:fs";
@@ -52,6 +52,7 @@ export class EmbeddingSpaceMismatchError extends Error {
 }
 
 const DEFAULT_DELETE_SIMILARITY_THRESHOLD = 0.85;
+const DEFAULT_DELETE_OVERLAP_THRESHOLD = 0.3;
 
 export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private store: MemoryStore;
@@ -63,6 +64,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private readonly embedder: EmbeddingProvider | null;
 	private readonly vectorCandidateLimit: number;
 	private readonly deleteSimilarityThreshold: number;
+	private readonly deleteOverlapThreshold: number;
 	private readonly disableKGSpreading: boolean;
 	private readonly reranker: import("../reranker.js").RerankerProvider | null;
 	private readonly onPersistenceError: ((error: unknown) => void) | null;
@@ -79,6 +81,8 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		this.vectorCandidateLimit = vectorCandidateLimit;
 		this.deleteSimilarityThreshold = typeof options === "object" ? options.deleteSimilarityThreshold ?? DEFAULT_DELETE_SIMILARITY_THRESHOLD : DEFAULT_DELETE_SIMILARITY_THRESHOLD;
 		if (!Number.isFinite(this.deleteSimilarityThreshold) || this.deleteSimilarityThreshold < 0 || this.deleteSimilarityThreshold > 1) throw new RangeError("deleteSimilarityThreshold must be between 0 and 1");
+		this.deleteOverlapThreshold = typeof options === "object" ? options.deleteOverlapThreshold ?? DEFAULT_DELETE_OVERLAP_THRESHOLD : DEFAULT_DELETE_OVERLAP_THRESHOLD;
+		if (!Number.isFinite(this.deleteOverlapThreshold) || this.deleteOverlapThreshold < 0 || this.deleteOverlapThreshold > 1) throw new RangeError("deleteOverlapThreshold must be between 0 and 1");
 		const storePath =
 			typeof options === "string" ? options : options?.storePath;
 		this.embedder =
@@ -488,7 +492,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 				const vectors = await Promise.all(eligible.map(f => this.embedDocumentWithCache(f.content)));
 				if (vectors.some(v => !v?.length)) return [];
 				const semantic = eligible.filter((_f, i) => cosineSimilarity(query, vectors[i]!) >= this.deleteSimilarityThreshold);
-				return semantic.length === 1 ? semantic : [];
+				return semantic.length === 1 && deletionValueOverlap(target, semantic[0].structured?.value ?? deletionFactValue(semantic[0].content)) >= this.deleteOverlapThreshold ? semantic : [];
 			} catch { return []; }
 		},
 	};
