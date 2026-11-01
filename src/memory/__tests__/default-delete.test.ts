@@ -169,3 +169,17 @@ for (const scenario of ["ambiguous", "project", "relative", "below", "literal", 
   expect((await adapter.semantic.getAll()).find(f => f.content.includes("청동나침반"))?.status).toBe("archived");
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });
+
+it("recognizes bare Korean imperatives without accepting questions or negation", async () => {
+ const {deletionTarget} = await import("../delete-tombstone.js");
+ for (const command of ["청동나침반을 잊어", "청동나침반을 잊어버려~", "청동나침반을 지워!", "청동나침반을 삭제해."]) expect(deletionTarget(command), command).toBe("청동나침반");
+ for (const text of ["청동나침반을 잊어?", "청동나침반을 잊어도 돼?", "청동나침반을 잊어버렸어", "청동나침반을 잊어서", "청동나침반을 잊어야 하나", "청동나침반 잊지 마", "청동나침반 안 잊어", '"잊어"라고 했어']) expect(deletionTarget(text), text).toBeNull();
+ const dir = await mkdtemp(join(tmpdir(), "delete-bare-"));
+ const adapter = new LocalAdapter(join(dir, "store.json"));
+ const memory = new MemorySystem({adapter});
+ try {
+  await memory.init();
+  for (const content of ["내 물건은 청동나침반이야.", "청동나침반을 잊어"]) { await memory.encode({role: "user", content}, {}); await memory.consolidateNow(true); }
+  expect((await adapter.semantic.getAll()).find(f => f.content.includes("청동나침반이야"))?.status).toBe("archived");
+ } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
+});
