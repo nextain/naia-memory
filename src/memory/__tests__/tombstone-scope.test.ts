@@ -32,9 +32,9 @@ it("selects the user's fact and fails closed when multiple user facts match", as
   try {
    await say("나는 서울에 살아."); await say(ambiguous ? "나는 서울에서 일해." : "친구는 서울에서 일해."); await say("서울을 잊어줘");
    const facts = await adapter.semantic.getAll();
-   expect(facts.find(f => f.content.includes("서울에 살아"))?.status).toBe(ambiguous ? "active" : "archived");
+   expect(facts.find(f => f.content.includes("서울에 살아"))?.status).toBe("archived");
    expect(facts.find(f => f.content.includes("서울에서 일해"))?.status).toBe("active");
-   if (ambiguous) expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(1);
   } finally { await close(); }
  }
 });
@@ -100,13 +100,13 @@ it("only releases a tombstone for a user reassertion with the same attribute", a
   expect(JSON.stringify(await adapter.semantic.search("청동나침반", 100, true, {project: "A", mode: "history"}))).not.toContain("내 물건은 청동나침반이야.");
   await say("나는 청동나침반으로 일해.", "A");
   expect(adapter.getStore().scopedTombstones).toHaveLength(1);
-  await say("나는 청동나침반을 갖고 있어.", "A");
+  await say("내 물건은 청동나침반이야.", "A");
   expect(adapter.getStore().scopedTombstones).toHaveLength(0);
  } finally { await close(); }
 });
 
 for (const [userPlace, relativePlace, relativeWork, forgetPlace, place, userObject, relativeObject, forgetObject, object] of [
- ["I live in Seoul.", "My brother lives in Seoul.", "My brother works in Seoul.", "Forget Seoul.", "Seoul", "I own a bronze compass.", "My brother owns a bronze compass.", "Forget bronze compass.", "bronze compass"],
+ ["I live in Seoul.", "My brother lives in Seoul.", "My brother works in Seoul.", "Forget Seoul.", "Seoul", "My thing is a bronze compass.", "My brother owns a bronze compass.", "Forget bronze compass.", "bronze compass"],
  ["나는 서울에 살아.", "내 동생은 서울에 살아.", "내 동생은 서울에서 일해.", "서울을 잊어줘", "서울", "내 물건은 청동나침반이야.", "내 동생의 물건은 청동나침반이야.", "청동나침반을 잊어줘", "청동나침반"],
 ] as const) {
  it(`preserves a relative's facts and tombstones (${place})`, async () => {

@@ -143,15 +143,15 @@ for (const scenario of ["ambiguous", "project", "relative", "below", "literal", 
    await memory.init();
    await say(scenario === "relative" ? "내 사촌은 금빛별에 살아." : "내 물건은 금빛별이야.", scenario === "project" ? "B" : "A");
    if (scenario === "ambiguous") await say("내 물건은 파란달이야.");
-   if (scenario === "literal") await say("내 물건은 가상의대상이야.");
+   if (scenario === "literal") await say("내 물건은 가상대상이야.");
    if (scenario === "attribute") {
     const facts = await adapter.semantic.getAll();
     expect(await adapter.tombstones.match("가상의대상", facts, "잊어줘", "residence")).toHaveLength(0);
    } else {
-    await say("가상의대상을 잊어줘");
+    await say(scenario === "literal" ? "가상대상을 잊어줘" : "가상의대상을 잊어줘");
     const facts = await adapter.semantic.getAll();
     expect(facts.find(f => f.content.includes("금빛별"))?.status).toBe("active");
-    if (scenario === "literal") expect(facts.find(f => f.content.includes("가상의대상"))?.status).toBe("archived");
+    if (scenario === "literal") expect(facts.find(f => f.content.includes("가상대상"))?.status).toBe("archived");
     else expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
    }
   } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
@@ -190,4 +190,19 @@ it("rejects standalone vague and short targets", async () => {
  for (const word of ["그거", "그것", "이거", "이것", "저거", "저것", "그", "이", "저", "다", "전부", "모두", "뭐", "무언가", "그런 거", "그 얘기", "아까 거", "집"]) expect(deletionTarget(`${word} 잊어`)).toBeNull();
  expect(deletionTarget("Forget that bronze compass.")).toBe("bronze compass");
  expect(deletionTarget("그 청동나침반 잊어")).toBe("청동나침반");
+});
+
+it.each([["I hired a developer last year.", "Forget developer."], ["나는 2025년에 서울을 방문했어.", "서울을 잊어줘"]])("does not delete incidental mentions: %s", async (fact, request) => {
+ const dir = await mkdtemp(join(tmpdir(), "delete-incidental-"));
+ const adapter = new LocalAdapter(join(dir, "store.json"));
+ const memory = new MemorySystem({adapter});
+ try {
+  await memory.init();
+  await memory.encode({role: "user", content: fact}, {}); await memory.consolidateNow(true);
+  const original = (await adapter.semantic.getAll()).find(f => f.content === fact)!;
+  expect(original).toBeDefined();
+  await memory.encode({role: "user", content: request}, {}); await memory.consolidateNow(true);
+  expect((await adapter.semantic.getAll()).find(f => f.id === original.id)?.status).toBe("active");
+  expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+ } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 });

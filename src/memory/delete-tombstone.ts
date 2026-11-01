@@ -58,12 +58,6 @@ export function deletionValueOverlap(target: string, value: string): number {
  const intersection = [...a].filter(g => b.has(g)).length;
  return intersection / (a.size + b.size - intersection);
 }
-export function deletionFactValue(content: string): string {
- return content.match(/^(?:내|제|나의|저의)\s+.+?(?:은|는|이|가)\s*(.+)$/u)?.[1]
-  ?? content.match(/^my\s+.+?\s+(?:is|are|was|were)\s+(.+)$/i)?.[1]
-  ?? content;
-}
-
 /** Conservative shared subject check for deletion and tombstone release. */
 const OTHER_RELATION = /(?:사촌|삼촌|외삼촌|이모|이모부|고모|고모부|숙모|조카|친척|형제|자매|형|오빠|누나|언니|동생|남동생|여동생|아버지|아빠|어머니|엄마|부모|할아버지|할머니|아들|딸|자식|아내|남편|와이프|배우자|애인|여자친구|남자친구|친구|동료|이웃|그\s*사람|그녀|그들|\b(?:cousin|uncle|aunt|nephew|niece|relative|brother|sister|sibling|father|dad|mother|mom|parent|grandfather|grandmother|son|daughter|child|wife|husband|spouse|partner|girlfriend|boyfriend|friend|colleague|coworker|co-worker|neighbor|he|she|they|their)\b)/i;
 const OTHER_TITLE = /(?:상사|선배|후배|사장|팀장|\b(?:boss|manager|teacher)\b)/i;
@@ -74,7 +68,7 @@ const USER_POSSESSIONS = {
  ko: ["물건", "집", "주소", "직업", "일", "회사", "직장", "학교", "전공", "취미", "이름", "별명", "생일", "나이", "차", "자동차", "휴대폰", "폰", "노트북", "컴퓨터", "가방", "지갑", "좋아하는 것", "싫어하는 것", "목표", "계획", "일정", "습관", "혈액형", "키", "몸무게"],
  en: ["thing", "stuff", "home", "house", "address", "job", "work", "company", "school", "major", "hobby", "name", "nickname", "birthday", "age", "car", "phone", "laptop", "computer", "bag", "wallet", "favorite", "goal", "plan", "schedule", "habit"],
 } as const;
-export function isUserSubject(text: string): boolean {
+function hasAllowedSubject(text: string): boolean {
  const input = text.trim();
  const userTitleStatement = USER_TITLE_STATEMENT.test(input);
  if (OTHER_RELATION.test(input) || (OTHER_TITLE.test(input) && !userTitleStatement)) return false;
@@ -91,6 +85,29 @@ export function isUserSubject(text: string): boolean {
  const en = input.match(/^my\s+([a-z]+)\s+(?:is|are|was|were|has|have|does|can|will)\b/i);
  return !!en && (USER_POSSESSIONS.en as readonly string[]).includes(en[1].toLowerCase());
 }
+
+/** Extract only explicitly supported user attribute statements. */
+export function extractUserFactValue(content: string): {key: string; value: string} | null {
+ const input = content.trim();
+ if (!hasAllowedSubject(input)) return null;
+ let key: string | undefined, value: string | undefined;
+ const ko = input.match(/^(?:내|제|나의|저의)\s+(.+?)(?:은|는|이|가)\s*(.+?)(?:이야|야|이에요|예요|입니다|이다|다)?[.!]?$/u);
+ const en = input.match(/^my\s+([a-z]+)\s+(?:is|are|was|were)\s+(.+?)[.!]?$/i);
+ const residenceEn = input.match(/^I live in\s+(.+?)[.!]?$/i);
+ const residenceKo = input.match(/^(?:나는|저는|난|전)\s+(.+?)에\s*(?:살아|살아요|삽니다|산다)[.!]?$/u);
+ const occupationEn = input.match(/^(?:I am|I'm|I work as)\s+(?:(?:a|an|the)\s+)?(.+?)[.!]?$/i);
+ const occupationKo = input.match(/^(?:나는|저는|난|전)\s*(.+?)(?:이야|야|이에요|예요|입니다|이다)[.!]?$/u);
+ if (ko && (USER_POSSESSIONS.ko as readonly string[]).includes(ko[1])) { key = ko[1]; value = ko[2]; }
+ else if (en && (USER_POSSESSIONS.en as readonly string[]).includes(en[1].toLowerCase())) { key = en[1].toLowerCase(); value = en[2].replace(/^(?:a|an|the)\s+/i, ""); }
+ else if (residenceEn || residenceKo) { key = "residence"; value = (residenceEn ?? residenceKo)![1]; }
+ else if (occupationEn || occupationKo) { key = "occupation"; value = (occupationEn ?? occupationKo)![1]; }
+ if (key === "직업" || key === "job" || key === "work") key = "occupation";
+ value = value?.trim();
+ if (!key || !value || OTHER_RELATION.test(value) || /['’]s\b|의/u.test(value)) return null;
+ return {key, value};
+}
+export function isUserSubject(text: string): boolean { return extractUserFactValue(text) !== null; }
+export function deletionFactValue(content: string): string { return extractUserFactValue(content)?.value ?? content; }
 
 export interface DeletedFact { id: string; value: string; attribute: import("./types.js").FactAttribute; identity?: Pick<import("./types.js").StructuredFact, "subject" | "property" | "subjectId" | "propertyId"> }
 export interface ScopedTombstone { target: string; project: string | null; factIds: string[]; episodeIds?: string[]; deletedFacts?: DeletedFact[] }

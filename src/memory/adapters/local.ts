@@ -1,4 +1,4 @@
-import { deletionFactValue, deletionValueOverlap, isTitleDeletionTarget, isTombstoned, isUserSubject, mentionsOtherPerson, normalizeDeletionTarget } from "../delete-tombstone.js";
+import { deletionFactValue, deletionValueOverlap, extractUserFactValue, isTombstoned, isUserSubject, mentionsOtherPerson, normalizeDeletionTarget } from "../delete-tombstone.js";
 import { cosineSimilarity } from "./local-search.js";
 import { calculateStrength } from "../decay.js";
 import { readFileSync } from "node:fs";
@@ -484,19 +484,19 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		},
 		match: async (target: string, facts: Fact[], request = "", attribute?: import("../types.js").FactAttribute) => {
 			// The request need not name the user, but must not name another person.
-			if (mentionsOtherPerson(request) && !(isTitleDeletionTarget(target) && !mentionsOtherPerson(request.replace(target, "")))) return [];
+			if (mentionsOtherPerson(request.replace(target, ""))) return [];
 			const active = facts.filter(f => f.status === "active");
-			const matches = active.filter(f => isUserSubject(f.content) && isTombstoned(f.content, [normalizeDeletionTarget(target)]));
+			const matches = active.filter(f => extractUserFactValue(f.content) !== null && normalizeDeletionTarget(target.replace(/^(?:a|an|the)\s+/i, "")) === normalizeDeletionTarget(extractUserFactValue(f.content)!.value));
 			if (matches.length > 1) { console.warn("[naia-memory] ambiguous delete ignored"); return []; }
 			if (matches.length === 1 || !this.embedder) return matches;
 			try {
 				const query = await this.embedWithCache(target);
 				if (!query?.length) return [];
 				const eligible = active.filter(f => isUserSubject(f.content) && (!attribute || attribute === "general" || f.attribute === attribute));
-				const vectors = await Promise.all(eligible.map(f => this.embedDocumentWithCache(f.content)));
+				const vectors = await Promise.all(eligible.map(f => this.embedDocumentWithCache(extractUserFactValue(f.content)!.value)));
 				if (vectors.some(v => !v?.length)) return [];
 				const semantic = eligible.filter((_f, i) => cosineSimilarity(query, vectors[i]!) >= this.deleteSimilarityThreshold);
-				return semantic.length === 1 && deletionValueOverlap(target, semantic[0].structured?.value ?? deletionFactValue(semantic[0].content)) >= this.deleteOverlapThreshold ? semantic : [];
+				return semantic.length === 1 && deletionValueOverlap(target, extractUserFactValue(semantic[0].content)!.value) >= this.deleteOverlapThreshold ? semantic : [];
 			} catch { return []; }
 		},
 	};
