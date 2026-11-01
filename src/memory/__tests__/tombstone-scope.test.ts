@@ -209,7 +209,55 @@ it("fails closed for unlisted possessors and nested ownership", async () => {
    expect(adapter.getStore().scopedTombstones).toHaveLength(1);
   } finally { await close(); }
  }
- for (const fact of ["I live in Seoul", "my job is a developer", "난 서울에 살아", "전 서울에 살아"]) expect(isUserSubject(fact)).toBe(true);
+ for (const fact of ["I live in Seoul", "my job is a teacher", "난 서울에 살아", "전 서울에 살아"]) expect(isUserSubject(fact)).toBe(true);
+});
+
+it.each([
+ ["I am a teacher.", "Forget teacher."],
+ ["My job is a teacher.", "Forget teacher."],
+ ["나는 팀장이야.", "팀장을 잊어줘"],
+])("archives and releases an explicit first-person occupation: %s", async (fact, request) => {
+ const {adapter, say, close} = await setup();
+ try {
+  expect(isUserSubject(fact)).toBe(true);
+  await say(fact); await say(request);
+  expect((await adapter.semantic.getAll()).find(f => f.content === fact)?.status).toBe("archived");
+  expect(adapter.getStore().scopedTombstones).toHaveLength(1);
+  await say(fact);
+  expect(adapter.getStore().scopedTombstones).toHaveLength(0);
+  expect((await adapter.semantic.getAll()).filter(f => f.content === fact).map(f => f.status)).toContain("active");
+ } finally { await close(); }
+});
+
+it.each([
+ ["My teacher lives in Seoul.", "Forget Seoul."],
+ ["The teacher lives in Seoul.", "Forget Seoul."],
+ ["I met the manager in Seoul.", "Forget Seoul."],
+ ["내 팀장은 서울에 살아.", "서울을 잊어줘"],
+ ["I know my cousin lives in Seoul.", "Forget Seoul."],
+ ["I am a teacher and my cousin lives in Seoul.", "Forget Seoul."],
+])("preserves other-person facts: %s", async (fact, request) => {
+ const {adapter, say, close} = await setup();
+ try {
+  expect(isUserSubject(fact)).toBe(false);
+  await say(fact); await say(request);
+  expect((await adapter.semantic.getAll()).find(f => f.content.includes(fact.includes(" and ") ? "my cousin lives in Seoul" : fact))?.status).toBe("active");
+  expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+ } finally { await close(); }
+});
+
+it("limits occupation exceptions to the specified sentence forms", () => {
+ for (const fact of [" I'm a teacher! ", "I work as the manager", "my work is boss", "저는 팀장님입니다.", "내 직업은 선배예요", "내 직업은팀장이다"]) expect(isUserSubject(fact), fact).toBe(true);
+ for (const fact of ["I am a teacher in Seoul.", "I met the manager", "팀장은 서울에 살아.", "I am a teacher and my cousin lives in Seoul."]) expect(isUserSubject(fact), fact).toBe(false);
+});
+
+it.each([["I am a teacher.", "Forget my teacher."], ["나는 팀장이야.", "내 팀장을 잊어줘"]])("does not treat a possessive title request as the user's occupation", async (fact, request) => {
+ const {adapter, say, close} = await setup();
+ try {
+  await say(fact); await say(request);
+  expect((await adapter.semantic.getAll()).find(f => f.content === fact)?.status).toBe("active");
+  expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
+ } finally { await close(); }
 });
 
 it("releases semantic deletion only for the same project and value attribute", async () => {

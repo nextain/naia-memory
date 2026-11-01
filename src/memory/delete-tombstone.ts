@@ -65,22 +65,27 @@ export function deletionFactValue(content: string): string {
 }
 
 /** Conservative shared subject check for deletion and tombstone release. */
-const OTHER_PERSON = /(?:사촌|삼촌|외삼촌|이모|이모부|고모|고모부|숙모|조카|친척|형제|자매|형|오빠|누나|언니|동생|남동생|여동생|아버지|아빠|어머니|엄마|부모|할아버지|할머니|아들|딸|자식|아내|남편|와이프|배우자|애인|여자친구|남자친구|친구|동료|상사|선배|후배|이웃|사장|팀장|그\s*사람|그녀|그들|\b(?:cousin|uncle|aunt|nephew|niece|relative|brother|sister|sibling|father|dad|mother|mom|parent|grandfather|grandmother|son|daughter|child|wife|husband|spouse|partner|girlfriend|boyfriend|friend|colleague|coworker|co-worker|boss|manager|neighbor|teacher|he|she|they|their)\b)/i;
-export function mentionsOtherPerson(text: string): boolean { return OTHER_PERSON.test(text); }
+const OTHER_RELATION = /(?:사촌|삼촌|외삼촌|이모|이모부|고모|고모부|숙모|조카|친척|형제|자매|형|오빠|누나|언니|동생|남동생|여동생|아버지|아빠|어머니|엄마|부모|할아버지|할머니|아들|딸|자식|아내|남편|와이프|배우자|애인|여자친구|남자친구|친구|동료|이웃|그\s*사람|그녀|그들|\b(?:cousin|uncle|aunt|nephew|niece|relative|brother|sister|sibling|father|dad|mother|mom|parent|grandfather|grandmother|son|daughter|child|wife|husband|spouse|partner|girlfriend|boyfriend|friend|colleague|coworker|co-worker|neighbor|he|she|they|their)\b)/i;
+const OTHER_TITLE = /(?:상사|선배|후배|사장|팀장|\b(?:boss|manager|teacher)\b)/i;
+export function isTitleDeletionTarget(text: string): boolean { return /^(?:상사|선배|후배|사장|팀장|boss|manager|teacher)$/i.test(text.trim()); }
+const USER_TITLE_STATEMENT = /^\s*(?:(?:I am|I'm|I work as|my job is|my work is)\s+(?:a|an|the)?\s*(?:boss|manager|teacher)|(?:나는|난|저는|전|내 직업은|제 직업은)\s*(?:상사|선배|후배|사장|팀장)(?:님)?(?:이야|야|이에요|예요|입니다|이다|다)?)\s*[.!]?\s*$/i;
+export function mentionsOtherPerson(text: string): boolean { return OTHER_RELATION.test(text) || OTHER_TITLE.test(text); }
 const USER_POSSESSIONS = {
  ko: ["물건", "집", "주소", "직업", "일", "회사", "직장", "학교", "전공", "취미", "이름", "별명", "생일", "나이", "차", "자동차", "휴대폰", "폰", "노트북", "컴퓨터", "가방", "지갑", "좋아하는 것", "싫어하는 것", "목표", "계획", "일정", "습관", "혈액형", "키", "몸무게"],
  en: ["thing", "stuff", "home", "house", "address", "job", "work", "company", "school", "major", "hobby", "name", "nickname", "birthday", "age", "car", "phone", "laptop", "computer", "bag", "wallet", "favorite", "goal", "plan", "schedule", "habit"],
 } as const;
 export function isUserSubject(text: string): boolean {
  const input = text.trim();
- if (mentionsOtherPerson(input)) return false;
+ const userTitleStatement = USER_TITLE_STATEMENT.test(input);
+ if (OTHER_RELATION.test(input) || (OTHER_TITLE.test(input) && !userTitleStatement)) return false;
  for (const match of input.matchAll(/\bmy\s+([a-z]+)\b/gi)) {
   if (!(USER_POSSESSIONS.en as readonly string[]).includes(match[1].toLowerCase())) return false;
  }
- for (const match of input.matchAll(/(?:^|\s)(?:내|제|나의|저의)\s+([가-힣]+)/gu)) {
+ const possessiveInput = userTitleStatement ? input.replace(/^((?:내|제) 직업은)(?=\S)/u, "$1 ") : input;
+ for (const match of possessiveInput.matchAll(/(?:^|\s)(?:내|제|나의|저의)\s+([가-힣]+)/gu)) {
   if (!(USER_POSSESSIONS.ko as readonly string[]).some(word => match[1] === word || new RegExp(`^${word}(?:은|는|이|가|을|를|의|에|도|만)$`, "u").test(match[1]))) return false;
  }
- if (/^(?:나는|난|내가|저는|전|제가)(?:\s|$)|^I(?:\b|['’]m\b)/i.test(input)) return true;
+ if (userTitleStatement || /^(?:나는|난|내가|저는|전|제가)(?:\s|$)|^I(?:\b|['’]m\b)/i.test(input)) return true;
  const ko = input.match(/^(?:내|제|나의|저의)\s+(.+?)(?:은|는|이|가)(?:\s|$)/u);
  if (ko) return (USER_POSSESSIONS.ko as readonly string[]).includes(ko[1]);
  const en = input.match(/^my\s+([a-z]+)\s+(?:is|are|was|were|has|have|does|can|will)\b/i);
