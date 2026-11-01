@@ -189,7 +189,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 						const resolution = await resolveDeleteTarget({
 							episode: srcEp,
 							fact: ef,
-							existingFacts,
+							existingFacts: candidates.filter(f => !ef.attribute || !f.attribute || f.attribute === ef.attribute),
 							verifier: this.deleteVerifier,
 						});
 						if (resolution.status === "oversized") {
