@@ -93,6 +93,7 @@ const WORK = /^(?:직장|회사|일터|workplace|company|job)$/i;
 const GROUP = /^(?:모임|동호회|학원|학교|소속|단체|club|group)$/i;
 const UNSUPPORTED_TIME = /^(?:현재|지금|요즘|올해|이번|최근|새|current|present|now|new|latest|recent)$/i;
 const ALLOWED_SUBJECT_MARKERS = new Set(["나는", "저는", "내가", "제가", "예전에는", "전에는", "옛날에는", "그때는", "작년에는", "지난해에는", "요즘은", "지금은"]);
+const ATTRIBUTE_MODIFIERS = new Set(["내", "제", "나의", "저의", "예전", "전", "옛", "옛날", "지금", "현재", "새", "요즘"]);
 function withoutSubjectMarkers(phrase: string): string | null {
  const words = phrase.trim().split(/\s+/u);
  if (words.some(word => !ALLOWED_SUBJECT_MARKERS.has(word) && /^[가-힣]+[은는이가]$/u.test(word))) return null;
@@ -102,11 +103,12 @@ export function hasUnsupportedDeletionTime(target: string): boolean {
  return target.toLowerCase().split(/[^\p{L}\p{N}]+/u).some(word => UNSUPPORTED_TIME.test(word));
 }
 function attributeKey(phrase: string): AttributeKey | null {
- const words = phrase.toLowerCase().trim().replace(/^(?:내|나의|제|저의|my|the)\s+/i, "").split(/\s+/u).filter(Boolean);
+ const words = phrase.toLowerCase().trim().split(/\s+/u).filter(Boolean);
  const head = words.pop();
- if (!head || !HEADS.test(head)) return null;
- const past = words.some(w => PAST.test(w));
- return {head, past, modifiers: [...new Set(words.filter(w => !PAST.test(w)))].sort()};
+ if (!head || !HEADS.test(head) || words.some(w => !ATTRIBUTE_MODIFIERS.has(w))) return null;
+ const modifiers = words.filter(w => !["내", "제", "나의", "저의"].includes(w));
+ const past = modifiers.some(w => PAST.test(w));
+ return {head, past, modifiers: [...new Set(modifiers.filter(w => !PAST.test(w)))].sort()};
 }
 function serializeAttribute(key: AttributeKey): string {
  if (!key.past && !key.modifiers.length && ["주소", "이름", "별명", "address", "name", "nickname"].includes(key.head)) return key.head;
@@ -167,7 +169,8 @@ export function extractUserFactValue(content: string): {key: string; value: stri
   if (verb) {
    const value = workEn ? verb[2].trim() : withoutSubjectMarkers(verb[2]);
    if (!value || OTHER_RELATION.test(value) || /['’]s\b|의/u.test(value)) return null;
-   return {key: `${groupKo ? "membership" : "workplace"}:${verb[1] || /(?:일했(?:어|다|었어|어요|습니다)|다녔(?:어|었어|어요|습니다)|다녔다)[.!]?$/u.test(input) || (workEn && /\bworked\b/i.test(input)) ? "past" : "current"}`, value};
+   const explicitSubject = !!workEn || /^(?:나는|저는|내가|제가)(?:\s|$)/u.test(input);
+   return {key: `${explicitSubject ? "" : "value:"}${groupKo ? "membership" : "workplace"}:${verb[1] || /(?:일했(?:어|다|었어|어요|습니다)|다녔(?:어|었어|어요|습니다)|다녔다)[.!]?$/u.test(input) || (workEn && /\bworked\b/i.test(input)) ? "past" : "current"}`, value};
   }
  }
  if (!hasAllowedSubject(input)) return null;
