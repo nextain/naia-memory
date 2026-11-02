@@ -1,4 +1,5 @@
 /** Public package entry for Naia Memory. */
+export type { FactAttribute } from "./types.js";
 export { MemorySystem } from "./memory-system.js";
 export * from "./memory-system-api.js";
 export { buildLLMDeleteVerifier } from "./llm-delete-verifier.js";

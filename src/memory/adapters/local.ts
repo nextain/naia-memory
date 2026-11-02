@@ -1,3 +1,5 @@
+import { deletionFactValue, extractUserFactValue, hasUnsafeDeletionTarget, hasUnsupportedDeletionTime, hasUnsupportedGroupModifier, isTombstoned, mentionsOtherPerson, matchesNamedDeletionTarget, splitDeletionTargets, normalizeDeletionTarget } from "../delete-tombstone.js";
+import { calculateStrength } from "../decay.js";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -10,6 +12,7 @@ import { KnowledgeGraph, emptyKGState } from "../knowledge-graph.js";
 import type {
 	BackupCapable,
 	ConsolidationResult,
+	Fact,
 	MemoryAdapter,
 } from "../types.js";
 import {
@@ -55,6 +58,7 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private readonly SAVE_DEBOUNCE_MS = 2000;
 	private kg: KnowledgeGraph;
 	private readonly embedder: EmbeddingProvider | null;
+	private readonly vectorCandidateLimit: number;
 	private readonly disableKGSpreading: boolean;
 	private readonly reranker: import("../reranker.js").RerankerProvider | null;
 	private readonly onPersistenceError: ((error: unknown) => void) | null;
@@ -66,6 +70,12 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 	private spaceReady: Promise<void> | null = null;
 
 	constructor(options?: string | LocalAdapterOptions) {
+		const vectorCandidateLimit = typeof options === "object" ? options.vectorCandidateLimit ?? 50 : 50;
+		if (!Number.isInteger(vectorCandidateLimit) || vectorCandidateLimit < 1) throw new RangeError("vectorCandidateLimit must be a positive integer");
+		this.vectorCandidateLimit = vectorCandidateLimit;
+		for (const [name, value] of Object.entries(typeof options === "object" ? {deleteSimilarityThreshold: options.deleteSimilarityThreshold, deleteOverlapThreshold: options.deleteOverlapThreshold} : {})) {
+			if (value !== undefined && (!Number.isFinite(value) || value < 0 || value > 1)) throw new RangeError(`${name} must be between 0 and 1`);
+		}
 		const storePath =
 			typeof options === "string" ? options : options?.storePath;
 		this.embedder =
@@ -250,9 +260,13 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			get factEmbeddings() {
 				return adapter.store.factEmbeddings;
 			},
+			get tombstones() { return adapter.store.tombstones; },
+			get scopedTombstones() { return adapter.store.scopedTombstones; },
+			get tombstoneFactIds() { return adapter.store.tombstoneFactIds; },
 			get embedder() {
 				return adapter.embedder;
 			},
+			get vectorCandidateLimit() { return adapter.vectorCandidateLimit; },
 			get disableKGSpreading() {
 				return adapter.disableKGSpreading;
 			},
@@ -408,6 +422,28 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		return getLocalEpochs(this.store);
 	}
 
+	async markUsed(ids: import("../types.js").MemoryUse): Promise<void> {
+		const episodes = new Set(ids.episodeIds ?? []);
+		const facts = new Set(ids.factIds ?? []);
+		const now = Date.now();
+		let changed = false;
+		for (const episode of this.store.episodes) {
+			if (!episodes.has(episode.id)) continue;
+			episode.recallCount++;
+			episode.lastAccessed = now;
+			episode.strength = calculateStrength(episode.importance.utility, episode.timestamp, episode.recallCount, now, now);
+			changed = true;
+		}
+		for (const fact of this.store.facts) {
+			if (!facts.has(fact.id)) continue;
+			fact.recallCount++;
+			fact.lastAccessed = now;
+			fact.strength = calculateStrength(fact.importance, fact.createdAt, fact.recallCount, now, now);
+			changed = true;
+		}
+		if (changed) { this.markDirty(); this.save(); }
+	}
+
 	episode = createLocalEpisodeMemory({
 		getStore: () => this.store,
 		embedQuery: (text) => this.embedWithCache(text),
@@ -415,6 +451,54 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		markDirty: () => this.markDirty(),
 		save: () => this.save(),
 	});
+
+	tombstones = {
+		add: async (target: string, factIds: string[] = [], project?: string, episodeIds: string[] = []) => {
+			const value = normalizeDeletionTarget(target);
+			if (!value) return;
+			this.store.scopedTombstones ??= [];
+			const deletedFacts = this.store.facts.filter(f => factIds.includes(f.id)).map(f => ({id: f.id, value: extractUserFactValue(f.content)?.value ?? f.structured?.value ?? deletionFactValue(f.content), ...(extractUserFactValue(f.content) ? {key: extractUserFactValue(f.content)!.key} : {}), attribute: f.attribute ?? "general" as const, ...(f.structured ? {identity: {subject: f.structured.subject, property: f.structured.property, subjectId: f.structured.subjectId, propertyId: f.structured.propertyId}} : {})}));
+			const attributeTarget = splitDeletionTargets(target).some(part => {
+				const normalized = normalizeDeletionTarget(part.replace(/^(?:a|an|the)\s+/i, ""));
+				return !deletedFacts.some(f => normalizeDeletionTarget(f.value.replace(/^(?:a|an|the)\s+/i, "")) === normalized) && deletedFacts.some(f => f.key && matchesNamedDeletionTarget(part, f.key));
+			});
+			const existing = this.store.scopedTombstones.find(t => t.target === value && t.project === (project ?? null) && !!t.attributeTarget === attributeTarget &&
+				!!t.deletedFacts.length && t.factIds.every(id => t.deletedFacts.some(f => f.id === id)));
+			if (existing) {
+				existing.deletedFacts = [...existing.deletedFacts.filter(f => !factIds.includes(f.id)), ...deletedFacts];
+				existing.factIds = [...new Set([...existing.factIds, ...factIds])];
+				existing.episodeIds = [...new Set([...existing.episodeIds, ...episodeIds])];
+			} else this.store.scopedTombstones.push({target: value, project: project ?? null, factIds: [...new Set(factIds)], episodeIds: [...new Set(episodeIds)], deletedFacts, ...(attributeTarget ? {attributeTarget: true} : {})});
+			this.markDirty(); this.save();
+		},
+		remove: async (target: string, options?: {project: string}) => {
+			const value = normalizeDeletionTarget(target);
+			if (!options) {
+				this.store.tombstones = (this.store.tombstones ?? []).filter(t => t !== value);
+				if (this.store.tombstoneFactIds) delete this.store.tombstoneFactIds[value];
+			}
+			this.store.scopedTombstones = (this.store.scopedTombstones ?? []).filter(t => t.target !== value || (options !== undefined && t.project !== options.project));
+			this.markDirty(); this.save();
+		},
+		match: async (target: string, facts: Fact[], request = "", _attribute?: import("../types.js").FactAttribute) => {
+			if (hasUnsafeDeletionTarget(request) || mentionsOtherPerson(request.replace(target, ""))) return [];
+			const selected: Fact[] = [];
+			for (const part of splitDeletionTargets(target)) {
+				if (hasUnsupportedDeletionTime(part)) { console.warn("[naia-memory] unsupported delete time ignored"); continue; }
+				if (hasUnsupportedGroupModifier(part)) { console.warn("[naia-memory] unsupported delete modifier ignored"); continue; }
+				const active = facts.filter(f => f.status === "active" && extractUserFactValue(f.content) !== null);
+				const matches = active.filter(f => normalizeDeletionTarget(part.replace(/^(?:a|an|the)\s+/i, "")) === normalizeDeletionTarget(extractUserFactValue(f.content)!.value.replace(/^(?:a|an|the)\s+/i, "")));
+				if (matches.length > 1) { console.warn("[naia-memory] ambiguous delete ignored"); continue; }
+				if (matches.length === 1) { selected.push(...matches); continue; }
+				const named = active.filter(f => matchesNamedDeletionTarget(part, extractUserFactValue(f.content)!.key));
+				const keys = new Set(named.map(f => extractUserFactValue(f.content)!.key));
+				const values = new Set(named.map(f => normalizeDeletionTarget(extractUserFactValue(f.content)!.value)));
+				if (keys.size > 1 || (named.length && /^(?:workplace|membership):/.test([...keys][0]) && values.size > 1)) { console.warn("[naia-memory] ambiguous delete ignored"); continue; }
+				selected.push(...named);
+			}
+			return [...new Map(selected.map(f => [f.id, f])).values()];
+		},
+	};
 
 	semantic = createLocalSemanticMemory({
 		getStore: () => this.store,

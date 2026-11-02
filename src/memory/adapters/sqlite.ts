@@ -173,6 +173,9 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
         if (!factColumns.some((column: { name: string }) => column.name === "structured_fact")) {
             await this.rawCallWorker("exec", { sql: "ALTER TABLE facts ADD COLUMN structured_fact TEXT" });
         }
+        if (!factColumns.some((column: { name: string }) => column.name === "attribute")) {
+            await this.rawCallWorker("exec", { sql: "ALTER TABLE facts ADD COLUMN attribute TEXT" });
+        }
         if (this.embedder) {
             if (!this.embedder.embeddingSpaceId) {
                 throw new Error("SQLite embedding provider must declare an immutable embeddingSpaceId");
@@ -272,8 +275,8 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
                 content: fact.content, entities: fact.entities.join(" "), topics: fact.topics.join(" "),
 				hot: fact.strength > 0.6 && fact.status === "active",
                 vector: vector ? Buffer.from(new Float32Array(vector).buffer) : null,
-                factSql: `INSERT OR REPLACE INTO facts (id, base_id, content, entities, topics, importance, max_emotion, strength, status, created_at, updated_at, last_accessed, recall_count, valid_from, valid_to, successor_id, supersedes, source_episodes, encoding_context, structured_fact) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                factParams: [fact.id, baseId, fact.content, JSON.stringify(fact.entities), JSON.stringify(fact.topics), fact.importance, fact.maxEmotion, fact.strength, fact.status, fact.createdAt, fact.updatedAt, fact.lastAccessed, fact.recallCount, fact.validFrom ?? fact.createdAt, fact.validTo, fact.successorId, fact.supersedes, JSON.stringify(fact.sourceEpisodes || []), JSON.stringify(fact.encodingContext), JSON.stringify(fact.structured ?? null)],
+                factSql: `INSERT OR REPLACE INTO facts (id, base_id, content, entities, topics, importance, max_emotion, strength, status, created_at, updated_at, last_accessed, recall_count, valid_from, valid_to, successor_id, supersedes, source_episodes, encoding_context, structured_fact, attribute) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                factParams: [fact.id, baseId, fact.content, JSON.stringify(fact.entities), JSON.stringify(fact.topics), fact.importance, fact.maxEmotion, fact.strength, fact.status, fact.createdAt, fact.updatedAt, fact.lastAccessed, fact.recallCount, fact.validFrom ?? fact.createdAt, fact.validTo, fact.successorId, fact.supersedes, JSON.stringify(fact.sourceEpisodes || []), JSON.stringify(fact.encodingContext), JSON.stringify(fact.structured ?? null), fact.attribute ?? null],
             });
             this.kgDirty = true;
         },
@@ -404,5 +407,5 @@ export class SqliteAdapter implements MemoryAdapter, BackupCapable {
     async close(): Promise<void> { if (this.closed) return; await this.initialization.catch(() => undefined); this.closed = true; for (const pending of this.pendingMsgs.values()) pending.reject(new Error("SQLite adapter is closed")); this.pendingMsgs.clear(); await this.worker.terminate(); }
     // NOTE(WIP): SqliteAdapter episode 스키마는 summary/recall_count/last_accessed/strength 미저장 → 기본값 복원(비손실 round-trip은 후속). LocalAdapter 가 완전한 기본 경로.
     private rowToEpisode(r: any): Episode { return { id: r.id, content: r.content, summary: r.summary ?? r.content, timestamp: r.timestamp, role: r.role as any, consolidated: !!r.consolidated, recallCount: r.recall_count ?? 0, lastAccessed: r.last_accessed ?? r.timestamp, strength: r.strength ?? 1, importance: { importance: r.importance_importance ?? 0, surprise: r.importance_surprise ?? 0, emotion: r.importance_emotion ?? 0, utility: r.importance_utility ?? 0 }, encodingContext: JSON.parse(r.encoding_context || "{}") }; }
-    private rowToFact(r: any, score?: number): Fact { return { id: r.id, content: r.content, entities: JSON.parse(r.entities || "[]"), topics: JSON.parse(r.topics || "[]"), importance: r.importance, maxEmotion: r.max_emotion, strength: r.strength, status: r.status as any, createdAt: r.created_at, updatedAt: r.updated_at, lastAccessed: r.last_accessed, recallCount: r.recall_count, validFrom: r.valid_from, validTo: r.valid_to, successorId: r.successor_id, supersedes: r.supersedes, sourceEpisodes: JSON.parse(r.source_episodes || "[]"), encodingContext: JSON.parse(r.encoding_context || "{}"), structured: r.structured_fact ? JSON.parse(r.structured_fact) as StructuredFact : undefined, relevanceScore: score }; }
+    private rowToFact(r: any, score?: number): Fact { return { id: r.id, content: r.content, attribute: r.attribute ?? undefined, entities: JSON.parse(r.entities || "[]"), topics: JSON.parse(r.topics || "[]"), importance: r.importance, maxEmotion: r.max_emotion, strength: r.strength, status: r.status as any, createdAt: r.created_at, updatedAt: r.updated_at, lastAccessed: r.last_accessed, recallCount: r.recall_count, validFrom: r.valid_from, validTo: r.valid_to, successorId: r.successor_id, supersedes: r.supersedes, sourceEpisodes: JSON.parse(r.source_episodes || "[]"), encodingContext: JSON.parse(r.encoding_context || "{}"), structured: r.structured_fact ? JSON.parse(r.structured_fact) as StructuredFact : undefined, relevanceScore: score }; }
 }

@@ -1,3 +1,4 @@
+import { applicableTombstones, extractUserFactValue, isTombstoned, isUserSubject } from "../delete-tombstone.js";
 /**
  * Local semantic search pipeline.
  *
@@ -16,8 +17,12 @@ export type SemanticSearchContext = Parameters<MemoryAdapter["semantic"]["search
 
 export interface LocalSemanticSearchHost {
 	readonly facts: Fact[];
+	readonly scopedTombstones?: import("../delete-tombstone.js").ScopedTombstone[];
+	readonly tombstones?: string[];
+	readonly tombstoneFactIds?: Record<string, string[]>;
 	readonly factEmbeddings: Record<string, number[]> | undefined;
 	readonly embedder: EmbeddingProvider | null;
+	readonly vectorCandidateLimit?: number;
 	readonly disableKGSpreading: boolean;
 	readonly kg: KnowledgeGraph;
 	readonly reranker: import("../reranker.js").RerankerProvider | null;
@@ -144,11 +149,23 @@ export async function searchLocalSemanticMemory(
 			                : baseFacts;
 			}
 
+			allFacts = allFacts.filter(fact => {
+				const hidden = applicableTombstones(host, fact.encodingContext?.project);
+				if (hidden.ids.has(fact.id)) return false;
+				const extracted = extractUserFactValue(fact.content);
+				if (!extracted) return true;
+				const targets = [...(host.tombstones ?? []), ...(host.scopedTombstones ?? [])
+					.filter(t => t.project === (fact.encodingContext?.project ?? null) &&
+						(!t.deletedFacts.length || t.deletedFacts.some(deleted => !deleted.key || deleted.key === extracted.key)))
+					.filter(t => !t.attributeTarget)
+					.map(t => t.target)];
+				return !isTombstoned(fact.content, targets);
+			});
 			// Apply the latest-view lifecycle contract before candidate truncation.
 			// Otherwise superseded/archived rows can occupy all broadK slots and
 			// disappear only after slicing, starving lower-ranked active facts.
 			const mode = context?.mode ?? "latest";
-			const touch = context?.touch ?? true;
+			const touch = context?.touch ?? false;
 			const includeSuperseded = mode === "history" || deepRecall || epochRange !== null;
 			if (!includeSuperseded && atT === undefined) {
 				allFacts = allFacts.filter((fact) => (fact.status ?? "active") === "active");
@@ -240,7 +257,8 @@ export async function searchLocalSemanticMemory(
 			                const isFlashbulb = Math.abs((fact.maxEmotion ?? 0.5) - 0.5) * 2 >= 0.6;
 			                const relevanceThreshold = epochRange ? 0.0 : 0.12;
 
-			                const isRelevant = vs >= relevanceThreshold || bs > 0 || eb > 0 || isFlashbulb;
+			                const vectorEligible = vs >= relevanceThreshold && (!queryVec || (vectorRank.get(fact.id) ?? Infinity) <= (host.vectorCandidateLimit ?? 50));
+			                const isRelevant = vectorEligible || bs > 0 || eb > 0 || isFlashbulb;
 
 			                if (!isRelevant && !deepRecall) return null;					let relevanceScore: number;
 					if (searchMode === "vector-head-rrf-tail") {

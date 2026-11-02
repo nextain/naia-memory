@@ -151,6 +151,7 @@ export abstract class MemorySystemCore {
 		} else {
 			const localAdapter = new LocalAdapter({
 				embeddingProvider: options.embeddingProvider,
+				vectorCandidateLimit: options.vectorCandidateLimit,
 				disableKGSpreading: options.disableKGSpreading,
 				reranker: options.reranker,
 			});
@@ -339,11 +340,23 @@ export abstract class MemorySystemCore {
 
 	// ─── Memory Retrieval ─────────────────────────────────────────────────
 
+	/** Reinforce only memories actually used by the caller. */
+	async markUsed(ids: import("./types.js").MemoryUse): Promise<void> {
+		if (!this.adapter.markUsed) throw new Error("Adapter does not support markUsed");
+		await this.adapter.markUsed(ids);
+	}
+
 	/**
 	 * Recall relevant memories for a query.
 	 * Combines episodic recall + semantic search + procedural reflections.
 	 * Implements Tulving's encoding specificity — context at retrieval matters.
 	 */
+	/** Remove a persistent deletion filter to allow matching memories to be recalled again. */
+	async removeTombstone(target: string, options?: { project: string }): Promise<void> {
+		if (!this.adapter.tombstones) throw new Error("Adapter does not support tombstones");
+		await this.adapter.tombstones.remove(target, options);
+	}
+
 	async recall(
 		query: string,
 		context: RecallContext,

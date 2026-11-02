@@ -256,3 +256,28 @@ describe("multilingual delete selection", () => {
 		await system.close();
 	});
 });
+
+for (const [storedAttribute, deleteAttribute, shouldDelete] of [
+ ["residence", undefined, true], [undefined, "residence", true], ["residence", "occupation", false],
+] as const) {
+ it(`filters structured deletes with optional attributes: ${storedAttribute}/${deleteAttribute}`, async () => {
+  let calls = 0;
+  const adapter = new LocalAdapter(join(rootDir, `attribute-${randomUUID()}.json`));
+  const system = new MemorySystem({adapter, consolidationIntervalMs: 0,
+   deleteVerifier: async (_episode, _fact, candidates) => { calls++; return {authorized: true, targetFactId: candidates[0].id}; },
+   factExtractor: async episodes => episodes.map(episode => {
+    const deleting = episode.content === "서울을 잊어줘";
+    return {content: "나는 서울에 살아.", entities: [], topics: [], importance: 0.8, sourceEpisodeIds: [episode.id],
+     attribute: deleting ? deleteAttribute : storedAttribute,
+     structured: {subject: "user", subjectId: "person:self", property: "residence", propertyId: "profile:residence", value: "서울", polarity: "affirmed" as const, cardinality: "single" as const},
+     operation: deleting ? "delete" as const : "upsert" as const,
+     ...(deleting ? {deleteEvidence: {kind: "explicit_removal_request" as const, evidenceQuote: episode.content, targetQuote: "서울"}} : {})};
+   })});
+  try {
+   await system.encode({role: "user", content: "나는 서울에 살아."}, {}); await system.consolidateNow(true);
+   await system.encode({role: "user", content: "서울을 잊어줘"}, {}); await system.consolidateNow(true);
+   expect(calls > 0).toBe(shouldDelete);
+   expect((await adapter.semantic.getAll())[0].status).toBe(shouldDelete ? "archived" : "active");
+  } finally { await system.close(); }
+ });
+}

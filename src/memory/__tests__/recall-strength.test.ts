@@ -591,8 +591,8 @@ describe("recall-strength: (4) touch: false", () => {
 		}
 	});
 
-	it("the default still reinforces", async () => {
-		// Pre-#51 and default: recall without touch increments recallCount by 1.
+	it("explicit touch reinforces", async () => {
+		// Explicit touch preserves the former reinforcement behavior.
 		const storePath = join(tmpdir(), `naia-recall-str-13-${randomUUID()}.json`);
 		const adapter = new LocalAdapter({
 			storePath,
@@ -602,7 +602,7 @@ describe("recall-strength: (4) touch: false", () => {
 			const ep = makeEpisode({ id: "default-touch-ep", content: "exact episode", recallCount: 2 });
 			await adapter.episode.store(ep);
 
-			await adapter.episode.recall("query", { project: "test-project" });
+			await adapter.episode.recall("query", { project: "test-project", touch: true });
 
 			const stored = await adapter.episode.getRecent(10);
 			const found = stored.find((e) => e.id === ep.id);
@@ -632,7 +632,7 @@ describe("recall-strength: (4) touch: false", () => {
 			const fact1 = allFacts1.find((f) => f.id === fact.id);
 			expect(fact1?.recallCount).toBe(5);
 
-			await memory.recall("query", { project: "test-project" });
+			await memory.recall("query", { project: "test-project", touch: true });
 
 			const allFacts2 = await adapter.semantic.getAll();
 			const fact2 = allFacts2.find((f) => f.id === fact.id);

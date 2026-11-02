@@ -66,6 +66,8 @@ export class Mem0Adapter implements MemoryAdapter {
 
 	// Local stores for Naia-specific data that mem0 doesn't handle
 	private episodes: Episode[] = [];
+	private syntheticEpisodeIds = new Set<string>();
+	private factUsage = new Map<string, { recallCount: number; lastAccessed: number }>();
 	private skills: Skill[] = [];
 	private reflections: Reflection[] = [];
 	private kg: KnowledgeGraph;
@@ -99,6 +101,21 @@ export class Mem0Adapter implements MemoryAdapter {
 		}
 		const { Memory } = await import("mem0ai/oss");
 		this.mem0 = new Memory(this.config.mem0Config);
+	}
+
+	async markUsed(ids: import("../types.js").MemoryUse): Promise<void> {
+		const now = Date.now();
+		for (const id of new Set(ids.episodeIds ?? [])) {
+			const ep = this.episodes.find((item) => item.id === id);
+			if (!ep) continue;
+			ep.recallCount++;
+			ep.lastAccessed = now;
+			ep.strength = calculateStrength(ep.importance.utility, ep.timestamp, ep.recallCount, now, now);
+		}
+		for (const id of new Set(ids.factIds ?? [])) {
+			const usage = this.factUsage.get(id);
+			if (usage) { usage.recallCount++; usage.lastAccessed = now; }
+		}
 	}
 
 	// ─── Episodic Memory ─────────────────────────────────────────────────
@@ -149,7 +166,7 @@ export class Mem0Adapter implements MemoryAdapter {
 			context: RecallContext,
 		): Promise<Episode[]> => {
 			const topK = context.topK ?? 5;
-			const touch = context.touch ?? true;
+			const touch = context.touch ?? false;
 
 			// Use mem0 vector search instead of keyword matching
 			const m = await this.ensureMem0();
@@ -165,15 +182,21 @@ export class Mem0Adapter implements MemoryAdapter {
 			for (const r of resultItems) {
 				const memoryText = r.memory ?? r.text ?? r.content ?? "";
 				const mem0Score: number = r.score ?? 0.5;
-				// Find matching episode by content similarity
-				const match = this.episodes.find(
-					(ep) =>
-						ep.content === memoryText ||
-						memoryText.includes(ep.content.slice(0, 50)) ||
-						ep.content.includes(memoryText.slice(0, 50)),
-				);
+				// External IDs identify synthetic episodes even when their payload changes.
+				const match = (r.id ? this.episodes.find((ep) => ep.id === r.id) : undefined)
+					?? this.episodes.find((ep) =>
+						(!r.id || !this.syntheticEpisodeIds.has(ep.id)) && (
+							ep.content === memoryText ||
+							memoryText.includes(ep.content.slice(0, 50)) ||
+							ep.content.includes(memoryText.slice(0, 50))
+						),
+					);
 				const now = Date.now();
 				if (match) {
+					if (r.id && match.id === r.id && this.syntheticEpisodeIds.has(match.id)) {
+						match.content = memoryText;
+						match.summary = memoryText.slice(0, 200);
+					}
 					if (touch) {
 						match.recallCount++;
 						match.lastAccessed = now;
@@ -192,8 +215,9 @@ export class Mem0Adapter implements MemoryAdapter {
 					const createdAt = r.created_at
 						? new Date(r.created_at).getTime()
 						: now;
-					const strength = calculateStrength(0.5, createdAt, 1, now, now);
-					matchedEpisodes.push({
+					const recallCount = touch ? 1 : 0;
+					const strength = calculateStrength(0.5, createdAt, recallCount, now, now);
+					const synthetic: Episode = {
 						id: r.id ?? randomUUID(),
 						content: memoryText,
 						summary: memoryText.slice(0, 200),
@@ -206,11 +230,13 @@ export class Mem0Adapter implements MemoryAdapter {
 						},
 						encodingContext: { project: r.metadata?.project },
 						consolidated: true,
-						recallCount: 1,
+						recallCount,
 						lastAccessed: now,
 						strength,
-						_mem0Score: mem0Score,
-					});
+					};
+					this.episodes.push(synthetic);
+					this.syntheticEpisodeIds.add(synthetic.id);
+					matchedEpisodes.push({ ...synthetic, _mem0Score: mem0Score });
 				}
 			}
 
@@ -303,7 +329,7 @@ export class Mem0Adapter implements MemoryAdapter {
 			query: string,
 			topK: number,
 			deepRecall = false,
-			context?: { project?: string; atTimestamp?: number },
+			context?: { project?: string; atTimestamp?: number; touch?: boolean },
 		): Promise<Fact[]> => {
 			// R2.3 — bi-temporal recall is not implemented in this adapter.
 			// Refuse explicitly instead of silently returning current-time results.
@@ -346,8 +372,12 @@ export class Mem0Adapter implements MemoryAdapter {
 						: now;
 					const entities: string[] = r.metadata?.entities ?? [];
 
-					// Decay-based strength
-					const strength = calculateStrength(0.5, createdAt, 1, now, now);
+					// Mem0 does not store Naia usage metadata; retain it for this adapter instance.
+					const id = r.id ?? randomUUID();
+					let usage = this.factUsage.get(id);
+					if (!usage) { usage = { recallCount: 0, lastAccessed: createdAt }; this.factUsage.set(id, usage); }
+					if (context?.touch) { usage.recallCount++; usage.lastAccessed = now; }
+					const strength = calculateStrength(0.5, createdAt, usage.recallCount, usage.lastAccessed, now);
 
 					// KG activation bonus
 					let kgBoost = 0;
@@ -365,15 +395,15 @@ export class Mem0Adapter implements MemoryAdapter {
 						: cosineScore * (1 + strength + kgBoost * 0.1);
 
 					return {
-						id: r.id ?? randomUUID(),
+						id,
 						content: r.memory ?? r.text ?? r.content ?? "",
 						entities,
 						topics: r.metadata?.topics ?? [],
 						createdAt,
 						updatedAt,
 						importance: 0.5,
-						recallCount: 1,
-						lastAccessed: now,
+						recallCount: usage.recallCount,
+						lastAccessed: usage.lastAccessed,
 						strength,
 						sourceEpisodes: [],
 						relevanceScore: r.score,

@@ -1,3 +1,4 @@
+import { deletionTarget, extractUserFactValue, normalizeDeletionTarget } from "./delete-tombstone.js";
 import {
 	buildNewFact,
 	findDuplicateFact,
@@ -134,7 +135,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					// (`vs>=0.12 || bs>0 || eb>=0.2`) does NOT prune candidates here. For
 					// contradiction detection we want broad recall — even loosely related
 					// facts must reach the LLM filter so it can decide.
-					const existingFacts = ef.structured
+					const candidates = ef.structured || (ef.attribute === "residence" && /이사|\bmoved\b/i.test(ef.content))
 						? (await this.adapter.semantic.getAll()).filter(
 								// Supersession mutates the predecessor.  Unlike soft recall, it
 								// must never let an unscoped write update a project-scoped fact.
@@ -149,6 +150,9 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 									? { project: efProject, touch: false }
 									: { touch: false },
 							);
+					const existingFacts = candidates.filter(
+						(fact) => (fact.attribute ?? "general") === (ef.attribute ?? "general"),
+					);
 					if (process.env.NAIA_FILTER_DEBUG === "1") {
 						const totalFacts =
 							(this.adapter as any).getStore?.()?.facts?.length ?? "?";
@@ -158,25 +162,34 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 					}
 
 					if (ef.operation === "delete") {
+						if (!this.deleteVerifier) {
+							const target = srcEp?.role === "user" && ef.sourceEpisodeIds.length === 1 ? deletionTarget(srcEp.content) : null;
+							if (!target || !normalizeDeletionTarget(target) || !ef.deleteEvidence || normalizeDeletionTarget(target) !== normalizeDeletionTarget(ef.deleteEvidence.targetQuote) || !this.adapter.tombstones) {
+								if (hasGroundedDeleteAuthority(ef, srcEp) && !this.warnedMissingDeleteVerifier) {
+									console.warn("[naia-memory] grounded delete ignored because no delete verifier is configured");
+									this.warnedMissingDeleteVerifier = true;
+								}
+								continue;
+							}
+							const eligible = (await this.adapter.semantic.getAll()).filter(f => f.encodingContext?.project === efProject);
+							const targets = await this.adapter.tombstones.match(target, eligible, srcEp!.content, ef.attribute);
+							if (!targets.length) continue;
+							const archived = targets.map(f => ({ ...f, status: "archived" as const, updatedAt: now, validTo: now }));
+							if (this.adapter.semantic.upsertMany) await this.adapter.semantic.upsertMany(archived);
+							else for (const f of archived) await this.adapter.semantic.upsert(f);
+							await this.adapter.tombstones.add(target, targets.map(f => f.id), efProject, ef.sourceEpisodeIds);
+							factsUpdated += archived.length;
+							continue;
+						}
 						if (!hasGroundedDeleteAuthority(ef, srcEp)) {
 							recordDeleteOutcome("denied");
 							continue;
 						}
 						if (!srcEp) continue;
-						if (!this.deleteVerifier) {
-							recordDeleteOutcome("verifier_failed");
-							if (!this.warnedMissingDeleteVerifier) {
-								console.warn(
-									"[naia-memory] grounded delete ignored because no delete verifier is configured",
-								);
-								this.warnedMissingDeleteVerifier = true;
-							}
-							continue;
-						}
 						const resolution = await resolveDeleteTarget({
 							episode: srcEp,
 							fact: ef,
-							existingFacts,
+							existingFacts: candidates.filter(f => !ef.attribute || !f.attribute || f.attribute === ef.attribute),
 							verifier: this.deleteVerifier,
 						});
 						if (resolution.status === "oversized") {
@@ -218,12 +231,16 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 							for (const target of archivedTargets)
 								await this.adapter.semantic.upsert(target);
 						}
+						if (archivedTargets.length && ef.deleteEvidence?.targetQuote && this.adapter.tombstones) await this.adapter.tombstones.add(ef.deleteEvidence.targetQuote, archivedTargets.map(f => f.id), efProject, ef.sourceEpisodeIds);
 						factsUpdated += archivedTargets.length;
 						continue;
 					}
 
 					// Check for exact/near identity to prevent semantic redundancy (#4)
-					const duplicate = findDuplicateFact(ef, existingFacts);
+					const userValue = extractUserFactValue(ef.content);
+					const duplicate = findDuplicateFact(ef, userValue
+						? existingFacts.filter(f => extractUserFactValue(f.content)?.key === userValue.key)
+						: existingFacts);
 
 					const mutationPolicy = resolveStructuredMutationPolicy({
 						trustedUserMutation,
@@ -336,6 +353,7 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								...anchor,
 								id: successorId,
 								content: ef.content,
+								attribute: ef.attribute ?? anchor.attribute,
 								status: "active",
 								createdAt: now,
 								updatedAt: now,
