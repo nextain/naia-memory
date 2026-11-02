@@ -1,4 +1,4 @@
-import { deletionFactValue, extractUserFactValue, hasUnsafeDeletionTarget, isTombstoned, mentionsOtherPerson, matchesNamedDeletionTarget, splitDeletionTargets, normalizeDeletionTarget } from "../delete-tombstone.js";
+import { deletionFactValue, extractUserFactValue, hasUnsafeDeletionTarget, hasUnsupportedDeletionTime, hasUnsupportedGroupModifier, isTombstoned, mentionsOtherPerson, matchesNamedDeletionTarget, splitDeletionTargets, normalizeDeletionTarget } from "../delete-tombstone.js";
 import { calculateStrength } from "../decay.js";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -484,6 +484,8 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			if (hasUnsafeDeletionTarget(request) || mentionsOtherPerson(request.replace(target, ""))) return [];
 			const selected: Fact[] = [];
 			for (const part of splitDeletionTargets(target)) {
+				if (hasUnsupportedDeletionTime(part)) { console.warn("[naia-memory] unsupported delete time ignored"); continue; }
+				if (hasUnsupportedGroupModifier(part)) { console.warn("[naia-memory] unsupported delete modifier ignored"); continue; }
 				const active = facts.filter(f => f.status === "active" && extractUserFactValue(f.content) !== null);
 				const matches = active.filter(f => normalizeDeletionTarget(part.replace(/^(?:a|an|the)\s+/i, "")) === normalizeDeletionTarget(extractUserFactValue(f.content)!.value.replace(/^(?:a|an|the)\s+/i, "")));
 				if (matches.length > 1) { console.warn("[naia-memory] ambiguous delete ignored"); continue; }

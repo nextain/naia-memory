@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalAdapter, MemorySystem } from "../index.js";
+import { extractUserFactValue, hasUnsafeDeletionTarget, hasUnsupportedDeletionTime } from "../delete-tombstone.js";
 
 async function scenario(facts: string[], request: string, deleted: string[], retained: string[] = [], reassert?: string) {
  const dir = await mkdtemp(join(tmpdir(), "named-delete-"));
@@ -16,6 +17,7 @@ async function scenario(facts: string[], request: string, deleted: string[], ret
   const stored = await adapter.semantic.getAll();
   for (const value of deleted) expect(stored.find(f => f.content.includes(value))?.status, value).toBe("archived");
   for (const value of retained) expect(stored.find(f => f.content.includes(value))?.status, value).toBe("active");
+  if (!deleted.length) expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(0);
   for (const context of [{}, {deepRecall: true}, {deepRecall: true, mode: "history" as const}]) {
    const text = JSON.stringify(await memory.recall("이름 주소 직장 모임 애칭", {...context, topK: 100}));
    for (const value of deleted) expect(text).not.toContain(value);
@@ -84,4 +86,40 @@ it("retains attribute tombstones on reload while allowing a new value", async ()
   expect(JSON.stringify(await adapter.episode.getRecent(100))).toContain("구슬");
   expect(adapter.getStore().scopedTombstones).toHaveLength(1);
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
+});
+
+it.each([
+ ["민수의 주소는 솔빛로 8이야.", "솔빛로 8을 잊어줘.", "솔빛로 8"],
+ ["민수의 주소는 솔빛로 8이야.", "주소를 지워줘.", "솔빛로 8"],
+ ["My ex's address is Amber Lane.", "Forget Amber Lane.", "Amber Lane"],
+ ["His nickname is moonstone.", "Forget moonstone.", "moonstone"],
+ ["내 주소는 솔빛로 8이야.", "민수의 주소를 지워줘.", "솔빛로 8"],
+ ["예전에는 해솔 가게에서 일했어.", "현재 직장 이름을 지워줘.", "해솔 가게"],
+ ["해솔 가게에서 일했어.", "첫 직장 이름을 지워줘.", "해솔 가게"],
+ ["푸른모임에 다녔어.", "주말 모임 이름을 지워줘.", "푸른모임"],
+ ["내 별명은 달조각이야.", "요즘 별명을 지워줘.", "달조각"],
+])("retains a fact for an unsafe target or owner: %s / %s", async (fact, request, value) => scenario([fact], request, [], [value]));
+
+it.each([
+ ["해솔 가게에서 일했어.", "예전 직장 이름을 지워줘.", "해솔 가게"],
+ ["푸른모임에 다녔어.", "전에 말한 모임 이름을 지워줘.", "푸른모임"],
+])("deletes an unmarked Korean past verb: %s", async (fact, request, value) => scenario([fact], request, [value]));
+
+it.each(["일했어", "일했다", "일했었어", "일했어요", "일했습니다", "다녔어", "다녔다", "다녔었어", "다녔어요", "다녔습니다"])("classifies %s as past", verb => {
+ const place = verb.startsWith("일") ? "해솔에서" : "푸른모임에";
+ expect(extractUserFactValue(`${place} ${verb}.`)?.key).toMatch(/:past$/);
+});
+
+it.each(["일해", "일한다", "일하고 있어", "다녀", "다닌다", "다니고 있어"])("classifies %s without a past marker", verb => {
+ const place = verb.startsWith("일") ? "해솔에서" : "푸른모임에";
+ expect(extractUserFactValue(`${place} ${verb}.`)?.key).toMatch(/:current$/);
+});
+
+it.each(["현재", "지금", "요즘", "올해", "이번", "최근", "새", "current", "present", "now", "new", "latest", "recent"])("rejects unsupported time word %s", word => {
+ expect(hasUnsupportedDeletionTime(`${word} address`)).toBe(true);
+});
+
+it.each(["his", "her", "their", "our", "your"])("rejects %s as an owner", owner => {
+ expect(extractUserFactValue(`${owner} nickname is moonstone.`)).toBeNull();
+ expect(hasUnsafeDeletionTarget(`Forget ${owner} address.`)).toBe(true);
 });

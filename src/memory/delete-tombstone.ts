@@ -57,9 +57,12 @@ const USER_POSSESSIONS = {
  ko: ["물건", "집", "주소", "직업", "일", "회사", "직장", "학교", "전공", "취미", "이름", "별명", "생일", "나이", "차", "자동차", "휴대폰", "폰", "노트북", "컴퓨터", "가방", "지갑", "좋아하는 것", "싫어하는 것", "목표", "계획", "일정", "습관", "혈액형", "키", "몸무게"],
  en: ["thing", "stuff", "home", "house", "address", "job", "work", "company", "school", "major", "hobby", "name", "nickname", "birthday", "age", "car", "phone", "laptop", "computer", "bag", "wallet", "favorite", "goal", "plan", "schedule", "habit"],
 } as const;
+function hasOtherPossessor(text: string): boolean {
+ return /의|['’]s\b|\b(?:his|her|their|our|your|its)\b/iu.test(text.replace(/(^|\s)(?:나의|저의)(?=\s)/gu, "$1내"));
+}
 /** Inspect the original request before demonstratives or punctuation are removed. */
 export function hasUnsafeDeletionTarget(request: string): boolean {
- if (OTHER_RELATION.test(request) || /['’]s\b|의/u.test(request.replace(/나의(?=\s)/gu, "내"))) return true;
+ if (OTHER_RELATION.test(request) || hasOtherPossessor(request)) return true;
  for (const match of request.matchAll(/\bmy\s+([a-z]+)\b/gi)) {
   if (!(USER_POSSESSIONS.en as readonly string[]).includes(match[1].toLowerCase()) && !/\bmy\s+(?:[a-z]+\s+)*(?:name|nickname|address)\b/i.test(request)) return true;
  }
@@ -88,8 +91,12 @@ const PAST = /^(?:예전|전|옛|지난|지난달|지난해|작년|old|previous|
 const HEADS = /^(?:이름|별칭|애칭|별명|주소|nickname|name|address)$/i;
 const WORK = /^(?:직장|회사|일터|workplace|company|job)$/i;
 const GROUP = /^(?:모임|동호회|학원|학교|소속|단체|club|group)$/i;
+const UNSUPPORTED_TIME = /^(?:현재|지금|요즘|올해|이번|최근|새|current|present|now|new|latest|recent)$/i;
+export function hasUnsupportedDeletionTime(target: string): boolean {
+ return target.toLowerCase().split(/[^\p{L}\p{N}]+/u).some(word => UNSUPPORTED_TIME.test(word));
+}
 function attributeKey(phrase: string): AttributeKey | null {
- const words = phrase.toLowerCase().trim().replace(/^(?:내|나의|my|the)\s+/i, "").split(/\s+/u).filter(Boolean);
+ const words = phrase.toLowerCase().trim().replace(/^(?:내|나의|제|저의|my|the)\s+/i, "").split(/\s+/u).filter(Boolean);
  const head = words.pop();
  if (!head || !HEADS.test(head)) return null;
  const past = words.some(w => PAST.test(w));
@@ -106,16 +113,25 @@ function parseAttribute(key: string): AttributeKey | null {
 export function splitDeletionTargets(target: string): string[] {
  return target.split(/\s*,\s*|\s+and\s+|(?:하고|랑|과|와)\s+/iu).map(s => s.trim()).filter(Boolean);
 }
-export function matchesNamedDeletionTarget(target: string, key: string): boolean {
- const cleaned = target.trim().replace(/^(?:(?:전에|아까|내가)\s*말한)\s*/u, "")
+function cleanAttributeTarget(target: string): string {
+ return target.trim().replace(/^(?:(?:전에|아까|내가)\s*말한)\s*/u, "")
   .replace(/\s+(?:that I mentioned|I told you)$/i, "").replace(/(?:을|를|은|는)$/u, "").trim();
- const words = cleaned.toLowerCase().replace(/^(?:내|나의|my|the)\s+/i, "").split(/\s+/u).filter(Boolean);
+}
+export function hasUnsupportedGroupModifier(target: string): boolean {
+ const words = cleanAttributeTarget(target).toLowerCase().replace(/^(?:내|나의|제|저의|my|the)\s+/i, "").split(/\s+/u).filter(Boolean);
+ if (words.at(-1) === "이름" || words.at(-1) === "name") words.pop();
+ const head = words.pop() ?? "";
+ return (WORK.test(head) || GROUP.test(head)) && words.some(w => !PAST.test(w));
+}
+export function matchesNamedDeletionTarget(target: string, key: string): boolean {
+ const cleaned = cleanAttributeTarget(target);
+ const words = cleaned.toLowerCase().replace(/^(?:내|나의|제|저의|my|the)\s+/i, "").split(/\s+/u).filter(Boolean);
  const past = words.some(w => PAST.test(w));
  const branch = key.match(/^(workplace|membership):(past|current)$/);
  if (branch) {
   const withoutName = words.at(-1) === "이름" || words.at(-1) === "name" ? words.slice(0, -1) : words;
   const head = withoutName.at(-1) ?? "";
-  return (!past || branch[2] === "past") && (branch[1] === "workplace" ? WORK.test(head) : GROUP.test(head));
+  return withoutName.slice(0, -1).every(w => PAST.test(w)) && (!past || branch[2] === "past") && (branch[1] === "workplace" ? WORK.test(head) : GROUP.test(head));
  }
  const fact = parseAttribute(key), wanted = attributeKey(cleaned);
  return !!fact && !!wanted && fact.head === wanted.head && (!wanted.past || fact.past) && wanted.modifiers.every(w => fact.modifiers.includes(w));
@@ -124,8 +140,9 @@ export function matchesNamedDeletionTarget(target: string, key: string): boolean
 /** Extract only explicitly supported user attribute statements. */
 export function extractUserFactValue(content: string): {key: string; value: string} | null {
  const input = content.trim();
+ if (hasOtherPossessor(input)) return null;
  if (!OTHER_RELATION.test(input) && !OTHER_TITLE.test(input)) {
-  const namedKo = input.match(/^(?:(?:내|나의)\s+)?(.*?(?:이름|별칭|애칭|별명|주소))(?:은|는|이|가)\s*(.+?)(?:이야|야|이에요|예요|입니다|이다)[.!]?$/u);
+  const namedKo = input.match(/^(?:(?:내|나의|제|저의)\s+)?(.*?(?:이름|별칭|애칭|별명|주소))(?:은|는|이|가)\s*(.+?)(?:이야|야|이에요|예요|입니다|이다)[.!]?$/u);
   const namedEn = input.match(/^my\s+(.+?\b(?:nickname|name|address)|nickname|name|address)\s+is\s+(.+?)[.!]?$/i);
   const named = namedKo ?? namedEn;
   if (named) {
@@ -133,11 +150,11 @@ export function extractUserFactValue(content: string): {key: string; value: stri
    if (key && value && !OTHER_RELATION.test(value) && !/['’]s\b|의/u.test(value)) return {key: serializeAttribute(key), value};
    return null;
   }
-  const workKo = input.match(/^(?:(예전에는|전에는)\s+)?(.+?)에서\s*(?:일했어|일해)[.!]?$/u);
-  const groupKo = input.match(/^(?:(예전에는)\s+)?(.+?)에\s*(?:다녔어|다녀)[.!]?$/u);
+  const workKo = input.match(/^(?:(예전에는|전에는)\s+)?(.+?)에서\s*(?:일했어|일했다|일했었어|일했어요|일했습니다|일해|일한다|일하고\s*있어)[.!]?$/u);
+  const groupKo = input.match(/^(?:(예전에는)\s+)?(.+?)에\s*(?:다녔어|다녔다|다녔었어|다녔어요|다녔습니다|다녀|다닌다|다니고\s*있어)[.!]?$/u);
   const workEn = input.match(/^I\s+(?:(used to)\s+)?work(?:ed)?\s+at\s+(.+?)[.!]?$/i);
   const verb = workKo ?? groupKo ?? workEn;
-  if (verb && !OTHER_RELATION.test(verb[2]) && !/['’]s\b|의/u.test(verb[2])) return {key: `${groupKo ? "membership" : "workplace"}:${verb[1] || (workEn && /\bworked\b/i.test(input)) ? "past" : "current"}`, value: verb[2].trim()};
+  if (verb && !OTHER_RELATION.test(verb[2]) && !/['’]s\b|의/u.test(verb[2])) return {key: `${groupKo ? "membership" : "workplace"}:${verb[1] || /(?:일했(?:어|다|었어|어요|습니다)|다녔(?:어|었어|어요|습니다)|다녔다)[.!]?$/u.test(input) || (workEn && /\bworked\b/i.test(input)) ? "past" : "current"}`, value: verb[2].trim()};
  }
  if (!hasAllowedSubject(input)) return null;
  let key: string | undefined, value: string | undefined;
