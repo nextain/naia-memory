@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalAdapter, MemorySystem } from "../index.js";
-import { extractUserFactValue, hasUnsafeDeletionTarget, hasUnsupportedDeletionTime } from "../delete-tombstone.js";
+import { extractUserFactValue, hasUnsafeDeletionTarget, hasUnsupportedDeletionTime, matchesNamedDeletionTarget } from "../delete-tombstone.js";
 
 async function scenario(facts: string[], request: string, deleted: string[], retained: string[] = [], reassert?: string) {
  const dir = await mkdtemp(join(tmpdir(), "named-delete-"));
@@ -27,6 +27,35 @@ async function scenario(facts: string[], request: string, deleted: string[], ret
   if (reassert) { await say(reassert); expect(JSON.stringify(await memory.recall(reassert, {deepRecall: true, topK: 100}))).toContain(reassert); }
  } finally { await memory.close(); await rm(dir, {recursive: true, force: true}); }
 }
+
+it.each([
+ ["철수는 해솔 가게에서 일했어.", "직장 이름을 지워줘.", "해솔 가게"],
+ ["민수 주소는 솔빛로야.", "주소를 지워줘.", "솔빛로"],
+])("retains another person's subject: %s", async (fact, request, value) => scenario([fact], request, [], [value]));
+
+it.each([
+ ["나는 해솔 가게에서 일했어.", "직장 이름을 지워줘.", "해솔 가게"],
+ ["제 주소는 솔빛로야.", "주소를 지워줘.", "솔빛로"],
+ ["해솔 가게에서 일했어.", "직장 이름을 지워줘.", "해솔 가게"],
+ ["예전에는 해솔 가게에서 일했어.", "예전 직장 이름을 지워줘.", "해솔 가게"],
+])("deletes an allowed subject: %s", async (fact, request, value) => scenario([fact], request, [value]));
+
+it("requires equal named attribute modifier sets", () => {
+ const key = extractUserFactValue("민수 주소는 솔빛로야.")?.key;
+ expect(key).toBeDefined();
+ expect(matchesNamedDeletionTarget("주소", key!)).toBe(false);
+ expect(matchesNamedDeletionTarget("민수 주소", key!)).toBe(true);
+});
+
+it.each(["나는", "저는", "내가", "제가", "예전에는", "전에는", "옛날에는", "그때는", "작년에는", "지난해에는", "요즘은", "지금은"])("strips allowed subject marker %s from workplace", marker => {
+ expect(extractUserFactValue(`${marker} 해솔 가게에서 일했어.`)?.value).toBe("해솔 가게");
+});
+
+it.each(["철수는", "민수가", "철수이", "민수은"])("rejects subject marker %s before a workplace or membership", marker => {
+ expect(extractUserFactValue(`${marker} 해솔 가게에서 일했어.`)).toBeNull();
+ expect(extractUserFactValue(`${marker} 푸른모임에 다녔어.`)).toBeNull();
+ expect(extractUserFactValue(`${marker} 주소는 솔빛로야.`)).toBeNull();
+});
 
 it.each([
  ["예전에는 별무리 서점에서 일했어.", "예전 직장 이름을 지워줘.", "별무리"],

@@ -32,9 +32,9 @@ it("selects the user's fact and fails closed when multiple user facts match", as
   try {
    await say("나는 서울에 살아."); await say(ambiguous ? "나는 서울에서 일해." : "친구는 서울에서 일해."); await say("서울을 잊어줘");
    const facts = await adapter.semantic.getAll();
-   expect(facts.find(f => f.content.includes("서울에 살아"))?.status).toBe("archived");
+   expect(facts.find(f => f.content.includes("서울에 살아"))?.status).toBe(ambiguous ? "active" : "archived");
    expect(facts.find(f => f.content.includes("서울에서 일해"))?.status).toBe("active");
-   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(1);
+   expect(adapter.getStore().scopedTombstones ?? []).toHaveLength(ambiguous ? 0 : 1);
   } finally { await close(); }
  }
 });
