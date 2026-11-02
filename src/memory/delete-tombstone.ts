@@ -59,9 +59,9 @@ const USER_POSSESSIONS = {
 } as const;
 /** Inspect the original request before demonstratives or punctuation are removed. */
 export function hasUnsafeDeletionTarget(request: string): boolean {
- if (OTHER_RELATION.test(request) || /['’]s\b|의/u.test(request)) return true;
+ if (OTHER_RELATION.test(request) || /['’]s\b|의/u.test(request.replace(/나의(?=\s)/gu, "내"))) return true;
  for (const match of request.matchAll(/\bmy\s+([a-z]+)\b/gi)) {
-  if (!(USER_POSSESSIONS.en as readonly string[]).includes(match[1].toLowerCase())) return true;
+  if (!(USER_POSSESSIONS.en as readonly string[]).includes(match[1].toLowerCase()) && !/\bmy\s+(?:[a-z]+\s+)*(?:name|nickname|address)\b/i.test(request)) return true;
  }
  return false;
 }
@@ -83,9 +83,62 @@ function hasAllowedSubject(text: string): boolean {
  return !!en && (USER_POSSESSIONS.en as readonly string[]).includes(en[1].toLowerCase());
 }
 
+type AttributeKey = { head: string; modifiers: string[]; past: boolean };
+const PAST = /^(?:예전|전|옛|지난|지난달|지난해|작년|old|previous|former)$/i;
+const HEADS = /^(?:이름|별칭|애칭|별명|주소|nickname|name|address)$/i;
+const WORK = /^(?:직장|회사|일터|workplace|company|job)$/i;
+const GROUP = /^(?:모임|동호회|학원|학교|소속|단체|club|group)$/i;
+function attributeKey(phrase: string): AttributeKey | null {
+ const words = phrase.toLowerCase().trim().replace(/^(?:내|나의|my|the)\s+/i, "").split(/\s+/u).filter(Boolean);
+ const head = words.pop();
+ if (!head || !HEADS.test(head)) return null;
+ const past = words.some(w => PAST.test(w));
+ return {head, past, modifiers: [...new Set(words.filter(w => !PAST.test(w)))].sort()};
+}
+function serializeAttribute(key: AttributeKey): string {
+ if (!key.past && !key.modifiers.length && ["주소", "이름", "별명", "address", "name", "nickname"].includes(key.head)) return key.head;
+ return `named:${JSON.stringify(key)}`;
+}
+function parseAttribute(key: string): AttributeKey | null {
+ if (!key.startsWith("named:")) return HEADS.test(key) ? {head: key, modifiers: [], past: false} : null;
+ return JSON.parse(key.slice(6)) as AttributeKey;
+}
+export function splitDeletionTargets(target: string): string[] {
+ return target.split(/\s*,\s*|\s+and\s+|(?:하고|랑|과|와)\s+/iu).map(s => s.trim()).filter(Boolean);
+}
+export function matchesNamedDeletionTarget(target: string, key: string): boolean {
+ const cleaned = target.trim().replace(/^(?:(?:전에|아까|내가)\s*말한)\s*/u, "")
+  .replace(/\s+(?:that I mentioned|I told you)$/i, "").replace(/(?:을|를|은|는)$/u, "").trim();
+ const words = cleaned.toLowerCase().replace(/^(?:내|나의|my|the)\s+/i, "").split(/\s+/u).filter(Boolean);
+ const past = words.some(w => PAST.test(w));
+ const branch = key.match(/^(workplace|membership):(past|current)$/);
+ if (branch) {
+  const withoutName = words.at(-1) === "이름" || words.at(-1) === "name" ? words.slice(0, -1) : words;
+  const head = withoutName.at(-1) ?? "";
+  return (!past || branch[2] === "past") && (branch[1] === "workplace" ? WORK.test(head) : GROUP.test(head));
+ }
+ const fact = parseAttribute(key), wanted = attributeKey(cleaned);
+ return !!fact && !!wanted && fact.head === wanted.head && (!wanted.past || fact.past) && wanted.modifiers.every(w => fact.modifiers.includes(w));
+}
+
 /** Extract only explicitly supported user attribute statements. */
 export function extractUserFactValue(content: string): {key: string; value: string} | null {
  const input = content.trim();
+ if (!OTHER_RELATION.test(input) && !OTHER_TITLE.test(input)) {
+  const namedKo = input.match(/^(?:(?:내|나의)\s+)?(.*?(?:이름|별칭|애칭|별명|주소))(?:은|는|이|가)\s*(.+?)(?:이야|야|이에요|예요|입니다|이다)[.!]?$/u);
+  const namedEn = input.match(/^my\s+(.+?\b(?:nickname|name|address)|nickname|name|address)\s+is\s+(.+?)[.!]?$/i);
+  const named = namedKo ?? namedEn;
+  if (named) {
+   const key = attributeKey(named[1]), value = named[2].trim();
+   if (key && value && !OTHER_RELATION.test(value) && !/['’]s\b|의/u.test(value)) return {key: serializeAttribute(key), value};
+   return null;
+  }
+  const workKo = input.match(/^(?:(예전에는|전에는)\s+)?(.+?)에서\s*(?:일했어|일해)[.!]?$/u);
+  const groupKo = input.match(/^(?:(예전에는)\s+)?(.+?)에\s*(?:다녔어|다녀)[.!]?$/u);
+  const workEn = input.match(/^I\s+(?:(used to)\s+)?work(?:ed)?\s+at\s+(.+?)[.!]?$/i);
+  const verb = workKo ?? groupKo ?? workEn;
+  if (verb && !OTHER_RELATION.test(verb[2]) && !/['’]s\b|의/u.test(verb[2])) return {key: `${groupKo ? "membership" : "workplace"}:${verb[1] || (workEn && /\bworked\b/i.test(input)) ? "past" : "current"}`, value: verb[2].trim()};
+ }
  if (!hasAllowedSubject(input)) return null;
  let key: string | undefined, value: string | undefined;
  const ko = input.match(/^(?:내|제|나의|저의)\s+(.+?)(?:은|는|이|가)\s*(.+?)(?:이야|야|이에요|예요|입니다|이다|다)?[.!]?$/u);
@@ -106,11 +159,11 @@ export function isUserSubject(text: string): boolean { return extractUserFactVal
 export function deletionFactValue(content: string): string { return extractUserFactValue(content)?.value ?? content; }
 
 export interface DeletedFact { id: string; value: string; key?: string; attribute: import("./types.js").FactAttribute; identity?: Pick<import("./types.js").StructuredFact, "subject" | "property" | "subjectId" | "propertyId"> }
-export interface ScopedTombstone { target: string; project: string | null; factIds: string[]; episodeIds: string[]; deletedFacts: DeletedFact[] }
+export interface ScopedTombstone { target: string; project: string | null; factIds: string[]; episodeIds: string[]; deletedFacts: DeletedFact[]; attributeTarget?: boolean }
 export function applicableTombstones(store: { tombstones?: string[]; tombstoneFactIds?: Record<string, string[]>; scopedTombstones?: ScopedTombstone[] }, project?: string) {
  const scoped = (store.scopedTombstones ?? []).filter(t => t.project === (project ?? null));
  return {
-  targets: [...(store.tombstones ?? []), ...scoped.map(t => t.target)],
+  targets: [...(store.tombstones ?? []), ...scoped.filter(t => !t.attributeTarget).map(t => t.target)],
   episodeIds: new Set(scoped.flatMap(t => t.episodeIds)),
   ids: new Set([...Object.values(store.tombstoneFactIds ?? {}).flat(), ...scoped.flatMap(t => t.factIds)]),
  };

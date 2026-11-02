@@ -1,4 +1,4 @@
-import { deletionFactValue, extractUserFactValue, hasUnsafeDeletionTarget, isTombstoned, mentionsOtherPerson, normalizeDeletionTarget } from "../delete-tombstone.js";
+import { deletionFactValue, extractUserFactValue, hasUnsafeDeletionTarget, isTombstoned, mentionsOtherPerson, matchesNamedDeletionTarget, splitDeletionTargets, normalizeDeletionTarget } from "../delete-tombstone.js";
 import { calculateStrength } from "../decay.js";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -458,13 +458,17 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 			if (!value) return;
 			this.store.scopedTombstones ??= [];
 			const deletedFacts = this.store.facts.filter(f => factIds.includes(f.id)).map(f => ({id: f.id, value: extractUserFactValue(f.content)?.value ?? f.structured?.value ?? deletionFactValue(f.content), ...(extractUserFactValue(f.content) ? {key: extractUserFactValue(f.content)!.key} : {}), attribute: f.attribute ?? "general" as const, ...(f.structured ? {identity: {subject: f.structured.subject, property: f.structured.property, subjectId: f.structured.subjectId, propertyId: f.structured.propertyId}} : {})}));
-			const existing = this.store.scopedTombstones.find(t => t.target === value && t.project === (project ?? null) &&
+			const attributeTarget = splitDeletionTargets(target).some(part => {
+				const normalized = normalizeDeletionTarget(part.replace(/^(?:a|an|the)\s+/i, ""));
+				return !deletedFacts.some(f => normalizeDeletionTarget(f.value.replace(/^(?:a|an|the)\s+/i, "")) === normalized) && deletedFacts.some(f => f.key && matchesNamedDeletionTarget(part, f.key));
+			});
+			const existing = this.store.scopedTombstones.find(t => t.target === value && t.project === (project ?? null) && !!t.attributeTarget === attributeTarget &&
 				!!t.deletedFacts.length && t.factIds.every(id => t.deletedFacts.some(f => f.id === id)));
 			if (existing) {
 				existing.deletedFacts = [...existing.deletedFacts.filter(f => !factIds.includes(f.id)), ...deletedFacts];
 				existing.factIds = [...new Set([...existing.factIds, ...factIds])];
 				existing.episodeIds = [...new Set([...existing.episodeIds, ...episodeIds])];
-			} else this.store.scopedTombstones.push({target: value, project: project ?? null, factIds: [...new Set(factIds)], episodeIds: [...new Set(episodeIds)], deletedFacts});
+			} else this.store.scopedTombstones.push({target: value, project: project ?? null, factIds: [...new Set(factIds)], episodeIds: [...new Set(episodeIds)], deletedFacts, ...(attributeTarget ? {attributeTarget: true} : {})});
 			this.markDirty(); this.save();
 		},
 		remove: async (target: string, options?: {project: string}) => {
@@ -478,9 +482,19 @@ export class LocalAdapter implements MemoryAdapter, BackupCapable {
 		},
 		match: async (target: string, facts: Fact[], request = "", _attribute?: import("../types.js").FactAttribute) => {
 			if (hasUnsafeDeletionTarget(request) || mentionsOtherPerson(request.replace(target, ""))) return [];
-			const matches = facts.filter(f => f.status === "active" && extractUserFactValue(f.content) !== null && normalizeDeletionTarget(target.replace(/^(?:a|an|the)\s+/i, "")) === normalizeDeletionTarget(extractUserFactValue(f.content)!.value.replace(/^(?:a|an|the)\s+/i, "")));
-			if (matches.length > 1) { console.warn("[naia-memory] ambiguous delete ignored"); return []; }
-			return matches;
+			const selected: Fact[] = [];
+			for (const part of splitDeletionTargets(target)) {
+				const active = facts.filter(f => f.status === "active" && extractUserFactValue(f.content) !== null);
+				const matches = active.filter(f => normalizeDeletionTarget(part.replace(/^(?:a|an|the)\s+/i, "")) === normalizeDeletionTarget(extractUserFactValue(f.content)!.value.replace(/^(?:a|an|the)\s+/i, "")));
+				if (matches.length > 1) { console.warn("[naia-memory] ambiguous delete ignored"); continue; }
+				if (matches.length === 1) { selected.push(...matches); continue; }
+				const named = active.filter(f => matchesNamedDeletionTarget(part, extractUserFactValue(f.content)!.key));
+				const keys = new Set(named.map(f => extractUserFactValue(f.content)!.key));
+				const values = new Set(named.map(f => normalizeDeletionTarget(extractUserFactValue(f.content)!.value)));
+				if (keys.size > 1 || (named.length && /^(?:workplace|membership):/.test([...keys][0]) && values.size > 1)) { console.warn("[naia-memory] ambiguous delete ignored"); continue; }
+				selected.push(...named);
+			}
+			return [...new Map(selected.map(f => [f.id, f])).values()];
 		},
 	};
 

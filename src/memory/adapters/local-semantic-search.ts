@@ -157,6 +157,7 @@ export async function searchLocalSemanticMemory(
 				const targets = [...(host.tombstones ?? []), ...(host.scopedTombstones ?? [])
 					.filter(t => t.project === (fact.encodingContext?.project ?? null) &&
 						(!t.deletedFacts.length || t.deletedFacts.some(deleted => !deleted.key || deleted.key === extracted.key)))
+					.filter(t => !t.attributeTarget)
 					.map(t => t.target)];
 				return !isTombstoned(fact.content, targets);
 			});
