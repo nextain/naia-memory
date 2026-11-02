@@ -78,7 +78,7 @@ const PATTERNS: readonly NegPattern[] = [
  * be dropped, or `null` if it should be kept. Patterns are checked first; a
  * matched drop-candidate is rescued only by the FIX exemption.
  */
-export function classifyNegativeCapture(content: string): string | null {
+export function classifyNegativeCapture(content: string, inheritedFirstPerson = false): string | null {
 	const s = String(content ?? "");
 	if (!s.trim()) return null;
 	let matched: string | null = null;
@@ -86,6 +86,8 @@ export function classifyNegativeCapture(content: string): string | null {
 		if (p.re.test(s)) { matched = p.reason; break; }
 	}
 	if (!matched) return null;
+	// A dated first-person experience is not an agent task summary.
+	if (matched === "one-off-task" && /\d{1,2}월\s*\d{1,2}일/.test(s) && (inheritedFirstPerson || /(?:내가|나는|저는|제가)/.test(s))) return null;
 	if (FIX_RE.test(s)) return null; // capture-the-FIX exemption → keep
 	return matched;
 }
@@ -94,13 +96,13 @@ export function classifyNegativeCapture(content: string): string | null {
  * Partition facts into kept / dropped by the negative-capture policy.
  * Generic over any object carrying a `content` string (e.g. ExtractedFact).
  */
-export function filterNegativeCapture<T extends { content: string }>(
+export function filterNegativeCapture<T extends { content: string; inheritedFirstPerson?: boolean }>(
 	facts: readonly T[] | null | undefined,
 ): NegativeCaptureResult<T> {
 	const kept: T[] = [];
 	const dropped: DroppedFact[] = [];
 	for (const f of facts ?? []) {
-		const reason = classifyNegativeCapture(f?.content ?? "");
+		const reason = classifyNegativeCapture(f?.content ?? "", f?.inheritedFirstPerson);
 		if (reason) dropped.push({ content: f.content, reason });
 		else kept.push(f);
 	}

@@ -30,6 +30,7 @@ describe("SqliteAdapter Smoke Test", () => {
         const fact = {
             id: randomUUID(),
             content: "SQLite is better than JSON for scaling.",
+            attribute: "general" as const,
             entities: ["SQLite", "JSON"],
             topics: ["database"],
             createdAt: Date.now(),
@@ -47,6 +48,7 @@ describe("SqliteAdapter Smoke Test", () => {
         const result = await memory.recall("database scaling", { topK: 5 });
         expect(result.facts.length).toBeGreaterThan(0);
         expect(result.facts[0].content).toContain("SQLite");
+        expect((await adapter.semantic.getAll())[0].attribute).toBe("general");
     });
 
     it("persists every concurrently submitted fact before each upsert resolves", async () => {

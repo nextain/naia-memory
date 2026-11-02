@@ -1,3 +1,4 @@
+import { applicableTombstones, isTombstoned, isUserSubject } from "../delete-tombstone.js";
 import { calculateStrength, compareByRelevanceThenStrength } from "../decay.js";
 import type { Episode, MemoryAdapter, RecallContext } from "../types.js";
 import type { MemoryStore } from "./local-model.js";
@@ -75,7 +76,7 @@ export function createLocalEpisodeMemory(
 			// #51 — strength is a retention signal, not a retrieval gate (default 0).
 			const minStrength = context.minStrength ?? 0;
 			const deepRecall = context.deepRecall ?? false;
-			const touch = context.touch ?? true;
+			const touch = context.touch ?? false;
 			const queryVec = await host.embedQuery(query);
 			const store = host.getStore();
 			const epScopeMode = context.scopeMode ?? "soft";
@@ -89,9 +90,14 @@ export function createLocalEpisodeMemory(
 							)
 						: store.episodes.filter((ep) => !ep.encodingContext?.project)
 					: store.episodes;
+			const hiddenEpisode = (episode: Episode) => {
+				const hidden = applicableTombstones(store, episode.encodingContext?.project);
+				return hidden.episodeIds.has(episode.id) || (isUserSubject(episode.content) && isTombstoned(episode.content, hidden.targets)) || (hidden.ids.size > 0 && store.facts.some(f => hidden.ids.has(f.id) && f.sourceEpisodes.includes(episode.id)));
+			};
 			const eligibleEpisodes = projectEpisodes.filter(
 				(episode) =>
 					!isSyntheticSystemEcho(episode) &&
+					!hiddenEpisode(episode) &&
 					episode.content.trim() !== query.trim(),
 			);
 			const episodeLexicalScores = new Map<string, number>();
@@ -177,7 +183,11 @@ export function createLocalEpisodeMemory(
 		getRecent: async (n: number): Promise<Episode[]> =>
 			host
 				.getStore()
-				.episodes.filter((ep) => ep.status !== "archived")
+				.episodes.filter((ep) => {
+					const store = host.getStore();
+					const hidden = applicableTombstones(store, ep.encodingContext?.project);
+					return ep.status !== "archived" && !hidden.episodeIds.has(ep.id) && !(isUserSubject(ep.content) && isTombstoned(ep.content, hidden.targets)) && (hidden.ids.size === 0 || !store.facts.some(f => hidden.ids.has(f.id) && f.sourceEpisodes.includes(ep.id)));
+				})
 				.sort((a, b) => b.timestamp - a.timestamp)
 				.slice(0, n),
 
