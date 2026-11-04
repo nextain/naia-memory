@@ -55,7 +55,8 @@ function normalizeLabel(value: string | undefined): string {
 function labelsMatch(a: string | undefined, b: string | undefined): boolean {
 	const left = normalizeLabel(a);
 	const right = normalizeLabel(b);
-	if (left.length < 2 || right.length < 2) return false;
+	// Generic labels such as "이름" must not match every "<noun> 이름".
+	if (left.length < 3 || right.length < 3) return false;
 	return left === right || left.includes(right) || right.includes(left);
 }
 
@@ -145,6 +146,7 @@ export async function resolveDeleteTarget(options: {
 							structured: {
 								subjectId: candidate.structured.subjectId,
 								propertyId: candidate.structured.propertyId,
+								property: candidate.structured.property,
 								value: candidate.structured.value,
 								polarity: candidate.structured.polarity,
 								cardinality: candidate.structured.cardinality,

@@ -365,4 +365,32 @@ describe("delete by property label", () => {
 		expect(verifier).not.toHaveBeenCalled();
 		expect(result).toEqual({ status: "denied" });
 	});
+
+	it("does not match through a generic two-character label", async () => {
+		const snail = labelled("snail", "단추");
+		snail.structured = { ...snail.structured!, property: "이름" };
+		const walk = {
+			...proposed,
+			structured: { ...proposed.structured!, property: "산책로 이름", value: "산책로 이름" },
+		} as ExtractedFact;
+		const verifier = vi.fn<DeleteVerifier>(async () => ({ authorized: true, targetFactId: "snail" }));
+		const result = await resolveDeleteTarget({
+			episode: labelEpisode,
+			fact: walk,
+			existingFacts: [snail],
+			verifier,
+		});
+		expect(verifier).not.toHaveBeenCalled();
+		expect(result).toEqual({ status: "denied" });
+	});
+
+	it("tells the verifier each candidate's property label", async () => {
+		const target = labelled("alias", "유리나침반");
+		const verifier = vi.fn<DeleteVerifier>(async (_ep, _fact, candidates) => ({
+			authorized: true,
+			targetFactId: candidates[0]!.id,
+		}));
+		await resolveDeleteTarget({ episode: labelEpisode, fact: proposed, existingFacts: [target], verifier });
+		expect(verifier.mock.calls[0]?.[2][0]?.structured.property).toBe("예전 공방 별칭");
+	});
 });
