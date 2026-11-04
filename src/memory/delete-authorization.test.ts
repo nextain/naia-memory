@@ -393,4 +393,22 @@ describe("delete by property label", () => {
 		await resolveDeleteTarget({ episode: labelEpisode, fact: proposed, existingFacts: [target], verifier });
 		expect(verifier.mock.calls[0]?.[2][0]?.structured.property).toBe("예전 공방 별칭");
 	});
+
+	it("matches \"예전 주소\" with a stored \"이전 주소\" fact but not the current residence", async () => {
+		const old = labelled("old", "물결로 18");
+		old.structured = { ...old.structured!, property: "이전 주소" };
+		const current = labelled("cur", "파도시 조개구");
+		current.structured = { ...current.structured!, property: "거주지", propertyId: "profile:residence", subjectId: "person:self" };
+		const addr = {
+			...proposed,
+			structured: { ...proposed.structured!, property: "예전 주소", value: "예전 주소" },
+		} as ExtractedFact;
+		const verifier = vi.fn<DeleteVerifier>(async (_ep, _fact, candidates) => ({
+			authorized: true,
+			targetFactId: candidates[0]!.id,
+		}));
+		const result = await resolveDeleteTarget({ episode: labelEpisode, fact: addr, existingFacts: [old, current], verifier });
+		expect(verifier.mock.calls[0]?.[2].map((c) => c.id)).toEqual(["old"]);
+		expect(result).toEqual({ status: "authorized", targets: [old] });
+	});
 });

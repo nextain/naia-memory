@@ -46,18 +46,23 @@ function normalizeLabel(value: string | undefined): string {
 	return (value ?? "")
 		.normalize("NFC")
 		.toLowerCase()
-		.replace(/[\s\p{P}\p{S}]+/gu, "");
+		.replace(/[\s\p{P}\p{S}]+/gu, "")
+		// Temporal modifiers vary between turns ("예전/이전/옛/전에 말한 주소"); the property is the rest.
+		.replace(/^(?:전에말한|지난번에말한|예전|이전|옛|지난|former|previous|old)/u, "");
 }
 
 // "예전 공방 별칭은 지워줘" names the property, not the value, and the closed
-// vocabulary has no id for it. Match on the property label (one contains the
-// other) so the verifier still gets the candidates; it remains the authority.
+// vocabulary has no id for it. Match on the property label so the verifier
+// still gets the candidates; it remains the authority. Equal labels match at
+// any length; containment needs 3+ characters so a generic label such as
+// "이름" cannot match every "<noun> 이름".
 function labelsMatch(a: string | undefined, b: string | undefined): boolean {
 	const left = normalizeLabel(a);
 	const right = normalizeLabel(b);
-	// Generic labels such as "이름" must not match every "<noun> 이름".
+	if (left.length < 2 || right.length < 2) return false;
+	if (left === right) return true;
 	if (left.length < 3 || right.length < 3) return false;
-	return left === right || left.includes(right) || right.includes(left);
+	return left.includes(right) || right.includes(left);
 }
 
 function eligibleCandidates(
