@@ -15,7 +15,11 @@
 
 import { hasGroundedDeleteEvidence } from "./delete-grounding.js";
 import type { ExtractedFact } from "./index.js";
-import { chatCompletionsUrl, temperatureField } from "./llm-request.js";
+import {
+	chatCompletionsUrl,
+	maxTokensField,
+	temperatureField,
+} from "./llm-request.js";
 import {
 	inferEnglishMemoryPropertyId,
 	isMemoryPropertyId,
@@ -316,7 +320,7 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
 				messages: [{ role: "user", content: prompt }],
 				// Gemini 2.5 may spend part of this budget on internal reasoning. A
 				// 2K ceiling can therefore truncate even a short JSON payload.
-				max_tokens: Math.max(8192, episodes.length * 400),
+				...maxTokensField(model, Math.max(8192, episodes.length * 400)),
 				// Extraction is a contract parse, not creative generation. Zero reduces
 				// multilingual key/cardinality drift across repeated benchmark runs; GPT-5 family omits it.
 				...temperatureField(model, 0, temperature),

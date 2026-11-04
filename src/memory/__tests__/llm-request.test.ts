@@ -10,6 +10,7 @@ import { buildLLMQueryStructurer } from "../llm-query-structurer.js";
 import {
 	chatCompletionsUrl,
 	isGpt5FamilyModel,
+	maxTokensField,
 	temperatureField,
 } from "../llm-request.js";
 import { buildLLMSummarizer } from "../llm-summarizer.js";
@@ -514,5 +515,28 @@ describe("memory-LLM request builders for GPT-5 and Gemini", () => {
 			expect("temperature" in (capturedBody ?? {})).toBe(false);
 			expect("tools" in (capturedBody ?? {})).toBe(false);
 		});
+	});
+});
+
+describe("maxTokensField", () => {
+	it("uses max_completion_tokens for the GPT-5 family and max_tokens otherwise", () => {
+		expect(maxTokensField("gpt-5.6-luna", 2048)).toEqual({ max_completion_tokens: 2048 });
+		expect(maxTokensField("azure:gpt-5.4-nano", 10)).toEqual({ max_completion_tokens: 10 });
+		expect(maxTokensField("gemini-3.5-flash", 2048)).toEqual({ max_tokens: 2048 });
+		expect(maxTokensField(undefined, 5)).toEqual({ max_tokens: 5 });
+	});
+
+	it("is sent by the delete verifier and extractor for GPT-5 models", async () => {
+		const bodies: Record<string, unknown>[] = [];
+		const injected = vi.fn(async (_url: unknown, init?: RequestInit) => {
+			bodies.push(JSON.parse(String(init?.body)));
+			return new Response(JSON.stringify({ choices: [{ message: { content: "{}" } }] }), { status: 200 });
+		});
+		vi.stubGlobal("fetch", injected);
+		const extractor = buildLLMFactExtractor({ apiKey: "k", baseURL: "https://fake.invalid/v1/", model: "gpt-5.6-luna", maxAttempts: 1 });
+		await extractor([episode]);
+		expect(bodies[0]).toHaveProperty("max_completion_tokens");
+		expect(bodies[0]).not.toHaveProperty("max_tokens");
+		vi.unstubAllGlobals();
 	});
 });

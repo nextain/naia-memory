@@ -19,6 +19,16 @@ export function temperatureField(
 	return { temperature: fallback };
 }
 
+/** Output-token cap field. GPT-5 family rejects `max_tokens` on OpenAI's own endpoint and wants `max_completion_tokens`. */
+export function maxTokensField(
+	model: string | undefined,
+	limit: number,
+): { max_tokens: number } | { max_completion_tokens: number } {
+	return isGpt5FamilyModel(model)
+		? { max_completion_tokens: limit }
+		: { max_tokens: limit };
+}
+
 /** `<base>/chat/completions` with exactly one "/" between, whether or not `baseURL` ends with slashes. */
 export function chatCompletionsUrl(baseURL: string): string {
 	return `${String(baseURL ?? "").trim().replace(/\/+$/, "")}/chat/completions`;
