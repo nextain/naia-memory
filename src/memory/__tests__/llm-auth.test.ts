@@ -607,3 +607,38 @@ describe("OpenAI-compatible LLM auth", () => {
 		expect(headers.Authorization).toBeUndefined();
 	});
 });
+
+describe("fact extraction batch resilience", () => {
+	const ep = (n: number): Episode => ({ ...episode, id: `episode-${n}`, content: `사용자 취미는 ${n}번 취미다.` });
+	const ok = (n: number) =>
+		new Response(
+			JSON.stringify({ choices: [{ message: { content: JSON.stringify({ "1": [`사용자 취미: ${n}`] }) } }] }),
+			{ status: 200 },
+		);
+
+	it("retries a failed batch one episode at a time", async () => {
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		let batchCalls = 0;
+		const injected = vi.fn(async (_url: unknown, init?: RequestInit) => {
+			const body = JSON.parse(String(init?.body));
+			const episodes = String(body.messages[0].content).match(/사용자 취미는 \d번 취미다\./g) ?? [];
+			if (episodes.length > 1) {
+				batchCalls++;
+				return new Response("gateway timeout", { status: 504 });
+			}
+			return ok(Number(/(\d)번 취미/.exec(String(body.messages[0].content))?.[1]));
+		});
+		const extractor = buildLLMFactExtractor({ apiKey: "", baseURL: "https://fake.invalid", model: "x", fetch: injected as typeof fetch, maxAttempts: 1 });
+		const facts = await extractor([ep(1), ep(2), ep(3)]);
+		expect(batchCalls).toBe(1);
+		expect(facts).toHaveLength(3);
+		vi.restoreAllMocks();
+	});
+
+	it("keeps throw policy strict", async () => {
+		const injected = vi.fn(async () => new Response("down", { status: 504 }));
+		const extractor = buildLLMFactExtractor({ apiKey: "", baseURL: "https://fake.invalid", model: "x", fetch: injected as typeof fetch, maxAttempts: 1, failurePolicy: "throw" });
+		await expect(extractor([ep(1), ep(2)])).rejects.toThrow(/504/);
+		expect(injected).toHaveBeenCalledOnce();
+	});
+});

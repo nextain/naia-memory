@@ -42,6 +42,23 @@ export function hasGroundedDeleteAuthority(
 	});
 }
 
+function normalizeLabel(value: string | undefined): string {
+	return (value ?? "")
+		.normalize("NFC")
+		.toLowerCase()
+		.replace(/[\s\p{P}\p{S}]+/gu, "");
+}
+
+// "예전 공방 별칭은 지워줘" names the property, not the value, and the closed
+// vocabulary has no id for it. Match on the property label (one contains the
+// other) so the verifier still gets the candidates; it remains the authority.
+function labelsMatch(a: string | undefined, b: string | undefined): boolean {
+	const left = normalizeLabel(a);
+	const right = normalizeLabel(b);
+	if (left.length < 2 || right.length < 2) return false;
+	return left === right || left.includes(right) || right.includes(left);
+}
+
 function eligibleCandidates(
 	existingFacts: Fact[],
 	fact: ExtractedFact,
@@ -73,9 +90,30 @@ function eligibleCandidates(
 		),
 	);
 	const identityFallback = oneEquivalentValue ? sameIdentity : [];
+	const sameLabel = proposed.propertyId
+		? []
+		: existingFacts.filter(
+				(candidate) =>
+					candidate.status === "active" &&
+					candidate.structured?.polarity === "affirmed" &&
+					!candidate.structured.propertyId &&
+					((proposed.subjectId !== undefined &&
+						candidate.structured.subjectId === proposed.subjectId) ||
+						labelsMatch(candidate.structured.subject, proposed.subject)) &&
+					labelsMatch(candidate.structured.property, proposed.property),
+			);
+	const oneLabelValue = sameLabel.every((candidate) =>
+		sameLabel.every(
+			(other) =>
+				candidate.structured !== undefined &&
+				other.structured !== undefined &&
+				sameStructuredValue(candidate.structured, other.structured),
+		),
+	);
+	const labelFallback = oneLabelValue ? sameLabel : [];
 	return [
 		...new Map(
-			[...exact, ...sameValue, ...identityFallback].map((candidate) => [
+			[...exact, ...sameValue, ...identityFallback, ...labelFallback].map((candidate) => [
 				candidate.id,
 				candidate,
 			]),

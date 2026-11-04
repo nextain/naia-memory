@@ -285,3 +285,84 @@ describe("delete candidate authorization", () => {
 		expect(verifier).not.toHaveBeenCalled();
 	});
 });
+
+describe("delete by property label", () => {
+	const labelEpisode = {
+		id: "episode-label",
+		content: "예전 공방 별칭은 지워줘.",
+		role: "user",
+	} as Episode;
+	const proposed = {
+		content: "사용자 공방 별칭",
+		operation: "delete",
+		structured: {
+			subject: "사용자",
+			property: "공방 별칭",
+			value: "공방 별칭",
+			polarity: "affirmed",
+			cardinality: "single",
+		},
+		deleteEvidence: {
+			kind: "explicit_removal_request",
+			evidenceQuote: "예전 공방 별칭은 지워줘.",
+			targetQuote: "공방 별칭",
+		},
+		sourceEpisodeIds: [labelEpisode.id],
+	} as ExtractedFact;
+	function labelled(id: string, value: string): Fact {
+		return {
+			id,
+			content: `사용자 예전 공방 별칭: ${value}`,
+			status: "active",
+			structured: {
+				subject: "사용자",
+				property: "예전 공방 별칭",
+				value,
+				polarity: "affirmed",
+				cardinality: "single",
+			},
+		} as Fact;
+	}
+
+	it("passes a sole fact with the same property label to the verifier", async () => {
+		const target = labelled("alias", "유리나침반");
+		const verifier = vi.fn<DeleteVerifier>(async (_ep, _fact, candidates) => ({
+			authorized: true,
+			targetFactId: candidates[0]?.id,
+		}));
+		const result = await resolveDeleteTarget({
+			episode: labelEpisode,
+			fact: proposed,
+			existingFacts: [target],
+			verifier,
+		});
+		expect(verifier.mock.calls[0]?.[2]).toEqual([expect.objectContaining({ id: "alias" })]);
+		expect(result).toEqual({ status: "authorized", targets: [target] });
+	});
+
+	it("fails closed when the label matches several distinct values", async () => {
+		const verifier = vi.fn<DeleteVerifier>(async () => ({ authorized: true, targetFactId: "unused" }));
+		const result = await resolveDeleteTarget({
+			episode: labelEpisode,
+			fact: proposed,
+			existingFacts: [labelled("a", "유리나침반"), labelled("b", "달종이방")],
+			verifier,
+		});
+		expect(verifier).not.toHaveBeenCalled();
+		expect(result).toEqual({ status: "denied" });
+	});
+
+	it("does not match facts of another property", async () => {
+		const other = labelled("other", "파랑콩");
+		other.structured = { ...other.structured!, property: "우산 애칭" };
+		const verifier = vi.fn<DeleteVerifier>(async () => ({ authorized: true, targetFactId: "unused" }));
+		const result = await resolveDeleteTarget({
+			episode: labelEpisode,
+			fact: proposed,
+			existingFacts: [other],
+			verifier,
+		});
+		expect(verifier).not.toHaveBeenCalled();
+		expect(result).toEqual({ status: "denied" });
+	});
+});

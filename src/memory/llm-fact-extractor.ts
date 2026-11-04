@@ -32,7 +32,7 @@ export interface LLMFactExtractorOptions {
 	baseURL?: string;
 	/** Model to use. Default: gemini-2.5-flash-lite (fast, cheap) */
 	model?: string;
-	/** Max episodes to send in a single API call. Default: 10 */
+	/** Max episodes to send in a single API call. Default: 5 */
 	batchSize?: number;
 	/** Product default skips failed batches; benchmarks should use throw. */
 	failurePolicy?: "skip" | "throw";
@@ -58,7 +58,7 @@ const DEFAULT_BASE_URL = USE_GATEWAY
 const DEFAULT_MODEL = USE_GATEWAY
 	? "vertexai:gemini-2.5-flash-lite"
 	: "gemini-2.5-flash-lite";
-const DEFAULT_BATCH_SIZE = 10;
+const DEFAULT_BATCH_SIZE = 5;
 
 function normalizedDeleteQuote(value: string): string {
 	return value.normalize("NFC").trim();
@@ -103,16 +103,35 @@ export function buildLLMFactExtractor(
 
 		for (let i = 0; i < episodes.length; i += batchSize) {
 			const batch = episodes.slice(i, i + batchSize);
-			const extracted = await extractBatch(batch, {
-				apiKey,
-				baseURL,
-				model,
-				auth,
-				failurePolicy,
-				temperature,
-				request,
-			}, Number.isFinite(maxAttempts) ? Math.max(1, Math.floor(maxAttempts)) : 3);
-			results.push(...extracted);
+			const retries = Number.isFinite(maxAttempts)
+				? Math.max(1, Math.floor(maxAttempts))
+				: 3;
+			const run = (
+				part: Episode[],
+				policy: "skip" | "throw",
+			): Promise<ExtractedFact[]> =>
+				extractBatch(
+					part,
+					{ apiKey, baseURL, model, auth, failurePolicy: policy, temperature, request },
+					retries,
+				);
+			if (failurePolicy === "throw" || batch.length === 1) {
+				results.push(...(await run(batch, failurePolicy)));
+				continue;
+			}
+			// A failed batch (HTTP 5xx after retries, malformed JSON) must not drop
+			// every episode in it: retry one episode at a time and skip only the
+			// episodes that still fail.
+			try {
+				results.push(...(await run(batch, "throw")));
+			} catch {
+				console.warn(
+					`[LLMFactExtractor] batch of ${batch.length} failed; retrying episodes one by one`,
+				);
+				for (const episode of batch) {
+					results.push(...(await run([episode], "skip")));
+				}
+			}
 		}
 
 		return results;
