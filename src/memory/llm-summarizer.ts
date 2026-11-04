@@ -8,6 +8,8 @@ import type { CompactionSummarizer } from "./index.js";
 import { chatCompletionsUrl, temperatureField } from "./llm-request.js";
 
 export interface LLMSummarizerOptions {
+	fetch?: typeof globalThis.fetch;
+	failurePolicy?: "skip" | "throw";
 	/** OpenAI-compat API key(로컬 서버는 빈 값 허용). */
 	apiKey: string;
 	/** Provider transport auth. 기본 bearer, Naia/AnyLLM gateway는 x-anyllm. */
@@ -49,7 +51,7 @@ export function buildLLMSummarizer(
 		}\n\n대화:\n${transcript}\n\n요약(평문, 군더더기 없이):`;
 
 		try {
-			const res = await fetch(chatCompletionsUrl(baseURL), {
+			const res = await (options.fetch ?? globalThis.fetch)(chatCompletionsUrl(baseURL), {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -67,14 +69,15 @@ export function buildLLMSummarizer(
 				}),
 				...(input.signal ? { signal: input.signal } : {}),
 			});
-			if (!res.ok) return seed; // 비-OK → 결정론 recap 폴백
+			if (!res.ok) { if (options.failurePolicy === "throw") throw new Error(`LLM summary HTTP ${res.status}`); return seed; } // 비-OK → 결정론 recap 폴백
 			const data = (await res.json()) as {
 				choices?: Array<{ message?: { content?: unknown } }>;
 			};
 			const content = data?.choices?.[0]?.message?.content;
 			const polished = typeof content === "string" ? content.trim() : "";
 			return polished || seed;
-		} catch {
+		} catch (error) {
+            if (options.failurePolicy === "throw") throw error;
 			return seed; // 네트워크/abort 실패 = 무손실 폴백
 		}
 	};

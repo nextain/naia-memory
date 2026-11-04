@@ -80,3 +80,7 @@ P04 증거(2026-09-23, Windows, nextain/naia-memory#51): typecheck·build 통과
 구현 및 검증 추적은 `src/memory/structured-facts.ts`,
 `src/memory/structured-mutation-policy.ts`, `src/memory/structured-duplicate-reconciliation.ts`,
 `src/memory/__tests__/structured-*.test.ts`, `src/benchmark/quality/**`에 연결된다.
+
+
+## R17 — 요청별 LLM 전송 주입 (#792 P01–P05)
+Agent가 선택한 작은 LLM·메인 대체의 전송을 추출/요약의 기존 안전 파서에 주입한다. 전역 fetch를 교체하지 않고 인스턴스별 fetch를 받으며, 실패를 호출자에게 전달하는 옵션과 유한 재시도 횟수를 지원한다. 기본 동작·삭제 근거 검증·언어 보존·인증 헤더는 유지한다. Test Coverage Map: `src/memory/__tests__/llm-auth.test.ts` 주입 격리·실패 재시도 + Agent R17 실제 gRPC 재시작 시험.

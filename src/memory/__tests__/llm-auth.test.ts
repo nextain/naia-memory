@@ -564,3 +564,24 @@ describe("OpenAI-compatible LLM auth", () => {
 		expect(headers.Authorization).toBeUndefined();
 	});
 });
+
+
+describe("R17 scoped transport", () => {
+ it("uses injected extraction and summary transports without global requests", async () => {
+   const ambient = vi.fn(() => { throw new Error("unexpected global fetch"); }); vi.stubGlobal("fetch", ambient);
+   const request = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+     const body = JSON.parse(String(init?.body));
+     return new Response(JSON.stringify({ choices: [{ message: { content: body.model === "facts" ? '{"1":["사용자 선호 에디터는 VS Code다."]}' : '요약 내용' } }] }));
+   });
+   const facts = await buildLLMFactExtractor({ apiKey: "", model: "facts", fetch: request, maxAttempts: 1, failurePolicy: "throw" })([episode]);
+   expect(facts[0].content).toContain("VS Code");
+   const summary = await buildLLMSummarizer({ apiKey: "", model: "summary", fetch: request, failurePolicy: "throw" })({ messages: [{ role: "user", content: "내용" }], keepTail: 0, targetTokens: 100, seedSummary: "seed" });
+   expect(summary).toBe("요약 내용"); expect(request).toHaveBeenCalledTimes(2); expect(ambient).not.toHaveBeenCalled();
+ });
+ it("honors one attempt and propagates an injected failure", async () => {
+   const request = vi.fn(async () => { throw new Error("offline"); });
+   await expect(buildLLMFactExtractor({ apiKey: "", fetch: request, maxAttempts: 1, failurePolicy: "throw" })([episode])).rejects.toThrow();
+   expect(request).toHaveBeenCalledOnce();
+   await expect(buildLLMSummarizer({ apiKey: "", fetch: request, failurePolicy: "throw" })({ messages: [{ role: "user", content: "내용" }], keepTail: 0, targetTokens: 100, seedSummary: "seed" })).rejects.toThrow("offline");
+ });
+});

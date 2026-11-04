@@ -24,6 +24,8 @@ import {
 import type { Episode, StructuredFact } from "./types.js";
 
 export interface LLMFactExtractorOptions {
+	fetch?: typeof globalThis.fetch;
+	maxAttempts?: number;
 	/** Gemini (or OpenAI-compatible) API key */
 	apiKey: string;
 	/** Provider transport auth. Default bearer; Naia/AnyLLM gateway uses x-anyllm. */
@@ -103,7 +105,8 @@ export function buildLLMFactExtractor(
 				auth,
 				failurePolicy,
 				temperature,
-			});
+                fetch: options.fetch,
+			}, Number.isInteger(options.maxAttempts) && options.maxAttempts! >= 1 && options.maxAttempts! <= 3 ? options.maxAttempts! : 3);
 			results.push(...extracted);
 		}
 
@@ -124,6 +127,7 @@ async function extractBatch(
 		auth: "bearer" | "x-anyllm";
 		failurePolicy: "skip" | "throw";
 		temperature?: number | null;
+        fetch?: typeof globalThis.fetch;
 	},
 	retries = 3,
 ): Promise<ExtractedFact[]> {
@@ -273,7 +277,7 @@ Structured format: {"1": [{"content":"사용자 거주지: 서울","operation":"
 Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"delete","deleteEvidenceKind":"explicit_removal_request","deleteEvidenceQuote":"땅콩 알레르기 기억을 삭제해 줘.","deleteTargetQuote":"땅콩 알레르기","structured":{"subject":"사용자","subjectId":"person:self","property":"알레르기","propertyId":"profile:allergy","value":"땅콩","polarity":"affirmed","cardinality":"multi"}}]}`;
 
 	const call = () =>
-		fetch(chatCompletionsUrl(baseURL), {
+		(opts.fetch ?? globalThis.fetch)(chatCompletionsUrl(baseURL), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -305,7 +309,7 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
 			console.warn(
 				`[LLMFactExtractor] API ${response.status}, retry ${attempt}/${retries} in ${delay}ms`,
 			);
-			await new Promise((r) => setTimeout(r, delay));
+			if (attempt < retries) await new Promise((r) => setTimeout(r, delay));
 		} catch (err: unknown) {
 			if (attempt === retries) {
 				if (failurePolicy === "throw") {

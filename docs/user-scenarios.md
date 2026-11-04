@@ -143,3 +143,7 @@ V-model의 사용자 시나리오(UC)에서 검증 테스트까지 추적하는 
 | UC-BENCH-01, UC-BENCH-02 | `src/benchmark/**` 계약·영수증·동일 설정 검증 |
 | UC-BENCH-03 | `src/benchmark/quality/public-evidence-review.test.ts` |
 | UC-MEM-01, UC-MEM-02 | `src/memory/__tests__/structured-*.test.ts`, `src/memory/__tests__/memory-system.test.ts` |
+
+
+## R17 — 요청별 LLM 전송 주입 (#792 P01–P05)
+Agent가 선택한 작은 LLM·메인 대체의 전송을 추출/요약의 기존 안전 파서에 주입한다. 전역 fetch를 교체하지 않고 인스턴스별 fetch를 받으며, 실패를 호출자에게 전달하는 옵션과 유한 재시도 횟수를 지원한다. 기본 동작·삭제 근거 검증·언어 보존·인증 헤더는 유지한다. Test Coverage Map: `src/memory/__tests__/llm-auth.test.ts` 주입 격리·실패 재시도 + Agent R17 실제 gRPC 재시작 시험.
