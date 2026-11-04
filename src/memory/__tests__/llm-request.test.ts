@@ -539,4 +539,30 @@ describe("maxTokensField", () => {
 		expect(bodies[0]).not.toHaveProperty("max_tokens");
 		vi.unstubAllGlobals();
 	});
+
+	it("keeps the word JSON in the verifier prompt (OpenAI json_object mode requires it)", async () => {
+		const bodies: { messages: { content: string }[] }[] = [];
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async (_url: unknown, init?: RequestInit) => {
+				bodies.push(JSON.parse(String(init?.body)));
+				return new Response(JSON.stringify({ choices: [{ message: { content: '{"authorized":false}' } }] }), { status: 200 });
+			}),
+		);
+		const verifier = buildLLMDeleteVerifier({ apiKey: "k", baseURL: "https://fake.invalid/v1/", model: "gpt-5.6-luna" });
+		await verifier(
+			{ ...episode, content: "내 우산 애칭을 지워줘." },
+			{
+				content: "사용자 우산 애칭",
+				operation: "delete",
+				structured: { subject: "사용자", property: "우산 애칭", value: "우산 애칭", polarity: "affirmed", cardinality: "single" },
+				deleteEvidence: { kind: "explicit_removal_request", evidenceQuote: "내 우산 애칭을 지워줘.", targetQuote: "우산 애칭" },
+				sourceEpisodeIds: [episode.id],
+			} as never,
+			[{ id: "f1", structured: { value: "파랑콩", polarity: "affirmed", cardinality: "single" } }] as never,
+		);
+		expect(bodies[0]?.messages[0]?.content).toMatch(/json/i);
+		expect(bodies[0]).toHaveProperty("max_completion_tokens");
+		vi.unstubAllGlobals();
+	});
 });
