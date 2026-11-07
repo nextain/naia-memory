@@ -57,6 +57,9 @@ export function hasGroundedDeleteEvidence(
 		hasVisibleSubstance(target) &&
 		Boolean(subject && property && value) &&
 		episode.includes(target) &&
-		(target.toLowerCase().includes(value.toLowerCase()) || hasStableIdentity)
+		(target.toLowerCase().includes(value.toLowerCase()) ||
+			(episode.toLowerCase().includes(value.toLowerCase()) &&
+				value.toLowerCase().includes(target.toLowerCase())) ||
+			hasStableIdentity)
 	);
 }

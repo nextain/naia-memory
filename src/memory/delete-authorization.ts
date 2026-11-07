@@ -43,12 +43,17 @@ export function hasGroundedDeleteAuthority(
 }
 
 function normalizeLabel(value: string | undefined): string {
-	return (value ?? "")
+	const raw = (value ?? "")
 		.normalize("NFC")
 		.toLowerCase()
-		.replace(/[\s\p{P}\p{S}]+/gu, "")
+		.replace(/[\s\p{P}\p{S}]+/gu, "");
+	const withoutSubj = raw.replace(/^(?:사용자가|사용자의|사용자|내가|나의|내)/u, "");
+	const stripped = (withoutSubj.length >= 2 ? withoutSubj : raw)
+		.replace(/^\d{4}년\d{1,2}월(?:에이용한|에다닌|에일한)?/u, "")
 		// Temporal modifiers vary between turns ("예전/이전/옛/전에 말한 주소"); the property is the rest.
-		.replace(/^(?:전에말한|지난번에말한|예전|이전|옛|지난|former|previous|old)/u, "");
+		.replace(/^(?:전에말한|지난번에말한|지난달|예전|이전|옛|지난|former|previous|old)+/u, "");
+	const withoutName = stripped.replace(/(?:이름|명칭|name)$/u, "");
+	return withoutName.length >= 2 ? withoutName : stripped;
 }
 
 // "예전 공방 별칭은 지워줘" names the property, not the value, and the closed
@@ -87,27 +92,40 @@ function eligibleCandidates(
 	// Extractors can represent one referent with different surface forms across
 	// turns. A sole value is unambiguous enough for the verifier even when it was
 	// duplicated across turns; multiple distinct values remain fail-closed.
-	const oneEquivalentValue = sameIdentity.every((candidate) =>
-		sameIdentity.every(
+	const targetQuote = fact.deleteEvidence?.targetQuote;
+	const isHistoricalTarget =
+		/^(?:전에\s*말한|지난번에\s*말한|지난달|예전|이전|옛|지난|former|previous|old)/iu.test(
+			(targetQuote ?? "").trim(),
+		) ||
+		/^(?:전에\s*말한|지난번에\s*말한|지난달|예전|이전|옛|지난|former|previous|old)/iu.test(
+			(proposed.property ?? "").trim(),
+		);
+	const matchesLabel = (candidate: Fact, status: Fact["status"]) =>
+		candidate.status === status &&
+		candidate.structured?.polarity === "affirmed" &&
+		!candidate.structured.propertyId &&
+		((proposed.subjectId !== undefined &&
+			candidate.structured.subjectId === proposed.subjectId) ||
+			labelsMatch(candidate.structured.subject, proposed.subject)) &&
+		(labelsMatch(candidate.structured.property, proposed.property) ||
+			(targetQuote !== undefined &&
+				labelsMatch(candidate.structured.property, targetQuote)));
+	const activeSameLabel = existingFacts.filter((c) => matchesLabel(c, "active"));
+	const sameLabel =
+		activeSameLabel.length > 0
+			? activeSameLabel
+			: existingFacts.filter((c) => matchesLabel(c, "superseded"));
+	const filteredSameIdentity =
+		isHistoricalTarget && sameLabel.length > 0 ? [] : sameIdentity;
+	const oneEquivalentValue = filteredSameIdentity.every((candidate) =>
+		filteredSameIdentity.every(
 			(other) =>
 				candidate.structured !== undefined &&
 				other.structured !== undefined &&
 				sameStructuredValue(candidate.structured, other.structured),
 		),
 	);
-	const identityFallback = oneEquivalentValue ? sameIdentity : [];
-	const sameLabel = proposed.propertyId
-		? []
-		: existingFacts.filter(
-				(candidate) =>
-					candidate.status === "active" &&
-					candidate.structured?.polarity === "affirmed" &&
-					!candidate.structured.propertyId &&
-					((proposed.subjectId !== undefined &&
-						candidate.structured.subjectId === proposed.subjectId) ||
-						labelsMatch(candidate.structured.subject, proposed.subject)) &&
-					labelsMatch(candidate.structured.property, proposed.property),
-			);
+	const identityFallback = oneEquivalentValue ? filteredSameIdentity : [];
 	const oneLabelValue = sameLabel.every((candidate) =>
 		sameLabel.every(
 			(other) =>
@@ -173,9 +191,10 @@ export async function resolveDeleteTarget(options: {
 		if (!target?.structured) return { status: "denied" };
 		const targets = candidates.filter(
 			(candidate) =>
-				candidate.structured !== undefined &&
-				sameStructuredIdentity(candidate.structured, target.structured!) &&
-				sameStructuredValue(candidate.structured, target.structured!),
+				candidate.id === target.id ||
+				(candidate.structured !== undefined &&
+					sameStructuredIdentity(candidate.structured, target.structured!) &&
+					sameStructuredValue(candidate.structured, target.structured!)),
 		);
 		return targets.length > 0
 			? { status: "authorized", targets }

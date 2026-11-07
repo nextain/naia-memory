@@ -4,6 +4,10 @@ function comparisonKey(value: string): string {
 	return value.normalize("NFC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
 
+function propertyComparisonKey(value: string): string {
+	return comparisonKey(value).replace(/^반려\s+/u, "");
+}
+
 function subjectComparisonKey(value: string): string {
 	return comparisonKey(value)
 		.replace(/[’']s\b/gu, "")
@@ -81,7 +85,7 @@ export function sameStructuredIdentity(
 	}
 	return (
 		comparisonKey(left.subject) === comparisonKey(right.subject) &&
-		comparisonKey(left.property) === comparisonKey(right.property)
+		propertyComparisonKey(left.property) === propertyComparisonKey(right.property)
 	);
 }
 

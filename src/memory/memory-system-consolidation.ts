@@ -219,6 +219,47 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								await this.adapter.semantic.upsert(target);
 						}
 						factsUpdated += archivedTargets.length;
+						if (ef.deleteEvidence?.kind === "explicit_removal_request") {
+							const rawStore = (this.adapter as any).getStore?.();
+							if (rawStore && Array.isArray(rawStore.episodes)) {
+								const hasUpsertInSrc = extracted.some(
+									(other) =>
+										other.operation !== "delete" &&
+										other.sourceEpisodeIds.includes(srcEp.id),
+								);
+								if (!hasUpsertInSrc) {
+									const storedSrc = rawStore.episodes.find(
+										(e: any) => e.id === srcEp.id,
+									);
+									if (storedSrc) storedSrc.status = "archived";
+								}
+								for (const target of archivedTargets) {
+									const delVal = target.structured?.value?.trim();
+									if (!delVal || delVal.length < 2) continue;
+									for (const ep of rawStore.episodes) {
+										if (!ep.content || !ep.content.includes(delVal)) continue;
+										const sentences = ep.content
+											.split(/(?<=[.!?])\s+/u)
+											.map((sent: string) => {
+												if (!sent.includes(delVal)) return sent;
+												const clauses = sent
+													.split(/,\s*/u)
+													.filter((c: string) => !c.includes(delVal));
+												if (clauses.length === 0) return "";
+												const joined = clauses.join(", ").trim();
+												return /[.!?]$/u.test(joined) ? joined : `${joined}.`;
+											})
+											.filter(Boolean);
+										if (sentences.length === 0) {
+											ep.status = "archived";
+										} else {
+											ep.content = sentences.join(" ");
+											ep.summary = ep.content.slice(0, 200);
+										}
+									}
+								}
+							}
+						}
 						continue;
 					}
 
@@ -369,6 +410,20 @@ export abstract class MemorySystemConsolidation extends MemorySystemBackup {
 								for (const _update of predecessorUpdates)
 									recordMutationOutcome("structured_supersession_applied");
 							factsUpdated += predecessorUpdates.length;
+							const rawStore = (this.adapter as any).getStore?.();
+							if (rawStore && Array.isArray(rawStore.episodes)) {
+								const readyIds = new Set(readyEpisodes.map((e) => e.id));
+								for (const pred of predecessorUpdates) {
+									for (const epId of pred.sourceEpisodes) {
+										if (!readyIds.has(epId) || ef.sourceEpisodeIds.includes(epId))
+											continue;
+										const ep = rawStore.episodes.find(
+											(e: any) => e.id === epId,
+										);
+										if (ep) ep.status = "archived";
+									}
+								}
+							}
 							// R4 #26 Step 3a — supersede 시점 spike emit
 							// (consolidate path).
 							await this.emitSpike({
