@@ -15,7 +15,11 @@
 
 import { hasGroundedDeleteEvidence } from "./delete-grounding.js";
 import type { ExtractedFact } from "./index.js";
-import { chatCompletionsUrl, temperatureField } from "./llm-request.js";
+import {
+	chatCompletionsUrl,
+	maxTokensField,
+	temperatureField,
+} from "./llm-request.js";
 import {
 	inferEnglishMemoryPropertyId,
 	isMemoryPropertyId,
@@ -32,7 +36,7 @@ export interface LLMFactExtractorOptions {
 	baseURL?: string;
 	/** Model to use. Default: gemini-2.5-flash-lite (fast, cheap) */
 	model?: string;
-	/** Max episodes to send in a single API call. Default: 10 */
+	/** Max episodes to send in a single API call. Default: 5 */
 	batchSize?: number;
 	/** Product default skips failed batches; benchmarks should use throw. */
 	failurePolicy?: "skip" | "throw";
@@ -58,7 +62,7 @@ const DEFAULT_BASE_URL = USE_GATEWAY
 const DEFAULT_MODEL = USE_GATEWAY
 	? "vertexai:gemini-2.5-flash-lite"
 	: "gemini-2.5-flash-lite";
-const DEFAULT_BATCH_SIZE = 10;
+const DEFAULT_BATCH_SIZE = 5;
 
 function normalizedDeleteQuote(value: string): string {
 	return value.normalize("NFC").trim();
@@ -103,16 +107,35 @@ export function buildLLMFactExtractor(
 
 		for (let i = 0; i < episodes.length; i += batchSize) {
 			const batch = episodes.slice(i, i + batchSize);
-			const extracted = await extractBatch(batch, {
-				apiKey,
-				baseURL,
-				model,
-				auth,
-				failurePolicy,
-				temperature,
-				request,
-			}, Number.isFinite(maxAttempts) ? Math.max(1, Math.floor(maxAttempts)) : 3);
-			results.push(...extracted);
+			const retries = Number.isFinite(maxAttempts)
+				? Math.max(1, Math.floor(maxAttempts))
+				: 3;
+			const run = (
+				part: Episode[],
+				policy: "skip" | "throw",
+			): Promise<ExtractedFact[]> =>
+				extractBatch(
+					part,
+					{ apiKey, baseURL, model, auth, failurePolicy: policy, temperature, request },
+					retries,
+				);
+			if (failurePolicy === "throw" || batch.length === 1) {
+				results.push(...(await run(batch, failurePolicy)));
+				continue;
+			}
+			// A failed batch (HTTP 5xx after retries, malformed JSON) must not drop
+			// every episode in it: retry one episode at a time and skip only the
+			// episodes that still fail.
+			try {
+				results.push(...(await run(batch, "throw")));
+			} catch {
+				console.warn(
+					`[LLMFactExtractor] batch of ${batch.length} failed; retrying episodes one by one`,
+				);
+				for (const episode of batch) {
+					results.push(...(await run([episode], "skip")));
+				}
+			}
 		}
 
 		return results;
@@ -167,6 +190,7 @@ DO NOT capture transient or environment-dependent failures as facts (negative-ca
 - Transient errors that resolved on retry (timeouts, 5xx, 429, connection refused). If retrying worked, there is no durable fact — at most the retry pattern.
 - One-off task narratives ("summarized today's news") — not a durable fact about the user.
 If a failure was caused by setup state, capture the FIX (the install/config/env step) as the fact — never the failure itself.
+- However, DO extract every distinct personal or historical clause in a multi-clause turn, including past club/group memberships (e.g. "예전에는 달빛관측회에 다녔어" -> property "예전 모임 이름", value "달빛관측회", cardinality "single"), items the user made or did (e.g. "내가 종이등을 만들었고"), and actions by named friends (e.g. "친구 세라는 동굴에 다녀왔어"). For a user's pet name (e.g. "내가 키우는 달팽이 이름" / "달팽이 이름"), use the canonical property without "반려 " (e.g. "달팽이 이름", cardinality "single").
 
 CRITICAL — UPDATE / CHANGE / REPLACEMENT statements:
 Update statements (where the speaker signals that a previously-true value
@@ -230,6 +254,7 @@ episode that names the target being removed. The evidence quote
 grounds current authority; the target quote grounds a current target mention.
 The model remains responsible for mapping that mention to the structured value.
 Do not emit a delete if either quote is unavailable.
+When the speaker explicitly asks to delete or forget a memory by its property/category name without repeating the stored value (for example, "예전 직장 이름과 예전 주소를 지워줘.", "전에 말한 산책로 이름은 잊어줘.", "예전 공방 별칭은 지워줘.", "전에 말한 모임 이름을 지워줘.", "내 우산 애칭을 지워줘."), you MUST emit an "operation":"delete" object for EACH requested property (emit two delete objects if two properties are requested in one sentence), using the exact property phrase from the episode as both "deleteTargetQuote" and "structured.value" (and as "structured.property").
 
 Durable cessation is language-independent. Phrases equivalent to "no longer",
 "더 이상 ... 않다", and "もう ... ではない" must delete the exact prior
@@ -297,7 +322,7 @@ Delete format: {"1": [{"content":"사용자 알레르기: 땅콩","operation":"d
 				messages: [{ role: "user", content: prompt }],
 				// Gemini 2.5 may spend part of this budget on internal reasoning. A
 				// 2K ceiling can therefore truncate even a short JSON payload.
-				max_tokens: Math.max(8192, episodes.length * 400),
+				...maxTokensField(model, Math.max(8192, episodes.length * 400)),
 				// Extraction is a contract parse, not creative generation. Zero reduces
 				// multilingual key/cardinality drift across repeated benchmark runs; GPT-5 family omits it.
 				...temperatureField(model, 0, temperature),
@@ -479,9 +504,17 @@ function parseStructuredFact(value: unknown): StructuredFact | undefined {
 	const subjectId = isMemorySubjectId(candidate.subjectId)
 		? candidate.subjectId
 		: undefined;
-	const propertyId = isMemoryPropertyId(candidate.propertyId)
+	const isHistoricalProp =
+		/^(?:전에\s*말한|지난번에\s*말한|지난달|예전|이전|옛|지난|former|previous|old)/iu.test(
+			candidate.property.trim(),
+		) ||
+		/^(?:전에\s*말한|지난번에\s*말한|지난달|예전|이전|옛|지난|former|previous|old)/iu.test(
+			candidate.value.trim(),
+		);
+	const rawPropertyId = isMemoryPropertyId(candidate.propertyId)
 		? candidate.propertyId
 		: inferEnglishMemoryPropertyId(candidate.property);
+	const propertyId = isHistoricalProp ? undefined : rawPropertyId;
 	const identityIds = subjectId && propertyId ? { subjectId, propertyId } : {};
 	return {
 		subject: candidate.subject,

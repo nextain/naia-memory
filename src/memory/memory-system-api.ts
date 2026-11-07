@@ -173,7 +173,10 @@ export interface DeleteCandidate {
 	structured: Pick<
 		StructuredFact,
 		"subjectId" | "propertyId" | "value" | "polarity" | "cardinality"
-	>;
+	> & {
+		/** Property label (e.g. "공방 별칭") so the verifier can tell which attribute the user's target names. */
+		property?: string;
+	};
 }
 
 export type DeleteVerificationResult =
