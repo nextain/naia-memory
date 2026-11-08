@@ -327,6 +327,6 @@ GEMINI_API_KEY=xxx \
 
 `.agents/` 와 `.users/` 의 AI 컨텍스트는 [CC-BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) 라이선스입니다.
 
-## 라이선스
+## 라이선스 및 특허 고지 (License & Patent Notice)
 
-Apache License 2.0 — [LICENSE](LICENSE) 참고. [Nextain](https://nextain.io) 제작, [naia-shell](https://github.com/nextain/naia-shell) 을 포함한 Naia 스택의 일부입니다.
+코드는 [Apache License 2.0 (`Apache-2.0`)](LICENSE)으로 배포되며([Nextain](https://nextain.io) 제작, [naia-shell](https://github.com/nextain/naia-shell) 을 포함한 Naia 스택의 일부), 특허 경계 및 조건부 특허 서약([`PATENTS.md`](PATENTS.md)), 상용·엔터프라이즈 라이선스([`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md)), 기여자 약정([`CONTRIBUTING.md`](CONTRIBUTING.md), [`CLA.md`](CLA.md), [`CLA-CORPORATE.md`](CLA-CORPORATE.md)) 전문은 영문 [`README.en.md`의 License & Patent Notice](README.en.md#license--patent-notice) 절을 참고하세요.
